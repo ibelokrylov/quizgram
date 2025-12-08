@@ -1,0 +1,275 @@
+/* Базовые стили для Telegram Mini App */
+:root {
+  /* Основные цвета темы Telegram (Base ThemeParams) */
+  --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
+  --tg-theme-text-color: var(--tg-theme-text-color, #000000);
+  --tg-theme-hint-color: var(--tg-theme-hint-color, #999999);
+  --tg-theme-link-color: var(--tg-theme-link-color, #2481cc);
+  --tg-theme-button-color: var(--tg-theme-button-color, #2481cc);
+  --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+  --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+
+  /* Расширенные цвета темы (Bot API 7.0+) */
+  --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #ffffff);
+  --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #2481cc);
+  --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #ffffff);
+  --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #2481cc);
+  --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #999999);
+  --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #ff3b30);
+
+  /* Дополнительные цвета (Bot API 7.6+) */
+  --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #e0e0e0);
+
+  /* Цвета нижней панели (Bot API 7.10+) */
+  --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #ffffff);
+}
+
+/* Использование CSS переменных Telegram для адаптации к теме */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--tgui--bg_color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  background-color: var(--tg-theme-bg-color, #ffffff);
+}
+
+/* Дополнительные переменные для совместимости */
+
+
+/* Обеспечиваем правильное отображение на всех устройствах */
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--tg-theme-link-color, #2481cc);
+  text-decoration: none;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  justify-content: space-between;
+}
+
+.content__body {
+  flex: 1 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  min-height: 0;
+}
+
+.footer__logo {
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  justify-content: center;
+  padding: 2px 8px;
+  margin-bottom: 6px;
+}
+
+.footer__logo-link {
+  text-decoration: none;
+  font-style: italic;
+}
+
+.center__content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.cards {
+  padding: 12px;
+}
+
+.cards.full {
+  width: calc(100vw - 24px);
+  /* min-height: 400px; */
+}
+
+.cards.standard {
+  min-height: 400px;
+}
+
+.cards_content_padding {
+  padding-top: 70px;
+}
+
+.card__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress__container {
+  max-width: calc(100vw - 30px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chip_question {
+  left: 16px;
+  right: auto;
+  max-width: calc(100% - 24px);
+}
+
+.question__padding {
+  padding-top: 30px;
+}
+
+.answer__option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.answer__option-item {
+  border: 1px solid var(--tg-theme-border-color, #e0e0e0);
+  border-radius: 8px;
+}
+
+.question__counter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: 6px;
+}
+
+.variant__image-item-image {
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.start-page__cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+}
+
+.start-page__card-chip {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.start-page__card-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  display: block;
+}
+
+.start-page__button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.variant__image {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.variant__image-item {
+  border: 2px solid transparent;
+  flex: 1 1 calc(50% - 4px);
+}
+
+.variant__image-item.selected {
+  border: 2px solid var(--tg-theme-button-color, #2481cc);
+}
+
+.variant__image-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.variant__image-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variant__image-item-value-text {
+  padding: 4px 10px 4px 8px;
+  text-align: center;
+  min-height: 40px;
+
+  word-wrap: break-word;
+}
+
+.progress__buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.variant__image_text {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.variant__image_text-preview img {
+  border-radius: .25rem;
+  max-width: 23.75rem;
+  max-height: 19.1875rem;
+}
+
+.variant__image_text-preview-skeleton {
+  width: 100%;
+  border-radius: .25rem;
+  background-color: var(--tgui--secondary_bg_color, #f1f1f1);
+}
+
+.variant__image_text-preview-skeleton p {
+  text-align: center;
+}
+
+.variant__image_text-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media screen and (max-width: 480px) {
+  .variant__image-item {
+    width: calc(50% - 4px);
+  }
+}

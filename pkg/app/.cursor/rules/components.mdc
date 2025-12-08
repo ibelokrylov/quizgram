@@ -1,0 +1,62 @@
+---
+description: React component patterns and UI component standards
+globs:
+  - "src/components/**"
+alwaysApply: false
+---
+
+# Component Patterns
+
+Components are reusable UI elements following React 19 patterns.
+
+## Component Structure
+
+- **UI Components**: Base components in `src/components/ui/` (shadcn/ui)
+- **Feature Components**: Higher-level components in `src/components/`
+- Use functional components with TypeScript
+- Prefer named exports over default exports
+
+## Component Props
+
+- Use `React.ComponentProps<'div'>` or similar for extending HTML element props
+- Accept `className` prop and merge with `cn()` utility
+- Use TypeScript interfaces for complex prop types
+
+```typescript
+export function Component({
+  className,
+  ...props
+}: React.ComponentProps<'div'>) {
+  return <div className={cn('base-classes', className)} {...props} />;
+}
+```
+
+## shadcn/ui Components
+
+- Use components from `@/components/ui/` (shadcn/ui New York style)
+- Components are built on Radix UI primitives with Tailwind styling
+- Import from `@/components/ui/` not directly from Radix
+
+## Form Components
+
+- Use `Field`, `FieldLabel`, `FieldDescription`, `FieldGroup` from `@/components/ui/field`
+- Use `Input`, `Button`, `Select` from `@/components/ui/`
+- Handle validation with Zod schemas
+- Use `toast` from `sonner` for error notifications
+
+## Styling
+
+- Use Tailwind CSS classes
+- Use `cn()` utility from `@/lib/utils` for conditional classes
+- Follow shadcn/ui New York style patterns
+
+## State Management
+
+- Use `useState` for local component state
+- Use `useContext` for accessing global context (Auth, etc.)
+- Use TanStack Query for server state
+
+## Examples
+
+See `@src/components/login-form.tsx` for form component pattern
+See `@src/components/ui/button.tsx` for shadcn/ui component pattern

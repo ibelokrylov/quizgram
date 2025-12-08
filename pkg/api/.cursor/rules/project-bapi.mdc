@@ -1,0 +1,286 @@
+---
+alwaysApply: true
+---
+# Правила проекта BAPI
+
+## Язык общения
+- Все ответы и комментарии должны быть на русском языке
+- Документация в коде также на русском языке
+
+## Технологический стек
+
+### Runtime и менеджер пакетов
+- **Bun** (не Node.js)
+  - Используй `bun` для установки пакетов (не npm/yarn)
+  - Используй API Bun для работы с файлами, процессами и т.д.
+  - Документация: https://bun.com/docs
+
+### Веб-фреймворк
+- **Elysia** для Bun
+  - Используй Elysia API для создания роутов, middleware и плагинов
+  - Следуй паттернам Elysia при организации кода
+  - Документация: https://elysiajs.com/table-of-content.html
+
+### База данных и ORM
+- **Drizzle ORM** для работы с PostgreSQL
+  - Используй только Drizzle ORM для всех операций с БД
+  - Не используй raw SQL без крайней необходимости
+  - Не используй другие ORM (TypeORM, Prisma и т.д.)
+  - Документация: https://orm.drizzle.team/docs/overview
+
+## Правила кодирования
+
+### TypeScript
+- Все файлы должны быть на TypeScript (.ts)
+- Используй строгую типизацию
+- Избегай использования `any`, предпочитай конкретные типы
+
+### Стиль кода
+- Следуй существующему стилю кода проекта
+- Используй понятные имена переменных и функций на английском языке
+- Комментарии на русском языке
+- Не создавай JSDOC
+
+### Логирование
+- **ВСЕГДА используй `logger` из `../lib/logger` вместо `console.log/error/warn`**
+- Используй соответствующий уровень логирования:
+  - `logger.debug()` - для отладочной информации (детали выполнения)
+  - `logger.info()` - для информационных сообщений (успешные операции)
+  - `logger.warn()` - для предупреждений (некритичные проблемы)
+  - `logger.error()` - для ошибок (критичные проблемы, передавай Error объект)
+- Передавай контекст через второй/третий параметр как объект с данными
+- Для ошибок передавай Error объект вторым параметром: `logger.error(message, error, data)`
+
+### Структура проекта
+
+Проект следует **feature-based folder structure** согласно [Elysia Best Practices](https://elysiajs.com/essential/best-practice.html#folder-structure).
+
+#### Структура папок
+
+```
+src/
+├── db/                    # Схемы базы данных (Drizzle ORM)
+│   ├── index.ts          # Подключение к БД и экспорт всех таблиц
+│   ├── user.ts           # Схема таблицы пользователей
+│   ├── plan.ts           # Схема таблицы тарифных планов
+│   ├── code.ts           # Схема таблицы кодов
+│   ├── quiz.ts           # Схемы таблиц квизов
+│   └── user-file.ts      # Схема таблицы файлов пользователей
+│
+├── modules/              # Функциональные модули приложения
+│   └── {feature}/        # Каждый модуль содержит:
+│       ├── index.ts      # Elysia controller (роуты и валидация запросов)
+│       ├── service.ts    # Бизнес-логика (отделена от HTTP)
+│       └── model.ts      # Модели валидации (Elysia.t) и типы
+│
+├── utils/                # Утилиты и вспомогательные функции
+│   └── ...
+│
+└── index.ts             # Точка входа приложения
+```
+
+#### Принципы организации модулей
+
+**1. Controller (index.ts)**
+- Используй Elysia instance как контроллер (не класс, привязанный к Context)
+- Обрабатывай HTTP-запросы: роутинг, валидация запросов, работа с cookies
+- Извлекай нужные данные из контекста и передавай их в сервис
+- НЕ передавай весь Context в сервис, используй деструктуризацию
+
+Пример:
+```typescript
+export const auth = new Elysia({ prefix: '/auth' })
+  .post('/sign-in', async ({ body, cookie }) => {
+    const response = await AuthService.signIn(body)
+    cookie.session.set({ value: response.token })
+    return response
+  }, {
+    body: AuthModel.signInBody,
+    response: { 200: AuthModel.signInResponse }
+  })
+```
+
+**2. Service (service.ts)**
+- Используй `abstract class` со `static` методами, если не нужно хранить состояние
+- Содержит бизнес-логику, отделённую от HTTP-слоя
+- НЕ зависит от Elysia Context, что упрощает тестирование и переиспользование
+- Используй Drizzle ORM для работы с базой данных
+
+Пример:
+```typescript
+import { eq } from 'drizzle-orm'
+import { db, userTable } from '../../db'
+
+export abstract class AuthService {
+  static async signIn({ username, password }: AuthModel.signInBody) {
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.login, username))
+      .limit(1)
+    // бизнес-логика...
+  }
+}
+```
+
+**3. Model (model.ts)**
+- Используй Elysia.t для валидации и типизации
+- Группируй модели в namespace
+- Используй `typeof model.static` для получения TypeScript типов
+- НЕ объявляй типы отдельно от моделей валидации
+
+Пример:
+```typescript
+import { t } from 'elysia'
+
+export namespace AuthModel {
+  export const signInBody = t.Object({
+    username: t.String(),
+    password: t.String(),
+  })
+  
+  export type signInBody = typeof signInBody.static
+  
+  export const signInResponse = t.Object({
+    username: t.String(),
+    token: t.String(),
+  })
+  
+  export type signInResponse = typeof signInResponse.static
+}
+```
+
+#### Правила для Controller
+
+✅ **Делай:**
+- Используй Elysia instance как контроллер
+- Извлекай нужные данные из контекста через деструктуризацию
+- Передавай только необходимые данные в сервис
+
+❌ **Не делай:**
+- НЕ создавай класс контроллера, привязанный к Elysia Context
+- НЕ передавай весь Context в сервис
+- НЕ используй `type Context` из Elysia для типизации контроллера
+
+#### Использование Guard и State в Elysia
+
+✅ **Правильное использование:**
+
+1. **State** - для хранения данных, доступных во всех обработчиках роутов:
+```typescript
+export const user = new Elysia({ prefix: "/user" })
+  .state('user', null as User | null)
+  .guard({
+    async beforeHandle(ctx) {
+      if (!ctx.cookie.token.value) {
+        ctx.set.status = 401;
+        return { message: "Unauthorized" };
+      } else {
+        ctx.store.user = await AuthService.getUserFromToken(ctx.cookie.token.value.toString());
+      }
+    },
+  }, (app) => app
+    .get("/", async (ctx) => {
+      const user = ctx.store.user; // Получаем из store
+      if (!user) {
+        ctx.set.status = 401;
+        return { message: "Unauthorized" };
+      }
+      // Используем user
+    })
+  )
+```
+
+2. **Получение данных из контекста:**
+```typescript
+async (ctx) => {
+  // Правильно: получаем user из store
+  const user = ctx.store.user;
+  if (!user) {
+    ctx.set.status = 401;
+    return { message: "Unauthorized" };
+  }
+  
+  // Правильно: деструктурируем только HTTP-специфичные данные
+  const { body, set, cookie } = ctx;
+  
+  // Используем user и другие данные
+}
+```
+
+❌ **Неправильное использование:**
+
+1. **НЕ деструктурируй user из контекста напрямую:**
+```typescript
+// ❌ НЕПРАВИЛЬНО
+const { user, body, set } = ctx as typeof ctx & { user: User };
+```
+
+2. **НЕ используй type assertion для добавления user в контекст:**
+```typescript
+// ❌ НЕПРАВИЛЬНО
+const { user, body, set } = ctx as typeof ctx & { user: UserModel.upload };
+```
+
+**Правильный паттерн:**
+- Используй `.state()` для объявления типизированного хранилища
+- Используй `.guard()` с `beforeHandle` для установки данных в `ctx.store`
+- Получай данные из `ctx.store` в обработчиках роутов
+- Проверяй наличие данных из store перед использованием
+- Деструктурируй только HTTP-специфичные данные (`body`, `set`, `cookie` и т.д.)
+
+#### Правила для Service
+
+✅ **Делай:**
+- Используй `abstract class` со `static` методами для сервисов без состояния
+- Держи бизнес-логику отдельно от HTTP-слоя
+- Используй Drizzle ORM для работы с БД
+
+❌ **Не делай:**
+- НЕ привязывай сервис к Elysia Context
+- НЕ используй HTTP-специфичные типы в сервисе
+
+#### Правила для Model
+
+✅ **Делай:**
+- Используй Elysia.t для валидации
+- Используй `typeof model.static` для получения типов
+- Группируй модели в namespace
+
+❌ **Не делай:**
+- НЕ объявляй классы или интерфейсы как модели
+- НЕ объявляй типы отдельно от моделей валидации
+
+## Что делать
+
+✅ Используй Bun API вместо Node.js API
+✅ Используй Elysia для создания API endpoints
+✅ Используй Drizzle ORM для работы с базой данных
+✅ Пиши код на TypeScript с строгой типизацией
+✅ Организуй код по feature-based структуре (modules/{feature}/)
+✅ Используй Elysia instance как контроллер
+✅ Разделяй Controller, Service и Model в отдельные файлы
+✅ Используй Elysia.t для валидации и типизации
+✅ Используй `abstract class` со `static` методами для сервисов без состояния
+✅ Извлекай данные из контекста через деструктуризацию перед передачей в сервис
+✅ Используй `logger` из `../lib/logger` для всех операций логирования
+✅ Используй `.state()` для объявления типизированного хранилища данных
+✅ Используй `.guard()` с `beforeHandle` для установки данных в `ctx.store`
+✅ Получай данные из `ctx.store` в обработчиках роутов (не деструктурируй из контекста)
+
+## Чего избегать
+
+❌ Не используй Node.js API (используй Bun)
+❌ Не используй npm/yarn (используй bun)
+❌ Не используй другие ORM или raw SQL без необходимости
+❌ Не используй `any` без крайней необходимости
+❌ Не смешивай языки в комментариях (используй русский)
+❌ Не создавай класс контроллера, привязанный к Elysia Context
+❌ Не передавай весь Context в сервис
+❌ Не объявляй классы или интерфейсы как модели (используй Elysia.t)
+❌ Не объявляй типы отдельно от моделей валидации
+❌ Не привязывай сервисы к HTTP-слою или Elysia Context
+❌ НЕ используй `console.log/error/warn` - всегда используй `logger` из `../lib/logger`
+❌ НЕ деструктурируй данные из `ctx.store` напрямую в параметрах функции (используй `ctx.store.property`)
+❌ НЕ используй type assertion для добавления данных в контекст (используй `.state()` и `ctx.store`)
+

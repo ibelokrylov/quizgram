@@ -1,0 +1,51 @@
+---
+description: TanStack Router file-based routing patterns
+globs:
+  - "src/routes/**"
+alwaysApply: false
+---
+
+# Routing with TanStack Router
+
+This project uses TanStack Router for file-based routing with automatic code splitting.
+
+## Route File Structure
+
+- Route files are in `src/routes/` directory
+- Root route is `__root.tsx` which contains QueryClientProvider and ContextHole
+- Route tree is automatically generated in `routeTree.gen.ts`
+- Use `createFileRoute` to define routes
+
+## Creating Routes
+
+```typescript
+import { createFileRoute } from '@tanstack/react-router';
+import { PageComponent } from '@/pages/Page';
+
+export const Route = createFileRoute('/path')({
+  component: PageComponent,
+});
+```
+
+## Route Patterns
+
+- **Root route**: `__root.tsx` - Must export `Route` using `createRootRoute`
+- **Index route**: `index.tsx` - Handles `/` path
+- **Dynamic routes**: `$param.tsx` - Use `$` prefix for dynamic segments
+- **Nested routes**: Create subdirectories (e.g., `app/quiz/$uid.tsx`)
+
+## Navigation
+
+- Use `Link` component from `@tanstack/react-router` for navigation
+- Use `useNavigate()` hook for programmatic navigation
+- Use `useParams()` to access route parameters
+
+## Route Guards
+
+- Check authentication in route components using `AuthContext`
+- Redirect unauthenticated users using `useNavigate()` in `useEffect`
+
+## Examples
+
+See `@src/routes/__root.tsx` for root layout pattern
+See `@src/routes/index.tsx` for authentication redirect pattern

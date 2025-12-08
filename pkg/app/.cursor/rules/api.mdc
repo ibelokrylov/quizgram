@@ -1,0 +1,62 @@
+---
+description: API calls and HTTP request patterns
+alwaysApply: false
+---
+
+# API and HTTP Patterns
+
+This project uses a custom HTTP client for API calls.
+
+## HTTP Client
+
+- HTTP client is in `src/lib/http/index.ts`
+- Use `http<T>()` function for API calls
+- Generic type parameter for response type
+
+## API Call Pattern
+
+```typescript
+import http from '@/lib/http';
+import type { User } from '@/entities/User/User.type';
+
+const res = await http<User>({
+  url: '/v1/auth/login',
+  method: 'POST',
+  body: data,
+});
+
+if (res.data) {
+  // Handle success
+}
+```
+
+## Error Handling
+
+- Wrap API calls in try-catch blocks
+- Use `toast.error()` from `sonner` for error notifications
+- Handle validation errors from Zod schemas before API calls
+
+## Validation Before API Calls
+
+Always validate data with Zod schemas before making API calls:
+
+```typescript
+const error = schema.safeParse(data);
+if (error.error) {
+  // Handle validation errors
+} else {
+  // Make API call
+  const res = await http({ ... });
+}
+```
+
+## TanStack Query
+
+- Use TanStack Query for server state management when appropriate
+- QueryClient is configured in `src/app/query-client.tsx`
+- Use QueryClientProvider from root layout
+
+## Examples
+
+See `@src/components/login-form.tsx` for API call pattern with validation
+See `@src/lib/http/index.ts` for HTTP client implementation

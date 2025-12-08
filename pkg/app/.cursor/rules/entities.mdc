@@ -1,0 +1,53 @@
+---
+description: Domain entities with Zod validation patterns
+globs:
+  - "src/entities/**"
+alwaysApply: false
+---
+
+# Entity Pattern
+
+Entities represent domain models and business logic, separated from UI components.
+
+## Entity Structure
+
+Each entity should be in its own directory under `src/entities/`:
+- `EntityName/EntityName.type.ts` - Zod schemas and TypeScript types
+- `EntityName/useEntity.tsx` - Custom hooks for entity operations
+- `EntityName/EntityName.context.tsx` - React Context for entity state (if needed)
+- `EntityName/EntityName.context.provider.tsx` - Context provider component (if needed)
+
+## Zod Schema Pattern
+
+Always define Zod schemas and infer TypeScript types from them:
+
+```typescript
+import { z } from 'zod';
+
+export const entityZod = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.email(),
+  created_at: z.date(),
+});
+
+export type Entity = z.infer<typeof entityZod>;
+```
+
+## Validation
+
+- Use Zod schemas for runtime validation
+- Use `.safeParse()` for validation with error handling
+- Export validation schemas for reuse in forms and API calls
+
+## Context Pattern
+
+When entity needs global state:
+- Create context in `EntityName.context.tsx`
+- Create provider in `EntityName.context.provider.tsx`
+- Use ContextHole pattern to register provider in `src/app/context/context.hole.tsx`
+
+## Examples
+
+See `@src/entities/User/User.type.ts` for Zod schema pattern
+See `@src/entities/User/auth.context.tsx` for context pattern

@@ -1,0 +1,56 @@
+---
+description: Core architecture patterns and project structure
+alwaysApply: true
+---
+
+# Project Architecture
+
+This is a React 19 application with TypeScript using modern architectural patterns.
+
+## Tech Stack
+
+- **React 19** with React Compiler enabled
+- **TanStack Router** for file-based routing with automatic code splitting
+- **TanStack Query** for server state management
+- **Tailwind CSS v4** with shadcn/ui components (New York style)
+- **Zod** for runtime type validation
+- **Biome** for code formatting (tabs, single quotes)
+- **i18next** with react-i18next for internationalization (Russian/English)
+- **Bun** as package manager
+
+## Directory Structure
+
+- **`src/app/`** - Global application configuration and providers (ContextHole, QueryClient, Auth context)
+- **`src/routes/`** - File-based routing system using `createFileRoute` from TanStack Router
+- **`src/components/`** - Reusable UI components (shadcn/ui in `/components/ui/`)
+- **`src/pages/`** - Page-level components (thin wrappers referenced by route files)
+- **`src/entities/`** - Domain models and business logic with Zod schema validation
+- **`src/lib/`** - Utility functions and helpers (cn(), i18n configuration)
+- **`src/locales/`** - Internationalization files (Russian `ru/` and English `en/`)
+- **`src/hooks/`** - Custom React hooks
+
+## Key Patterns
+
+1. **File-Based Routing**: Routes automatically generated from files in `src/routes/`
+2. **Entity-Component Separation**: Domain entities separate from UI components
+3. **Context Provider Pattern**: Global state through React Context (Auth, QueryClient)
+4. **Type-Safe Development**: Zod schemas for runtime validation, TypeScript throughout
+5. **Auto Code Splitting**: TanStack Router automatically splits code by routes
+6. **Internationalization**: Use i18next `t()` function for all user-facing text
+7. **Language Detection**: Automatic language detection with fallback to English
+
+## Import Aliases
+
+- `@/` → `./src/`
+- `@/components` → UI components
+- `@/lib/utils` → Utility functions
+- `@/components/ui` → shadcn/ui components
+
+## Development Commands
+
+- Install dependencies: `bun install`
+- Add dependency: `bun add <package>`
+- Development: `bun run dev`
+- Build: `bun run build`
+- Format/Lint: `bun run lint`
+- Preview: `bun run preview`

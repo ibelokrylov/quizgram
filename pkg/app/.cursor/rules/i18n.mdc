@@ -1,0 +1,50 @@
+---
+description: Internationalization patterns with i18next
+alwaysApply: false
+---
+
+# Internationalization (i18n)
+
+This project uses i18next with react-i18next for Russian/English support.
+
+## Translation Files
+
+- Translations are in `src/locales/{lang}/common.json`
+- Supported languages: `en` (English), `ru` (Russian)
+- Default namespace is `common`
+
+## Using Translations
+
+Always use `useTranslation()` hook and `t()` function for user-facing text:
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function Component() {
+  const { t } = useTranslation();
+  return <h1>{t('key.path')}</h1>;
+}
+```
+
+## Translation Keys
+
+- Use dot notation for nested keys: `t('login.title')`, `t('login.email')`
+- Keep keys organized by feature/page
+- Never hardcode user-facing strings in components
+
+## Language Detection
+
+- Automatic detection from localStorage, navigator, or HTML tag
+- Fallback to English if language not available
+- Language preference stored in localStorage
+
+## Adding Translations
+
+1. Add key-value pairs to both `src/locales/en/common.json` and `src/locales/ru/common.json`
+2. Use the same key structure in both files
+3. Always provide translations for both languages
+
+## Examples
+
+See `@src/components/login-form.tsx` for translation usage pattern
+See `@src/lib/i18n.ts` for i18n configuration

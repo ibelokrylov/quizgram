@@ -1,0 +1,239 @@
+---
+description: Telegram Mini App development patterns and SDK usage
+alwaysApply: true
+---
+
+# Telegram Mini App
+
+Это приложение является **Telegram Mini App** и работает внутри Telegram. Приложение использует Telegram SDK для интеграции с платформой Telegram.
+
+## Документация
+
+- **Официальная документация Telegram Mini Apps**: https://core.telegram.org/bots/webapps
+- **Документация @telegram-apps/sdk-react v3.x**: https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk-react/3-x
+
+## Технологический стек
+
+- **React 19** с TypeScript
+- **@telegram-apps/sdk-react** - React SDK для Telegram Mini Apps
+- **@telegram-apps/telegram-ui** - UI компоненты в стиле Telegram
+- **Vite** для сборки
+
+## Инициализация SDK
+
+В файле `main.tsx` обязательно должна быть инициализация SDK:
+
+```typescript
+import { init, backButton } from '@telegram-apps/sdk-react';
+
+// Инициализация SDK
+init();
+
+// Монтирование компонентов (например, backButton)
+backButton.mount();
+```
+
+**Важно**: Пакет `@telegram-apps/sdk-react` полностью реэкспортирует `@telegram-apps/sdk`, поэтому не нужно устанавливать его отдельно.
+
+## Использование Telegram SDK
+
+### Основные компоненты SDK
+
+- **`init()`** - инициализация SDK (обязательно вызывать в `main.tsx`)
+- **`backButton`** - кнопка "Назад" в Telegram
+- **`AppRoot`** - корневой компонент для Telegram UI (из `@telegram-apps/telegram-ui`)
+- Компоненты из `@telegram-apps/telegram-ui` для нативного вида Telegram
+
+### React Hooks (@telegram-apps/sdk-react)
+
+Пакет предоставляет специальные React хуки для работы с Telegram SDK:
+
+#### `useLaunchParams`
+
+Получает параметры запуска приложения. Возвращает объект с параметрами запуска (с префиксом `tgWebApp`).
+
+```typescript
+import { useLaunchParams } from '@telegram-apps/sdk-react';
+
+function Component() {
+  const launchParams = useLaunchParams();
+  // {
+  //   tgWebAppBotInline: false,
+  //   tgWebAppData: { user: {...}, auth_date: Date(...), ... },
+  //   ...
+  // }
+}
+```
+
+#### `useRawLaunchParams`
+
+Возвращает параметры запуска в сыром формате.
+
+```typescript
+import { useRawLaunchParams } from '@telegram-apps/sdk-react';
+
+function Component() {
+  const rawParams = useRawLaunchParams();
+  // 'tgWebAppBotInline=0&tgWebAppData=%7B%22user%22%3A%7D...'
+}
+```
+
+#### `useRawInitData`
+
+Получает init data в исходном формате.
+
+```typescript
+import { useRawInitData } from '@telegram-apps/sdk-react';
+
+function Component() {
+  const initData = useRawInitData();
+  // '{"user":...,"auth_date":...,"query_id":...,...}'
+}
+```
+
+#### `useSignal`
+
+Хук для работы с сигналами SDK. Возвращает текущее значение и обновляется при изменении сигнала.
+
+```typescript
+import { useEffect } from 'react';
+import { backButton, useSignal } from '@telegram-apps/sdk-react';
+
+function Component() {
+  const isVisible = useSignal(backButton.isVisible);
+
+  useEffect(() => {
+    console.log('Back button is', isVisible ? 'visible' : 'invisible');
+  }, [isVisible]);
+
+  useEffect(() => {
+    backButton.show();
+    return () => backButton.hide();
+  }, []);
+
+  return null;
+}
+```
+
+#### `useAndroidDeviceData`
+
+Получает данные об Android устройстве из `navigator.userAgent`.
+
+```typescript
+import { useAndroidDeviceData } from '@telegram-apps/sdk-react';
+
+function Component() {
+  const deviceData = useAndroidDeviceData();
+  // {
+  //   manufacturer: 'Samsung',
+  //   performanceClass: 'AVERAGE',
+  //   model: 'SM-A155F',
+  //   androidVersion: '14',
+  //   sdkVersion: 34,
+  // }
+}
+```
+
+### Пример использования
+
+```typescript
+// main.tsx
+import { backButton, init } from '@telegram-apps/sdk-react';
+import { AppRoot, Placeholder } from '@telegram-apps/telegram-ui';
+
+init();
+backButton.mount();
+
+// В компонентах
+import { useLaunchParams, useSignal } from '@telegram-apps/sdk-react';
+
+function MyComponent() {
+  const launchParams = useLaunchParams();
+  const isVisible = useSignal(backButton.isVisible);
+  
+  return (
+    <AppRoot>
+      <Placeholder header="Title" description="Description">
+        Content
+      </Placeholder>
+    </AppRoot>
+  );
+}
+```
+
+## Особенности разработки
+
+### 1. Работа внутри Telegram
+
+- Приложение запускается внутри WebView Telegram
+- Имеет доступ к данным пользователя через Telegram SDK
+- Может использовать нативные функции Telegram (платежи, уведомления и т.д.)
+
+### 2. UI компоненты
+
+- Используй компоненты из `@telegram-apps/telegram-ui` для нативного вида
+- Импортируй стили: `import '@telegram-apps/telegram-ui/dist/styles.css'`
+- Оберни приложение в `<AppRoot>` для правильной работы
+
+### 3. Навигация
+
+- Используй `backButton` из SDK для кнопки "Назад"
+- Кнопка автоматически интегрируется с навигацией Telegram
+
+### 4. Доступ к данным пользователя
+
+Telegram SDK предоставляет доступ к:
+- Данным пользователя (`WebAppUser`)
+- Параметрам темы (`ThemeParams`)
+- Инициализационным данным (`initData`)
+- И другим возможностям платформы
+
+## Важные моменты
+
+✅ **Всегда инициализируй SDK** через `init()` в `main.tsx`  
+✅ **Монтируй компоненты** через `.mount()` (например, `backButton.mount()`)  
+✅ **Используй React хуки** из `@telegram-apps/sdk-react` для работы с SDK  
+✅ **Используй `useSignal`** для реактивной работы с сигналами SDK  
+✅ **Используй компоненты Telegram UI** для нативного вида  
+✅ **Обрабатывай навигацию** через `backButton`  
+✅ **Тестируй внутри Telegram** - приложение работает только в контексте Telegram  
+
+❌ **Не используй обычные веб-компоненты** без обертки в Telegram UI  
+❌ **Не забывай импортировать стили** Telegram UI  
+❌ **Не тестируй в обычном браузере** без эмуляции Telegram окружения  
+❌ **Не устанавливай `@telegram-apps/sdk` отдельно** - он уже включен в `@telegram-apps/sdk-react`  
+
+## Документация API
+
+### Основные источники документации:
+
+- **Telegram Mini Apps API**: https://core.telegram.org/bots/webapps
+- **@telegram-apps/sdk-react v3.x**: https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk-react/3-x
+
+### Основные классы и методы SDK:
+
+- **WebApp** / **MiniApp** - основной класс для работы с Mini App
+- **WebAppUser** - данные пользователя
+- **ThemeParams** - параметры темы (светлая/темная)
+- **MainButton** / **BottomButton** - кнопки управления
+- **BackButton** - кнопка "Назад"
+- **CloudStorage** - облачное хранилище
+- **BiometricManager** - биометрическая аутентификация
+- **Popup** - всплывающие окна
+- **QRScanner** - сканер QR-кодов
+- **Invoice** - платежи
+- И многие другие возможности
+
+### React Hooks (v3.x):
+
+- **`useLaunchParams()`** - параметры запуска приложения
+- **`useRawLaunchParams()`** - параметры запуска в сыром формате
+- **`useRawInitData()`** - init data в исходном формате
+- **`useSignal(signal)`** - работа с сигналами SDK
+- **`useAndroidDeviceData()`** - данные об Android устройстве
+- **`useAndroidDeviceDataFrom(userAgent)`** - парсинг данных устройства из кастомного userAgent
+
+## Примеры использования
+
+См. `@src/main.tsx` для инициализации SDK  
+См. `@src/App.tsx` для использования UI компонентов

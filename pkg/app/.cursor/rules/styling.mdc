@@ -1,0 +1,50 @@
+---
+description: Code formatting and styling standards
+alwaysApply: false
+---
+
+# Code Formatting and Styling
+
+This project uses Biome for formatting and Tailwind CSS for styling.
+
+## Biome Configuration
+
+- **Indentation**: Tabs (not spaces)
+- **Quotes**: Single quotes for JavaScript/TypeScript
+- **Auto-format**: Run `bun run lint` to format code
+- **Organize imports**: Enabled automatically
+
+## Formatting Rules
+
+- Use tabs for indentation (configured in `biome.json`)
+- Use single quotes for strings
+- Let Biome handle import organization
+- Run `bun run lint` before committing
+
+## Tailwind CSS
+
+- Use Tailwind utility classes for styling
+- Use `cn()` utility from `@/lib/utils` for conditional classes
+- Follow shadcn/ui New York style patterns
+- Use Tailwind v4 features
+
+## Class Merging
+
+Always use `cn()` utility for merging classes:
+
+```typescript
+import { cn } from '@/lib/utils';
+
+<div className={cn('base-classes', className, condition && 'conditional-class')} />
+```
+
+## Component Styling
+
+- Prefer Tailwind classes over inline styles
+- Use shadcn/ui components which already have proper styling
+- Follow component composition patterns from shadcn/ui
+
+## Examples
+
+See `@src/lib/utils.ts` for `cn()` utility
+See `@src/components/login-form.tsx` for styling patterns

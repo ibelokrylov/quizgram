@@ -1,0 +1,31 @@
+{
+  "name": "bapi",
+  "version": "1.0.50",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "db:create-schema": "bun run scripts/create-schema.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run db:create-schema && drizzle-kit migrate",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.943.0",
+    "@aws-sdk/lib-storage": "^3.943.0",
+    "@aws-sdk/s3-request-presigner": "^3.943.0",
+    "@elysiajs/cors": "catalog:backend",
+    "bun-ffmpeg": "^0.2.2",
+    "drizzle-orm": "^1.0.0-beta.2-b782ae1",
+    "drizzle-typebox": "^0.3.3",
+    "elysia": "catalog:backend",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.11",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^7.0.4",
+    "bun-types": "catalog:backend",
+    "drizzle-kit": "^1.0.0-beta.2-b782ae1"
+  },
+  "module": "src/index.js"
+}
