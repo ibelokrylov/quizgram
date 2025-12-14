@@ -26,13 +26,14 @@ export function BidDetailsDrawer({
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
 			<DrawerContent>
-				<DrawerHeader>
-					<DrawerTitle>Детали заявки</DrawerTitle>
-					<DrawerDescription>
-						{bidDetails ? `Заявка: ${bidDetails.key}` : "Загрузка..."}
-					</DrawerDescription>
-				</DrawerHeader>
-				<div className="p-4">
+				<div className="max-w-[1000px] mx-auto w-full">
+					<DrawerHeader>
+						<DrawerTitle>Детали заявки</DrawerTitle>
+						<DrawerDescription>
+							{bidDetails ? `Заявка: ${bidDetails.key}` : "Загрузка..."}
+						</DrawerDescription>
+					</DrawerHeader>
+					<div className="p-4">
 					{isLoading ? (
 						<div className="flex items-center justify-center min-h-[200px]">
 							<Loader />
@@ -68,6 +69,7 @@ export function BidDetailsDrawer({
 							</div>
 						</div>
 					) : null}
+					</div>
 				</div>
 			</DrawerContent>
 		</Drawer>
