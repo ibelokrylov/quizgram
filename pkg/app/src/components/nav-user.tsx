@@ -4,9 +4,12 @@ import {
   IconLogout,
   IconNotification,
   IconUserCircle,
-} from '@tabler/icons-react';
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +18,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
+import { AuthContext } from "@/entities/User/auth.context";
+import { useUserPlan } from "@/entities/User/useUserPlan";
+import http from "@/lib/http";
 
 export function NavUser({
   user,
@@ -32,11 +38,47 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const { query: planQuery } = useUserPlan();
+  const navigate = useNavigate();
+  const { setIsAuth, setUser } = useContext(AuthContext);
+  const { t } = useTranslation("common");
 
   const n = user.name
-    .split(' ')
+    .split(" ")
     .map((i) => i[0])
-    .join('');
+    .join("");
+
+  const planName = planQuery.data?.name;
+
+  const handleBilling = () => {
+    navigate({ to: "/app/payment" });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await http({
+        url: "/v1/auth/logout",
+        method: "POST",
+      });
+
+      // Очищаем состояние аутентификации
+      setIsAuth(false);
+      setUser(undefined);
+
+      // Очищаем sessionStorage
+      sessionStorage.removeItem("userPlan");
+
+      // Редирект на страницу входа
+      navigate({ to: "/" });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      // Даже при ошибке очищаем состояние и делаем редирект
+      setIsAuth(false);
+      setUser(undefined);
+      sessionStorage.removeItem("userPlan");
+      navigate({ to: "/" });
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -55,13 +97,18 @@ export function NavUser({
                 <span className="text-muted-foreground truncate text-xs">
                   {user.email}
                 </span>
+                {planName ? (
+                  <span className="text-muted-foreground truncate text-[10px]">
+                    {planName}
+                  </span>
+                ) : null}
               </div>
               <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? 'bottom' : 'right'}
+            side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
@@ -75,6 +122,11 @@ export function NavUser({
                   <span className="text-muted-foreground truncate text-xs">
                     {user.email}
                   </span>
+                  {planName ? (
+                    <span className="text-muted-foreground truncate text-[10px]">
+                      {planName}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -84,19 +136,19 @@ export function NavUser({
               {/*   <IconUserCircle /> */}
               {/*   Account */}
               {/* </DropdownMenuItem> */}
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBilling}>
                 <IconCreditCard />
-                Billing
+                {t("nav.user.billing")}
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
+              {/* <DropdownMenuItem> */}
+              {/*   <IconNotification /> */}
+              {/*   {t('nav.user.notifications')} */}
+              {/* </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
-              Log out
+              {t("nav.user.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

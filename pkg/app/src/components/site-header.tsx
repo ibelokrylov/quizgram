@@ -4,6 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useLocation } from "@tanstack/react-router";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { LanguageToggle } from "./language-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
 const title: Record<string, string> = {
@@ -70,7 +71,10 @@ export function SiteHeader() {
 						</>
 					) : null}
 				</div>
-				<ThemeToggle />
+				<div className="flex items-center gap-2">
+					<LanguageToggle />
+					<ThemeToggle />
+				</div>
 			</div>
 		</header>
 	);

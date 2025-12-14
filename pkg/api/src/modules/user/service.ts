@@ -113,7 +113,8 @@ export abstract class UserService {
 
     // Отправляем email
     try {
-      await MailService.sendVerificationEmailCode(user.login, code.value);
+      const userLanguage = user.language || "en";
+      await MailService.sendVerificationEmailCode(user.login, code.value, userLanguage);
 
       // Обновляем NextMailSendAvailable после успешной отправки
       await db
@@ -174,5 +175,18 @@ export abstract class UserService {
   static async getAllPlans(): Promise<Plan[]> {
     const plans = await db.select().from(planTable).orderBy(planTable.id);
     return plans;
+  }
+
+  /**
+   * Обновление языка пользователя
+   */
+  static async updateLanguage(userId: number, language: string): Promise<void> {
+    await db
+      .update(userTable)
+      .set({ 
+        language,
+        updatedAt: new Date(),
+      })
+      .where(eq(userTable.id, userId));
   }
 }

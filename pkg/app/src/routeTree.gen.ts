@@ -15,6 +15,7 @@ import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppPaymentRouteRouteImport } from './routes/app/payment/route'
 import { Route as AppDashboardRouteRouteImport } from './routes/app/dashboard/route'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
 import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
@@ -51,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPaymentRouteRoute = AppPaymentRouteRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppDashboardRouteRoute = AppDashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/quiz/$uid'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/quiz/$uid'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/quiz/$uid'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/payment': {
+      id: '/app/payment'
+      path: '/payment'
+      fullPath: '/app/payment'
+      preLoaderRoute: typeof AppPaymentRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
@@ -264,6 +283,7 @@ const AppBidReportRouteRouteWithChildren =
 
 interface AppRouteRouteChildren {
   AppDashboardRouteRoute: typeof AppDashboardRouteRoute
+  AppPaymentRouteRoute: typeof AppPaymentRouteRoute
   AppBidReportRouteRoute: typeof AppBidReportRouteRouteWithChildren
   AppBidStatisticRouteRoute: typeof AppBidStatisticRouteRoute
   AppQuizUidRoute: typeof AppQuizUidRoute
@@ -271,6 +291,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardRouteRoute: AppDashboardRouteRoute,
+  AppPaymentRouteRoute: AppPaymentRouteRoute,
   AppBidReportRouteRoute: AppBidReportRouteRouteWithChildren,
   AppBidStatisticRouteRoute: AppBidStatisticRouteRoute,
   AppQuizUidRoute: AppQuizUidRoute,

@@ -8,6 +8,7 @@ export const userZod = z.object({
 	isVerification: z.boolean(),
 	name: z.string(),
 	planId: z.number(),
+	language: z.string().optional(),
 	// referral_id: z.number(),
 });
 

@@ -48,6 +48,7 @@ export const user = new Elysia({ prefix: "/user" })
                   planId: user.planId,
                   referralId: user.referralId ?? undefined,
                   isVerification: user.isVerification,
+                  language: user.language ?? undefined,
                   createdAt: user.createdAt,
                   updatedAt: user.updatedAt,
                 },
@@ -498,6 +499,52 @@ export const user = new Elysia({ prefix: "/user" })
             response: {
               200: UserModel.deleteFileSuccessResponse,
               400: UserModel.deleteFileErrorResponse,
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
+        )
+        .put(
+          "/language",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+            const { body, set } = ctx;
+            try {
+              await UserService.updateLanguage(user.id, body.language);
+
+              const response: UserModel.updateLanguageSuccessResponse = {
+                message: "ok",
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при обновлении языка пользователя",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id, language: body.language },
+              );
+              set.status = 400;
+              const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+
+              const response: UserModel.updateLanguageErrorResponse = {
+                message: "update-language@error",
+                error: errorMessage,
+              };
+
+              return response;
+            }
+          },
+          {
+            body: UserModel.updateLanguageBody,
+            response: {
+              200: UserModel.updateLanguageSuccessResponse,
+              400: UserModel.updateLanguageErrorResponse,
               401: t.Object({
                 message: t.String(),
               }),

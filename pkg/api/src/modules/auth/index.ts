@@ -54,6 +54,7 @@ export const auth = new Elysia({ prefix: "/auth" })
             planId: user.planId,
             referralId: user.referralId ?? undefined,
             isVerification: user.isVerification,
+            language: user.language ?? undefined,
             createdAt: user.createdAt ?? undefined,
             updatedAt: user.updatedAt ?? undefined,
           },
@@ -117,6 +118,7 @@ export const auth = new Elysia({ prefix: "/auth" })
             planId: user.planId,
             referralId: user.referralId ?? undefined,
             isVerification: user.isVerification,
+            language: user.language ?? undefined,
           },
         };
 

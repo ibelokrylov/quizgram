@@ -11,6 +11,7 @@ export namespace UserModel {
     planId: t.Number(),
     referralId: t.Optional(t.Number()),
     isVerification: t.Boolean(),
+    language: t.Optional(t.String()),
     createdAt: t.Optional(t.Date()),
     updatedAt: t.Optional(t.Date()),
   });
@@ -170,4 +171,31 @@ export namespace UserModel {
   });
 
   export type uploadFileQuery = typeof uploadFileQuery.static;
+
+  // Тело запроса для обновления языка пользователя
+  export const updateLanguageBody = t.Object({
+    language: t.String({
+      pattern: "^(en|ru)$",
+      description: "Язык интерфейса: 'en' или 'ru'",
+    }),
+  });
+
+  export type updateLanguageBody = typeof updateLanguageBody.static;
+
+  // Успешный ответ при обновлении языка
+  export const updateLanguageSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+  });
+
+  export type updateLanguageSuccessResponse =
+    typeof updateLanguageSuccessResponse.static;
+
+  // Ответ при ошибке обновления языка
+  export const updateLanguageErrorResponse = t.Object({
+    message: t.String(), // "update-language@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type updateLanguageErrorResponse =
+    typeof updateLanguageErrorResponse.static;
 }

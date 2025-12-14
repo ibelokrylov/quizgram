@@ -155,6 +155,7 @@ export abstract class AuthService {
       name: payload.name || null,
       planId: 1, // По умолчанию бесплатный план
       isVerification: false,
+      language: payload.language || "en", // Сохраняем язык или используем "en" по умолчанию
     };
 
     const [createdUser] = await db
@@ -171,9 +172,11 @@ export abstract class AuthService {
 
       // Отправляем email с кодом верификации
       try {
+        const userLanguage = createdUser.language || payload.language || "en";
         await MailService.sendVerificationEmailCode(
           createdUser.login,
           code.value,
+          userLanguage,
         );
 
         // Обновляем NextMailSendAvailable после успешной отправки
@@ -239,7 +242,8 @@ export abstract class AuthService {
 
     // Отправляем email с кодом восстановления пароля
     try {
-      await MailService.sendForgotPasswordEmailCode(user.login, code.value);
+      const userLanguage = user.language || "en";
+      await MailService.sendForgotPasswordEmailCode(user.login, code.value, userLanguage);
 
       // Обновляем NextMailSendAvailable после успешной отправки
       await db
@@ -345,7 +349,8 @@ export abstract class AuthService {
 
     // Отправляем уведомление об успешном изменении пароля
     try {
-      await MailService.sendInformationOfResetPassword(payload.email);
+      const userLanguage = user.language || "en";
+      await MailService.sendInformationOfResetPassword(payload.email, userLanguage);
     } catch (mailError) {
       logger.error(
         "Ошибка при отправке уведомления об изменении пароля",

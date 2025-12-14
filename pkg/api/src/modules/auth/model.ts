@@ -28,6 +28,7 @@ export namespace AuthModel {
     planId: t.Number(),
     referralId: t.Optional(t.Number()),
     isVerification: t.Boolean(),
+    language: t.Optional(t.String()),
     createdAt: t.Optional(t.Date()),
     updatedAt: t.Optional(t.Date()),
   });
@@ -61,6 +62,12 @@ export namespace AuthModel {
       default: false,
     }),
     name: t.Optional(t.String()),
+    language: t.Optional(
+      t.String({
+        pattern: "^(en|ru)$",
+        description: "Язык интерфейса: 'en' или 'ru'",
+      }),
+    ),
   });
 
   export type registrationBody = typeof registrationBody.static;

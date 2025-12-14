@@ -142,22 +142,40 @@ const templateCache: Map<string, string> = new Map();
 
 /**
  * Загрузка шаблона из файла с кэшированием
+ * Поддерживает выбор языка: если language = "en", загружает шаблон с суффиксом "_en"
  */
-function loadTemplate(templateName: string): string {
-  if (templateCache.has(templateName)) {
-    return templateCache.get(templateName)!;
+function loadTemplate(templateName: string, language?: string): string {
+  // Определяем имя шаблона с учетом языка
+  const templateKey = language === "en" ? `${templateName}_en` : templateName;
+  const templateFile = language === "en" ? `${templateName}_en.html` : `${templateName}.html`;
+  
+  if (templateCache.has(templateKey)) {
+    return templateCache.get(templateKey)!;
   }
 
   try {
-    const templatePath = join(templatesDir, `${templateName}.html`);
+    const templatePath = join(templatesDir, templateFile);
     const template = readFileSync(templatePath, "utf-8");
-    templateCache.set(templateName, template);
+    templateCache.set(templateKey, template);
     return template;
   } catch (error) {
+    // Если не найден шаблон с языком, пробуем базовый шаблон
+    if (language === "en") {
+      try {
+        const fallbackPath = join(templatesDir, `${templateName}.html`);
+        const template = readFileSync(fallbackPath, "utf-8");
+        templateCache.set(templateKey, template);
+        logger.warn("Английский шаблон не найден, используется базовый", { templateName });
+        return template;
+      } catch (fallbackError) {
+        // Продолжаем с основной ошибкой
+      }
+    }
+    
     logger.error(
       "Ошибка при загрузке шаблона",
       error instanceof Error ? error : new Error(String(error)),
-      { templateName },
+      { templateName, language, templateFile },
     );
     throw new Error(`Template ${templateName} not found`);
   }
@@ -177,34 +195,50 @@ function renderTemplate(template: string, data: Record<string, string>): string 
 export abstract class MailService {
   /**
    * Отправка кода верификации на email
+   * @param email - Email адрес получателя
+   * @param code - Код верификации
+   * @param language - Язык пользователя ("en" или "ru"), по умолчанию "ru"
    */
   static async sendVerificationEmailCode(
     email: string,
     code: string,
+    language: string = "ru",
   ): Promise<void> {
-    const template = loadTemplate("verification_code");
+    const template = loadTemplate("verification_code", language);
     const html = renderTemplate(template, { CODE: code });
-    await sendMail("Код верификации", html, email);
+    const subject = language === "en" ? "Verification Code" : "Код верификации";
+    await sendMail(subject, html, email);
   }
 
   /**
    * Отправка кода для восстановления пароля
+   * @param email - Email адрес получателя
+   * @param code - Код восстановления пароля
+   * @param language - Язык пользователя ("en" или "ru"), по умолчанию "ru"
    */
   static async sendForgotPasswordEmailCode(
     email: string,
     code: string,
+    language: string = "ru",
   ): Promise<void> {
-    const template = loadTemplate("forgot_password_code");
+    const template = loadTemplate("forgot_password_code", language);
     const html = renderTemplate(template, { CODE: code });
-    await sendMail("Восстановление пароля", html, email);
+    const subject = language === "en" ? "Password Recovery" : "Восстановление пароля";
+    await sendMail(subject, html, email);
   }
 
   /**
    * Отправка уведомления об успешном изменении пароля
+   * @param email - Email адрес получателя
+   * @param language - Язык пользователя ("en" или "ru"), по умолчанию "ru"
    */
-  static async sendInformationOfResetPassword(email: string): Promise<void> {
-    const template = loadTemplate("password_reset_notification");
+  static async sendInformationOfResetPassword(
+    email: string,
+    language: string = "ru",
+  ): Promise<void> {
+    const template = loadTemplate("password_reset_notification", language);
     const html = renderTemplate(template, {});
-    await sendMail("Пароль успешно изменен", html, email);
+    const subject = language === "en" ? "Password Successfully Changed" : "Пароль успешно изменен";
+    await sendMail(subject, html, email);
   }
 }

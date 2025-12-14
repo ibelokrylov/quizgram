@@ -7,6 +7,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import type { BidListItem } from "@/entities/Bid/bid.type";
+import { useTranslation } from "react-i18next";
 import { BidsTableRow } from "./BidsTableRow";
 import { BidsTableCard } from "./BidsTableCard";
 import { BidsTablePagination } from "./BidsTablePagination";
@@ -26,10 +27,12 @@ export function BidsTableBase({
 	fetchNextPage,
 	observerTarget,
 }: BidsTableBaseProps) {
+	const { t } = useTranslation("common");
+
 	if (bids.length === 0) {
 		return (
 			<Card className="p-8 text-center">
-				<p className="text-muted-foreground">Заявки не найдены</p>
+				<p className="text-muted-foreground">{t("bids.table.empty")}</p>
 			</Card>
 		);
 	}
@@ -41,11 +44,11 @@ export function BidsTableBase({
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead className="p-3">Статус</TableHead>
-							<TableHead className="p-3">Дата</TableHead>
-							<TableHead className="p-3">Квиз</TableHead>
-							<TableHead className="p-3">Контакты</TableHead>
-							<TableHead className="p-3">Действия</TableHead>
+							<TableHead className="p-3">{t("bids.table.status")}</TableHead>
+							<TableHead className="p-3">{t("bids.table.date")}</TableHead>
+							<TableHead className="p-3">{t("bids.table.quiz")}</TableHead>
+							<TableHead className="p-3">{t("bids.table.contacts")}</TableHead>
+							<TableHead className="p-3">{t("bids.table.actions")}</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>

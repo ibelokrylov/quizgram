@@ -38,6 +38,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 	});
 
 	const ctx = useContext(AuthContext);
+	const { i18n } = useTranslation();
 
 	function change(v: string | boolean, type: keyof typeof data) {
 		setError({ ...error, [type]: false });
@@ -61,6 +62,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 				if (data.password !== data.passwordConfirm) {
 					setError({ ...error, passwordConfirm: true });
 				} else {
+					// Получаем текущий язык из i18n
+					const currentLanguage = i18n.language || "en";
+					const language = currentLanguage === "ru" || currentLanguage.startsWith("ru") ? "ru" : "en";
+					
 					const res = await http({
 						url: "/v1/auth/registration",
 						method: "POST",
@@ -69,11 +74,17 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 							password: data.password,
 							name: data.name,
 							remember: data.remember,
+							language,
 						},
 					});
 					if (res.data) {
 						ctx.setUser(res.data);
 						ctx.setIsAuth(true);
+						
+						// Устанавливаем язык из ответа сервера, если он есть
+						if (res.data.language && (res.data.language === "en" || res.data.language === "ru")) {
+							i18n.changeLanguage(res.data.language);
+						}
 					} else {
 						toast.error(res.message);
 					}
@@ -86,7 +97,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 		setLoading(false);
 	}
 
-	const { t } = useTranslation();
 	return (
 		<Card {...props}>
 			<CardHeader>

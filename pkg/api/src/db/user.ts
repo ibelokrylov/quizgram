@@ -27,6 +27,7 @@ export const userTable = pgTable("user", {
   referralId: integer("referral_id"),
   quizCount: integer("quiz_count").notNull().default(0),
   paymentDateEnd: timestamp("payment_date_end", { withTimezone: false }),
+  language: varchar("language", { length: 2 }).default("en"),
 });
 
 // Тип строки пользователя (для выборок)
