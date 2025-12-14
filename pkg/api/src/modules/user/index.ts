@@ -73,6 +73,91 @@ export const user = new Elysia({ prefix: "/user" })
             },
           },
         )
+        .get(
+          "/plan",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+            try {
+              const plan = await UserService.getUserPlan(user.id);
+
+              const response: UserModel.getUserPlanSuccessResponse = {
+                message: "ok",
+                data: {
+                  id: plan.id,
+                  name: plan.name,
+                  price: plan.price,
+                  bidMonthLimit: plan.bidMonthLimit,
+                },
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при получении плана пользователя",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+              ctx.set.status = 400;
+              const response: UserModel.getUserPlanErrorResponse = {
+                message: "get-user-plan@error",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+              return response;
+            }
+          },
+          {
+            response: {
+              200: UserModel.getUserPlanSuccessResponse,
+              400: UserModel.getUserPlanErrorResponse,
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
+        )
+        .get(
+          "/plans",
+          async (ctx) => {
+            try {
+              const plans = await UserService.getAllPlans();
+
+              const response: UserModel.getAllPlansSuccessResponse = {
+                message: "ok",
+                data: plans.map((plan) => ({
+                  id: plan.id,
+                  name: plan.name,
+                  price: plan.price,
+                  bidMonthLimit: plan.bidMonthLimit,
+                })),
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при получении всех планов",
+                error instanceof Error ? error : new Error(String(error)),
+              );
+              ctx.set.status = 400;
+              return {
+                message: "get-all-plans@error",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          },
+          {
+            response: {
+              200: UserModel.getAllPlansSuccessResponse,
+              400: t.Object({
+                message: t.String(),
+                error: t.Optional(t.String()),
+              }),
+            },
+          },
+        )
         .post(
           "/verification-email",
           async (ctx) => {

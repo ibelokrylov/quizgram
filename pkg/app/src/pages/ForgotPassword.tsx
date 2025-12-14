@@ -12,7 +12,7 @@ import {
 	firstStepForgotPassword,
 	startForgotPassword,
 } from "@/entities/ForgotPassword/forgot-password.type";
-import { AuthContext } from '@/entities/User/auth.context';
+import { AuthContext } from "@/entities/User/auth.context";
 import http from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -35,7 +35,7 @@ export const ForgotPassword = ({
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
-	const {user} = useContext(AuthContext);
+	const { user } = useContext(AuthContext);
 
 	if (user) {
 		navigate({ to: "/" });

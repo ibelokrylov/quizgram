@@ -67,7 +67,7 @@ export type QuizAnswerFormData = typeof quizAnswerFormData.static;
 // Модель для отправки контактных данных
 export const quizContacts = t.Object({
   answers: t.Record(t.String(), t.String()), // Объект с ключами типа поля (name, email, phone) и значениями
-  form: t.Array(t.Any()), // Массив полей формы
+  form: t.Optional(t.Array(t.Any())), // Массив полей формы (опционально, форма уже сохранена в contactsForm)
   key: t.Optional(t.String()), // UUID ключ для сохранения ответов
 });
 

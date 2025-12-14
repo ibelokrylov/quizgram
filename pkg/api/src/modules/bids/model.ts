@@ -5,6 +5,7 @@ export const bidsListFilters = t.Object({
   quiz_uid: t.Optional(t.String()),
   status: t.Optional(t.String()),
   isFull: t.Optional(t.Boolean()),
+  isRead: t.Optional(t.Boolean()), // Фильтр по прочитанным/новым заявкам
   limit: t.Optional(t.Numeric({ default: 10, minimum: 1, maximum: 10 })),
   offset: t.Optional(t.Numeric({ default: 0, minimum: 0 })),
 });
@@ -36,9 +37,12 @@ export type BidListItem = typeof bidListItem.static;
 export const bidsListData = t.Object({
   data: t.Array(bidListItem),
   total: t.Number(), // Количество isFull = true
-  totalNotFull: t.Number(), // Количество isFull = false
+  totalNotFull: t.Optional(t.Number()), // Количество isFull = false (не возвращается для FREE плана)
   hasMore: t.Boolean(),
   hasMoreBeyondLimit: t.Optional(t.Boolean()), // Есть ли заявки сверх лимита
+  beyondLimitCount: t.Number(), // Количество заявок, которые не влезли из-за лимита тарифного плана
+  maxAvailableFull: t.Number(), // Количество доступных заявок с isFull = true в пределах лимита тарифного плана
+  deletedInLimitFull: t.Number(), // Количество удаленных заявок с isFull = true, которые влезли в лимит
 });
 
 export type BidsListData = typeof bidsListData.static;
@@ -65,13 +69,18 @@ export const bidDetails = t.Object({
   key: t.String(),
   status: t.String(),
   isFull: t.Boolean(),
+  isRead: t.Boolean(), // Прочитана ли заявка
+  first: t.Boolean(), // Первый ли это запрос квиза
   createdAt: t.String(),
   updatedAt: t.String(),
   quizName: t.String(),
-  data: t.Any(), // Полные данные заявки (ответы, контакты и т.д.)
+  data: t.Any(), // Полные данные заявки (ответы, контакты и т.д.) - поле answer из таблицы
   info: t.Optional(t.Nullable(t.Any())), // Дополнительная информация (контакты и т.д.)
   questions: t.Optional(t.Nullable(t.Any())), // Вопросы квиза
+  contacts: t.Optional(t.Nullable(t.Any())), // Ответы пользователя на форму контактов
+  contactsForm: t.Optional(t.Nullable(t.Any())), // Форма контактов из квиза
   userInfo: t.Optional(t.Nullable(t.Any())), // Информация о пользователе из Telegram
+  initData: t.Optional(t.Nullable(t.String())), // Telegram WebApp initData как строка
   ipLocation: t.Optional(t.Nullable(t.Object({
     country: t.Nullable(t.String()),
     city: t.Nullable(t.String()),
@@ -123,4 +132,21 @@ export namespace BidsModel {
   });
 
   export type getBidDetailsErrorResponse = typeof getBidDetailsErrorResponse.static;
+
+  // Ответы для удаления заявки
+  export const deleteBidSuccessResponse = t.Object({
+    message: t.String(),
+    data: t.Object({
+      success: t.Boolean(),
+    }),
+  });
+
+  export type deleteBidSuccessResponse = typeof deleteBidSuccessResponse.static;
+
+  export const deleteBidErrorResponse = t.Object({
+    message: t.String(),
+    error: t.String(),
+  });
+
+  export type deleteBidErrorResponse = typeof deleteBidErrorResponse.static;
 }

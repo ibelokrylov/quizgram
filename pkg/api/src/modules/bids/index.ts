@@ -62,7 +62,7 @@ export const bids = new Elysia({ prefix: "/bids" })
               ctx.set.status = 403;
               const response: BidsModel.getBidsErrorResponse = {
                 message: "failed",
-                error: "Access denied: FREE plan users can only view completed bids (isFull=true)",
+                error: "error.freePlanBidsRestriction",
               };
               return response;
             }
@@ -75,9 +75,22 @@ export const bids = new Elysia({ prefix: "/bids" })
               planName
             );
 
+            // Для FREE плана убираем totalNotFull из ответа
+            const responseData = planName === "FREE" 
+              ? {
+                  data: result.data,
+                  total: result.total,
+                  hasMore: result.hasMore,
+                  hasMoreBeyondLimit: result.hasMoreBeyondLimit,
+                  beyondLimitCount: result.beyondLimitCount,
+                  maxAvailableFull: result.maxAvailableFull,
+                  deletedInLimitFull: result.deletedInLimitFull,
+                }
+              : result;
+
             return {
               message: "success",
-              data: result
+              data: responseData
             };
           } catch (error) {
             logger.error("Failed to get bids list", error as Error, { userId: user.id });
@@ -196,6 +209,57 @@ export const bids = new Elysia({ prefix: "/bids" })
             401: BidsModel.getBidDetailsErrorResponse,
             404: BidsModel.getBidDetailsErrorResponse,
             500: BidsModel.getBidDetailsErrorResponse,
+          },
+        })
+
+        // DELETE /bids/:key - удаление заявки (soft delete)
+        .delete("/:key", async (ctx) => {
+          const user = ctx.store.user;
+
+          if (!user) {
+            ctx.set.status = 401;
+            return { message: "failed", error: "Unauthorized" };
+          }
+
+          try {
+            const { params } = ctx;
+            await BidsService.deleteBid(user.id, params.key);
+
+            return {
+              message: "success",
+              data: { success: true }
+            };
+          } catch (error) {
+            logger.error("Failed to delete bid", error as Error, {
+              userId: user.id,
+              key: ctx.params.key
+            });
+
+            if (error instanceof Error && error.message === "Bid not found or access denied") {
+              ctx.set.status = 404;
+              const response: BidsModel.deleteBidErrorResponse = {
+                message: "failed",
+                error: "Bid not found or access denied",
+              };
+              return response;
+            }
+
+            ctx.set.status = 500;
+            const response: BidsModel.deleteBidErrorResponse = {
+              message: "failed",
+              error: "Internal server error",
+            };
+            return response;
+          }
+        }, {
+          params: t.Object({
+            key: t.String(),
+          }),
+          response: {
+            200: BidsModel.deleteBidSuccessResponse,
+            401: BidsModel.deleteBidErrorResponse,
+            404: BidsModel.deleteBidErrorResponse,
+            500: BidsModel.deleteBidErrorResponse,
           },
         })
   );

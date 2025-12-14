@@ -6,59 +6,59 @@ import { useTranslation } from "react-i18next";
 import { DashboardQuiz } from "./ui/DashboardQuiz";
 
 export const DashboardPage = () => {
-  const [queryParams, setQueryParams] = useState<{
-    limit: number;
-    page: number;
-  }>({ limit: 10, page: 1 });
-  const { query } = useDashboard(queryParams);
-  const { t } = useTranslation();
+	const [queryParams, setQueryParams] = useState<{
+		limit: number;
+		page: number;
+	}>({ limit: 10, page: 1 });
+	const { query } = useDashboard(queryParams);
+	const { t } = useTranslation();
 
-  const [quizzes, setQuizzes] = useState<QuizDashboard[]>([]);
+	const [quizzes, setQuizzes] = useState<QuizDashboard[]>([]);
 
-  function addQuizzes(newQuizzes: QuizDashboard[]) {
-    setQuizzes((prev) => [...prev, ...newQuizzes]);
-  }
+	function addQuizzes(newQuizzes: QuizDashboard[]) {
+		setQuizzes((prev) => [...prev, ...newQuizzes]);
+	}
 
-  function deleteQuiz(uid: string) {
-    const newQ = [...quizzes]?.filter((q) => q.uid !== uid);
-    setQuizzes(newQ);
-  }
+	function deleteQuiz(uid: string) {
+		const newQ = [...quizzes]?.filter((q) => q.uid !== uid);
+		setQuizzes(newQ);
+	}
 
-  useEffect(() => {
-    if (query?.data) {
-      if (queryParams.page === 1) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setQuizzes(query.data.quizzes);
-      } else {
-        addQuizzes(query.data.quizzes);
-      }
-    }
-  }, [query?.data, queryParams.page]);
+	useEffect(() => {
+		if (query?.data) {
+			if (queryParams.page === 1) {
+				// eslint-disable-next-line react-hooks/set-state-in-effect
+				setQuizzes(query.data.quizzes);
+			} else {
+				addQuizzes(query.data.quizzes);
+			}
+		}
+	}, [query?.data, queryParams.page]);
 
-  return (
-    <div className="flex flex-col gap-5 p-1 md:p-2">
-      <div className={"mt-2 grid grid-cols-1 md:grid-cols-2 gap-2"}>
-        {quizzes?.map((quiz) => (
-          <DashboardQuiz
-            onDeleteQuiz={() => deleteQuiz(quiz.uid)}
-            key={quiz.uid}
-            quiz={quiz}
-          />
-        ))}
-      </div>
-      {(query?.data?.count ?? 0) > 0 &&
-      quizzes?.length !== query?.data?.count ? (
-        <div>
-          <Button
-            variant={"outline"}
-            onClick={() =>
-              setQueryParams({ ...queryParams, page: queryParams.page + 1 })
-            }
-          >
-            {t("quiz.load-more")}
-          </Button>
-        </div>
-      ) : null}
-    </div>
-  );
+	return (
+		<div className="flex flex-col gap-5 p-1 md:p-2">
+			<div className={"mt-2 grid grid-cols-1 md:grid-cols-2 gap-2"}>
+				{quizzes?.map((quiz) => (
+					<DashboardQuiz
+						onDeleteQuiz={() => deleteQuiz(quiz.uid)}
+						key={quiz.uid}
+						quiz={quiz}
+					/>
+				))}
+			</div>
+			{(query?.data?.count ?? 0) > 0 &&
+			quizzes?.length !== query?.data?.count ? (
+				<div>
+					<Button
+						variant={"outline"}
+						onClick={() =>
+							setQueryParams({ ...queryParams, page: queryParams.page + 1 })
+						}
+					>
+						{t("quiz.load-more")}
+					</Button>
+				</div>
+			) : null}
+		</div>
+	);
 };

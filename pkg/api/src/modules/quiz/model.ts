@@ -164,22 +164,22 @@ export namespace QuizModel {
   });
   export type createQuizSuccessResponse = typeof createQuizSuccessResponse.static;
 
-  // Успешный ответ при получении UUID квизов
-  export const quizUuidsSuccessResponse = t.Object({
+  // Успешный ответ при получении фильтров квизов
+  export const quizFiltersSuccessResponse = t.Object({
     message: t.String(), // "ok"
     data: t.Object({
-      uuids: t.Array(t.Object({
+      filters: t.Array(t.Object({
         uid: t.String(),
         name: t.String(),
       })),
     }),
   });
-  export type quizUuidsSuccessResponse = typeof quizUuidsSuccessResponse.static;
+  export type quizFiltersSuccessResponse = typeof quizFiltersSuccessResponse.static;
 
-  // Ответ при ошибке получения UUID квизов
-  export const quizUuidsErrorResponse = t.Object({
+  // Ответ при ошибке получения фильтров квизов
+  export const quizFiltersErrorResponse = t.Object({
     message: t.String(), // "failed"
     error: t.String(), // "Unauthorized" или другая ошибка
   });
-  export type quizUuidsErrorResponse = typeof quizUuidsErrorResponse.static;
+  export type quizFiltersErrorResponse = typeof quizFiltersErrorResponse.static;
 }

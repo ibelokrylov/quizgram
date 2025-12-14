@@ -29,9 +29,9 @@ interface DashboardCacheItem {
   expires: number; // timestamp в миллисекундах
 }
 
-// Тип для элемента кэша UUID квизов
-interface QuizUuidsCacheItem {
-  uuids: Array<{ uid: string; name: string }>;
+// Тип для элемента кэша фильтров квизов
+interface QuizFiltersCacheItem {
+  filters: Array<{ uid: string; name: string }>;
   expires: number; // timestamp в миллисекундах
 }
 
@@ -39,8 +39,8 @@ export abstract class QuizService {
   // Кэш для dashboard (аналог sync.Map в Go)
   private static dashboardCache = new Map<string, DashboardCacheItem>();
   
-  // Кэш для UUID квизов пользователя
-  private static quizUuidsCache = new Map<number, QuizUuidsCacheItem>();
+  // Кэш для фильтров квизов пользователя
+  private static quizFiltersCache = new Map<number, QuizFiltersCacheItem>();
 
   /**
    * Получение всех квизов пользователя для dashboard с пагинацией и кэшированием
@@ -115,24 +115,24 @@ export abstract class QuizService {
   }
 
   /**
-   * Получение UUID и name всех квизов пользователя (не удаленных) с кэшированием
+   * Получение фильтров квизов (uid и name) всех квизов пользователя (не удаленных) с кэшированием
    * @param userId - ID пользователя
    * @returns Массив объектов с uid и name
    */
-  static async getQuizUuids(userId: number): Promise<Array<{ uid: string; name: string }>> {
+  static async getQuizFilters(userId: number): Promise<Array<{ uid: string; name: string }>> {
     // Проверяем кэш
-    const cached = this.quizUuidsCache.get(userId);
+    const cached = this.quizFiltersCache.get(userId);
     if (cached && Date.now() < cached.expires) {
-      logger.debug("Quiz UUIDs cache hit", { userId });
-      return cached.uuids;
+      logger.debug("Quiz filters cache hit", { userId });
+      return cached.filters;
     }
 
     // Кэш истек или отсутствует, удаляем его
     if (cached) {
-      this.quizUuidsCache.delete(userId);
+      this.quizFiltersCache.delete(userId);
     }
 
-    logger.debug("Quiz UUIDs cache miss", { userId });
+    logger.debug("Quiz filters cache miss", { userId });
 
     // Получаем uid и name всех не удаленных квизов пользователя
     const quizzes = await db
@@ -149,11 +149,11 @@ export abstract class QuizService {
     }));
 
     // Сохраняем в кэш с TTL 20 секунд
-    const cacheItem: QuizUuidsCacheItem = {
-      uuids: quizList,
+    const cacheItem: QuizFiltersCacheItem = {
+      filters: quizList,
       expires: Date.now() + 20 * 1000, // 20 секунд
     };
-    this.quizUuidsCache.set(userId, cacheItem);
+    this.quizFiltersCache.set(userId, cacheItem);
 
     return quizList;
   }

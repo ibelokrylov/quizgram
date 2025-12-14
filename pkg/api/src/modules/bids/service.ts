@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
 import { db, quizBidTable, quizTable, userTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { BidsListFilters, UpdateBidStatus } from './model';
@@ -34,7 +34,10 @@ export abstract class BidsService {
       const monthsRegistered = Math.max(1, Math.ceil(monthsDiff)); // Минимум 1 месяц
 
       // Формируем условия для фильтрации
-      const conditions = [eq(quizTable.userId, userId)];
+      const conditions = [
+        eq(quizTable.userId, userId),
+        isNull(quizBidTable.deletedAt), // Исключаем удаленные заявки
+      ];
 
       if (effectiveFilters.quiz_uid) {
         conditions.push(eq(quizTable.uid, effectiveFilters.quiz_uid));
@@ -48,6 +51,10 @@ export abstract class BidsService {
         conditions.push(eq(quizBidTable.isFull, effectiveFilters.isFull));
       }
 
+      if (effectiveFilters.isRead !== undefined) {
+        conditions.push(eq(quizBidTable.isRead, effectiveFilters.isRead));
+      }
+
       // Получаем общее количество записей (для hasMoreBeyondLimit)
       const totalCountResult = await db
         .select({ count: count() })
@@ -59,12 +66,18 @@ export abstract class BidsService {
 
       // Подсчитываем total (isFull = true) и totalNotFull (isFull = false)
       // Базовые условия без фильтра isFull
-      const baseConditions = [eq(quizTable.userId, userId)];
+      const baseConditions = [
+        eq(quizTable.userId, userId),
+        isNull(quizBidTable.deletedAt), // Исключаем удаленные заявки
+      ];
       if (effectiveFilters.quiz_uid) {
         baseConditions.push(eq(quizTable.uid, effectiveFilters.quiz_uid));
       }
       if (effectiveFilters.status) {
         baseConditions.push(eq(quizBidTable.status, effectiveFilters.status));
+      }
+      if (effectiveFilters.isRead !== undefined) {
+        baseConditions.push(eq(quizBidTable.isRead, effectiveFilters.isRead));
       }
 
       // Подсчет isFull = true
@@ -95,34 +108,46 @@ export abstract class BidsService {
         0, 0, 0, 0
       ));
       
-      // Формируем WHERE условия динамически с использованием sql``
-      const whereConditions: any[] = [sql`q.user_id = ${userId}`];
+      // Формируем базовые условия (общие для лимита и отображения)
+      const baseWhereConditions: any[] = [
+        sql`q.user_id = ${userId}`,
+      ];
 
       if (effectiveFilters.quiz_uid) {
-        whereConditions.push(sql`q.uid = ${effectiveFilters.quiz_uid}`);
+        baseWhereConditions.push(sql`q.uid = ${effectiveFilters.quiz_uid}`);
       }
 
       if (effectiveFilters.status) {
-        whereConditions.push(sql`b.status = ${effectiveFilters.status}`);
+        baseWhereConditions.push(sql`b.status = ${effectiveFilters.status}`);
       }
 
       if (effectiveFilters.isFull !== undefined) {
-        whereConditions.push(sql`b.is_full = ${effectiveFilters.isFull}`);
+        baseWhereConditions.push(sql`b.is_full = ${effectiveFilters.isFull}`);
+      }
+
+      if (effectiveFilters.isRead !== undefined) {
+        baseWhereConditions.push(sql`b.is_read = ${effectiveFilters.isRead}`);
       }
 
       // Передаем дату как ISO строку для правильной обработки PostgreSQL
-      whereConditions.push(sql`DATE_TRUNC('month', b.created_at) >= DATE_TRUNC('month', ${userCreatedAtMonth.toISOString()}::timestamp)`);
+      baseWhereConditions.push(sql`DATE_TRUNC('month', b.created_at) >= DATE_TRUNC('month', ${userCreatedAtMonth.toISOString()}::timestamp)`);
 
-      // Объединяем условия через AND
-      let combinedWhere = whereConditions[0];
-      for (let i = 1; i < whereConditions.length; i++) {
-        combinedWhere = sql`${combinedWhere} AND ${whereConditions[i]}`;
+      // Условия для расчета лимита - ВКЛЮЧАЕМ удаленные заявки (чтобы они занимали место в лимите)
+      // Это важно для предотвращения обхода лимита: удаленные заявки все равно считаются в лимите
+      const whereConditionsForLimit = [...baseWhereConditions];
+      let combinedWhereForLimit = whereConditionsForLimit[0];
+      for (let i = 1; i < whereConditionsForLimit.length; i++) {
+        combinedWhereForLimit = sql`${combinedWhereForLimit} AND ${whereConditionsForLimit[i]}`;
       }
 
       // Используем SQL с оконной функцией для нумерации заявок в каждом месяце
+      // Сначала ранжируем ВСЕ заявки (включая удаленные) для расчета лимита
+      // Затем фильтруем только неудаленные для отображения
       const bidsWithRowNumber = await db.execute(sql`
-        WITH ranked_bids AS (
+        WITH all_ranked_bids AS (
           SELECT 
+            b.id,
+            b.deleted_at,
             q.uid,
             b.key,
             b.status,
@@ -131,7 +156,7 @@ export abstract class BidsService {
             b.first,
             b.created_at as "createdAt",
             b.updated_at as "updatedAt",
-            b.info,
+            b.contacts,
             b.ip_location as "ipLocation",
             q.name as "quizName",
             ROW_NUMBER() OVER (
@@ -140,7 +165,13 @@ export abstract class BidsService {
             ) as row_num
           FROM quiz_bid b
           LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhere}
+          WHERE ${combinedWhereForLimit}
+        ),
+        ranked_bids AS (
+          SELECT *
+          FROM all_ranked_bids
+          WHERE row_num <= ${monthlyLimit}
+            AND deleted_at IS NULL
         )
         SELECT 
           uid,
@@ -151,11 +182,10 @@ export abstract class BidsService {
           first,
           "createdAt",
           "updatedAt",
-          info,
+          contacts,
           "ipLocation",
           "quizName"
         FROM ranked_bids
-        WHERE row_num <= ${monthlyLimit}
         ORDER BY "createdAt" DESC
         LIMIT ${effectiveFilters.limit || 10}
         OFFSET ${effectiveFilters.offset || 0}
@@ -171,33 +201,107 @@ export abstract class BidsService {
         first: boolean;
         createdAt: Date | string;
         updatedAt: Date | string;
-        info: any;
+        contacts: Record<string, string> | null;
         ipLocation: { country: string | null; city: string | null; ip: string | null } | null;
         quizName: string;
       }>) || [];
 
       // Подсчитываем общее количество доступных заявок (в пределах лимита по месяцам)
+      // Учитываем только неудаленные заявки, которые попали в лимит
       const availableCountResult = await db.execute(sql`
-        WITH ranked_bids AS (
+        WITH all_ranked_bids AS (
           SELECT 
             b.id,
+            b.deleted_at,
             ROW_NUMBER() OVER (
               PARTITION BY DATE_TRUNC('month', b.created_at)
               ORDER BY b.id DESC
             ) as row_num
           FROM quiz_bid b
           LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhere}
+          WHERE ${combinedWhereForLimit}
         )
         SELECT COUNT(*)::int as count
-        FROM ranked_bids
+        FROM all_ranked_bids
         WHERE row_num <= ${monthlyLimit}
+          AND deleted_at IS NULL
       `);
 
       // В Drizzle ORM с postgres.js результат db.execute - это массив объектов напрямую
       const countResult = (availableCountResult as unknown as Array<{ count: number | string }>) || [];
       const maxAvailable = Number(countResult[0]?.count || 0);
       const actualOffset = effectiveFilters.offset || 0;
+
+      // Подсчитываем количество доступных заявок с isFull = true в пределах лимита
+      // Это нужно для расчета beyondLimitCount (только завершенные заявки)
+      const whereConditionsForLimitFull: any[] = [
+        sql`q.user_id = ${userId}`,
+        sql`b.is_full = true`, // Только завершенные заявки
+      ];
+
+      if (effectiveFilters.quiz_uid) {
+        whereConditionsForLimitFull.push(sql`q.uid = ${effectiveFilters.quiz_uid}`);
+      }
+
+      if (effectiveFilters.status) {
+        whereConditionsForLimitFull.push(sql`b.status = ${effectiveFilters.status}`);
+      }
+
+      if (effectiveFilters.isRead !== undefined) {
+        whereConditionsForLimitFull.push(sql`b.is_read = ${effectiveFilters.isRead}`);
+      }
+
+      whereConditionsForLimitFull.push(sql`DATE_TRUNC('month', b.created_at) >= DATE_TRUNC('month', ${userCreatedAtMonth.toISOString()}::timestamp)`);
+
+      let combinedWhereForLimitFull = whereConditionsForLimitFull[0];
+      for (let i = 1; i < whereConditionsForLimitFull.length; i++) {
+        combinedWhereForLimitFull = sql`${combinedWhereForLimitFull} AND ${whereConditionsForLimitFull[i]}`;
+      }
+
+      const availableCountFullResult = await db.execute(sql`
+        WITH all_ranked_bids AS (
+          SELECT 
+            b.id,
+            b.deleted_at,
+            ROW_NUMBER() OVER (
+              PARTITION BY DATE_TRUNC('month', b.created_at)
+              ORDER BY b.id DESC
+            ) as row_num
+          FROM quiz_bid b
+          LEFT JOIN quiz q ON b.quiz_id = q.id
+          WHERE ${combinedWhereForLimitFull}
+        )
+        SELECT COUNT(*)::int as count
+        FROM all_ranked_bids
+        WHERE row_num <= ${monthlyLimit}
+          AND deleted_at IS NULL
+      `);
+
+      const countFullResult = (availableCountFullResult as unknown as Array<{ count: number | string }>) || [];
+      const maxAvailableFull = Number(countFullResult[0]?.count || 0);
+
+      // Подсчитываем количество удаленных заявок с isFull = true, которые влезли в лимит
+      const deletedCountFullResult = await db.execute(sql`
+        WITH all_ranked_bids AS (
+          SELECT 
+            b.id,
+            b.deleted_at,
+            ROW_NUMBER() OVER (
+              PARTITION BY DATE_TRUNC('month', b.created_at)
+              ORDER BY b.id DESC
+            ) as row_num
+          FROM quiz_bid b
+          LEFT JOIN quiz q ON b.quiz_id = q.id
+          WHERE ${combinedWhereForLimitFull}
+        )
+        SELECT COUNT(*)::int as count
+        FROM all_ranked_bids
+        WHERE row_num <= ${monthlyLimit}
+          AND deleted_at IS NOT NULL
+      `);
+
+      const deletedCountFullResultArray = (deletedCountFullResult as unknown as Array<{ count: number | string }>) || [];
+      const deletedInLimitFull = Number(deletedCountFullResultArray[0]?.count || 0);
 
       // Трансформируем данные для ответа
       const transformedBids = bids.map(bid => ({
@@ -214,7 +318,7 @@ export abstract class BidsService {
           ? bid.updatedAt.toISOString() 
           : new Date(bid.updatedAt).toISOString(),
         quizName: bid.quizName,
-        contacts: bid.info?.contacts || null,
+        contacts: bid.contacts || null,
         ipLocation: bid.ipLocation,
       }));
 
@@ -223,6 +327,9 @@ export abstract class BidsService {
       
       // Проверяем, есть ли заявки сверх лимита (общее количество больше доступного по месяцам)
       const hasMoreBeyondLimit = total > maxAvailable;
+      
+      // Вычисляем количество заявок с isFull = true, которые не влезли из-за лимита тарифного плана
+      const beyondLimitCount = Math.max(0, totalFull - maxAvailableFull);
 
       logger.debug("Bids list retrieved", {
         userId,
@@ -235,22 +342,42 @@ export abstract class BidsService {
         total: totalFull,
         totalNotFull,
         maxAvailable,
+        beyondLimitCount,
         returned: transformedBids.length,
         hasMore,
         hasMoreBeyondLimit,
       });
 
-      return {
+      // Формируем ответ в зависимости от плана
+      const response: {
+        data: typeof transformedBids;
+        total: number;
+        totalNotFull?: number;
+        hasMore: boolean;
+        hasMoreBeyondLimit: boolean;
+        beyondLimitCount: number; // Количество заявок, которые не влезли из-за лимита тарифного плана
+        maxAvailableFull: number; // Количество доступных заявок с isFull = true в пределах лимита тарифного плана
+        deletedInLimitFull: number; // Количество удаленных заявок с isFull = true, которые влезли в лимит
+      } = {
         data: transformedBids,
         total: totalFull, // Количество isFull = true
-        totalNotFull, // Количество isFull = false
         hasMore,
         hasMoreBeyondLimit,
+        beyondLimitCount, // Количество заявок, которые не влезли из-за лимита тарифного плана
+        maxAvailableFull, // Количество доступных заявок с isFull = true в пределах лимита тарифного плана
+        deletedInLimitFull, // Количество удаленных заявок с isFull = true, которые влезли в лимит
       };
+
+      // Для FREE плана не возвращаем totalNotFull
+      if (planName !== "FREE") {
+        response.totalNotFull = totalNotFull; // Количество isFull = false
+      }
+
+      return response;
     } catch (error) {
       logger.error("Failed to get bids list", error as Error, { 
         userId, 
-        filters: effectiveFilters,
+        filters,
         planName,
         errorMessage: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined
@@ -322,10 +449,15 @@ export abstract class BidsService {
           key: quizBidTable.key,
           status: quizBidTable.status,
           isFull: quizBidTable.isFull,
+          isRead: quizBidTable.isRead,
+          first: quizBidTable.first,
           data: quizBidTable.answer,
           info: quizBidTable.info,
           questions: quizBidTable.questions,
+          contacts: quizBidTable.contacts,
+          contactsForm: quizBidTable.contactsForm,
           userInfo: quizBidTable.userInfo,
+          initData: quizBidTable.initData,
           ipLocation: quizBidTable.ipLocation,
           createdAt: quizBidTable.createdAt,
           updatedAt: quizBidTable.updatedAt,
@@ -336,7 +468,8 @@ export abstract class BidsService {
         .where(
           and(
             eq(quizBidTable.key, key),
-            eq(quizTable.userId, userId)
+            eq(quizTable.userId, userId),
+            isNull(quizBidTable.deletedAt) // Исключаем удаленные заявки
           )
         )
         .limit(1);
@@ -366,17 +499,70 @@ export abstract class BidsService {
         key: bidData.key,
         status: bidData.status,
         isFull: bidData.isFull,
+        isRead: bidData.isRead,
+        first: bidData.first,
         createdAt: bidData.createdAt?.toISOString() || new Date().toISOString(),
         updatedAt: bidData.updatedAt?.toISOString() || new Date().toISOString(),
         quizName: bidData.quizName,
         data: bidData.data,
         info: bidData.info,
         questions: bidData.questions,
+        contacts: bidData.contacts,
+        contactsForm: bidData.contactsForm,
         userInfo: bidData.userInfo,
+        initData: bidData.initData,
         ipLocation: bidData.ipLocation,
       };
     } catch (error) {
       logger.error("Failed to get bid details", error as Error, { userId, key });
+      throw error;
+    }
+  }
+
+  /**
+   * Удаляет заявку (soft delete - устанавливает deletedAt)
+   * @param userId - ID пользователя
+   * @param key - ключ заявки
+   */
+  static async deleteBid(userId: number, key: string): Promise<void> {
+    try {
+      // Проверяем, принадлежит ли квиз пользователю
+      const bidInfo = await db
+        .select({
+          bidId: quizBidTable.id,
+          quizId: quizTable.id,
+        })
+        .from(quizBidTable)
+        .leftJoin(quizTable, eq(quizBidTable.quizId, quizTable.id))
+        .where(
+          and(
+            eq(quizBidTable.key, key),
+            eq(quizTable.userId, userId),
+            isNull(quizBidTable.deletedAt) // Проверяем, что заявка не удалена
+          )
+        )
+        .limit(1);
+
+      if (!bidInfo.length) {
+        throw new Error("Bid not found or access denied");
+      }
+
+      // Выполняем soft delete - устанавливаем deletedAt
+      await db
+        .update(quizBidTable)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(quizBidTable.id, bidInfo[0].bidId));
+
+      logger.debug("Bid deleted", {
+        userId,
+        key,
+        bidId: bidInfo[0].bidId,
+      });
+    } catch (error) {
+      logger.error("Failed to delete bid", error as Error, { userId, key });
       throw error;
     }
   }

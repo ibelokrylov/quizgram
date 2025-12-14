@@ -1,20 +1,24 @@
-import { DownloadFiles } from '@/components/download-files';
-import { Loader } from '@/components/loader';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
-import type { Quiz, QuizStartPageStandard } from '@/entities/Quiz/quiz.type';
-import { AuthContext } from '@/entities/User/auth.context';
-import http from '@/lib/http';
-import { ArrowDownFromLine, Trash } from 'lucide-react';
-import { useContext, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { DownloadFiles } from "@/components/download-files";
+import { Loader } from "@/components/loader";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
+import type { Quiz, QuizStartPageStandard } from "@/entities/Quiz/quiz.type";
+import { AuthContext } from "@/entities/User/auth.context";
+import http from "@/lib/http";
+import { ArrowDownFromLine, Trash } from "lucide-react";
+import { useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 // export const quizStartPageStandardZod = z.object({
 //   logo_url: z.string().optional(),
@@ -32,125 +36,138 @@ import { toast } from 'sonner';
 // })
 
 const defaultPage: QuizStartPageStandard = {
-  logo_url: undefined,
-  name: undefined,
-  link: undefined,
-  title: undefined,
-  description: undefined,
-  button: undefined,
-  phone: undefined,
-  company_name: undefined,
-  company_description: undefined,
-  background: undefined,
-  background_type: 'image',
-  background_mobile: undefined,
-  type: 'standard',
-  content_align: 'left',
-  show_logo: true,
-  disclamer: undefined,
+	logo_url: undefined,
+	name: undefined,
+	link: undefined,
+	title: undefined,
+	description: undefined,
+	button: undefined,
+	phone: undefined,
+	company_name: undefined,
+	company_description: undefined,
+	background: undefined,
+	background_type: "image",
+	background_mobile: undefined,
+	type: "standard",
+	content_align: "left",
+	show_logo: true,
+	disclamer: undefined,
 };
 
 export const Standard = () => {
-  const { quiz, setQuiz } = useContext(CreateQuizContext);
-  const { user } = useContext(AuthContext);
-  const { t } = useTranslation();
+	const { quiz, setQuiz } = useContext(CreateQuizContext);
+	const { user } = useContext(AuthContext);
+	const { t } = useTranslation();
 
-  const startPage = quiz?.startPage?.content as QuizStartPageStandard;
-  const [page, setPage] = useState<QuizStartPageStandard>({ ...defaultPage, ...(startPage ?? {}) });
-  const [loadingImage, setLoadingImage] = useState(false);
+	const startPage = quiz?.startPage?.content as QuizStartPageStandard;
+	const [page, setPage] = useState<QuizStartPageStandard>({
+		...defaultPage,
+		...(startPage ?? {}),
+	});
+	const [loadingImage, setLoadingImage] = useState(false);
 
-  function changePage(page: QuizStartPageStandard) {
-    setPage(page);
-    console.log('123', page);
-    setQuiz({ ...quiz, startPage: { ...quiz?.startPage, content: page } } as Quiz);
-  }
+	function changePage(page: QuizStartPageStandard) {
+		setPage(page);
+		console.log("123", page);
+		setQuiz({
+			...quiz,
+			startPage: { ...quiz?.startPage, content: page },
+		} as Quiz);
+	}
 
-  function handleFinal(value: string, type: 'image' | 'mobile') {
-    if (type === 'image') {
-      changePage({ ...page, background: value });
-    } else if (type === 'mobile') {
-      changePage({ ...page, background_mobile: value });
-    }
-  }
+	function handleFinal(value: string, type: "image" | "mobile") {
+		if (type === "image") {
+			changePage({ ...page, background: value });
+		} else if (type === "mobile") {
+			changePage({ ...page, background_mobile: value });
+		}
+	}
 
-  async function deleteFile(url: string, changeLoading?: (loading: boolean) => void) {
-    try {
-      changeLoading?.(true);
-      await http({ url: '/v1/user/delete-file', method: 'DELETE', body: { file_url: url } });
-    } catch (err) {
-      console.log(err);
-    } finally {
-      changeLoading?.(false);
-    }
-  }
+	async function deleteFile(
+		url: string,
+		changeLoading?: (loading: boolean) => void,
+	) {
+		try {
+			changeLoading?.(true);
+			await http({
+				url: "/v1/user/delete-file",
+				method: "DELETE",
+				body: { file_url: url },
+			});
+		} catch (err) {
+			console.log(err);
+		} finally {
+			changeLoading?.(false);
+		}
+	}
 
-  async function handleDeleteImage(type: 'image' | 'mobile') {
-    const url = type === 'image' ? page?.background : page?.background_mobile;
-    if (!url) return;
-    await deleteFile(url, setLoadingImage);
-    if (type === 'image') {
-      changePage({ ...page, background: undefined });
-    } else if (type === 'mobile') {
-      changePage({ ...page, background_mobile: undefined });
-    }
-  }
+	async function handleDeleteImage(type: "image" | "mobile") {
+		const url = type === "image" ? page?.background : page?.background_mobile;
+		if (!url) return;
+		await deleteFile(url, setLoadingImage);
+		if (type === "image") {
+			changePage({ ...page, background: undefined });
+		} else if (type === "mobile") {
+			changePage({ ...page, background_mobile: undefined });
+		}
+	}
 
-  async function deleteLogo() {
-    if (!page?.logo_url) return;
-    await deleteFile(page?.logo_url);
-    changePage({ ...page, logo_url: undefined });
-  }
+	async function deleteLogo() {
+		if (!page?.logo_url) return;
+		await deleteFile(page?.logo_url);
+		changePage({ ...page, logo_url: undefined });
+	}
 
-  async function showLogoChange(value: boolean) {
-    if (user?.planId === 1) {
-      toast.error(t('edit-quiz.start-page.standard.edit.show_logo_error'));
-      return;
-    }
-    changePage({ ...page, show_logo: value });
-  }
+	async function showLogoChange(value: boolean) {
+		if (user?.planId === 1) {
+			toast.error(t("edit-quiz.start-page.standard.edit.show_logo_error"));
+			return;
+		}
+		changePage({ ...page, show_logo: value });
+	}
 
-  async function deletePage() {
-    setQuiz({ ...quiz, startPage: undefined } as Quiz);
-  }
+	async function deletePage() {
+		setQuiz({ ...quiz, startPage: undefined } as Quiz);
+	}
 
-  // function handleBackgroundTypeChange(value: boolean) {
-  //   changePage({ ...page, background_type: value ? 'video' : 'image', background_mobile: undefined, background: undefined });
-  // }
+	// function handleBackgroundTypeChange(value: boolean) {
+	//   changePage({ ...page, background_type: value ? 'video' : 'image', background_mobile: undefined, background: undefined });
+	// }
 
-  return (
-    <div className='flex flex-col gap-4'>
-      <Card className={'p-2 max-w-[1000px]'}>
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-0 sm:gap-x-4 w-full'>
-          {loadingImage ? (
-            <div className='col-span-1 flex justify-center items-center h-full bg-gray-200 dark:bg-neutral-800 rounded-md p-3'>
-              <Loader className='w-full h-full min-h-[500px]' />
-            </div>
-          ) : (
-            <div className='col-span-1 flex flex-col space-y-2'>
-              {page?.background_type === 'image' ? (
-                <DownloadFiles
-                  resize={{ width: 1080, height: 1920 }}
-                  image={page?.background}
-                  mobileImage={page?.background_mobile}
-                  onChangeLoading={setLoadingImage}
-                  onFinal={handleFinal}
-                  className='h-full min-h-[500px]'
-                  deleteImage={handleDeleteImage}
-                />
-              ) : (
-                <DownloadFiles
-                  disableDownload={user?.planId === 1}
-                  type='video'
-                  image={page?.background}
-                  showDownloadMobile={false}
-                  mobileImage={page?.background_mobile}
-                  onChangeLoading={setLoadingImage}
-                  onFinal={handleFinal}
-                  className='h-full min-h-[500px]'
-                  deleteImage={handleDeleteImage}
-                />
-              )}
-              {/* <div className='flex items-center space-x-2'>
+	return (
+		<div className="flex flex-col gap-4">
+			<Card className={"p-2 max-w-[1000px]"}>
+				<div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-0 sm:gap-x-4 w-full">
+					{loadingImage ? (
+						<div className="col-span-1 flex justify-center items-center h-full bg-gray-200 dark:bg-neutral-800 rounded-md p-3">
+							<Loader className="w-full h-full min-h-[500px]" />
+						</div>
+					) : (
+						<div className="col-span-1 flex flex-col space-y-2">
+							{page?.background_type === "image" ? (
+								<DownloadFiles
+									resize={{ width: 1080, height: 1920 }}
+									image={page?.background}
+									mobileImage={page?.background_mobile}
+									onChangeLoading={setLoadingImage}
+									onFinal={handleFinal}
+									className="h-full min-h-[500px]"
+									deleteImage={handleDeleteImage}
+								/>
+							) : (
+								<DownloadFiles
+									disableDownload={user?.planId === 1}
+									type="video"
+									image={page?.background}
+									showDownloadMobile={false}
+									mobileImage={page?.background_mobile}
+									onChangeLoading={setLoadingImage}
+									onFinal={handleFinal}
+									className="h-full min-h-[500px]"
+									deleteImage={handleDeleteImage}
+								/>
+							)}
+							{/* <div className='flex items-center space-x-2'>
                 <Switch
                   id='background_type'
                   checked={page?.background_type !== 'image'}
@@ -158,159 +175,198 @@ export const Standard = () => {
                 />
                 <Label htmlFor='background_type'>{t('edit-quiz.start-page.standard.edit.video')}</Label>
               </div> */}
-            </div>
-          )}
-          <div className='col-span-2 flex flex-col gap-4'>
-            <div className='flex items-center gap-2'>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {page?.logo_url ? (
-                    <div className='w-[40px] h-[40px] block relative group'>
-                      <img
-                        src={page?.logo_url}
-                        alt='logo'
-                        className='w-[40px] h-[40px] object-cover block rounded-md'
-                      />
-                      <Button
-                        className='absolute top-2 left-2 size-6 opacity-0 group-hover:opacity-100 transition-opacity'
-                        variant={'destructive'}
-                        size={'icon'}
-                        onClick={deleteLogo}
-                      >
-                        <Trash />
-                      </Button>
-                    </div>
-                  ) : (
-                    <DownloadFiles
-                      resize={{ width: 40, height: 40 }}
-                      image={page?.logo_url}
-                      className='w-[40px] h-[40px] relative'
-                      showDownloadMobile={false}
-                      classNamePreview='w-[40px] h-[40px] relative'
-                      onFinal={(value) => changePage({ ...page, logo_url: value })}
-                      icon={
-                        <ArrowDownFromLine
-                          size={20}
-                          className={'ml-[-2px] mt-[-1px]'}
-                        />
-                      }
-                      tooltipMobile={t('downloadImage.standard.logo_info')}
-                    />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.logo_info')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    className='w-[calc(100%-60px)]'
-                    value={page?.name}
-                    onChange={(e) => changePage({ ...page, name: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.companyName')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.company_name_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <Separator />
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.title}
-                    onChange={(e) => changePage({ ...page, title: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.title')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.title_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.description}
-                    onChange={(e) => changePage({ ...page, description: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.description')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.description_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <Separator />
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.button}
-                    onChange={(e) => changePage({ ...page, button: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.button')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.button_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <Separator />
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.phone}
-                    onChange={(e) => changePage({ ...page, phone: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.phone')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.phone_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.company_name}
-                    onChange={(e) => changePage({ ...page, company_name: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.company_name')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.company_name_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='company_name_info_off'
-                checked={page?.show_logo}
-                onCheckedChange={showLogoChange}
-              />
-              <Label htmlFor='company_name_info_off'>{t('edit-quiz.start-page.standard.edit.show', { name: import.meta.env.VITE_PUBLIC_APP_NAME })}</Label>
-            </div>
-            <Separator />
-            <div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Input
-                    value={page?.disclamer}
-                    onChange={(e) => changePage({ ...page, disclamer: e.target.value })}
-                    placeholder={t('edit-quiz.start-page.standard.edit.disclamer')}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{t('edit-quiz.start-page.standard.edit.disclamer_info')}</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </Card>
-      <Separator />
-      <div>
-        <Button
-          variant={'destructive'}
-          onClick={deletePage}
-        >
-          {t('edit-quiz.start-page.standard.edit.delete')}
-          <Trash />
-        </Button>
-      </div>
-      <div>Show preview telegram</div>
-      <div>Show preview web</div>
-    </div>
-  );
+						</div>
+					)}
+					<div className="col-span-2 flex flex-col gap-4">
+						<div className="flex items-center gap-2">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									{page?.logo_url ? (
+										<div className="w-[40px] h-[40px] block relative group">
+											<img
+												src={page?.logo_url}
+												alt="logo"
+												className="w-[40px] h-[40px] object-cover block rounded-md"
+											/>
+											<Button
+												className="absolute top-2 left-2 size-6 opacity-0 group-hover:opacity-100 transition-opacity"
+												variant={"destructive"}
+												size={"icon"}
+												onClick={deleteLogo}
+											>
+												<Trash />
+											</Button>
+										</div>
+									) : (
+										<DownloadFiles
+											resize={{ width: 40, height: 40 }}
+											image={page?.logo_url}
+											className="w-[40px] h-[40px] relative"
+											showDownloadMobile={false}
+											classNamePreview="w-[40px] h-[40px] relative"
+											onFinal={(value) =>
+												changePage({ ...page, logo_url: value })
+											}
+											icon={
+												<ArrowDownFromLine
+													size={20}
+													className={"ml-[-2px] mt-[-1px]"}
+												/>
+											}
+											tooltipMobile={t("downloadImage.standard.logo_info")}
+										/>
+									)}
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.logo_info")}
+								</TooltipContent>
+							</Tooltip>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										className="w-[calc(100%-60px)]"
+										value={page?.name}
+										onChange={(e) =>
+											changePage({ ...page, name: e.target.value })
+										}
+										placeholder={t("edit-quiz.start-page.standard.companyName")}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.company_name_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<Separator />
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.title}
+										onChange={(e) =>
+											changePage({ ...page, title: e.target.value })
+										}
+										placeholder={t("edit-quiz.start-page.standard.edit.title")}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.title_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.description}
+										onChange={(e) =>
+											changePage({ ...page, description: e.target.value })
+										}
+										placeholder={t(
+											"edit-quiz.start-page.standard.edit.description",
+										)}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.description_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<Separator />
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.button}
+										onChange={(e) =>
+											changePage({ ...page, button: e.target.value })
+										}
+										placeholder={t("edit-quiz.start-page.standard.edit.button")}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.button_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<Separator />
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.phone}
+										onChange={(e) =>
+											changePage({ ...page, phone: e.target.value })
+										}
+										placeholder={t("edit-quiz.start-page.standard.edit.phone")}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.phone_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.company_name}
+										onChange={(e) =>
+											changePage({ ...page, company_name: e.target.value })
+										}
+										placeholder={t(
+											"edit-quiz.start-page.standard.edit.company_name",
+										)}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.company_name_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+						<div className="flex items-center space-x-2">
+							<Switch
+								id="company_name_info_off"
+								checked={page?.show_logo}
+								onCheckedChange={showLogoChange}
+							/>
+							<Label htmlFor="company_name_info_off">
+								{t("edit-quiz.start-page.standard.edit.show", {
+									name: import.meta.env.VITE_PUBLIC_APP_NAME,
+								})}
+							</Label>
+						</div>
+						<Separator />
+						<div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Input
+										value={page?.disclamer}
+										onChange={(e) =>
+											changePage({ ...page, disclamer: e.target.value })
+										}
+										placeholder={t(
+											"edit-quiz.start-page.standard.edit.disclamer",
+										)}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>
+									{t("edit-quiz.start-page.standard.edit.disclamer_info")}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Separator />
+			<div>
+				<Button variant={"destructive"} onClick={deletePage}>
+					{t("edit-quiz.start-page.standard.edit.delete")}
+					<Trash />
+				</Button>
+			</div>
+			<div>Show preview telegram</div>
+			<div>Show preview web</div>
+		</div>
+	);
 };

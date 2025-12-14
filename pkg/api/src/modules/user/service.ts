@@ -1,7 +1,7 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
 import { eq } from "drizzle-orm";
-import { codeTable, db, userTable, type User } from "../../db";
+import { codeTable, db, userTable, planTable, type User, type Plan } from "../../db";
 import { logger } from "../../lib/logger";
 import { CodeService } from "../../services/code.service";
 import { MailService } from "../../services/mail.service";
@@ -136,5 +136,43 @@ export abstract class UserService {
       error.name = "MailError";
       throw error;
     }
+  }
+
+  /**
+   * Получение плана пользователя по userId
+   */
+  static async getUserPlan(userId: number): Promise<Plan> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      const error = new Error("User not found");
+      error.name = "UserNotFoundError";
+      throw error;
+    }
+
+    // Получаем план пользователя из таблицы plan
+    const plans = await db
+      .select()
+      .from(planTable)
+      .where(eq(planTable.id, user.planId))
+      .limit(1);
+
+    const plan = plans[0];
+
+    if (!plan) {
+      const error = new Error("Plan not found");
+      error.name = "PlanNotFoundError";
+      throw error;
+    }
+
+    return plan;
+  }
+
+  /**
+   * Получение всех планов
+   */
+  static async getAllPlans(): Promise<Plan[]> {
+    const plans = await db.select().from(planTable).orderBy(planTable.id);
+    return plans;
   }
 }

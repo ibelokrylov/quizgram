@@ -21,6 +21,8 @@ export const quizBidTable = pgTable("quiz_bid", {
     .default(sql`gen_random_uuid()::text`),
   answer: jsonb("answer").notNull(),
   questions: jsonb("questions"), // Вопросы квиза
+  contacts: jsonb("contacts").default(null), // Ответы пользователя на форму контактов
+  contactsForm: jsonb("contacts_form").default(null), // Форма контактов из квиза
   first: boolean("first").notNull().default(false),
   status: varchar("status", { length: 20 }).notNull().default("create"),
   isFull: boolean("is_full").notNull().default(false),

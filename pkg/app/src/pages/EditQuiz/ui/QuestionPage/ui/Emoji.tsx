@@ -1,3 +1,3 @@
 export const Emoji = () => {
-  return <div>Emoji</div>;
+	return <div>Emoji</div>;
 };

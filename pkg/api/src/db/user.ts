@@ -26,6 +26,7 @@ export const userTable = pgTable("user", {
   planId: integer("plan_id").notNull().default(1),
   referralId: integer("referral_id"),
   quizCount: integer("quiz_count").notNull().default(0),
+  paymentDateEnd: timestamp("payment_date_end", { withTimezone: false }),
 });
 
 // Тип строки пользователя (для выборок)

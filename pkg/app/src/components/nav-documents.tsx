@@ -1,35 +1,40 @@
 "use client";
 
 import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+	SidebarGroup,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 export function NavDocuments({
-  items,
+	items,
 }: {
-  items: {
-    name: string;
-    url: string;
-    icon: React.ReactNode;
-  }[];
+	items: {
+		name: string;
+		url: string;
+		icon: React.ReactNode;
+	}[];
 }) {
-  return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      {/*<SidebarGroupLabel>{t("nav.bids.title")}</SidebarGroupLabel>*/}
-      <SidebarMenu>
-        {items.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link to={item.url}>
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
-            {/*<DropdownMenu>
+	const location = useLocation();
+
+	return (
+		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+			{/*<SidebarGroupLabel>{t("nav.bids.title")}</SidebarGroupLabel>*/}
+			<SidebarMenu>
+				{items.map((item) => {
+					// Проверяем точное совпадение пути (без учета query параметров)
+					const isActive = location.pathname === item.url;
+					return (
+						<SidebarMenuItem key={item.name}>
+							<SidebarMenuButton asChild isActive={!!isActive}>
+								<Link to={item.url}>
+									{item.icon}
+									<span>{item.name}</span>
+								</Link>
+							</SidebarMenuButton>
+							{/*<DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction
                   showOnHover
@@ -59,15 +64,16 @@ export function NavDocuments({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>*/}
-          </SidebarMenuItem>
-        ))}
-        {/*<SidebarMenuItem>
+						</SidebarMenuItem>
+					);
+				})}
+				{/*<SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
             <IconDots className="text-sidebar-foreground/70" />
             <span>More</span>
           </SidebarMenuButton>
         </SidebarMenuItem>*/}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
+			</SidebarMenu>
+		</SidebarGroup>
+	);
 }

@@ -223,13 +223,12 @@ export const Contact = () => {
     setIsSubmitting(true);
     setErrorMessage('');
 
-    // Сохраняем данные в sessionStorage
+    // Сохраняем данные в sessionStorage (только answers, form уже сохранен)
     const storageKey = `quiz_contact_${quiz.uid}`;
     sessionStorage.setItem(
       storageKey,
       JSON.stringify({
         answers: formData,
-        form: contactForm,
       })
     );
 
@@ -242,16 +241,14 @@ export const Contact = () => {
     }
 
     try {
-      // Добавляем key в body, если он есть
+      // Отправляем только answers, form уже сохранен в contactsForm при получении квиза
       const contactsData = quizKey
         ? {
             answers: formData,
-            form: contactForm,
             key: quizKey,
           }
         : {
             answers: formData,
-            form: contactForm,
           };
 
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${quiz.uid}/contacts`, {

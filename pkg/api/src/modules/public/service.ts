@@ -92,6 +92,11 @@ export abstract class PublicService {
     
     // Извлекаем вопросы из полученного квиза
     const questions = quiz.question || [];
+    
+    // Извлекаем форму контактов из квиза
+    const contactsForm = quiz.contact && quiz.contact.length > 0 
+      ? quiz.contact[0].form || null 
+      : null;
 
     // Проверяем, существует ли уже запись с таким key
     const existingRecord = await db
@@ -126,6 +131,7 @@ export abstract class PublicService {
           key: userKey,
           answer: initialAnswer,
           questions: questions.length > 0 ? questions : null,
+          contactsForm: contactsForm,
           first: isFirst,
           status: 'create',
           info: null, // Поле info теперь свободно для других целей
@@ -149,6 +155,7 @@ export abstract class PublicService {
           key: userKey,
           answer: initialAnswer,
           questions: questions.length > 0 ? questions : null,
+          contactsForm: contactsForm,
           first: isFirst,
           status: 'create',
           info: null,
@@ -167,6 +174,7 @@ export abstract class PublicService {
         key: userKey,
         answer: initialAnswer,
         questions: questions.length > 0 ? questions : null,
+        contactsForm: contactsForm,
         first: isFirst,
         status: 'create',
         info: null,
@@ -392,6 +400,8 @@ export abstract class PublicService {
           quizId: quiz[0].id,
           key: userKey,
           answer: newAnswer,
+          contacts: null,
+          contactsForm: null,
           first: true,
           status: 'create',
           info: null,
@@ -427,12 +437,12 @@ export abstract class PublicService {
    * Сохраняет контактные данные
    * Статус остается 'create' - его обновляет администратор вручную
    * @param quizUid - UID квиза
-   * @param contactData - данные контактов (answers и form)
+   * @param contactData - данные контактов (answers и form, но form не сохраняется - он уже в contactsForm)
    * @param sessionToken - токен сессии для идентификации пользователя
    */
   static async saveQuizContacts(
     quizUid: string,
-    contactData: { answers: Record<string, string>; form: any[] },
+    contactData: { answers: Record<string, string>; form?: any[] },
     sessionToken?: string
   ): Promise<void> {
 
@@ -463,23 +473,16 @@ export abstract class PublicService {
         )
         .limit(1);
 
-      const timestamp = new Date().toISOString();
-
       if (existingRecord.length > 0 && existingRecord[0]) {
-        // Обновляем существующую запись: сохраняем контакты в info и меняем статус
-        // answer остается массивом ответов, контакты сохраняем в info
+        // Обновляем существующую запись: сохраняем только answers в contacts
+        // form уже сохранен в contactsForm при получении квиза
         const existingAnswers = (existingRecord[0].answer as any[]) || [];
 
         await db
           .update(quizBidTable)
           .set({
             answer: existingAnswers, // Сохраняем массив ответов
-            info: {
-              contacts: {
-                answers: contactData.answers,
-                form: contactData.form,
-              },
-            },
+            contacts: contactData.answers, // Сохраняем только answers пользователя
             // Статус не обновляем - он остается 'create', администратор обновит его вручную
             isFull: true, // Помечаем как полностью заполненный
             updatedAt: new Date(),
@@ -490,6 +493,7 @@ export abstract class PublicService {
           quizUid,
           userKey,
           isFull: true,
+          contactsCount: Object.keys(contactData.answers).length,
         });
       } else {
         // Если записи нет, это ошибка - она должна быть создана при получении квиза

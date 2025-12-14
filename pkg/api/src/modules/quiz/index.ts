@@ -501,12 +501,12 @@ export const quiz = new Elysia({ prefix: "/quiz" })
           },
         )
         .get(
-          "/uuids",
+          "/filters",
           async (ctx) => {
             const user = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              const response: QuizModel.quizUuidsErrorResponse = {
+              const response: QuizModel.quizFiltersErrorResponse = {
                 message: "failed",
                 error: "Unauthorized",
               };
@@ -514,25 +514,25 @@ export const quiz = new Elysia({ prefix: "/quiz" })
             }
 
             try {
-              const uuids = await QuizService.getQuizUuids(user.id);
+              const filters = await QuizService.getQuizFilters(user.id);
 
-              const response: QuizModel.quizUuidsSuccessResponse = {
+              const response: QuizModel.quizFiltersSuccessResponse = {
                 message: "ok",
                 data: {
-                  uuids,
+                  filters,
                 },
               };
 
               return response;
             } catch (error) {
               logger.error(
-                "Ошибка при получении UUID квизов",
+                "Ошибка при получении фильтров квизов",
                 error instanceof Error ? error : new Error(String(error)),
                 { userId: user.id },
               );
               ctx.set.status = 500;
 
-              const response: QuizModel.quizUuidsErrorResponse = {
+              const response: QuizModel.quizFiltersErrorResponse = {
                 message: "failed",
                 error: "Internal server error",
               };
@@ -542,9 +542,9 @@ export const quiz = new Elysia({ prefix: "/quiz" })
           },
           {
             response: {
-              200: QuizModel.quizUuidsSuccessResponse,
-              401: QuizModel.quizUuidsErrorResponse,
-              500: QuizModel.quizUuidsErrorResponse,
+              200: QuizModel.quizFiltersSuccessResponse,
+              401: QuizModel.quizFiltersErrorResponse,
+              500: QuizModel.quizFiltersErrorResponse,
             },
           },
         ),

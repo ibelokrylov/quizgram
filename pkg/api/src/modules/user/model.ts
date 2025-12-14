@@ -122,6 +122,43 @@ export namespace UserModel {
 
   export type deleteFileErrorResponse = typeof deleteFileErrorResponse.static;
 
+  // Модель плана пользователя
+  export const userPlan = t.Object({
+    id: t.Number(),
+    name: t.String(), // "FREE" или "BASE"
+    price: t.Number(),
+    bidMonthLimit: t.Number(),
+  });
+
+  export type userPlan = typeof userPlan.static;
+
+  // Успешный ответ при получении плана пользователя
+  export const getUserPlanSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: userPlan,
+  });
+
+  export type getUserPlanSuccessResponse =
+    typeof getUserPlanSuccessResponse.static;
+
+  // Ответ при ошибке получения плана
+  export const getUserPlanErrorResponse = t.Object({
+    message: t.String(), // "get-user-plan@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type getUserPlanErrorResponse =
+    typeof getUserPlanErrorResponse.static;
+
+  // Успешный ответ при получении всех планов
+  export const getAllPlansSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: t.Array(userPlan),
+  });
+
+  export type getAllPlansSuccessResponse =
+    typeof getAllPlansSuccessResponse.static;
+
   // Query параметры для загрузки файла
   export const uploadFileQuery = t.Object({
     size: t.Optional(

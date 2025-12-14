@@ -5,6 +5,7 @@ import { auth } from "./modules/auth";
 import { bids } from "./modules/bids";
 import { publicModule } from './modules/public';
 import { quiz } from "./modules/quiz";
+import { startScheduler } from "./modules/scheduler";
 import { user } from "./modules/user";
 import { PlanService } from "./services/plan.service";
 
@@ -12,6 +13,9 @@ import { PlanService } from "./services/plan.service";
 PlanService.scanPlanAndCreate().catch((error) => {
   logger.error("Ошибка при инициализации планов", error instanceof Error ? error : new Error(String(error)));
 });
+
+// Запуск scheduler для обработки незавершенных заявок
+startScheduler();
 
 // Определяем окружение
 const env = typeof Bun !== "undefined" ? Bun.env : process.env;
