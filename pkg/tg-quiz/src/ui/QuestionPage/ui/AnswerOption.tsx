@@ -11,7 +11,7 @@ export const AnswerOption = () => {
     sendAnswer({
       question_uid: question.uid,
       answer: e.target.value,
-      question: question.content?.title,
+      question: question,
     });
   }
 

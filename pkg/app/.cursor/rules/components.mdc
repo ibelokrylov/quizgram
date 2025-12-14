@@ -13,6 +13,7 @@ Components are reusable UI elements following React 19 patterns.
 
 - **UI Components**: Base components in `src/components/ui/` (shadcn/ui)
 - **Feature Components**: Higher-level components in `src/components/`
+- **Page Components**: Page-level components in `src/pages/` (thin wrappers referenced by route files)
 - Use functional components with TypeScript
 - Prefer named exports over default exports
 

@@ -1,0 +1,61 @@
+---
+description: Структура монорепозитория и организация пакетов
+alwaysApply: true
+---
+
+# Структура проекта
+
+Это монорепозиторий с несколькими пакетами.
+
+## Пакеты
+
+- **`pkg/app`** - React 19 frontend приложение (основное веб-приложение)
+- **`pkg/api`** - Backend API с использованием Elysia framework
+- **`pkg/tg-quiz`** - Telegram Mini App
+
+## Специфичные правила для пакетов
+
+Каждый пакет имеет свой файл `CLAUDE.md` с конкретными правилами:
+
+### pkg/app/CLAUDE.md
+React 19 приложение с:
+- TanStack Router для file-based routing
+- TanStack Query для server state
+- Tailwind CSS v4 с shadcn/ui
+- Zod для валидации
+- i18next для интернационализации
+
+### pkg/api/CLAUDE.md
+Backend API с:
+- Bun runtime с Elysia framework
+- Drizzle ORM с PostgreSQL
+- Feature-based структура модулей
+- Строгая типизация TypeScript
+- Кастомная утилита для логирования
+
+### pkg/tg-quiz/CLAUDE.md
+Telegram Mini App с:
+- @telegram-apps/sdk-react v3.x
+- @telegram-apps/telegram-ui компоненты
+- Работает внутри Telegram WebView
+- Нативная интеграция с Telegram
+
+## Общие команды
+
+Запускай команды из директорий пакетов:
+
+```bash
+bun install          # Установка зависимостей
+bun run dev          # Запуск dev-сервера
+bun run build        # Сборка проекта
+bun run lint         # Запуск линтера/форматтера
+bun test             # Запуск тестов
+```
+
+## Ключевые архитектурные паттерны
+
+1. **Bun-first**: Всегда предпочитай Bun API над Node.js
+2. **TypeScript**: Используй строгую типизацию везде
+3. **Feature-based**: Организуй код по фичам, а не по типам файлов
+4. **Separation of concerns**: Держи бизнес-логику отдельно от UI/HTTP слоёв
+5. **Validation**: Используй Zod или Elysia.t для валидации в runtime

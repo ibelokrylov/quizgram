@@ -1,15 +1,16 @@
 import { Button, Card, Image, Placeholder, Text } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect } from 'react';
-import { AppContext } from '../../../App.context';
+import { AppContext, type QuizStartPageStandard } from '../../../App.context';
 
-export const Standard = (props: { refparent: React.RefObject<HTMLDivElement | null> }) => {
+export const Standard = () => {
   const { nextStage, quiz } = useContext(AppContext);
 
-  const data = quiz?.startPage?.content;
-  const refparent = props.refparent;
+  const startPage = quiz?.startPage as QuizStartPageStandard;
+
+  const data = startPage.content;
 
   useEffect(() => {
-    const element = refparent.current;
+    const element = window.document.querySelector('#root');
     const url = data?.background_mobile;
     const footer = document.querySelector('.footer__logo') as HTMLElement;
 
@@ -60,8 +61,10 @@ export const Standard = (props: { refparent: React.RefObject<HTMLDivElement | nu
         footer.style.left = '';
         footer.style.transform = '';
       }
+
+      element.setAttribute('style', '');
     };
-  }, [data?.background_mobile, refparent]);
+  }, [data?.background_mobile]);
 
   return (
     <>

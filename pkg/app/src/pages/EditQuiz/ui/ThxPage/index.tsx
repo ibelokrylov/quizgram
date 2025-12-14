@@ -44,132 +44,134 @@ export const ThxPage = () => {
   const content: QuizThxPage | undefined = quiz?.thxPage;
 
   return (
-    <Card className='flex flex-col items-center justify-center p-2 max-w-[414px] min-h-[800px] w-full'>
-      <Card className='max-w-none w-full mr-2 ml-2 flex flex-col gap-5 px-3 py-2'>
-        <div className={'relative'}>
-          <div className={'absolute top-[10px] left-[-20px]'}>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('edit-quiz.thx-page.title_info')}</p>
-              </TooltipContent>
-            </Tooltip>
+    <div className={'px-2 sm:px-4'}>
+      <Card className='flex flex-col items-center justify-center p-2 max-w-none px-2 sm:max-w-[414px] min-h-[800px] w-full'>
+        <Card className='max-w-none w-full mr-2 ml-2 flex flex-col gap-5 px-3 py-2'>
+          <div className={'relative'}>
+            <div className={'absolute top-[10px] left-[-20px]'}>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('edit-quiz.thx-page.title_info')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <TextAreaNoBorder
+              value={content?.title}
+              fontSize={20}
+              maxLength={60}
+              onChange={(e) =>
+                setQuiz({
+                  ...quiz,
+                  thxPage: { ...content, title: e.target.value },
+                } as Quiz)
+              }
+              fixedWidth={386}
+            />
           </div>
           <TextAreaNoBorder
-            value={content?.title}
-            fontSize={20}
-            maxLength={60}
+            value={content?.description}
+            fontSize={16}
+            maxLength={250}
             onChange={(e) =>
               setQuiz({
                 ...quiz,
-                thxPage: { ...content, title: e.target.value },
+                thxPage: { ...content, description: e.target.value },
               } as Quiz)
             }
             fixedWidth={386}
           />
-        </div>
-        <TextAreaNoBorder
-          value={content?.description}
-          fontSize={16}
-          maxLength={250}
-          onChange={(e) =>
-            setQuiz({
-              ...quiz,
-              thxPage: { ...content, description: e.target.value },
-            } as Quiz)
-          }
-          fixedWidth={386}
-        />
-        <div className='flex justify-center w-full'>
-          {content?.buttons?.length ? (
-            <div className='flex flex-col gap-2 items-center w-full'>
-              {content.buttons.map((i) => (
-                <Card
-                  className='flex gap-2 items-center relative w-full p-2 group'
-                  key={v7()}
-                >
-                  {i.title}
-                  <div className={'absolute left-2 top-[50%] translate-y-[-50%]'}>
-                    <Link size={16} />
-                  </div>
-                  <div className='absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                    <Button
-                      variant={'outline'}
-                      size={'icon-sm'}
-                      onClick={() => {
-                        setOpenButtons(true);
-                        setOpenK(v7());
-                      }}
-                    >
-                      <Settings />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Button
-              variant={'outline'}
-              onClick={() => {
-                setOpenButtons(true);
-                setOpenK(v7());
-              }}
-            >
-              {t('edit-quiz.thx-page.button.add')}
-              <CirclePower />
-            </Button>
-          )}
-        </div>
-        <div>
-          {content?.social?.length ? (
-            <div className={'flex items-center flex-wrap justify-center gap-3 relative w-fit mx-auto'}>
-              {content.social.map((i) => (
-                <div key={i.type}>
-                  <Button variant={'outline'}>{socialIcons[i.type as keyof typeof socialIcons]}</Button>
-                </div>
-              ))}
-              <div className={'absolute right-[-40px] top-0'}>
-                <Button
-                  variant={'outline'}
-                  size={'icon-sm'}
-                  onClick={() => setOpenSocial(true)}
-                >
-                  <CiCirclePlus />
-                </Button>
+          <div className='flex justify-center w-full'>
+            {content?.buttons?.length ? (
+              <div className='flex flex-col gap-2 items-center w-full'>
+                {content.buttons.map((i) => (
+                  <Card
+                    className='flex gap-2 items-center relative w-full p-2 group'
+                    key={v7()}
+                  >
+                    {i.title}
+                    <div className={'absolute left-2 top-[50%] translate-y-[-50%]'}>
+                      <Link size={16} />
+                    </div>
+                    <div className='absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                      <Button
+                        variant={'outline'}
+                        size={'icon-sm'}
+                        onClick={() => {
+                          setOpenButtons(true);
+                          setOpenK(v7());
+                        }}
+                      >
+                        <Settings />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </div>
-          ) : (
-            <div className={'flex justify-center w-full'}>
+            ) : (
               <Button
                 variant={'outline'}
-                onClick={() => setOpenSocial(true)}
+                onClick={() => {
+                  setOpenButtons(true);
+                  setOpenK(v7());
+                }}
               >
-                {t('edit-quiz.thx-page.social.add')}
-                <Twitter />
+                {t('edit-quiz.thx-page.button.add')}
+                <CirclePower />
               </Button>
-            </div>
-          )}
-        </div>
-        <ButtonsEditor
-          key={openK}
-          buttons={content?.buttons}
-          setButtons={(buttons) => setQuiz({ ...quiz, thxPage: { ...content, buttons } } as Quiz)}
-          open={openButtons}
-          setOpen={setOpenButtons}
-        />
-        <SocialEditor
-          key={openSocialK}
-          social={content?.social ?? []}
-          setSocial={(social) => setQuiz({ ...quiz, thxPage: { ...content, social } } as Quiz)}
-          open={openSocial}
-          setOpen={() => {
-            setOpenSocial(false);
-            setOpenSocialK(v7());
-          }}
-        />
+            )}
+          </div>
+          <div>
+            {content?.social?.length ? (
+              <div className={'flex items-center flex-wrap justify-center gap-3 relative w-fit mx-auto'}>
+                {content.social.map((i) => (
+                  <div key={i.type}>
+                    <Button variant={'outline'}>{socialIcons[i.type as keyof typeof socialIcons]}</Button>
+                  </div>
+                ))}
+                <div className={'absolute right-[-40px] top-0'}>
+                  <Button
+                    variant={'outline'}
+                    size={'icon-sm'}
+                    onClick={() => setOpenSocial(true)}
+                  >
+                    <CiCirclePlus />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className={'flex justify-center w-full'}>
+                <Button
+                  variant={'outline'}
+                  onClick={() => setOpenSocial(true)}
+                >
+                  {t('edit-quiz.thx-page.social.add')}
+                  <Twitter />
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
       </Card>
-    </Card>
+      <ButtonsEditor
+        key={openK}
+        buttons={content?.buttons}
+        setButtons={(buttons) => setQuiz({ ...quiz, thxPage: { ...content, buttons } } as Quiz)}
+        open={openButtons}
+        setOpen={setOpenButtons}
+      />
+      <SocialEditor
+        key={openSocialK}
+        social={content?.social ?? []}
+        setSocial={(social) => setQuiz({ ...quiz, thxPage: { ...content, social } } as Quiz)}
+        open={openSocial}
+        setOpen={() => {
+          setOpenSocial(false);
+          setOpenSocialK(v7());
+        }}
+      />
+    </div>
   );
 };

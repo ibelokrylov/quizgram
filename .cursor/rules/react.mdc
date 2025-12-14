@@ -1,0 +1,35 @@
+---
+globs: *.tsx
+alwaysApply: false
+---
+
+# React правила
+
+## Условный рендеринг
+
+Для условного рендеринга компонентов предпочитай тернарный оператор с явным `null` вместо логического оператора `&&`.
+
+### ❌ Неправильно
+
+```tsx
+{!bid.isRead && (
+  <Badge variant="default" className="text-xs px-1.5 py-0.5 w-fit">
+    New
+  </Badge>
+)}
+```
+
+### ✅ Правильно
+
+```tsx
+{!bid.isRead ? (
+  <Badge variant="default" className="text-xs px-1.5 py-0.5 w-fit">
+    New
+  </Badge>
+) : null}
+```
+
+**Причины:**
+- Явное указание `null` делает намерение более понятным
+- Избегает потенциальных проблем с falsy значениями (0, "", false)
+- Более предсказуемое поведение в edge cases

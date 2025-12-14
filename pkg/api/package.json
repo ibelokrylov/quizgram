@@ -4,8 +4,6 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "db:create-schema": "bun run scripts/create-schema.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "bun run db:create-schema && drizzle-kit migrate",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {

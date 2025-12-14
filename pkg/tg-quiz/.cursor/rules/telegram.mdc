@@ -15,9 +15,10 @@ alwaysApply: true
 ## Технологический стек
 
 - **React 19** с TypeScript
-- **@telegram-apps/sdk-react** - React SDK для Telegram Mini Apps
+- **@telegram-apps/sdk-react** - React SDK для Telegram Mini Apps (v3.x)
 - **@telegram-apps/telegram-ui** - UI компоненты в стиле Telegram
 - **Vite** для сборки
+- **Bun** как менеджер пакетов
 
 ## Инициализация SDK
 
@@ -160,6 +161,15 @@ function MyComponent() {
   );
 }
 ```
+
+## Команды разработки
+
+- **Install dependencies**: `bun install` - Install project dependencies
+- **Add dependency**: `bun add <package>` - Add new dependency
+- **Add dev dependency**: `bun add -d <package>` - Add development dependency
+- **Development**: `bun run dev` - Start development server
+- **Build**: `bun run build` - Build the project
+- **Format/Lint**: `bun run lint` - Run linter/formatter
 
 ## Особенности разработки
 

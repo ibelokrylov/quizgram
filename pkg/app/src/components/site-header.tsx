@@ -23,6 +23,10 @@ const titlePatterns: Array<{ pattern: RegExp; titleKey: string }> = [
     pattern: /^\/app\/dashboard$/,
     titleKey: 'titles.dashboard',
   },
+  {
+    pattern: /^\/app\/bid\/report$/,
+    titleKey: 'titles.bidReport',
+  },
 ];
 
 function getTitleByPath(pathname: string): string | undefined {

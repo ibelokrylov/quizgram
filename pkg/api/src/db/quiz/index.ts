@@ -1,7 +1,6 @@
 // Модели квиза и связанных сущностей в Drizzle ORM (PostgreSQL)
 
 import {
-  bigint,
   boolean,
   integer,
   jsonb,
@@ -9,7 +8,7 @@ import {
   pgTable,
   serial,
   timestamp,
-  varchar,
+  varchar
 } from "drizzle-orm/pg-core";
 import { userTable } from "../user";
 
@@ -41,8 +40,6 @@ export const quizTable = pgTable("quiz", {
     .defaultNow()
     .notNull(),
   deletedAt: timestamp("deleted_at", { withTimezone: false }),
-  opened: bigint("opened", { mode: "number" }).notNull().default(0),
-  full: bigint("full", { mode: "number" }).notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   name: varchar("name", { length: 255 })
     .notNull()
@@ -104,5 +101,5 @@ export type NewQuizQuestion = typeof quizQuestionTable.$inferInsert;
 
 // Экспортируем quizBidTable
 export * from "./bid";
-// Экспортируем quizBidUserInfoTable
-export * from "./bid-user-info";
+// Экспортируем quizFileTable
+export * from "./file";

@@ -11,14 +11,22 @@ import type { QuizContact, QuizContactForm, QuizContactFormType } from '@/entiti
 import http from '@/lib/http';
 import { cn } from '@/lib/utils';
 import { Image, Plus, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContactDrawer } from './ContactDrawer';
 
 export const ContactEditForm = ({ contact, setContact }: { contact: QuizContact; setContact: (contact: QuizContact) => void }) => {
   const [open, setOpen] = useState(false);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [title, setTitle] = useState(contact.title ?? '');
+  const [description, setDescription] = useState(contact.description ?? '');
   const { t } = useTranslation();
+
+  // Синхронизация локальных state с пропсом contact
+  useEffect(() => {
+    setTitle(contact.title ?? '');
+    setDescription(contact.description ?? '');
+  }, [contact.title, contact.description]);
 
   function onFinal(url: string) {
     setContact({ ...contact, background: url });
@@ -107,15 +115,17 @@ export const ContactEditForm = ({ contact, setContact }: { contact: QuizContact;
                 maxWidth={330}
                 maxLength={50}
                 fixedWidth={330}
-                value={contact.title}
-                onChange={(e) => setContact({ ...contact, title: e.target.value })}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => setContact({ ...contact, title })}
                 placeholder={t('edit-quiz.contacts-page.contact.placeholder.title')}
               />
               <TextAreaNoBorder
-                value={contact.description}
+                value={description}
                 fixedWidth={330}
                 maxLength={150}
-                onChange={(e) => setContact({ ...contact, description: e.target.value })}
+                onChange={(e) => setDescription(e.target.value)}
+                onBlur={() => setContact({ ...contact, description })}
                 placeholder={t('edit-quiz.contacts-page.contact.placeholder.description')}
               />
             </div>

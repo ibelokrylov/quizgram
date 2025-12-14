@@ -8,8 +8,6 @@ export namespace QuizModel {
     uid: t.String(),
     createdAt: t.Date(),
     updatedAt: t.Date(),
-    opened: t.Number(),
-    full: t.Number(),
     isActive: t.Boolean(),
     name: t.String(),
     startPage: t.Optional(t.Any()),
@@ -69,6 +67,7 @@ export namespace QuizModel {
     name: t.String(),
     opened: t.Number(),
     full: t.Number(),
+    openedUnique: t.Number(),
     isActive: t.Boolean(),
     createdAt: t.Date(),
     updatedAt: t.Date(),
@@ -164,4 +163,23 @@ export namespace QuizModel {
     }),
   });
   export type createQuizSuccessResponse = typeof createQuizSuccessResponse.static;
+
+  // Успешный ответ при получении UUID квизов
+  export const quizUuidsSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: t.Object({
+      uuids: t.Array(t.Object({
+        uid: t.String(),
+        name: t.String(),
+      })),
+    }),
+  });
+  export type quizUuidsSuccessResponse = typeof quizUuidsSuccessResponse.static;
+
+  // Ответ при ошибке получения UUID квизов
+  export const quizUuidsErrorResponse = t.Object({
+    message: t.String(), // "failed"
+    error: t.String(), // "Unauthorized" или другая ошибка
+  });
+  export type quizUuidsErrorResponse = typeof quizUuidsErrorResponse.static;
 }

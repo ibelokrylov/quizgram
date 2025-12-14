@@ -44,6 +44,8 @@ export const Route = createFileRoute('/path')({
 
 - Check authentication in route components using `AuthContext`
 - Redirect unauthenticated users using `useNavigate()` in `useEffect`
+- Route tree is automatically generated in `routeTree.gen.ts`
+- TanStack Router DevTools are included in development build
 
 ## Examples
 

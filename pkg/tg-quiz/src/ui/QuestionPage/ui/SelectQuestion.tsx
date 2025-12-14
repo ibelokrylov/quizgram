@@ -11,7 +11,7 @@ export const SelectQuestion = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: question.content?.variants?.[0] ?? '',
-      question: question.content?.title,
+      question: question,
     });
   }, []);
 

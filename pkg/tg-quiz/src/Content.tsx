@@ -5,12 +5,13 @@ import { ContentLayout } from './ContentLayout';
 import { Contact } from './ui/Contact';
 import { QuestionPage } from './ui/QuestionPage';
 import { StartPage } from './ui/StartPage';
+import { ThxPage } from './ui/ThxPage';
 
 const render = {
   startPage: <StartPage />,
   question: <QuestionPage />,
   contact: <Contact />,
-  thxPage: <div>Thx page</div>,
+  thxPage: <ThxPage />,
   '404': (
     <Placeholder
       header='404'

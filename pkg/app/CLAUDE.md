@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Install dependencies**: `bun install` - Install project dependencies
 - **Add dependency**: `bun add <package>` - Add new dependency
 - **Add dev dependency**: `bun add -d <package>` - Add development dependency
-- **Development**: `bun run dev` - Start Vite development server
-- **Build**: `bun run build` - TypeScript compilation followed by Vite build
+- **Development**: `bun run dev` - Start development server
+- **Build**: `bun run build` - Build the project
 - **Format/Lint**: `bun run lint` - Run Biome formatter with auto-fix
 - **Preview**: `bun run preview` - Preview production build locally
 
@@ -55,6 +55,7 @@ This is a modern React 19 application using TypeScript with the following key ar
 **`src/lib/`** - Utility functions and helpers
 - Shared utilities like `cn()` for class merging
 - i18n configuration and initialization
+- HTTP client for API calls
 
 **`src/locales/`** - Internationalization files
 - Language files for Russian (`ru/`) and English (`en/`)
@@ -62,26 +63,93 @@ This is a modern React 19 application using TypeScript with the following key ar
 
 **`src/shared/`** - Cross-cutting concerns (currently empty but structured for shared utilities)
 
-### Key Patterns
+## Key Patterns
 
-1. **File-Based Routing**: Routes are automatically generated from files in `src/routes/`
-2. **Entity-Component Separation**: Domain entities are separate from UI components
-3. **Context Provider Pattern**: Global state through React Context (Auth, QueryClient)
-4. **Type-Safe Development**: Zod schemas for runtime validation, TypeScript throughout
-5. **Auto Code Splitting**: TanStack Router automatically splits code by routes
-6. **Internationalization**: Use i18next `t()` function for all user-facing text
-7. **Language Detection**: Automatic language detection with fallback to English
+### 1. File-Based Routing with TanStack Router
+- Routes are automatically generated from files in `src/routes/`
+- Root route: `__root.tsx` - Must export `Route` using `createRootRoute`
+- Index route: `index.tsx` - Handles `/` path
+- Dynamic routes: `$param.tsx` - Use `$` prefix for dynamic segments
+- Nested routes: Create subdirectories (e.g., `app/quiz/$uid.tsx`)
+- Use `Link` component from `@tanstack/react-router` for navigation
+- Use `useNavigate()` hook for programmatic navigation
+- Use `useParams()` to access route parameters
 
-### Import Aliases
+### 2. Entity-Component Separation
+- Domain entities separate from UI components
+- Each entity in its own directory under `src/entities/`
+- Entity structure:
+  - `EntityName/EntityName.type.ts` - Zod schemas and TypeScript types
+  - `EntityName/useEntity.tsx` - Custom hooks for entity operations
+  - `EntityName/EntityName.context.tsx` - React Context (if needed)
+  - `EntityName/EntityName.context.provider.tsx` - Context provider (if needed)
+
+### 3. Component Patterns
+- Use functional components with TypeScript
+- Prefer named exports over default exports
+- Use `React.ComponentProps<'div'>` for extending HTML element props
+- Accept `className` prop and merge with `cn()` utility
+- shadcn/ui components from `@/components/ui/` (New York style)
+- Use `Field`, `FieldLabel`, `FieldDescription`, `FieldGroup` from `@/components/ui/field`
+
+### 4. Type-Safe Development with Zod
+- Always define Zod schemas and infer TypeScript types from them:
+```typescript
+import { z } from 'zod';
+
+export const entityZod = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.email(),
+  created_at: z.date(),
+});
+
+export type Entity = z.infer<typeof entityZod>;
+```
+- Use Zod schemas for runtime validation
+- Use `.safeParse()` for validation with error handling
+- Export validation schemas for reuse in forms and API calls
+
+### 5. Context Provider Pattern
+- Global state through React Context (Auth, QueryClient)
+- When entity needs global state:
+  - Create context in `EntityName.context.tsx`
+  - Create provider in `EntityName.context.provider.tsx`
+  - Use ContextHole pattern to register provider in `src/app/context/context.hole.tsx`
+
+### 6. API and HTTP Patterns
+- HTTP client is in `src/lib/http/index.ts`
+- Use `http<T>()` function for API calls with generic type parameter
+- Always validate data with Zod schemas before making API calls
+- Wrap API calls in try-catch blocks
+- Use `toast.error()` from `sonner` for error notifications
+
+### 7. Internationalization (i18n)
+- Uses i18next with react-i18next for Russian/English support
+- Translations in `src/locales/{lang}/common.json`
+- Always use `useTranslation()` hook and `t()` function for user-facing text
+- Use dot notation for nested keys: `t('login.title')`, `t('login.email')`
+- Never hardcode user-facing strings in components
+
+### 8. Code Formatting and Styling
+- Uses Biome for formatting (tabs, single quotes)
+- Use Tailwind utility classes for styling
+- Use `cn()` utility from `@/lib/utils` for conditional classes
+- Follow shadcn/ui New York style patterns
+- Run `bun run lint` to format code before committing
+
+## Import Aliases
 
 - `@/` → `./src/`
 - `@/components` → UI components
 - `@/lib/utils` → Utility functions
 - `@/components/ui` → shadcn/ui components
 
-### Development Notes
+## Development Notes
 
 - React Compiler is enabled and may impact build performance
 - Biome formatter is configured with tab indentation and single quotes
 - The project uses shadcn/ui component system with New York style
 - TanStack Router DevTools are included in development build
+- Automatic language detection with fallback to English
+- Language preference stored in localStorage

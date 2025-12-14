@@ -4,12 +4,21 @@ import type { QuizQuestionVariantImageText } from '../../../App.context';
 import { QuestionContext } from '../Question.context';
 
 export const VariantImageText = () => {
-  const { questions, current } = useContext(QuestionContext);
+  const { questions, current, setCurrentAnswer } = useContext(QuestionContext);
 
   const [selected, setSelected] = useState<number | null>(null);
-  console.log(selected);
 
   const question = questions[current] as QuizQuestionVariantImageText;
+
+  function handleSelect(idx: number) {
+    setCurrentAnswer({
+      question_uid: question.uid,
+      answer: question.content.variants[idx],
+      question: question,
+    });
+    setSelected(idx);
+  }
+
   return (
     <div className='variant__image_text'>
       <div className='variant__image_text-preview'>
@@ -52,7 +61,7 @@ export const VariantImageText = () => {
                 <Selectable
                   name='group'
                   value={variant.value}
-                  onChange={() => setSelected(idx)}
+                  onChange={() => handleSelect(idx)}
                 />
               }
               multiline

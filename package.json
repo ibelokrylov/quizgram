@@ -1,16 +1,16 @@
 {
   "name": "quizgram",
-  "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev:api": "--workspace=pkg/api dev",
+    "dev:app": "--workspace=pkg/app dev",
+    "dev:tg-quiz": "--workspace=pkg/tg-quiz dev"
+  },
   "workspaces": {
     "packages": [
       "pkg/*"
     ],
-    "catalog": {
-      "typescript": "^5",
-      "@types/bun": "latest"
-    },
     "catalogs": {
       "frontend": {
         "react": "^19.1.1",
@@ -26,13 +26,21 @@
         "@types/react": "^19.1.16",
         "@types/react-dom": "^19.1.9",
         "typescript-eslint": "^8.46.4",
-        "@eslint/js": "^9.39.1"
+        "@eslint/js": "^9.39.1",
+        "react-icons": "^5.5.0"
       },
       "backend": {
         "bun-types": "latest",
         "elysia": "latest",
+        "@types/bun": "latest",
         "@elysiajs/cors": "^1.4.0"
+      },
+      "all": {
+        "typescript": "^5"
       }
     }
+  },
+  "devDependencies": {
+    "shadcn": "^3.6.1"
   }
 }

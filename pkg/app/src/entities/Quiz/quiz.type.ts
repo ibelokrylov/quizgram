@@ -45,6 +45,7 @@ export const quizZod = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   opened: z.number(),
+  openedUnique: z.number(),
   full: z.number(),
   isActive: z.boolean(),
   name: z.string(),
@@ -243,9 +244,8 @@ export type QuizQuestionType =
 export type Quiz = z.infer<typeof quizZod>;
 export type QuizDashboard = Pick<
   Quiz,
-  "uid" | "name" | "opened" | "full" | "is_active" | "created_at" | "updated_at"
+  "uid" | "name" | "opened" | "openedUnique" | "full" | "isActive" | "createdAt" | "updatedAt"
 >;
-// Select("uid", "name", "opened", "full", "is_active", "created_at", "updated_at").
 
 export type QuizContact = z.infer<typeof quizContactZod>;
 export type QuizContactForm = z.infer<typeof quizContactFormZod>;

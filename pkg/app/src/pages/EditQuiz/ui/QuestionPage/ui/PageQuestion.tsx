@@ -14,6 +14,7 @@ export const PageQuestion = ({ question, setQuestion }: { question: Quiz['questi
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<'image' | 'video'>('image');
   const { user } = useContext(AuthContext);
+  const [value, setValue] = useState<string>(content?.text ?? '');
 
   useEffect(() => {
     if (!content) {
@@ -25,8 +26,9 @@ export const PageQuestion = ({ question, setQuestion }: { question: Quiz['questi
     <div className={'flex flex-col gap-3'}>
       <Textarea
         placeholder={t('edit-quiz.question-page.question.page.text.placeholder')}
-        value={content?.text}
-        onChange={(e) => setQuestion({ ...question, content: { ...content, text: e.target.value } })}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => setQuestion({ ...question, content: { ...content, text: value } })}
       />
       <div>
         {content?.url ? (
@@ -98,6 +100,9 @@ export const PageQuestion = ({ question, setQuestion }: { question: Quiz['questi
           </div>
         )}
         <DownloadDrawer
+          targetWidth={820}
+          targetHeight={820}
+          resize={true}
           disableDownload={user?.planId === 1}
           type={type}
           open={open}

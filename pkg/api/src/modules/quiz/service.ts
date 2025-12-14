@@ -6,7 +6,11 @@ import {
   db,
   getDb,
   NewQuiz,
+  NewQuizContact,
+  NewQuizThxPage,
   quizContactTable,
+  QuizOpen,
+  quizOpenTable,
   QuizQuestion,
   quizQuestionTable,
   quizTable,
@@ -21,13 +25,22 @@ import { logger } from "../../lib/logger";
 
 // Тип для элемента кэша dashboard
 interface DashboardCacheItem {
-  quizzes: Quiz[];
+  quizzes: (Quiz & { quiz_open?: QuizOpen })[];
+  expires: number; // timestamp в миллисекундах
+}
+
+// Тип для элемента кэша UUID квизов
+interface QuizUuidsCacheItem {
+  uuids: Array<{ uid: string; name: string }>;
   expires: number; // timestamp в миллисекундах
 }
 
 export abstract class QuizService {
   // Кэш для dashboard (аналог sync.Map в Go)
   private static dashboardCache = new Map<string, DashboardCacheItem>();
+  
+  // Кэш для UUID квизов пользователя
+  private static quizUuidsCache = new Map<number, QuizUuidsCacheItem>();
 
   /**
    * Получение всех квизов пользователя для dashboard с пагинацией и кэшированием
@@ -40,7 +53,7 @@ export abstract class QuizService {
     userId: number,
     limit: number = 10,
     offset: number = 0,
-  ): Promise<Quiz[]> {
+  ): Promise<{ quizzes: (Quiz & { quiz_open?: QuizOpen })[] }> {
     // Ограничиваем limit максимумом 10
     const actualLimit = limit > 10 ? 10 : limit;
 
@@ -55,7 +68,7 @@ export abstract class QuizService {
         limit: actualLimit,
         offset,
       });
-      return cached.quizzes;
+      return { quizzes: cached.quizzes };
     }
 
     // Кэш истек или отсутствует, удаляем его
@@ -78,15 +91,73 @@ export abstract class QuizService {
       .limit(actualLimit)
       .offset(offset);
 
+    const quiz_opens = await db
+      .select()
+      .from(quizOpenTable)
+      .where(inArray(quizOpenTable.quizUid, quizzes.map((quiz) => quiz.uid)));
+
+    const quizzesWithOpen: (Quiz & { quiz_open?: QuizOpen })[] = quizzes.map((quiz) => {
+      const quiz_open = quiz_opens.find((quiz_open) => quiz_open.quizUid === quiz.uid);
+      return {
+        ...quiz,
+        quiz_open,
+      };
+    });
+
     // Сохраняем в кэш с TTL 5 секунд (как в Go API)
     const cacheItem: DashboardCacheItem = {
-      quizzes,
+      quizzes: quizzesWithOpen,
       expires: Date.now() + 5 * 1000, // 5 секунд
     };
     this.dashboardCache.set(cacheKey, cacheItem);
 
-    return quizzes;
+    return { quizzes: quizzesWithOpen };
   }
+
+  /**
+   * Получение UUID и name всех квизов пользователя (не удаленных) с кэшированием
+   * @param userId - ID пользователя
+   * @returns Массив объектов с uid и name
+   */
+  static async getQuizUuids(userId: number): Promise<Array<{ uid: string; name: string }>> {
+    // Проверяем кэш
+    const cached = this.quizUuidsCache.get(userId);
+    if (cached && Date.now() < cached.expires) {
+      logger.debug("Quiz UUIDs cache hit", { userId });
+      return cached.uuids;
+    }
+
+    // Кэш истек или отсутствует, удаляем его
+    if (cached) {
+      this.quizUuidsCache.delete(userId);
+    }
+
+    logger.debug("Quiz UUIDs cache miss", { userId });
+
+    // Получаем uid и name всех не удаленных квизов пользователя
+    const quizzes = await db
+      .select({ 
+        uid: quizTable.uid,
+        name: quizTable.name
+      })
+      .from(quizTable)
+      .where(and(eq(quizTable.userId, userId), isNull(quizTable.deletedAt)));
+
+    const quizList = quizzes.map((quiz) => ({
+      uid: quiz.uid,
+      name: quiz.name || "Новый квиз",
+    }));
+
+    // Сохраняем в кэш с TTL 20 секунд
+    const cacheItem: QuizUuidsCacheItem = {
+      uuids: quizList,
+      expires: Date.now() + 20 * 1000, // 20 секунд
+    };
+    this.quizUuidsCache.set(userId, cacheItem);
+
+    return quizList;
+  }
+
   /**
    * Получение квиза по UID с загрузкой связанных данных (Contact и ThxPage)
    * @param uid - UID квиза
@@ -371,6 +442,52 @@ export abstract class QuizService {
     if (!createdQuiz) {
       throw new Error("Failed to create quiz");
     }
+
+    // Создаем дефолтную запись в quiz_contact
+    const quizContact: NewQuizContact = {
+      quizId: createdQuiz.id,
+      uid: crypto.randomUUID(),
+      title: "Заголовок формы",
+      description: "Описание формы",
+      form: [
+        {
+          type: "name",
+          label: "Имя",
+          placeholder: "Иван",
+          required: true,
+          step: 0
+        },
+        {
+          type: "email",
+          label: "Email",
+          placeholder: "mail@example.com",
+          required: true,
+          step: 0
+        },
+        {
+          type: "phone",
+          label: "Телефон",
+          placeholder: "+7 (999) 999-99-99",
+          required: true,
+          mask: "+7 (###) ###-##-##",
+          step: 0
+        }
+      ]
+    };
+
+    await db.insert(quizContactTable).values(quizContact);
+
+    // Создаем дефолтную страницу благодарности (thxPage)
+    const quizThxPage: NewQuizThxPage = {
+      quizId: createdQuiz.id,
+      uid: crypto.randomUUID(),
+      title: "Спасибо, [name]!",
+      description: "Здесь может быть любой текст",
+      buttons: [],
+      social: [],
+    };
+
+    await db.insert(quizThxPageTable).values(quizThxPage);
 
     // Увеличиваем счетчик квизов у пользователя
     await db

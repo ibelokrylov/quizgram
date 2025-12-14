@@ -39,6 +39,7 @@ export type Entity = z.infer<typeof entityZod>;
 - Use Zod schemas for runtime validation
 - Use `.safeParse()` for validation with error handling
 - Export validation schemas for reuse in forms and API calls
+- Always validate data with Zod schemas before making API calls
 
 ## Context Pattern
 

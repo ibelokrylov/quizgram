@@ -13,7 +13,7 @@ export const TextInput = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: e.target.value,
-      question: question.content.title,
+      question: question,
     });
     setValue(e.target.value);
   }

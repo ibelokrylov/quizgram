@@ -13,7 +13,7 @@ export const VariantImage = () => {
     sendAnswer({
       question_uid: question.uid,
       answer: value,
-      question: question.content?.title,
+      question: question,
     });
     setSelected(idx);
   }

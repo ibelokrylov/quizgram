@@ -1,6 +1,6 @@
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { QuizQuestionFile } from '@/entities/Quiz/quiz.type';
+import type { Quiz, QuizQuestionFile } from '@/entities/Quiz/quiz.type';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,8 +9,8 @@ export const FileQuestion = ({ question, setQuestion }: { question: Quiz['questi
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!content) {
-      setQuestion({ ...question, content: { type: 'image' } });
+    if (!content.type && !content.title) {
+      setQuestion({ ...question, content: { type: 'image', title: 'Заголовок вопроса' } });
     }
   }, [content]);
 
@@ -20,7 +20,7 @@ export const FileQuestion = ({ question, setQuestion }: { question: Quiz['questi
       <Select
         value={content?.type}
         defaultValue='image'
-        onValueChange={(value) => setQuestion({ ...question, content: { ...content, type: value as 'image' | 'video' | 'docs' } })}
+        onValueChange={(value) => setQuestion({ ...question, content: { ...content, type: value as QuizQuestionFile['type'] } })}
       >
         <SelectTrigger>
           <SelectValue placeholder={t('edit-quiz.question-page.question.file.type')} />

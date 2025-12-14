@@ -38,6 +38,7 @@ This is a React 19 application with TypeScript using modern architectural patter
 5. **Auto Code Splitting**: TanStack Router automatically splits code by routes
 6. **Internationalization**: Use i18next `t()` function for all user-facing text
 7. **Language Detection**: Automatic language detection with fallback to English
+8. **ContextHole Pattern**: Centralized provider management in `src/app/context/context.hole.tsx`
 
 ## Import Aliases
 
@@ -48,9 +49,20 @@ This is a React 19 application with TypeScript using modern architectural patter
 
 ## Development Commands
 
-- Install dependencies: `bun install`
-- Add dependency: `bun add <package>`
-- Development: `bun run dev`
-- Build: `bun run build`
-- Format/Lint: `bun run lint`
-- Preview: `bun run preview`
+- **Install dependencies**: `bun install` - Install project dependencies
+- **Add dependency**: `bun add <package>` - Add new dependency
+- **Add dev dependency**: `bun add -d <package>` - Add development dependency
+- **Development**: `bun run dev` - Start development server
+- **Build**: `bun run build` - Build the project
+- **Format/Lint**: `bun run lint` - Run Biome formatter with auto-fix
+- **Preview**: `bun run preview` - Preview production build locally
+
+## React Compiler
+
+- React Compiler is enabled and may impact build performance
+- Automatic optimization of React components
+
+## Biome Configuration
+
+- Biome formatter is configured with tab indentation and single quotes
+- Run `bun run lint` to format code before committing

@@ -1,7 +1,7 @@
-import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
-import type { Quiz, QuizContact } from "@/entities/Quiz/quiz.type";
-import { useContext } from "react";
-import { ContactEditForm } from "./ui/ContactEditForm";
+import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
+import type { Quiz, QuizContact } from '@/entities/Quiz/quiz.type';
+import { useContext } from 'react';
+import { ContactEditForm } from './ui/ContactEditForm';
 
 export const ContactsPage = () => {
   const { quiz, setQuiz } = useContext(CreateQuizContext);
@@ -9,14 +9,14 @@ export const ContactsPage = () => {
   const contacts = quiz?.contact ?? [];
 
   function updateContact(contact: QuizContact) {
-    const newContacts = [...(contacts ?? [])].map((c) =>
-      c.uid === contact.uid ? contact : c,
-    );
+    const newContacts = [...(contacts ?? [])].map((c) => (c.uid === contact.uid ? contact : c));
     setQuiz({ ...quiz, contact: newContacts } as Quiz);
   }
 
+  console.log(contacts);
+
   return (
-    <div className="flex flex-col gap-10">
+    <div className='flex flex-col gap-10'>
       {contacts?.map((contact) => (
         <ContactEditForm
           key={contact.uid}

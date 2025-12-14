@@ -25,6 +25,7 @@
   "nav.footer.logout": "Выйти",
   "titles.app": "Главная",
   "titles.quiz": "Редактировать квиз",
+  "titles.bidReport": "Список заявок",
   "forgot-password.title": "Восстановить пароль",
   "forgot-password.login.label": "Логин",
   "forgot-password.login.placeholder": "mail@example.ru",
@@ -199,8 +200,10 @@
   "titles.dashboard": "Квизы",
   "quiz.load-more": "Загрузить ещё",
   "toast.copy.success": "Скопировано в буфер обмена",
-  "quiz.dashboard.opened.tooltip": "Учитываются только уникальные открытия",
   "quiz.dashboard.opened": "Открытий",
+  "quiz.dashboard.opened.tooltip": "Учитываются все открытия",
+  "quiz.dashboard.openedUnique": "Уникальных открытий",
+  "quiz.dashboard.openedUnique.tooltip": "Учитываются только уникальные открытия",
   "quiz.dashboard.full": "Прохождения",
   "quiz.dashboard.full.tooltip": "Учитываются только полные прохождения",
   "quiz.dashboard.conversion": "Конверсия",
@@ -242,5 +245,7 @@
   "resizeImage.zoom": "Масштаб",
   "resizeImage.upload": "Загрузить",
   "resizeImage.cancel": "Отмена",
-  "resizeImage.dragToPosition": "Перетащите изображение для позиционирования"
+  "resizeImage.dragToPosition": "Перетащите изображение для позиционирования",
+  "nav.bids.report": "Заявки",
+  "nav.bid.statistic": "Статистика"
 }

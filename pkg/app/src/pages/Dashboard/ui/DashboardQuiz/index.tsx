@@ -100,12 +100,12 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           />
         </div>
         <Separator />
-        <div className='grid grid-cols-3 gap-4'>
+        <div className='grid grid-cols-4 gap-4 items-start'>
           <Tooltip>
             <TooltipTrigger>
               <div className='flex flex-col text-left'>
                 <div className='text-xl font-bold'>{quiz.opened}</div>
-                <div className='text-gray-400 dark:text-gray-700'>{t('quiz.dashboard.opened')}</div>
+                <div className='text-gray-400 dark:text-gray-700 text-xs'>{t('quiz.dashboard.opened')}</div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -115,20 +115,31 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           <Tooltip>
             <TooltipTrigger>
               <div className='flex flex-col text-left'>
+                <div className='text-xl font-bold'>{quiz.openedUnique}</div>
+                <div className='text-gray-400 dark:text-gray-700 text-xs'>{t('quiz.dashboard.openedUnique')}</div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t('quiz.dashboard.openedUnique.tooltip')}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className='flex flex-col text-left'>
                 <div className='text-xl font-bold'>{quiz.full}</div>
-                <div className='text-gray-400 dark:text-gray-700'>{t('quiz.dashboard.full')}</div>
+                <div className='text-gray-400 dark:text-gray-700 text-xs'>{t('quiz.dashboard.full')}</div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>{t('quiz.dashboard.full.tooltip')}</p>
             </TooltipContent>
           </Tooltip>
-          {quiz.opened && quiz.full ? (
+          {quiz.openedUnique && quiz.full ? (
             <Tooltip>
               <TooltipTrigger>
                 <div className='flex flex-col text-left'>
-                  <div className='text-xl font-bold'>{quiz.full / quiz.opened}%</div>
-                  <div className='text-gray-400 dark:text-gray-700'>{t('quiz.dashboard.conversion')}</div>
+                  <div className='text-xl font-bold'>{((quiz.full / quiz.opened) * 100).toFixed(1)}%</div>
+                  <div className='text-gray-400 dark:text-gray-700 text-xs'>{t('quiz.dashboard.conversion')}</div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>

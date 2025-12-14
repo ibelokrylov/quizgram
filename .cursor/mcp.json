@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    },
+    "dbhub": {
+      "command": "npx",
+      "args": ["@bytebase/dbhub", "--transport", "stdio", "--dsn", "postgres://postgres:postgres@localhost:5432/postgres"]
+    }
+  }
+}

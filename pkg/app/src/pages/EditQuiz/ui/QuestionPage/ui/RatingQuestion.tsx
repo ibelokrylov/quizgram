@@ -9,7 +9,7 @@ export const RatingQuestion = ({ question, setQuestion }: { question: Quiz['ques
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!content) {
+    if (!content?.left_placeholder || !content?.right_placeholder) {
       setQuestion({
         ...question,
         content: {

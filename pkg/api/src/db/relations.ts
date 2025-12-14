@@ -5,7 +5,6 @@ import { codeTable } from "./code";
 import { planTable } from "./plan";
 import {
   quizBidTable,
-  quizBidUserInfoTable,
   quizContactTable,
   quizQuestionTable,
   quizTable,
@@ -26,7 +25,6 @@ export const relations = defineRelations(
     quizThxPage: quizThxPageTable,
     quizQuestion: quizQuestionTable,
     quizBid: quizBidTable,
-    quizBidUserInfo: quizBidUserInfoTable,
     quizOpen: quizOpenTable,
   },
   (r) => ({
@@ -96,17 +94,13 @@ export const relations = defineRelations(
         from: r.quiz.id,
         to: r.quizQuestion.quizId,
       }),
-      quizOpens: r.many.quizOpen({
+      quizOpen: r.one.quizOpen({
         from: r.quiz.uid,
         to: r.quizOpen.quizUid,
       }),
       quizBids: r.many.quizBid({
         from: r.quiz.id,
         to: r.quizBid.quizId,
-      }),
-      quizBidUserInfos: r.many.quizBidUserInfo({
-        from: r.quiz.id,
-        to: r.quizBidUserInfo.quizId,
       }),
     },
 
@@ -146,14 +140,6 @@ export const relations = defineRelations(
     quizBid: {
       quiz: r.one.quiz({
         from: r.quizBid.quizId,
-        to: r.quiz.id,
-      }),
-    },
-
-    // QuizBidUserInfo relations
-    quizBidUserInfo: {
-      quiz: r.one.quiz({
-        from: r.quizBidUserInfo.quizId,
         to: r.quiz.id,
       }),
     },

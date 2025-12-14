@@ -87,7 +87,7 @@ export const quiz = new Elysia({ prefix: "/quiz" })
             const offset = (page - 1) * limit;
 
             try {
-              const quizzes = await QuizService.getAllByDashboard(
+              const { quizzes } = await QuizService.getAllByDashboard(
                 user.id,
                 limit,
                 offset,
@@ -99,8 +99,9 @@ export const quiz = new Elysia({ prefix: "/quiz" })
                   quizzes: quizzes.map((quiz) => ({
                     uid: quiz.uid,
                     name: quiz.name ?? "Новый квиз",
-                    opened: quiz.opened ?? 0,
-                    full: quiz.full ?? 0,
+                    opened: quiz.quiz_open?.opened ?? 0,
+                    openedUnique: quiz.quiz_open?.openedUnique ?? 0,
+                    full: quiz.quiz_open?.full ?? 0,
                     isActive: quiz.isActive ?? true,
                     createdAt: quiz.createdAt ?? new Date(),
                     updatedAt: quiz.updatedAt ?? new Date(),
@@ -454,8 +455,6 @@ export const quiz = new Elysia({ prefix: "/quiz" })
                   uid: quizData.quiz.uid,
                   createdAt: quizData.quiz.createdAt ?? new Date(),
                   updatedAt: quizData.quiz.updatedAt ?? new Date(),
-                  opened: quizData.quiz.opened ?? 0,
-                  full: quizData.quiz.full ?? 0,
                   isActive: quizData.quiz.isActive ?? false,
                   name: quizData.quiz.name ?? "Новый квиз",
                   startPage: quizData.quiz.startPage ?? undefined,
@@ -498,6 +497,54 @@ export const quiz = new Elysia({ prefix: "/quiz" })
                 message: t.String(),
                 error: t.String(),
               }),
+            },
+          },
+        )
+        .get(
+          "/uuids",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              const response: QuizModel.quizUuidsErrorResponse = {
+                message: "failed",
+                error: "Unauthorized",
+              };
+              return response;
+            }
+
+            try {
+              const uuids = await QuizService.getQuizUuids(user.id);
+
+              const response: QuizModel.quizUuidsSuccessResponse = {
+                message: "ok",
+                data: {
+                  uuids,
+                },
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при получении UUID квизов",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+              ctx.set.status = 500;
+
+              const response: QuizModel.quizUuidsErrorResponse = {
+                message: "failed",
+                error: "Internal server error",
+              };
+
+              return response;
+            }
+          },
+          {
+            response: {
+              200: QuizModel.quizUuidsSuccessResponse,
+              401: QuizModel.quizUuidsErrorResponse,
+              500: QuizModel.quizUuidsErrorResponse,
             },
           },
         ),

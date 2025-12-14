@@ -17,6 +17,9 @@ import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppDashboardRouteRouteImport } from './routes/app/dashboard/route'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
+import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
+import { Route as AppBidReportRouteRouteImport } from './routes/app/bid/report/route'
+import { Route as AppBidReportStatisticRouteRouteImport } from './routes/app/bid/report/statistic/route'
 
 const RegistrationRoute = RegistrationRouteImport.update({
   id: '/registration',
@@ -58,6 +61,22 @@ const AppQuizUidRoute = AppQuizUidRouteImport.update({
   path: '/quiz/$uid',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppBidStatisticRouteRoute = AppBidStatisticRouteRouteImport.update({
+  id: '/bid/statistic',
+  path: '/bid/statistic',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBidReportRouteRoute = AppBidReportRouteRouteImport.update({
+  id: '/bid/report',
+  path: '/bid/report',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBidReportStatisticRouteRoute =
+  AppBidReportStatisticRouteRouteImport.update({
+    id: '/statistic',
+    path: '/statistic',
+    getParentRoute: () => AppBidReportRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +86,10 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
+  '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
+  '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +99,10 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
+  '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
+  '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +113,10 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
+  '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
+  '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +128,10 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/bid/report'
+    | '/app/bid/statistic'
     | '/app/quiz/$uid'
+    | '/app/bid/report/statistic'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +141,10 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/bid/report'
+    | '/app/bid/statistic'
     | '/app/quiz/$uid'
+    | '/app/bid/report/statistic'
   id:
     | '__root__'
     | '/'
@@ -120,7 +154,10 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/bid/report'
+    | '/app/bid/statistic'
     | '/app/quiz/$uid'
+    | '/app/bid/report/statistic'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -190,16 +227,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQuizUidRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/bid/statistic': {
+      id: '/app/bid/statistic'
+      path: '/bid/statistic'
+      fullPath: '/app/bid/statistic'
+      preLoaderRoute: typeof AppBidStatisticRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/bid/report': {
+      id: '/app/bid/report'
+      path: '/bid/report'
+      fullPath: '/app/bid/report'
+      preLoaderRoute: typeof AppBidReportRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/bid/report/statistic': {
+      id: '/app/bid/report/statistic'
+      path: '/statistic'
+      fullPath: '/app/bid/report/statistic'
+      preLoaderRoute: typeof AppBidReportStatisticRouteRouteImport
+      parentRoute: typeof AppBidReportRouteRoute
+    }
   }
 }
 
+interface AppBidReportRouteRouteChildren {
+  AppBidReportStatisticRouteRoute: typeof AppBidReportStatisticRouteRoute
+}
+
+const AppBidReportRouteRouteChildren: AppBidReportRouteRouteChildren = {
+  AppBidReportStatisticRouteRoute: AppBidReportStatisticRouteRoute,
+}
+
+const AppBidReportRouteRouteWithChildren =
+  AppBidReportRouteRoute._addFileChildren(AppBidReportRouteRouteChildren)
+
 interface AppRouteRouteChildren {
   AppDashboardRouteRoute: typeof AppDashboardRouteRoute
+  AppBidReportRouteRoute: typeof AppBidReportRouteRouteWithChildren
+  AppBidStatisticRouteRoute: typeof AppBidStatisticRouteRoute
   AppQuizUidRoute: typeof AppQuizUidRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardRouteRoute: AppDashboardRouteRoute,
+  AppBidReportRouteRoute: AppBidReportRouteRouteWithChildren,
+  AppBidStatisticRouteRoute: AppBidStatisticRouteRoute,
   AppQuizUidRoute: AppQuizUidRoute,
 }
 

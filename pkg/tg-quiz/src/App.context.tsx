@@ -5,10 +5,156 @@ export type Quiz = {
   name: string;
   startPage: unknown;
   questionTitle: string;
-  question: (QuizQuestionAnswerOptions | QuizQuestionVariantImage | QuizQuestionVariantImageText | QuizQuestionInput | QuizQuestionSelect)[];
-  contact: unknown;
-  thxPage: unknown;
+  question: (
+    | QuizQuestionAnswerOptions
+    | QuizQuestionVariantImage
+    | QuizQuestionVariantImageText
+    | QuizQuestionInput
+    | QuizQuestionSelect
+    | QuizQuestionDate
+    | QuizQuestionSlide
+    | QuizQuestionFile
+    | QuizQuestionPage
+    | QuizQuestionRating
+    | QuizQuestionGroup
+  )[];
+  contact: QuizContact[];
+  thxPage: QuizThxPage;
   hideLogo: boolean;
+};
+
+export type QuizThxPage = {
+  uid: string;
+  title: string;
+  description: string;
+  buttons: QuizThxPageButton[];
+  social: QuizThxPageSocial[];
+};
+
+export type QuizThxPageButton = {
+  link: string;
+  title: string;
+};
+
+export type QuizThxPageSocial = {
+  link: string;
+  type: string;
+};
+
+export type QuizContact = {
+  uid: string;
+  title?: string;
+  description?: string;
+  form?: QuizContactForm[];
+  background: string | null;
+};
+
+export type QuizContactForm = {
+  step: number | undefined;
+  type: string;
+  label: string | undefined;
+  required: boolean;
+  placeholder: string | undefined;
+  mask: string | undefined;
+};
+
+export type QuizStartPage = QuizStartPageStandard;
+export type QuizStartPageStandard = {
+  'type': 'standard';
+  'content': {
+    'name'?: string;
+    'type'?: 'standard';
+    'phone'?: string;
+    'title'?: string;
+    'button'?: string;
+    'logo_url'?: string;
+    'disclamer'?: string;
+    'show_logo'?: boolean;
+    'description'?: string;
+    'company_name'?: string;
+    'content_align'?: 'left';
+    'background_type'?: 'image';
+    'background_mobile'?: string;
+  };
+};
+
+export type QuizQuestionGroup = {
+  type: 'question_group';
+  uid: string;
+  order: number;
+  content: {
+    title: string;
+    questions: (
+      | QuizQuestionAnswerOptions
+      | QuizQuestionVariantImage
+      | QuizQuestionVariantImageText
+      | QuizQuestionInput
+      | QuizQuestionSelect
+      | QuizQuestionDate
+      | QuizQuestionSlide
+      | QuizQuestionFile
+      | QuizQuestionPage
+      | QuizQuestionRating
+    )[];
+  };
+};
+
+export type QuizQuestionRating = {
+  type: 'rating';
+  uid: string;
+  order: number;
+  content: {
+    title?: string;
+    left_placeholder?: string;
+    right_placeholder?: string;
+  };
+};
+
+export type QuizQuestionPage = {
+  'type': 'page';
+  'uid': string;
+  'order': number;
+  'content'?: {
+    'url'?: string;
+    'text'?: string;
+    'type'?: 'img' | 'video';
+    'title'?: string;
+  };
+};
+
+export type QuizQuestionFile = {
+  type: 'file';
+  uid: string;
+  order: number;
+  content: {
+    title?: string;
+    type: 'image' | 'video' | 'docs' | 'all';
+  };
+};
+
+export type QuizQuestionSlide = {
+  'type': 'slide';
+  'uid': string;
+  'order': number;
+  'content': {
+    'title': string;
+    'options'?: {
+      'end'?: number;
+      'step'?: number;
+      'start'?: number;
+      'default_select'?: number;
+    };
+  };
+};
+
+export type QuizQuestionDate = {
+  'type': 'date';
+  'uid': string;
+  'order': number;
+  'content': {
+    'type': 'calendar' | 'mask';
+    'title'?: string;
+  };
 };
 
 export type QuizQuestionSelect = {

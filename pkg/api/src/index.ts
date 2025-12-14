@@ -2,6 +2,7 @@ import { cors } from '@elysiajs/cors';
 import { Elysia } from "elysia";
 import { logger } from "./lib/logger";
 import { auth } from "./modules/auth";
+import { bids } from "./modules/bids";
 import { publicModule } from './modules/public';
 import { quiz } from "./modules/quiz";
 import { user } from "./modules/user";
@@ -38,6 +39,7 @@ const app = new Elysia()
     .use(auth)
     .use(user)
     .use(quiz)
+    .use(bids)
     .use(publicModule)
   )
   .listen(5001);
