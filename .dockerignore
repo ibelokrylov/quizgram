@@ -1,0 +1,65 @@
+# Игнорируем node_modules
+node_modules
+**/node_modules
+
+# Игнорируем git
+.git
+.gitignore
+
+# Игнорируем IDE файлы
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.cursor
+
+# Игнорируем логи
+*.log
+logs
+
+# Игнорируем временные файлы
+*.tmp
+*.temp
+.DS_Store
+
+# Игнорируем тесты и документацию
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+README.md
+*.md
+TODO.md
+
+# Игнорируем конфигурационные файлы разработки
+.env.local
+.env.development
+.env.test
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Игнорируем сборки (будут созданы заново)
+dist
+build
+out
+*.tsbuildinfo
+
+# Игнорируем временные файлы TanStack Router
+**/.tanstack/
+
+# Игнорируем кеши
+.eslintcache
+.cache
+coverage
+*.lcov
+
+# Игнорируем Docker файлы (чтобы не копировать их в образ)
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# Игнорируем другие служебные файлы
+*.tgz
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
