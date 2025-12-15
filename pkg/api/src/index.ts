@@ -22,10 +22,17 @@ const env = typeof Bun !== "undefined" ? Bun.env : process.env;
 const isDevelopment = env.NODE_ENV !== "production";
 
 // Настраиваем CORS в зависимости от окружения
+// Читаем разрешённые URL из переменной окружения APP_URLS
+const appUrls = env.APP_URLS
+  ? env.APP_URLS.split(",").map((url) => url.trim()).filter(Boolean)
+  : [];
+
 const corsConfig = {
-  origin: isDevelopment
-    ? ["http://localhost:5173", "http://localhost:5174"]
-    : "https://example.com",
+  origin: appUrls.length > 0
+    ? appUrls
+    : isDevelopment
+      ? ["http://localhost:5173", "http://localhost:5174"]
+      : "https://example.com",
   credentials: true,
 };
 
