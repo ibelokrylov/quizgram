@@ -62,10 +62,12 @@ services:
       context: .
       dockerfile: Dockerfile.api
     container_name: quizgram-api
-    ports:
-      - "5001:5001"
+    # Используем host network - контейнер будет доступен напрямую на порту 5001 хоста
+    # При host network порты не маппятся через ports:, контейнер использует сеть хоста напрямую
+    # POSTGRES_HOST должен быть localhost, так как postgres доступен через порт 5432 на хосте
+    network_mode: host
     environment:
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
       POSTGRES_DB: "${POSTGRES_DB:?POSTGRES_DB variable is not set}"
       POSTGRES_USER: "${POSTGRES_USER:?POSTGRES_USER variable is not set}"
@@ -76,8 +78,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    networks:
-      - quizgram-network
 
   app:
     build:

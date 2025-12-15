@@ -1,7 +1,9 @@
 # Dockerfile для API
 # Сборка: docker build -f Dockerfile.api -t quizgram-api .
-# Запуск: docker run -p 5001:5001 --env-file .env quizgram-api
+# Запуск с обычной сетью: docker run -p 5001:5001 --env-file .env quizgram-api
+# Запуск с host network: docker run --network host --env-file .env quizgram-api
 # Примечание: переменные окружения передаются через docker-compose или --env-file при запуске
+# При host network API будет доступен напрямую на порту 5001 хоста
 
 # Используем официальный образ Bun
 FROM oven/bun:1 AS base
@@ -16,7 +18,7 @@ COPY package.json bun.lock ./
 COPY pkg/ ./pkg/
 
 # Устанавливаем все зависимости (включая dev для drizzle-kit миграций)
-RUN bun install
+RUN bun install --linker=isolated
 
 # Делаем entrypoint скрипт исполняемым (скрипт уже скопирован через COPY pkg/)
 RUN chmod +x /app/pkg/api/docker-entrypoint.sh
