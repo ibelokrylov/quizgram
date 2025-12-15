@@ -38,8 +38,8 @@ export const QuestionLayout = ({
 	}, [title]);
 
 	return (
-		<Card className="p-2 relative" key={question.uid}>
-			<CardHeader className="px-6">
+		<Card className="p-1.5 md:p-2 relative" key={question.uid}>
+			<CardHeader className="px-3 md:px-4 pt-2.5 md:pt-3 pb-1.5 md:pb-2">
 				<CardTitle>
 					<div className={"flex items-center justify-between"}>
 						<div className="flex items-center gap-2 w-[calc(100%-100px)]">
@@ -87,8 +87,8 @@ export const QuestionLayout = ({
 					</div>
 				</CardTitle>
 			</CardHeader>
-			<CardContent>{children}</CardContent>
-			<div className="flex justify-end px-6">
+			<CardContent className="px-3 md:px-4 pb-3 md:pb-4 pt-1">{children}</CardContent>
+			<div className="flex justify-end px-3 md:px-4 pb-2.5 md:pb-3">
 				<div>
 					<Tooltip>
 						<TooltipTrigger asChild>

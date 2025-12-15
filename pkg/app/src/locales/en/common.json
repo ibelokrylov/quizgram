@@ -214,6 +214,7 @@
 	"quiz.dashboard.conversion.tooltip": "Percentage of completions from opens",
 	"quiz.dashboard.edit": "Edit",
 	"quiz.dashboard.bid": "Leads",
+	"quiz.dashboard.empty": "You don't have any quizzes yet. Create your first quiz to start collecting leads.",
 	"quiz.dashboard.delete": "Delete",
 	"quiz.dashboard.deactivate": "Deactivate",
 	"quiz.dashboard.activate": "Activate",

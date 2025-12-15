@@ -6,18 +6,15 @@ export interface QuizFilterItem {
 	name: string;
 }
 
-interface QuizFiltersResponse {
-	message: string;
-	data: {
-		filters: QuizFilterItem[];
-	};
+interface QuizFiltersData {
+	filters: QuizFilterItem[];
 }
 
 async function fetchQuizFilters(): Promise<QuizFilterItem[]> {
-	const response = await http<QuizFiltersResponse>({
+	const response = await http<QuizFiltersData>({
 		url: "/v1/quiz/filters",
 	});
-	return response.data.data.filters;
+	return response.data.filters;
 }
 
 export const useQuizFilters = () => {

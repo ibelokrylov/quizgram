@@ -187,7 +187,15 @@ export const DashboardQuiz = ({
 							</Link>
 						</div>
 						<div>
-							<Button variant={"secondary"}>{t("quiz.dashboard.bid")}</Button>
+							<Link
+								to="/app/bid/report"
+								search={{
+									limit: 10,
+									quiz_uid: quiz.uid,
+								}}
+							>
+								<Button variant={"secondary"}>{t("quiz.dashboard.bid")}</Button>
+							</Link>
 						</div>
 					</div>
 					<div>

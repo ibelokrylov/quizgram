@@ -214,6 +214,7 @@
 	"quiz.dashboard.conversion.tooltip": "Процент прохождений от открытий",
 	"quiz.dashboard.edit": "Редактировать",
 	"quiz.dashboard.bid": "Заявки",
+	"quiz.dashboard.empty": "У вас пока нет квизов. Создайте первый квиз, чтобы начать собирать заявки.",
 	"plans.title": "Тарифы",
 	"plans.description": "Выберите подходящий тарифный план",
 	"plans.buy": "Купить",

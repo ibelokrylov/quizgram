@@ -8,11 +8,15 @@ import { quiz } from "./modules/quiz";
 import { startScheduler } from "./modules/scheduler";
 import { user } from "./modules/user";
 import { PlanService } from "./services/plan.service";
+import { initTelegramBotsOnStartup } from "./services/quiz-bot.service";
 
 // Инициализация планов при запуске приложения
 PlanService.scanPlanAndCreate().catch((error) => {
   logger.error("Ошибка при инициализации планов", error instanceof Error ? error : new Error(String(error)));
 });
+
+// Явная инициализация Telegram‑ботов при старте API
+initTelegramBotsOnStartup();
 
 // Запуск scheduler для обработки незавершенных заявок
 startScheduler();

@@ -25,6 +25,14 @@ export function startScheduler() {
     });
   }, INTERVAL_MS);
 
+  // Не держим процесс живым только из-за таймера scheduler
+  // В Node.js/Bun у таймера есть метод unref, но его может не быть в типах
+  // @ts-ignore
+  if (typeof intervalId.unref === "function") {
+    // @ts-ignore
+    intervalId.unref();
+  }
+
   // Обработка завершения процесса
   if (typeof process !== 'undefined') {
     process.on('SIGINT', () => {

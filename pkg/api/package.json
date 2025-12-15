@@ -16,11 +16,13 @@
     "drizzle-typebox": "^0.3.3",
     "elysia": "catalog:backend",
     "jsonwebtoken": "^9.0.2",
+    "node-telegram-bot-api": "^0.67.0",
     "nodemailer": "^7.0.11",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node-telegram-bot-api": "^0.64.13",
     "@types/nodemailer": "^7.0.4",
     "bun-types": "catalog:backend",
     "drizzle-kit": "^1.0.0-beta.2-b782ae1"
