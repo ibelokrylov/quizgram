@@ -14,7 +14,12 @@ export const useUserPlan = () => {
 		queryFn: _fetch,
 		retry: false,
 		retryOnMount: false,
+		// План пользователя меняется редко, поэтому считаем данные «свежими»
+		// и не дёргаем эндпоинт повторно при маунте нескольких компонентов.
+		staleTime: 1000 * 60 * 5, // 5 минут
+		refetchOnMount: false,
 		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});
 
 	return { query };

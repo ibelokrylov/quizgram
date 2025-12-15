@@ -123,7 +123,7 @@ export const DashboardQuiz = ({
 						<TooltipTrigger>
 							<div className="flex flex-col text-left">
 								<div className="text-xl font-bold">{quiz.opened}</div>
-								<div className="text-gray-400 dark:text-gray-700 text-xs">
+								<div className="text-xs text-muted-foreground">
 									{t("quiz.dashboard.opened")}
 								</div>
 							</div>
@@ -136,7 +136,7 @@ export const DashboardQuiz = ({
 						<TooltipTrigger>
 							<div className="flex flex-col text-left">
 								<div className="text-xl font-bold">{quiz.openedUnique}</div>
-								<div className="text-gray-400 dark:text-gray-700 text-xs">
+								<div className="text-xs text-muted-foreground">
 									{t("quiz.dashboard.openedUnique")}
 								</div>
 							</div>
@@ -149,7 +149,7 @@ export const DashboardQuiz = ({
 						<TooltipTrigger>
 							<div className="flex flex-col text-left">
 								<div className="text-xl font-bold">{quiz.full}</div>
-								<div className="text-gray-400 dark:text-gray-700 text-xs">
+								<div className="text-xs text-muted-foreground">
 									{t("quiz.dashboard.full")}
 								</div>
 							</div>
@@ -165,7 +165,7 @@ export const DashboardQuiz = ({
 									<div className="text-xl font-bold">
 										{((quiz.full / quiz.opened) * 100).toFixed(1)}%
 									</div>
-									<div className="text-gray-400 dark:text-gray-700 text-xs">
+									<div className="text-xs text-muted-foreground">
 										{t("quiz.dashboard.conversion")}
 									</div>
 								</div>

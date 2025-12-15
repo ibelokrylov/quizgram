@@ -1,5 +1,6 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
+import "@telegram-apps/telegram-ui/dist/styles.css";
 import "./index.css";
 import "./lib/i18n";
 
