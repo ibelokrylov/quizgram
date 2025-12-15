@@ -5,10 +5,11 @@
 # Примечание: переменные окружения передаются через docker-compose или --env-file при запуске
 # При host network API будет доступен напрямую на порту 5001 хоста
 
-# Используем официальный образ Bun
-FROM oven/bun:1 AS base
+# ============================================
+# Этап 1: Установка зависимостей
+# ============================================
+FROM oven/bun:1-alpine AS deps
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
 # Копируем корневые файлы для workspaces
@@ -17,10 +18,31 @@ COPY package.json bun.lock ./
 # Копируем все пакеты (нужно для правильной работы lockfile)
 COPY pkg/ ./pkg/
 
-# Устанавливаем все зависимости (включая dev для drizzle-kit миграций)
-RUN bun install --linker=isolated
+# Устанавливаем зависимости (включая dev для drizzle-kit миграций)
+RUN bun install --linker=isolated && \
+    # Удаляем ненужные пакеты (app и tg-quiz не нужны для API)
+    rm -rf /app/pkg/app /app/pkg/tg-quiz && \
+    # Очищаем кеш bun для уменьшения размера
+    rm -rf /root/.bun/install/cache && \
+    # Удаляем тестовые файлы и документацию из node_modules
+    find /app/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "*.test.*" \) -exec rm -rf {} + 2>/dev/null || true && \
+    find /app/node_modules -type f \( -name "*.test.*" -o -name "*.spec.*" -o -name "*.map" -o -name "README.md" -o -name "CHANGELOG.md" \) -delete 2>/dev/null || true
 
-# Делаем entrypoint скрипт исполняемым (скрипт уже скопирован через COPY pkg/)
+# ============================================
+# Этап 2: Финальный образ
+# ============================================
+FROM oven/bun:1-alpine AS runner
+
+WORKDIR /app
+
+# Копируем установленные зависимости из этапа deps
+COPY --from=deps /app/node_modules ./node_modules
+# Копируем только пакет API (app и tg-quiz уже удалены на этапе deps)
+COPY --from=deps /app/pkg/api ./pkg/api
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/bun.lock ./bun.lock
+
+# Делаем entrypoint скрипт исполняемым
 RUN chmod +x /app/pkg/api/docker-entrypoint.sh
 
 # Переходим в директорию API
