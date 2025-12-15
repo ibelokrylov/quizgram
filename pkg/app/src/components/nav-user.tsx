@@ -2,14 +2,12 @@ import {
   IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
-  IconUserCircle,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,

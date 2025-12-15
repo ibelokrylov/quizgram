@@ -12,9 +12,11 @@ export const QuestionGroup = () => {
 
   function addCurrentAnswer(answer: Record<string, unknown>) {
     const { question_uid } = answer;
+    // Явно указываем тип для вычисляемого свойства
+    const questionUid = question_uid as string;
     const newAnswers = {
       ...answers,
-      [question_uid]: answer
+      [questionUid]: answer
     };
     setAnswers(newAnswers);
 

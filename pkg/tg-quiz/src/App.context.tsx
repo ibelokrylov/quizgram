@@ -19,7 +19,7 @@ export type Quiz = {
     | QuizQuestionGroup
   )[];
   contact: QuizContact[];
-  thxPage: QuizThxPage;
+  thxPage: QuizThxPage | null;
   hideLogo: boolean;
 };
 

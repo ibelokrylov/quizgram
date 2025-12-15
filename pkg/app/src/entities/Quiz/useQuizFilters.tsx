@@ -17,7 +17,7 @@ async function fetchQuizFilters(): Promise<QuizFilterItem[]> {
 	const response = await http<QuizFiltersResponse>({
 		url: "/v1/quiz/filters",
 	});
-	return response.data.filters;
+	return response.data.data.filters;
 }
 
 export const useQuizFilters = () => {

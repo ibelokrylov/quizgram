@@ -2,7 +2,7 @@ import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 
 interface BidsTablePaginationProps {
-	observerTarget: React.RefObject<HTMLDivElement>;
+	observerTarget: React.RefObject<HTMLDivElement | null>;
 	isFetchingNextPage: boolean;
 	hasNextPage: boolean;
 	fetchNextPage: () => void;

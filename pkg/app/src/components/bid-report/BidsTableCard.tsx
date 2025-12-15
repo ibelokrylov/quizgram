@@ -87,6 +87,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 								search: (prev) => ({
 									...prev,
 									key: bid.key,
+									limit: prev.limit ?? 10,
 								}),
 							});
 						}}

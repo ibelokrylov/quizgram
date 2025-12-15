@@ -74,8 +74,7 @@ export function BidsReportPage() {
 	}, [isFreePlan, search.isFull, navigate]);
 
 	// Получаем список квизов для фильтра
-	const { data: quizFilters = [], isLoading: isLoadingQuizzes } =
-		useQuizFilters();
+	const { data: quizFilters = [] } = useQuizFilters();
 
 	const {
 		data,
@@ -107,7 +106,7 @@ export function BidsReportPage() {
 	const isDrawerOpen = !!search.key;
 
 	// Intersection Observer для бесконечного скролла
-	const observerTarget = useRef<HTMLDivElement>(null);
+	const observerTarget = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		const element = observerTarget.current;
@@ -133,13 +132,21 @@ export function BidsReportPage() {
 		key: keyof BidsListFilters,
 		value: string | boolean | number | undefined,
 	) => {
+		// Для boolean значений конвертируем в строку для URL
+		if (typeof value === "boolean") {
+			const stringValue = String(value);
+			navigate({
+				search: (prev) => ({
+					...prev,
+					[key]: stringValue,
+				}),
+				replace: true,
+			});
+			return;
+		}
+
 		let newValue: string | number | undefined =
 			value === "" ? undefined : value;
-
-		// Для boolean значений конвертируем в строку для URL
-		if (key === "isFull" && typeof newValue === "boolean") {
-			newValue = String(newValue);
-		}
 
 		// Обновляем URL с новыми параметрами
 		navigate({

@@ -132,6 +132,7 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
 								search: (prev) => ({
 									...prev,
 									key: bid.key,
+									limit: prev.limit ?? 10,
 								}),
 							});
 						}}

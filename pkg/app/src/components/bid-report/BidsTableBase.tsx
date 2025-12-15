@@ -17,7 +17,7 @@ interface BidsTableBaseProps {
 	isFetchingNextPage: boolean;
 	hasNextPage: boolean;
 	fetchNextPage: () => void;
-	observerTarget: React.RefObject<HTMLDivElement>;
+	observerTarget: React.RefObject<HTMLDivElement | null>;
 }
 
 export function BidsTableBase({

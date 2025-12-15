@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import { AuthContext } from "@/entities/User/auth.context";
 import {
 	userRegistrationZod,
 	type UserRegistration,
+	type User,
 } from "@/entities/User/User.type";
 import http from "@/lib/http";
 import { Link } from "@tanstack/react-router";
@@ -38,7 +38,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 	});
 
 	const ctx = useContext(AuthContext);
-	const { i18n } = useTranslation();
+	const { i18n, t } = useTranslation("common");
 
 	function change(v: string | boolean, type: keyof typeof data) {
 		setError({ ...error, [type]: false });
@@ -66,7 +66,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 					const currentLanguage = i18n.language || "en";
 					const language = currentLanguage === "ru" || currentLanguage.startsWith("ru") ? "ru" : "en";
 					
-					const res = await http({
+					const res = await http<User>({
 						url: "/v1/auth/registration",
 						method: "POST",
 						body: {
@@ -82,8 +82,9 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 						ctx.setIsAuth(true);
 						
 						// Устанавливаем язык из ответа сервера, если он есть
-						if (res.data.language && (res.data.language === "en" || res.data.language === "ru")) {
-							i18n.changeLanguage(res.data.language);
+						const userLanguage = res.data.language;
+						if (userLanguage && (userLanguage === "en" || userLanguage === "ru")) {
+							i18n.changeLanguage(userLanguage);
 						}
 					} else {
 						toast.error(res.message);

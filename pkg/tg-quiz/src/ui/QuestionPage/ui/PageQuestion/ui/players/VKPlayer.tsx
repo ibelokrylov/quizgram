@@ -9,15 +9,23 @@ export const VKPlayer = ({ url }: VKPlayerProps) => {
   const link = `https://vk.ru/video_ext.php?oid=${oid}&amp;&id=${id}`;
   console.log(src);
 
+  // VK Player требует нестандартные атрибуты iframe для работы плеера
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vkPlayerAttrs: any = {
+    adplaying: 'false',
+    link: link,
+    nativeplayer: '',
+  };
+
   return (
     <div className='player'>
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore - VK Player требует нестандартные атрибуты iframe (adplaying, link, nativeplayer) для работы плеера */}
       <iframe
         src={src}
         allow='autoplay; encrypted-media;'
         frameBorder='0'
-        adplaying='false'
-        link={link}
-        nativeplayer=''
+        {...vkPlayerAttrs}
       ></iframe>
     </div>
   );

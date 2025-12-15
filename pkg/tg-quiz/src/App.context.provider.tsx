@@ -1,5 +1,6 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
+import { useRawInitData, useLaunchParams } from "@telegram-apps/sdk-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
@@ -17,8 +18,9 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   const [allStages, setAllStages] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
-  // Получаем initData от Telegram
-  // const initData = useRawInitData();
+  // Получаем данные от Telegram SDK
+  const initData = useRawInitData();
+  const launchParams = useLaunchParams();
 
   function generateStages(quiz: Quiz) {
     const stages = [];
@@ -50,13 +52,13 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   async function fetchQuiz() {
     setLoading(true);
     try {
-      getStartAppParam();
       // Получаем uid из startapp параметра
-      // tgWebAppStartParam содержит параметр, переданный в startapp
-      // const launchParamsTyped = launchParams as Record<string, unknown>;
-      // const uid = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
-
-      const uid = getStartAppParam();
+      // Сначала пытаемся получить из launchParams (Telegram SDK)
+      // Если не получилось - используем getStartAppParam() как fallback
+      const launchParamsTyped = launchParams as Record<string, unknown>;
+      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
+      const uidFromUrl = getStartAppParam();
+      const uid = uidFromLaunchParams || uidFromUrl;
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
@@ -72,7 +74,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         },
         credentials: "include", // Для отправки cookies (bidToken)
         body: JSON.stringify({
-          // initData: initData || undefined, // Закомментировано для dev режима
+          initData: initData || undefined,
         }),
       });
 
@@ -136,6 +138,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   }
   useEffect(() => {
     fetchQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function sendAnswer(answer: Record<string, unknown>) {
