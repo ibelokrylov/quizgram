@@ -19,14 +19,31 @@ function validateEmail(email: string): boolean {
 }
 
 function validateMailConfig(): void {
+  const errors: string[] = [];
+  
   if (!MAIL_HOST) {
-    throw new Error("MAIL_HOST environment variable is not set");
+    errors.push("MAIL_HOST environment variable is not set");
   }
   if (!MAIL_USER) {
-    throw new Error("MAIL_USER environment variable is not set");
+    errors.push("MAIL_USER environment variable is not set");
   }
   if (!MAIL_PASS) {
-    throw new Error("MAIL_PASS environment variable is not set");
+    errors.push("MAIL_PASS environment variable is not set");
+  }
+  
+  if (errors.length > 0) {
+    const errorMessage = [
+      "SMTP configuration is incomplete:",
+      ...errors,
+      "",
+      "Пожалуйста, настройте переменные окружения для отправки email.",
+      "Документация: pkg/api/docs/SMTP_SETUP.md",
+      "",
+      "Для Yandex используйте пароль приложения, а не обычный пароль!",
+      "Создайте пароль приложения: https://passport.yandex.ru/profile",
+    ].join("\n");
+    
+    throw new Error(errorMessage);
   }
 }
 
@@ -43,6 +60,13 @@ function getTransporter(): nodemailer.Transporter {
   // Определяем, используется ли SSL/TLS (порт 465) или STARTTLS (порт 587)
   const isSecure = MAIL_PORT === 465;
 
+  logger.debug("Инициализация SMTP транспортера", {
+    host: MAIL_HOST,
+    port: MAIL_PORT,
+    user: MAIL_USER,
+    secure: isSecure,
+  });
+
   transporter = nodemailer.createTransport({
     host: MAIL_HOST,
     port: MAIL_PORT,
@@ -55,6 +79,10 @@ function getTransporter(): nodemailer.Transporter {
       // Отключаем проверку сертификата (аналогично Go коду с InsecureSkipVerify: true)
       rejectUnauthorized: false,
     },
+    // Увеличиваем таймауты для медленных SMTP серверов
+    connectionTimeout: 10000, // 10 секунд
+    greetingTimeout: 10000,
+    socketTimeout: 30000,
   });
 
   return transporter;
@@ -90,10 +118,39 @@ async function sendMail(
       messageId: info.messageId,
     });
   } catch (error) {
+    // Детальное логирование ошибки для диагностики
+    const errorDetails: Record<string, any> = {
+      to,
+      host: MAIL_HOST,
+      port: MAIL_PORT,
+      user: MAIL_USER,
+      secure: MAIL_PORT === 465,
+    };
+
+    if (error instanceof Error) {
+      errorDetails.errorMessage = error.message;
+      errorDetails.errorName = error.name;
+      errorDetails.errorStack = error.stack;
+      
+      // Дополнительные поля для SMTP ошибок
+      if ('code' in error) {
+        errorDetails.errorCode = (error as any).code;
+      }
+      if ('command' in error) {
+        errorDetails.smtpCommand = (error as any).command;
+      }
+      if ('response' in error) {
+        errorDetails.smtpResponse = (error as any).response;
+      }
+      if ('responseCode' in error) {
+        errorDetails.smtpResponseCode = (error as any).responseCode;
+      }
+    }
+
     logger.error(
       "Ошибка при отправке email",
       error instanceof Error ? error : new Error(String(error)),
-      { to },
+      errorDetails,
     );
     throw error;
   }
