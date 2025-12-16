@@ -23,8 +23,8 @@ jobs:
 
       - name: Проверка обязательных секретов
         run: |
-          if [ -z "${{ secrets.SSH_KEY }}" ]; then
-            echo "ERROR: SSH_KEY secret is not set!"
+          if [ -z "${{ secrets.SERVER_PASS }}" ]; then
+            echo "ERROR: SERVER_PASS secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.SERVER_IP }}" ]; then
@@ -51,11 +51,12 @@ jobs:
           cd pkg/tg-quiz
           bun run build
 
+      - name: Установка sshpass для SSH аутентификации
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
       - name: Настройка SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
           if [ -n "${{ secrets.SERVER_PORT }}" ] && [ -n "${{ secrets.SERVER_IP }}" ]; then
             ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           else
@@ -66,28 +67,18 @@ jobs:
       - name: Debug SSH setup
         run: |
           ls -la ~/.ssh
-          cat ~/.ssh/known_hosts
-          echo "SSH_KEY length: $(wc -c < ~/.ssh/id_rsa)"
+          cat ~/.ssh/known_hosts || echo "known_hosts file not found"
           echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
           echo "SERVER_HOST: ${{ secrets.SERVER_IP }}"
           echo "SERVER_PORT: ${{ secrets.SERVER_PORT }}"
-          if [ -z "${{ secrets.SERVER_PORT }}" ]; then
-            echo "ERROR: SERVER_PORT is not set!"
-          fi
-          if [ -z "${{ secrets.SERVER_IP }}" ]; then
-            echo "ERROR: SERVER_IP is not set!"
-          fi
-          if [ -z "${{ secrets.SSH_KEY }}" ]; then
-            echo "ERROR: SSH_KEY is not set!"
-          fi
 
       - name: Проверка SSH подключения
         run: |
-          ssh -v -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful'"
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -v -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful'"
 
       - name: Обновление кода на сервере
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
             git fetch
             git pull
@@ -95,7 +86,7 @@ jobs:
 
       - name: Создание корневого .env файла
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/.env << ENV
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -111,7 +102,7 @@ jobs:
 
       - name: Создание pkg/api/.env файла
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/api/.env << ENV
             ENV=${{ secrets.ENV }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -149,7 +140,7 @@ jobs:
 
       - name: Создание pkg/app/.env файла
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/app/.env << ENV
             VITE_PUBLIC_API_URL='${{ secrets.VITE_PUBLIC_API_URL }}'
             VITE_PUBLIC_APP_NAME='${{ secrets.VITE_PUBLIC_APP_NAME }}'
@@ -159,7 +150,7 @@ jobs:
 
       - name: Создание pkg/tg-quiz/.env файла
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/tg-quiz/.env << ENV
             # API URL для backend
             VITE_TG_QUIZ_API_URL=${{ secrets.VITE_TG_QUIZ_API_URL }}
@@ -168,7 +159,7 @@ jobs:
 
       - name: Перезапуск контейнеров через docker-compose
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
             docker-compose down
             docker-compose up -d --build
