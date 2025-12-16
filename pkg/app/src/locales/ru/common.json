@@ -218,6 +218,7 @@
 	"plans.title": "Тарифы",
 	"plans.description": "Выберите подходящий тарифный план",
 	"plans.buy": "Купить",
+	"plans.contact": "Связаться с нами",
 	"plans.current": "Текущий",
 	"plans.popular": "Популярный",
 	"plans.price.free": "Бесплатно",
@@ -379,5 +380,6 @@
 	"error.uploadFile": "Ошибка при загрузке файла",
 	"error.deleteFile": "Ошибка при удалении файла",
 	"error.getUserPlan": "Ошибка при получении тарифа",
-	"error.getProfile": "Ошибка при получении профиля"
+	"error.getProfile": "Ошибка при получении профиля",
+	"input.edit": "изменить"
 }

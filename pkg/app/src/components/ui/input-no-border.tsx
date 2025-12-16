@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { motion, type HTMLMotionProps } from "framer-motion";
-import { Pen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 
 interface InputNoBorderProps extends HTMLMotionProps<"input"> {
@@ -26,16 +26,15 @@ function InputNoBorder({
 	onMouseLeave,
 	...props
 }: InputNoBorderProps) {
+	const { t } = useTranslation();
 	const [width, setWidth] = React.useState(initialWidth);
 	const [isFocused, setIsFocused] = React.useState(false);
-	const [isHovered, setIsHovered] = React.useState(false);
 	const measureRef = React.useRef<HTMLSpanElement>(null);
 	const inputRef = React.useRef<HTMLInputElement>(null);
 	const containerRef = React.useRef<HTMLDivElement>(null);
 
 	const currentValue = value ?? defaultValue ?? "";
 	const currentLength = String(currentValue).length;
-	const showIcon = isFocused || isHovered;
 	const showCounter = maxLength !== undefined && isFocused;
 
 	const fontSizeStyle = fontSize
@@ -123,14 +122,8 @@ function InputNoBorder({
 					setIsFocused(false);
 					onBlur?.(e);
 				}}
-				onMouseEnter={(e) => {
-					setIsHovered(true);
-					onMouseEnter?.(e);
-				}}
-				onMouseLeave={(e) => {
-					setIsHovered(false);
-					onMouseLeave?.(e);
-				}}
+				onMouseEnter={onMouseEnter}
+				onMouseLeave={onMouseLeave}
 				animate={{ width: `${width}px` }}
 				transition={{
 					type: "spring",
@@ -139,28 +132,16 @@ function InputNoBorder({
 				}}
 				style={fontSizeStyle}
 				className={cn(
-					"file:text-foreground placeholder:text-muted-foreground selection:bg-transparent selection:text-primary-foreground dark:bg-transparent border-none h-9 rounded-md bg-transparent px-3 py-1 text-base transition-colors outline-none file:inline-flex file:h-7 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+					"file:text-foreground placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none h-9 rounded-md bg-transparent px-3 py-1 text-base transition-colors outline-none file:inline-flex file:h-7 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
 					"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
 					"aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
 					className,
 				)}
 				{...props}
 			/>
-			<motion.div
-				initial={false}
-				animate={{
-					opacity: showIcon ? 1 : 0,
-					scale: showIcon ? 1 : 0.8,
-				}}
-				transition={{
-					duration: 0.2,
-					ease: "easeOut",
-				}}
-				className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
-				style={{ left: `${width + 8}px` }}
-			>
-				<Pen className="h-4 w-4 text-muted-foreground" />
-			</motion.div>
+			<div className="absolute right-0 pointer-events-none" style={{ bottom: "-5px" }}>
+				<span className="text-xs text-muted-foreground">{t("input.edit")}</span>
+			</div>
 			{maxLength !== undefined && (
 				<motion.div
 					initial={false}

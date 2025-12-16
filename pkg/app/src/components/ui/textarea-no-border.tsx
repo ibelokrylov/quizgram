@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { motion, type HTMLMotionProps } from "framer-motion";
-import { Pen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import * as React from "react";
 
 interface TextAreaNoBorderProps
@@ -31,10 +31,10 @@ function TextAreaNoBorder({
 	fixedWidth,
 	...restProps
 }: TextAreaNoBorderProps) {
+	const { t } = useTranslation();
 	const [width, setWidth] = React.useState(fixedWidth ?? initialWidth);
 	const [height, setHeight] = React.useState(initialHeight);
 	const [isFocused, setIsFocused] = React.useState(false);
-	const [isHovered, setIsHovered] = React.useState(false);
 	const measureRef = React.useRef<HTMLDivElement>(null);
 	const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 	const containerRef = React.useRef<HTMLDivElement>(null);
@@ -42,7 +42,6 @@ function TextAreaNoBorder({
 
 	const currentValue = value ?? defaultValue ?? "";
 	const currentLength = String(currentValue).length;
-	const showIcon = isFocused || isHovered;
 	const showCounter = maxLength !== undefined && isFocused;
 
 	const fontSizeStyle = fontSize
@@ -301,14 +300,8 @@ function TextAreaNoBorder({
 					setIsFocused(false);
 					restProps.onBlur?.(e);
 				}}
-				onMouseEnter={(e) => {
-					setIsHovered(true);
-					restProps.onMouseEnter?.(e);
-				}}
-				onMouseLeave={(e) => {
-					setIsHovered(false);
-					restProps.onMouseLeave?.(e);
-				}}
+				onMouseEnter={restProps.onMouseEnter}
+				onMouseLeave={restProps.onMouseLeave}
 				animate={{
 					width: `${width}px`,
 					height: `${height}px`,
@@ -320,7 +313,7 @@ function TextAreaNoBorder({
 				}}
 				style={fontSizeStyle}
 				className={cn(
-					"placeholder:text-muted-foreground selection:bg-transparent selection:text-primary-foreground dark:bg-transparent border-none rounded-md bg-transparent px-3 py-2 text-base transition-colors outline-none resize-none overflow-hidden disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+					"placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none rounded-md bg-transparent px-3 py-2 text-base transition-colors outline-none resize-none overflow-hidden disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
 					"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
 					"aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
 					maxWidthNumeric && width >= maxWidthNumeric && "break-all",
@@ -328,21 +321,9 @@ function TextAreaNoBorder({
 				)}
 				{...restProps}
 			/>
-			<motion.div
-				initial={false}
-				animate={{
-					opacity: showIcon ? 1 : 0,
-					scale: showIcon ? 1 : 0.8,
-				}}
-				transition={{
-					duration: 0.2,
-					ease: "easeOut",
-				}}
-				className="absolute top-2 pointer-events-none"
-				style={{ left: `${width + 8}px` }}
-			>
-				<Pen className="h-4 w-4 text-muted-foreground" />
-			</motion.div>
+			<div className="absolute right-0 pointer-events-none" style={{ bottom: "-5px" }}>
+				<span className="text-xs text-muted-foreground">{t("input.edit")}</span>
+			</div>
 			{maxLength !== undefined && (
 				<motion.div
 					initial={false}

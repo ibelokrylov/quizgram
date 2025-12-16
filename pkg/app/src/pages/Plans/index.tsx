@@ -8,71 +8,47 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AuthContext } from "@/entities/User/auth.context";
+import { useNavigate } from "@tanstack/react-router";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-router";
-
-type PlanFeatures = {
-  quiz_limit: string;
-  lead_limit: string;
-  lead_delivery: string;
-  analytics: string;
-  broadcasts: string;
-  bot_in_miniapp: string;
-  integrations: string;
-  phone_verification: string;
-  exports_reports: string;
-  result_tab: string;
-  quizgram_logo: string;
-  target_audience: string;
-};
 
 type Plan = {
-  plan: string;
-  icon: string;
+  id: "free" | "pro" | "custom";
+  name: string;
   price: string;
-  features: PlanFeatures;
+  description: string;
+  details: string[];
 };
 
 const plans: Plan[] = [
   {
-    plan: "Free",
-    icon: "🧩",
+    id: "free",
+    name: "Free",
     price: "0 ₽ / навсегда",
-    features: {
-      quiz_limit: "♾️ Без лимита",
-      lead_limit: "до 10 заявок в месяц",
-      lead_delivery: "только в личку от бота",
-      analytics: "✖ нет",
-      broadcasts: "✖ нет",
-      bot_in_miniapp: "❌ Только бот Quizgram (единый стиль и логотип проекта)",
-      integrations: "✖ нет",
-      phone_verification: "✖ нет",
-      exports_reports: "✖ нет",
-      result_tab: "✖ нет",
-      quizgram_logo: "отображается",
-      target_audience: "чтобы попробовать и получить первые 10 лидов",
-    },
+    description: "Для первых тестов и 10 лидов в месяц.",
+    details: ["Квизов без лимита", "до 10 заявок в месяц", "заявки только в личку от бота"],
   },
   {
-    plan: "Pro",
-    icon: "⚡",
+    id: "pro",
+    name: "Pro",
     price: "899 ₽ / мес",
-    features: {
-      quiz_limit: "♾️ Без лимита",
-      lead_limit: "до 100 заявок в месяц",
-      lead_delivery: "бот / группа / канал",
-      analytics: "✅ базовая (по вопросам и отвалам)",
-      broadcasts: "✖ нет",
-      bot_in_miniapp: "❌ Только бот Quizgram (единый стиль и логотип проекта)",
-      integrations: "✖ нет",
-      phone_verification: "✖ нет",
-      exports_reports: "✅ CSV/Excel",
-      result_tab: "стандартный финальный экран",
-      quizgram_logo: "отсутствует",
-      target_audience:
-        "для малого бизнеса и маркетологов с рекламой в Telegram",
-    },
+    description: "Для малого бизнеса и маркетологов с рекламой в Telegram.",
+    details: [
+      "Квизов без лимита",
+      "до 100 заявок в месяц",
+      "экспорт заявок в CSV/Excel",
+    ],
+  },
+  {
+    id: "custom",
+    name: "Custom",
+    price: "по запросу",
+    description: "Индивидуальный тариф под ваши задачи и объёмы.",
+    details: [
+      "кастомные лимиты по квизам и заявкам",
+      "интеграции и дополнительные отчёты",
+      "выделенная поддержка",
+    ],
   },
 ];
 
@@ -89,133 +65,65 @@ export const PlansPage = () => {
     }
   };
 
+  const handleContact = () => {
+    // Простой способ связаться — открыть почтовый клиент
+    window.location.href = "mailto:hello@quizgram.site?subject=Quizgram%20Custom%20plan";
+  };
+
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">{t("plans.title")}</h1>
+    <div className="flex flex-col gap-8 p-4 md:p-8 max-w-5xl mx-auto">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {t("plans.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+          {t("plans.description")}
+        </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 max-w-5xl mx-auto w-full">
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {plans.map((plan) => (
-          <Card key={plan.plan} className="flex flex-col">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl">{plan.icon}</span>
-                  <CardTitle className="text-2xl">{plan.plan}</CardTitle>
-                </div>
+          <Card
+            key={plan.id}
+            className="flex flex-col border-border/70 transition-all hover:border-primary hover:shadow-md cursor-pointer"
+          >
+            <CardHeader className="space-y-2">
+              <div>
+                <CardTitle className="text-lg">{plan.name}</CardTitle>
+                <CardDescription className="text-base text-foreground mt-1">
+                  {plan.price}
+                </CardDescription>
               </div>
-              <CardDescription className="text-lg font-semibold text-foreground mt-4">
-                {plan.price}
-              </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1">
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.quiz_limit")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.quiz_limit}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.lead_limit")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.lead_limit}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.lead_delivery")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.lead_delivery}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.analytics")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.analytics}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.broadcasts")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.broadcasts}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.bot_in_miniapp")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.bot_in_miniapp}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.integrations")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.integrations}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.phone_verification")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.phone_verification}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.exports_reports")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.exports_reports}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.result_tab")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.result_tab}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.quizgram_logo")}:
-                  </span>
-                  <span className="text-sm font-medium text-right">
-                    {plan.features.quizgram_logo}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start pt-2 border-t">
-                  <span className="text-sm text-muted-foreground">
-                    {t("plans.features.target_audience")}:
-                  </span>
-                  <span className="text-sm font-medium text-right max-w-[60%]">
-                    {plan.features.target_audience}
-                  </span>
-                </div>
-              </div>
+            <CardContent className="flex-1 space-y-3">
+              <p className="text-sm text-muted-foreground">{plan.description}</p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                {plan.details.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-primary/60" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
             <CardFooter>
-              <Button
-                onClick={handleBuy}
-                className="w-full"
-                variant={plan.plan === "Pro" ? "default" : "outline"}
-              >
-                {t("plans.buy")}
-              </Button>
+              {plan.id === "custom" ? (
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={handleContact}
+                >
+                  {t("plans.contact")}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleBuy}
+                  className="w-full"
+                  variant={plan.id === "pro" ? "default" : "outline"}
+                >
+                  {t("plans.buy")}
+                </Button>
+              )}
             </CardFooter>
           </Card>
         ))}

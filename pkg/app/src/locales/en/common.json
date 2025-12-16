@@ -221,6 +221,7 @@
 	"plans.title": "Plans",
 	"plans.description": "Choose the plan that suits you",
 	"plans.buy": "Buy",
+	"plans.contact": "Contact us",
 	"plans.current": "Current",
 	"plans.popular": "Popular",
 	"plans.price.free": "Free",
@@ -379,5 +380,6 @@
 	"error.uploadFile": "File upload error",
 	"error.deleteFile": "File deletion error",
 	"error.getUserPlan": "Failed to get user plan",
-	"error.getProfile": "Failed to get profile"
+	"error.getProfile": "Failed to get profile",
+	"input.edit": "Edit"
 }
