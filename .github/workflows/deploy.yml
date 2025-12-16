@@ -1,82 +1,54 @@
-name: Deploy Quizgram
+name: Deploy to Server
 
-# Этот workflow можно запустить вручную или автоматически при push в main
+# Мануальный деплой на сервер с перезапуском контейнеров
 on:
-  push:
-    branches:
-      - main
-    paths:
-      # Деплой только при изменении важных файлов (не при изменении документации)
-      - 'pkg/**'
-      - 'docker-compose.yml'
-      - 'Dockerfile.*'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
-      skip_build:
-        description: 'Пропустить сборку фронтенда (использовать существующие dist)'
+      skip_git_pull:
+        description: 'Пропустить git pull (использовать текущий код на сервере)'
         required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+        default: false
+        type: boolean
+      skip_env_update:
+        description: 'Пропустить обновление .env файлов'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   deploy:
+    name: Деплой на сервер
     runs-on: ubuntu-latest
     environment: prod
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Установка Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Установка зависимостей
-        run: bun install
-
       - name: Проверка обязательных секретов
         run: |
           if [ -z "${{ secrets.SERVER_PASS }}" ]; then
-            echo "ERROR: SERVER_PASS secret is not set!"
+            echo "❌ ERROR: SERVER_PASS secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.SERVER_IP }}" ]; then
-            echo "ERROR: SERVER_IP secret is not set!"
+            echo "❌ ERROR: SERVER_IP secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.SERVER_PORT }}" ]; then
-            echo "ERROR: SERVER_PORT secret is not set!"
+            echo "❌ ERROR: SERVER_PORT secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.SERVER_USER }}" ]; then
-            echo "ERROR: SERVER_USER secret is not set!"
+            echo "❌ ERROR: SERVER_USER secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.DOCKER_HUB_LOGIN }}" ]; then
-            echo "ERROR: DOCKER_HUB_LOGIN secret is not set!"
+            echo "❌ ERROR: DOCKER_HUB_LOGIN secret is not set!"
             exit 1
           fi
           if [ -z "${{ secrets.DOCKER_HUB_TOKEN }}" ]; then
-            echo "ERROR: DOCKER_HUB_TOKEN secret is not set!"
+            echo "❌ ERROR: DOCKER_HUB_TOKEN secret is not set!"
             exit 1
           fi
-          echo "All required secrets are set"
-
-      - name: Сборка pkg/app
-        if: github.event.inputs.skip_build != 'true'
-        run: |
-          cd pkg/app
-          bun run build
-
-      - name: Сборка pkg/tg-quiz
-        if: github.event.inputs.skip_build != 'true'
-        run: |
-          cd pkg/tg-quiz
-          bun run build
+          echo "✅ Все обязательные секреты установлены"
 
       - name: Установка sshpass для SSH аутентификации
         run: sudo apt-get update && sudo apt-get install -y sshpass
@@ -87,32 +59,35 @@ jobs:
           if [ -n "${{ secrets.SERVER_PORT }}" ] && [ -n "${{ secrets.SERVER_IP }}" ]; then
             ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           else
-            echo "Warning: SERVER_PORT or SERVER_IP is not set, skipping ssh-keyscan"
+            echo "⚠️ Warning: SERVER_PORT or SERVER_IP is not set, skipping ssh-keyscan"
           fi
         shell: /usr/bin/bash -e {0}
 
-      - name: Debug SSH setup
-        run: |
-          ls -la ~/.ssh
-          cat ~/.ssh/known_hosts || echo "known_hosts file not found"
-          echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
-          echo "SERVER_HOST: ${{ secrets.SERVER_IP }}"
-          echo "SERVER_PORT: ${{ secrets.SERVER_PORT }}"
-
       - name: Проверка SSH подключения
         run: |
-          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -v -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful'"
+          echo "Проверка подключения к серверу..."
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -v -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH подключение успешно'"
 
       - name: Обновление кода на сервере
+        if: ${{ !inputs.skip_git_pull }}
         run: |
+          echo "Обновление кода из Git репозитория..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
             git fetch
             git pull
+            echo "✅ Код обновлён"
           EOF
 
-      - name: Создание корневого .env файла
+      - name: Пропуск обновления кода
+        if: ${{ inputs.skip_git_pull }}
         run: |
+          echo "⏭️ Обновление кода пропущено (используется текущий код на сервере)"
+
+      - name: Создание корневого .env файла
+        if: ${{ !inputs.skip_env_update }}
+        run: |
+          echo "Создание корневого .env файла..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/.env << ENV
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -128,7 +103,9 @@ jobs:
           EOF
 
       - name: Создание pkg/api/.env файла
+        if: ${{ !inputs.skip_env_update }}
         run: |
+          echo "Создание .env файла для API..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/api/.env << ENV
             ENV=${{ secrets.ENV }}
@@ -166,7 +143,9 @@ jobs:
           EOF
 
       - name: Создание pkg/app/.env файла
+        if: ${{ !inputs.skip_env_update }}
         run: |
+          echo "Создание .env файла для frontend..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/app/.env << ENV
             VITE_PUBLIC_API_URL='${{ secrets.VITE_PUBLIC_API_URL }}'
@@ -176,7 +155,9 @@ jobs:
           EOF
 
       - name: Создание pkg/tg-quiz/.env файла
+        if: ${{ !inputs.skip_env_update }}
         run: |
+          echo "Создание .env файла для Telegram Mini App..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/tg-quiz/.env << ENV
             # API URL для backend
@@ -184,15 +165,62 @@ jobs:
           ENV
           EOF
 
+      - name: Пропуск обновления .env файлов
+        if: ${{ inputs.skip_env_update }}
+        run: |
+          echo "⏭️ Обновление .env файлов пропущено"
+
       - name: Авторизация в Docker Hub на сервере
         run: |
+          echo "Авторизация в Docker Hub..."
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_LOGIN }}" --password-stdin
+            echo "✅ Авторизация в Docker Hub успешна"
           EOF
 
-      - name: Перезапуск контейнеров через docker compose
+      - name: Перезапуск контейнеров (app, api, tg-quiz)
         run: |
+          echo "Перезапуск контейнеров с пересборкой..."
+          echo "Контейнеры для перезапуска: app, api, tg-quiz"
+          echo "PostgreSQL контейнер НЕ будет перезапущен"
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
-            docker compose up -d --build api app tg-quiz
+            docker compose up -d --build app api tg-quiz
+            echo "✅ Контейнеры перезапущены"
           EOF
+
+      - name: Проверка статуса контейнеров
+        run: |
+          echo "Проверка статуса всех контейнеров..."
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /root/quizgram
+            echo "=== Статус контейнеров ==="
+            docker compose ps
+          EOF
+
+      - name: Показать последние логи
+        run: |
+          echo "Последние 30 строк логов перезапущенных контейнеров..."
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /root/quizgram
+            echo "=== Логи API ==="
+            docker compose logs --tail=10 api
+            echo ""
+            echo "=== Логи APP ==="
+            docker compose logs --tail=10 app
+            echo ""
+            echo "=== Логи TG-QUIZ ==="
+            docker compose logs --tail=10 tg-quiz
+          EOF
+
+      - name: Итоговый отчёт
+        run: |
+          echo ""
+          echo "✅ Деплой завершён успешно!"
+          echo ""
+          echo "Перезапущенные контейнеры:"
+          echo "  - app (frontend)"
+          echo "  - api (backend)"
+          echo "  - tg-quiz (Telegram Mini App)"
+          echo ""
+          echo "PostgreSQL контейнер не перезапускался"
