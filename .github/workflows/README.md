@@ -109,11 +109,13 @@ docker compose up -d --build app api tg-quiz
 - `DOCKER_HUB_TOKEN` - Токен доступа Docker Hub
 
 ### База данных
-- `POSTGRES_USER` - Пользователь PostgreSQL
-- `POSTGRES_PASSWORD` - Пароль PostgreSQL
-- `POSTGRES_DB` - Имя базы данных
-- `POSTGRES_HOST` - Хост базы данных
-- `DATABASE_URL` - Полный URL подключения к БД
+- `POSTGRES_USER` - Пользователь PostgreSQL (обязательно)
+- `POSTGRES_PASSWORD` - Пароль PostgreSQL (обязательно)
+- `POSTGRES_DB` - Имя базы данных (обязательно)
+- `POSTGRES_HOST` - Хост базы данных (обязательно)
+- `POSTGRES_PORT` - Порт базы данных (опционально, по умолчанию 5432)
+
+**Примечание:** `DATABASE_URL` больше не требуется в secrets. Строка подключения автоматически собирается из отдельных параметров подключения к БД в формате: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`
 
 ### API (pkg/api)
 - `ENV` - Окружение (production/development)

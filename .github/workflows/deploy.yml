@@ -48,7 +48,54 @@ jobs:
             echo "❌ ERROR: DOCKER_HUB_TOKEN secret is not set!"
             exit 1
           fi
+          if [ -z "${{ secrets.POSTGRES_USER }}" ]; then
+            echo "❌ ERROR: POSTGRES_USER secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.POSTGRES_PASSWORD }}" ]; then
+            echo "❌ ERROR: POSTGRES_PASSWORD secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.POSTGRES_DB }}" ]; then
+            echo "❌ ERROR: POSTGRES_DB secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.POSTGRES_HOST }}" ]; then
+            echo "❌ ERROR: POSTGRES_HOST secret is not set!"
+            exit 1
+          fi
           echo "✅ Все обязательные секреты установлены"
+
+      - name: Сборка DATABASE_URL из secrets
+        id: build_db_url
+        run: |
+          DB_USER="${{ secrets.POSTGRES_USER }}"
+          DB_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          DB_HOST="${{ secrets.POSTGRES_HOST }}"
+          DB_NAME="${{ secrets.POSTGRES_DB }}"
+          
+          # Используем POSTGRES_PORT из secrets, если он есть, иначе 5432
+          if [ -n "${{ secrets.POSTGRES_PORT }}" ]; then
+            DB_PORT="${{ secrets.POSTGRES_PORT }}"
+          else
+            DB_PORT="5432"
+          fi
+          
+          # Экранируем специальные символы в пароле для URL
+          DB_PASSWORD_ESCAPED=$(echo "$DB_PASSWORD" | sed 's/@/%40/g' | sed 's/:/%3A/g' | sed 's/#/%23/g' | sed 's/\[/%5B/g' | sed 's/\]/%5D/g')
+          
+          DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD_ESCAPED}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+          
+          echo "DATABASE_URL построена из отдельных secrets"
+          echo "DB_HOST=${DB_HOST}"
+          echo "DB_PORT=${DB_PORT}"
+          echo "DB_NAME=${DB_NAME}"
+          echo "DB_USER=${DB_USER}"
+          echo "DATABASE_URL length: ${#DATABASE_URL}"
+          
+          # Сохраняем в output для использования в следующих шагах
+          echo "database_url=${DATABASE_URL}" >> $GITHUB_OUTPUT
+          echo "db_port=${DB_PORT}" >> $GITHUB_OUTPUT
 
       - name: Установка sshpass для SSH аутентификации
         run: sudo apt-get update && sudo apt-get install -y sshpass
@@ -94,8 +141,9 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            POSTGRES_PORT=${{ steps.build_db_url.outputs.db_port }}
             
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DATABASE_URL=${{ steps.build_db_url.outputs.database_url }}
             
             # Environment flag
             IS_DEV=${{ secrets.IS_DEV }}
@@ -113,11 +161,12 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            POSTGRES_PORT=${{ steps.build_db_url.outputs.db_port }}
             
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}
             
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DATABASE_URL=${{ steps.build_db_url.outputs.database_url }}
             
             MAIL_USER=${{ secrets.MAIL_USER }}
             MAIL_PASS=${{ secrets.MAIL_PASS }}
