@@ -157,10 +157,10 @@ jobs:
           ENV
           EOF
 
-      - name: Перезапуск контейнеров через docker-compose
+      - name: Перезапуск контейнеров через docker compose
         run: |
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
-            docker-compose down
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
           EOF
