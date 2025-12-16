@@ -50,6 +50,11 @@ const renderStage = {
 	result: <ResultPage />,
 };
 
+type QuizUpdateResponse = {
+	ok: string[];
+	errors: string[];
+};
+
 export const EditQuiz = () => {
 	const { user } = useContext(AuthContext);
 	const { quiz, isLoadToServer, setQuiz, setIsLoadToServer } =
@@ -162,8 +167,10 @@ export const EditQuiz = () => {
 			});
 			console.log(response);
 
-			// Если нет ошибок в ответе, обновляем состояние синхронизации в IndexedDB
-			if (!response.errors || response.errors.length === 0) {
+			// Сервер возвращает { ok: string[], errors: string[] } напрямую
+			// Функция http делает type assertion, но реально возвращает данные напрямую
+			const result = response as unknown as QuizUpdateResponse;
+			if (!result.errors || result.errors.length === 0) {
 				await set(quiz.uid, { data: quiz, isLoadToServer: true });
 				setIsLoadToServer(true);
 			}
