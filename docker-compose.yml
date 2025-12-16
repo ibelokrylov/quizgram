@@ -51,6 +51,7 @@ services:
       start_period: 10s
     restart: unless-stopped
     volumes:
+      - postgres-data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
     env_file:
       - .env
@@ -102,3 +103,7 @@ services:
 networks:
   quizgram-network:
     driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

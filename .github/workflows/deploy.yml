@@ -39,6 +39,14 @@ jobs:
             echo "ERROR: SERVER_USER secret is not set!"
             exit 1
           fi
+          if [ -z "${{ secrets.DOCKER_HUB_LOGIN }}" ]; then
+            echo "ERROR: DOCKER_HUB_LOGIN secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKER_HUB_TOKEN }}" ]; then
+            echo "ERROR: DOCKER_HUB_TOKEN secret is not set!"
+            exit 1
+          fi
           echo "All required secrets are set"
 
       - name: Сборка pkg/app
@@ -157,10 +165,15 @@ jobs:
           ENV
           EOF
 
+      - name: Авторизация в Docker Hub на сервере
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_LOGIN }}" --password-stdin
+          EOF
+
       - name: Перезапуск контейнеров через docker compose
         run: |
           sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /root/quizgram
-            docker compose down
-            docker compose up -d --build
+            docker compose up -d --build api app tg-quiz
           EOF
