@@ -33,28 +33,15 @@ Actions → Deploy to Server → Run workflow
 
 ---
 
-### 3️⃣ View Logs - Просмотр логов
-**Триггер:** Только вручную
-
-```
-Actions → View Logs → Run workflow
-• container: api (или app, tg-quiz, postgres, all)
-• lines: 100 (количество строк)
-```
-
-⏱️ **Время:** ~10 секунд
-
----
-
 ## Частые сценарии
 
 | Ситуация | Действие |
 |----------|----------|
 | 📝 Изменил код, хочу задеплоить | 1. `git push` → Build запустится автоматически<br>2. Если сборка ✅ → Deploy to Server вручную |
 | 🔧 Изменил .env на сервере | Deploy to Server → `skip_git_pull: true` |
-| ❌ Ищу ошибку в логах | View Logs → `api`, `lines: 500` |
 | 🔄 Нужно перезапустить контейнеры | Deploy to Server → `skip_git_pull: true` |
 | 📄 Изменил только README.md | Просто `git push` (деплой не запустится) |
+| ❌ Ищу ошибку в логах | Подключись к серверу: `docker compose logs --tail=500 api` |
 
 ---
 

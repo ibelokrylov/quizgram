@@ -51,11 +51,6 @@
 
 Деплоит приложение на production сервер.
 
-### 3. View Logs (`logs.yml`)
-**Вручную** через GitHub Actions UI
-
-Показывает логи контейнеров.
-
 ---
 
 ## 🎯 Двухэтапный процесс
@@ -95,8 +90,7 @@ STAGE 2: DEPLOY (вручную)
 Если что-то не работает:
 
 1. Проверь [workflows/README.md](workflows/README.md) → раздел "Отладка"
-2. Запусти `View Logs` workflow для просмотра логов
-3. Проверь статус контейнеров на сервере
+2. Проверь статус контейнеров на сервере
 
 ---
 
@@ -112,8 +106,7 @@ STAGE 2: DEPLOY (вручную)
     ├── README.md                ← Полная документация
     ├── ARCHITECTURE.md          ← Архитектура
     ├── build.yml                ← Workflow: Сборка
-    ├── deploy.yml               ← Workflow: Деплой
-    └── logs.yml                 ← Workflow: Логи
+    └── deploy.yml               ← Workflow: Деплой
 ```
 
 ---

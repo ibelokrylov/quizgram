@@ -67,16 +67,6 @@ docker compose up -d --build app api tg-quiz
 
 ---
 
-### 📋 Сохранённые workflows
-
-#### `logs.yml` - Просмотр логов
-
-**Без изменений**
-
-Позволяет просматривать логи контейнеров через GitHub Actions UI.
-
----
-
 ### 📚 Новая документация
 
 #### `README.md` - Полная документация workflows
