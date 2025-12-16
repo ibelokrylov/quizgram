@@ -20,6 +20,26 @@ jobs:
       - name: Установка зависимостей
         run: bun install
 
+      - name: Проверка обязательных секретов
+        run: |
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "ERROR: SSH_KEY secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_IP }}" ]; then
+            echo "ERROR: SERVER_IP secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_PORT }}" ]; then
+            echo "ERROR: SERVER_PORT secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_USER }}" ]; then
+            echo "ERROR: SERVER_USER secret is not set!"
+            exit 1
+          fi
+          echo "All required secrets are set"
+
       - name: Сборка pkg/app
         run: |
           cd pkg/app
@@ -35,7 +55,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          if [ -n "${{ secrets.SERVER_PORT }}" ] && [ -n "${{ secrets.SERVER_IP }}" ]; then
+            ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          else
+            echo "Warning: SERVER_PORT or SERVER_IP is not set, skipping ssh-keyscan"
+          fi
         shell: /usr/bin/bash -e {0}
 
       - name: Debug SSH setup
@@ -46,6 +70,15 @@ jobs:
           echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
           echo "SERVER_HOST: ${{ secrets.SERVER_IP }}"
           echo "SERVER_PORT: ${{ secrets.SERVER_PORT }}"
+          if [ -z "${{ secrets.SERVER_PORT }}" ]; then
+            echo "ERROR: SERVER_PORT is not set!"
+          fi
+          if [ -z "${{ secrets.SERVER_IP }}" ]; then
+            echo "ERROR: SERVER_IP is not set!"
+          fi
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "ERROR: SSH_KEY is not set!"
+          fi
 
       - name: Проверка SSH подключения
         run: |
