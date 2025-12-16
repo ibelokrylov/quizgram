@@ -285,6 +285,8 @@
 	"nav.bid.statistic": "Статистика",
 	"nav.bids.statistic": "Статистика",
 	"bids.filters": "Фильтры",
+	"bids.filters.collapse": "Свернуть фильтры",
+	"bids.filters.expand": "Развернуть фильтры",
 	"bids.quiz": "Квиз",
 	"bids.quiz.select": "Выберите квиз...",
 	"bids.quiz.search": "Поиск по названию...",

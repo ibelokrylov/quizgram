@@ -285,6 +285,8 @@
 	"nav.bid.statistic": "Statistics",
 	"nav.bids.statistic": "Statistics",
 	"bids.filters": "Filters",
+	"bids.filters.collapse": "Collapse filters",
+	"bids.filters.expand": "Expand filters",
 	"bids.quiz": "Quiz",
 	"bids.quiz.select": "Select quiz...",
 	"bids.quiz.search": "Search by name...",
