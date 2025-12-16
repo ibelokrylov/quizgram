@@ -1,6 +1,7 @@
 // Сервис для работы с файлами квиза
 // Обрабатывает загрузку в S3 и сохранение в БД без требования userId
 
+import { and, eq } from "drizzle-orm";
 import { db, quizFileTable, type NewQuizFile } from "../db";
 import { FileType, validateFileTypeAndSize } from "../helpers/file.helper";
 import { logger } from "../lib/logger";
@@ -35,6 +36,11 @@ export abstract class QuizFileService {
       fileName = file.name;
       fileSize = file.size;
       contentType = file.type;
+    } else if (file instanceof Blob) {
+      // Для Blob генерируем имя и используем size
+      fileName = `file-${Date.now()}`;
+      fileSize = file.size;
+      contentType = file.type || 'application/octet-stream';
     } else {
       // Для Buffer/Uint8Array генерируем имя и определяем размер
       fileName = `file-${Date.now()}`;
@@ -123,8 +129,10 @@ export abstract class QuizFileService {
       .select()
       .from(quizFileTable)
       .where(
-        (table) =>
-          table.fileUrl === fileUrl && table.sessionKey === sessionKey
+        and(
+          eq(quizFileTable.fileUrl, fileUrl),
+          eq(quizFileTable.sessionKey, sessionKey)
+        )
       )
       .limit(1);
 
@@ -135,7 +143,7 @@ export abstract class QuizFileService {
 
     // Удаляем из БД
     await db.delete(quizFileTable).where(
-      (table) => table.id === file.id
+      eq(quizFileTable.id, file.id)
     );
 
     // Удаляем из S3

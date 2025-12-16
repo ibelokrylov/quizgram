@@ -480,6 +480,11 @@ export abstract class BidsService {
 
       const bidData = bid[0];
 
+      // Проверяем, что uid и quizName не null (заявка должна быть связана с квизом)
+      if (!bidData.uid || !bidData.quizName) {
+        throw new Error("Bid data is invalid: missing quiz information");
+      }
+
       // Обновляем isRead на true при просмотре заявки
       await db
         .update(quizBidTable)
@@ -493,6 +498,9 @@ export abstract class BidsService {
         key,
         status: bidData.status,
       });
+
+      // Приводим ipLocation к правильному типу
+      const ipLocation = bidData.ipLocation as { country: string | null; city: string | null; ip: string | null } | null | undefined;
 
       return {
         uid: bidData.uid,
@@ -511,7 +519,7 @@ export abstract class BidsService {
         contactsForm: bidData.contactsForm,
         userInfo: bidData.userInfo,
         initData: bidData.initData,
-        ipLocation: bidData.ipLocation,
+        ipLocation,
       };
     } catch (error) {
       logger.error("Failed to get bid details", error as Error, { userId, key });
