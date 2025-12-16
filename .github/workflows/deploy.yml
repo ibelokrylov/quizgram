@@ -1,9 +1,26 @@
 name: Deploy Quizgram
 
+# Этот workflow можно запустить вручную или автоматически при push в main
 on:
   push:
     branches:
       - main
+    paths:
+      # Деплой только при изменении важных файлов (не при изменении документации)
+      - 'pkg/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile.*'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      skip_build:
+        description: 'Пропустить сборку фронтенда (использовать существующие dist)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   deploy:
@@ -50,11 +67,13 @@ jobs:
           echo "All required secrets are set"
 
       - name: Сборка pkg/app
+        if: github.event.inputs.skip_build != 'true'
         run: |
           cd pkg/app
           bun run build
 
       - name: Сборка pkg/tg-quiz
+        if: github.event.inputs.skip_build != 'true'
         run: |
           cd pkg/tg-quiz
           bun run build

@@ -1,0 +1,78 @@
+name: View Logs
+
+# Workflow для просмотра логов контейнеров
+on:
+  workflow_dispatch:
+    inputs:
+      container:
+        description: 'Какой контейнер смотреть'
+        required: true
+        default: 'api'
+        type: choice
+        options:
+          - api
+          - app
+          - tg-quiz
+          - postgres
+          - all
+      lines:
+        description: 'Сколько строк логов показать'
+        required: false
+        default: '100'
+        type: string
+      follow:
+        description: 'Показать только последние логи (false) или весь файл (true)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Установка sshpass для SSH аутентификации
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Настройка SSH
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        shell: /usr/bin/bash -e {0}
+
+      - name: Просмотр логов Docker
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /root/quizgram
+            echo "=== Логи Docker контейнера: ${{ github.event.inputs.container }} ==="
+            docker compose logs --tail=${{ github.event.inputs.lines }} ${{ github.event.inputs.container }}
+          EOF
+
+      - name: Просмотр логов из файлов (для API)
+        if: github.event.inputs.container == 'api'
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            echo ""
+            echo "=== Логи из файлов (последние ${{ github.event.inputs.lines }} строк сегодняшнего лога) ==="
+            cd /root/quizgram
+            if [ -f "logs/api/$(date +%Y-%m-%d).log" ]; then
+              tail -n ${{ github.event.inputs.lines }} logs/api/$(date +%Y-%m-%d).log
+            else
+              echo "Файл логов за сегодня не найден"
+            fi
+          EOF
+
+      - name: Статистика контейнеров
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASS }}" ssh -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            echo ""
+            echo "=== Статус контейнеров ==="
+            cd /root/quizgram
+            docker compose ps
+            echo ""
+            echo "=== Использование ресурсов ==="
+            docker stats --no-stream
+          EOF
