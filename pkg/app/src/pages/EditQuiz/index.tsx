@@ -1,3 +1,4 @@
+import { set } from "@/app/db/index-db";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InputNoBorder } from "@/components/ui/input-no-border";
@@ -18,7 +19,7 @@ import {
 	PanelTop,
 	UserSearch,
 } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CiSaveUp1 } from "react-icons/ci";
 import { toast } from "sonner";
@@ -51,7 +52,8 @@ const renderStage = {
 
 export const EditQuiz = () => {
 	const { user } = useContext(AuthContext);
-	const { quiz, isLoadToServer, setQuiz } = useContext(CreateQuizContext);
+	const { quiz, isLoadToServer, setQuiz, setIsLoadToServer } =
+		useContext(CreateQuizContext);
 	const { t } = useTranslation();
 	const currentStages =
 		planStages[(user?.planId as keyof typeof planStages) ?? 1];
@@ -59,10 +61,48 @@ export const EditQuiz = () => {
 	const navigate = useNavigate();
 	const [name, setName] = useState(quiz?.name);
 	const [active, setActive] = useState(quiz?.isActive);
+	const [isMobile, setIsMobile] = useState(false);
+	const nameContainerRef = useRef<HTMLDivElement>(null);
+	const [containerWidth, setContainerWidth] = useState<number | undefined>(
+		undefined,
+	);
 
 	const [stage, setStage] = useState<string>(
 		currentStages.has(location.hash) ? location.hash : "start",
 	);
+
+	useEffect(() => {
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth < 1024);
+		};
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
+
+	useEffect(() => {
+		if (!nameContainerRef.current || !isMobile) {
+			setContainerWidth(undefined);
+			return;
+		}
+		const updateWidth = () => {
+			if (nameContainerRef.current) {
+				setContainerWidth(nameContainerRef.current.offsetWidth);
+			}
+		};
+		updateWidth();
+
+		const resizeObserver = new ResizeObserver(() => {
+			updateWidth();
+		});
+		resizeObserver.observe(nameContainerRef.current);
+
+		window.addEventListener("resize", updateWidth);
+		return () => {
+			resizeObserver.disconnect();
+			window.removeEventListener("resize", updateWidth);
+		};
+	}, [isMobile]);
 	function handleStageChange(stage: string) {
 		if (currentStages.has(stage)) {
 			setStage(stage);
@@ -105,6 +145,9 @@ export const EditQuiz = () => {
 			toast.error(t("toast.error.quiz-load"));
 			return;
 		}
+		if (!quiz?.uid) {
+			return;
+		}
 		try {
 			const response = await http({
 				url: "/v1/quiz/" + quiz?.uid,
@@ -118,6 +161,12 @@ export const EditQuiz = () => {
 				method: "PUT",
 			});
 			console.log(response);
+
+			// Если нет ошибок в ответе, обновляем состояние синхронизации в IndexedDB
+			if (!response.errors || response.errors.length === 0) {
+				await set(quiz.uid, { data: quiz, isLoadToServer: true });
+				setIsLoadToServer(true);
+			}
 		} catch (err) {
 			console.log(err);
 			toast.error(t("toast.error.quiz-not-load"));
@@ -126,50 +175,59 @@ export const EditQuiz = () => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex flex-row gap-5 pt-3">
-				<InputNoBorder
-					key={quiz?.name}
-					value={name}
-					maxLength={60}
-					onChange={(e) => setName(e.target.value)}
-					onBlur={updateName}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") {
-							updateName();
-						}
-					}}
-				/>
-				<div>
-					<Separator orientation="vertical" />
-				</div>
+			<div className="flex flex-col lg:flex-row gap-3 lg:gap-5 pt-3 px-4 lg:px-0">
 				<div
-					onClick={toggleActive}
-					className={"flex flex-row gap-2 items-center cursor-pointer"}
+					ref={nameContainerRef}
+					className="w-full lg:w-auto [&>div]:block lg:[&>div]:inline-block [&>div]:w-full lg:[&>div]:w-auto [&>div>input]:!w-full lg:[&>div>input]:!w-auto [&>div>input]:!max-w-full lg:[&>div>input]:!max-w-none"
 				>
-					<Switch id={"active-switch"} checked={active} />
-					<Label htmlFor={"active-switch"}>
-						{t(`edit-quiz.active.${active?.toString() ?? "false"}`)}
-					</Label>
+					<InputNoBorder
+						key={quiz?.name}
+						value={name}
+						maxLength={60}
+						maxWidth={isMobile && containerWidth ? containerWidth : undefined}
+						initialWidth={isMobile && containerWidth ? containerWidth : 200}
+						onChange={(e) => setName(e.target.value)}
+						onBlur={updateName}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								updateName();
+							}
+						}}
+					/>
 				</div>
-				<div>
+				<div className="hidden lg:block">
 					<Separator orientation="vertical" />
 				</div>
-				<div>
-					{!isLoadToServer ? (
-						<Button onClick={saveToServer} color={"primary"}>
-							<CiSaveUp1 />
-							{t("edit-quiz.publish")}
-						</Button>
-					) : (
-						<div className={"text-xs text-gray-500 dark:text-gray-400 pt-3"}>
-							{t("edit-quiz.updated-at", {
-								date: format(
-									quiz?.updatedAt ?? new Date(),
-									"dd.MM.yyyy HH:mm:ss",
-								),
-							})}
-						</div>
-					)}
+				<div className="flex flex-row gap-3 lg:gap-5 items-center justify-between lg:justify-start pt-2 pb-2">
+					<div
+						onClick={toggleActive}
+						className={"flex flex-row gap-2 items-center cursor-pointer"}
+					>
+						<Switch id={"active-switch"} checked={active} />
+						<Label htmlFor={"active-switch"}>
+							{t(`edit-quiz.active.${active?.toString() ?? "false"}`)}
+						</Label>
+					</div>
+					<div className="hidden lg:block">
+						<Separator orientation="vertical" />
+					</div>
+					<div>
+						{!isLoadToServer ? (
+							<Button onClick={saveToServer} color={"primary"}>
+								<CiSaveUp1 />
+								{t("edit-quiz.publish")}
+							</Button>
+						) : (
+							<div className={"text-xs text-gray-500 dark:text-gray-400 pt-0 lg:pt-3"}>
+								{t("edit-quiz.updated-at", {
+									date: format(
+										quiz?.updatedAt ?? new Date(),
+										"dd.MM.yyyy HH:mm:ss",
+									),
+								})}
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 			<Separator />
@@ -183,8 +241,8 @@ export const EditQuiz = () => {
 						className={cn(
 							st === stage
 								? "bg-primary text-primary-foreground"
-								: "bg-secondary text-secondary-foreground",
-							"cursor-pointer p-4",
+								: "bg-secondary text-secondary-foreground dark:bg-background/80 dark:border-input/80 dark:text-foreground dark:hover:bg-accent/30",
+							"cursor-pointer p-4 transition-all",
 						)}
 					>
 						<div className="flex flex-row gap-2 items-center">
