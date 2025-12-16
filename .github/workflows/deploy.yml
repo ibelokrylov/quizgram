@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -99,11 +100,9 @@ jobs:
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
             POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             
-            DATABASE_URL=postgresql://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@\${POSTGRES_HOST}:\${POSTGRES_PORT}/\${POSTGRES_DB}
-            
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
             
             # Environment flag
             IS_DEV=${{ secrets.IS_DEV }}
@@ -114,40 +113,37 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/api/.env << ENV
-            ENV=${{ secrets.API_ENV }}
-            POSTGRES_USER=${{ secrets.API_POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.API_POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ secrets.API_POSTGRES_DB }}
-            POSTGRES_PORT=${{ secrets.API_POSTGRES_PORT }}
-            POSTGRES_HOST=${{ secrets.API_POSTGRES_HOST }}
+            ENV=${{ secrets.ENV }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             
-            JWT_SECRET=${{ secrets.API_JWT_SECRET }}
-            COOKIE_SECRET=${{ secrets.API_COOKIE_SECRET }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}
             
-            DATABASE_URL=postgresql://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@\${POSTGRES_HOST}:\${POSTGRES_PORT}/\${POSTGRES_DB}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
             
-            MAIL_USER=${{ secrets.API_MAIL_USER }}
-            MAIL_PASS=${{ secrets.API_MAIL_PASS }}
-            MAIL_HOST=${{ secrets.API_MAIL_HOST }}
-            MAIL_PORT=${{ secrets.API_MAIL_PORT }}
+            MAIL_USER=${{ secrets.MAIL_USER }}
+            MAIL_PASS=${{ secrets.MAIL_PASS }}
+            MAIL_HOST=${{ secrets.MAIL_HOST }}
+            MAIL_PORT=${{ secrets.MAIL_PORT }}
             
-            URL_ORIGIN=${{ secrets.API_URL_ORIGIN }}
-            PORT=${{ secrets.API_PORT }}
-            APP_NAME=${{ secrets.API_APP_NAME }}
-            APP_URLS=${{ secrets.API_APP_URLS }}
+            PORT=${{ secrets.PORT }}
+            APP_NAME=${{ secrets.APP_NAME }}
+            APP_URLS=${{ secrets.APP_URLS }}
             
+            S3_URL=${{ secrets.S3_URL }}
+            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+            S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}
+            S3_SWIFT_URL=${{ secrets.S3_SWIFT_URL }}
+            S3_SWIFT_ACCESS_KEY=${{ secrets.S3_SWIFT_ACCESS_KEY }}
+            S3_SWIFT_SECRET_ACCESS_KEY=${{ secrets.S3_SWIFT_SECRET_ACCESS_KEY }}
+            S3_REGION=${{ secrets.S3_REGION }}
             
-            S3_URL=${{ secrets.API_S3_URL }}
-            S3_BUCKET_NAME=${{ secrets.API_S3_BUCKET_NAME }}
-            S3_ACCESS_KEY=${{ secrets.API_S3_ACCESS_KEY }}
-            S3_SECRET_ACCESS_KEY=${{ secrets.API_S3_SECRET_ACCESS_KEY }}
-            S3_SWIFT_URL=${{ secrets.API_S3_SWIFT_URL }}
-            S3_SWIFT_ACCESS_KEY=${{ secrets.API_S3_SWIFT_ACCESS_KEY }}
-            S3_SWIFT_SECRET_ACCESS_KEY=${{ secrets.API_S3_SWIFT_SECRET_ACCESS_KEY }}
-            S3_REGION=${{ secrets.API_S3_REGION }}
-            
-            BOT_QUIZ_TOKEN=${{ secrets.API_BOT_QUIZ_TOKEN }}
-            BOT_CRM_TOKEN=${{ secrets.API_BOT_CRM_TOKEN }}
+            BOT_QUIZ_TOKEN=${{ secrets.BOT_TOKEN }}
+            BOT_CRM_TOKEN=${{ secrets.BOT_TOKEN_DEV }}
           ENV
           EOF
 
@@ -155,9 +151,9 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/app/.env << ENV
-            VITE_PUBLIC_API_URL = '${{ secrets.APP_VITE_PUBLIC_API_URL }}'
-            VITE_PUBLIC_APP_NAME = '${{ secrets.APP_VITE_PUBLIC_APP_NAME }}'
-            VITE_PUBLIC_QUIZ_URL = '${{ secrets.APP_VITE_PUBLIC_QUIZ_URL }}'
+            VITE_PUBLIC_API_URL='${{ secrets.VITE_PUBLIC_API_URL }}'
+            VITE_PUBLIC_APP_NAME='${{ secrets.VITE_PUBLIC_APP_NAME }}'
+            VITE_PUBLIC_QUIZ_URL='${{ secrets.VITE_PUBLIC_QUIZ_URL }}'
           ENV
           EOF
 
@@ -166,7 +162,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
             cat > /root/quizgram/pkg/tg-quiz/.env << ENV
             # API URL для backend
-            VITE_TG_QUIZ_API_URL=${{ secrets.TG_QUIZ_VITE_TG_QUIZ_API_URL }}
+            VITE_TG_QUIZ_API_URL=${{ secrets.VITE_TG_QUIZ_API_URL }}
           ENV
           EOF
 
