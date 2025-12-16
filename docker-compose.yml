@@ -79,6 +79,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    volumes:
+      # Монтируем директорию логов на хост для сохранения при перезапуске контейнера
+      - ./logs/api:/app/pkg/api/logs
 
   app:
     build:
@@ -107,3 +110,6 @@ networks:
 volumes:
   postgres-data:
     driver: local
+
+# Директории логов монтируются напрямую на хост (bind mount)
+# Логи API сохраняются в ./logs/api на хосте

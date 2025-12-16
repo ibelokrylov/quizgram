@@ -3,9 +3,14 @@
 
 import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
 import { appendFile } from "fs/promises";
-import { join } from "path";
+import { join, resolve } from "path";
 
-const LOG_DIR = "logs";
+// Путь к директории логов можно настроить через переменную окружения LOG_DIR
+// По умолчанию используется "logs" (относительно рабочей директории)
+// В Docker контейнере рабочая директория: /app/pkg/api, поэтому "logs" -> /app/pkg/api/logs
+// В docker-compose.yml эта директория монтируется как ./logs/api на хосте
+const LOG_DIR_ENV = (typeof Bun !== "undefined" ? Bun.env : process.env).LOG_DIR || "logs";
+const LOG_DIR = resolve(LOG_DIR_ENV); // Преобразуем в абсолютный путь для надежности
 const RETENTION_DAYS = 30;
 
 export enum LogLevel {
