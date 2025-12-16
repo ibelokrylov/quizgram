@@ -2,8 +2,7 @@ import { Button, Card, Input, Placeholder, Snackbar } from '@telegram-apps/teleg
 import { useContext, useEffect, useState } from 'react';
 import { AppContext, type QuizContact } from '../../App.context';
 import { InputMask } from './input-mask';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+import { API_BASE_URL } from '../../config';
 
 export const Contact = () => {
   const { quiz, nextStage } = useContext(AppContext);

@@ -1,8 +1,7 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { useRawInitData, useLaunchParams } from "@telegram-apps/sdk-react";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+import { API_BASE_URL } from "./config";
 
 function getStartAppParam(): string | undefined {
   const uid = window.location.search.split("startapp=")[1];
