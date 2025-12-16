@@ -56,11 +56,6 @@
 
 Показывает логи контейнеров.
 
-### 4. Restart Containers (`restart.yml`)
-**Вручную** через GitHub Actions UI
-
-Перезапускает контейнеры с/без пересборки.
-
 ---
 
 ## 🎯 Двухэтапный процесс
@@ -118,8 +113,7 @@ STAGE 2: DEPLOY (вручную)
     ├── ARCHITECTURE.md          ← Архитектура
     ├── build.yml                ← Workflow: Сборка
     ├── deploy.yml               ← Workflow: Деплой
-    ├── logs.yml                 ← Workflow: Логи
-    └── restart.yml              ← Workflow: Перезапуск
+    └── logs.yml                 ← Workflow: Логи
 ```
 
 ---

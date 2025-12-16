@@ -46,29 +46,14 @@ Actions → View Logs → Run workflow
 
 ---
 
-### 4️⃣ Restart Containers - Перезапуск контейнеров
-**Триггер:** Только вручную
-
-```
-Actions → Restart Containers → Run workflow
-• containers: all (или выберите нужный)
-• rebuild: true (с пересборкой) или false (быстро)
-```
-
-⏱️ **Время:** ~30 сек без rebuild, ~2-3 мин с rebuild
-
----
-
 ## Частые сценарии
 
 | Ситуация | Действие |
 |----------|----------|
 | 📝 Изменил код, хочу задеплоить | 1. `git push` → Build запустится автоматически<br>2. Если сборка ✅ → Deploy to Server вручную |
-| 🐛 API не отвечает | Restart Containers → `api`, `rebuild: false` |
-| 🔧 Изменил .env на сервере | Restart Containers → `all`, `rebuild: true` |
+| 🔧 Изменил .env на сервере | Deploy to Server → `skip_git_pull: true` |
 | ❌ Ищу ошибку в логах | View Logs → `api`, `lines: 500` |
-| 🔄 Все контейнеры зависли | Restart Containers → `all`, `rebuild: false` |
-| 🐘 PostgreSQL упал | Restart Containers → `postgres`, `rebuild: false` |
+| 🔄 Нужно перезапустить контейнеры | Deploy to Server → `skip_git_pull: true` |
 | 📄 Изменил только README.md | Просто `git push` (деплой не запустится) |
 
 ---
