@@ -15,7 +15,8 @@ const bidsReportSearchSchema = z.object({
 		z.string().optional(),
 	),
 	limit: z.coerce.number().optional().default(10),
-	key: z.string().optional(), // Ключ заявки для открытия Drawer
+	key: z.string().optional(), // Ключ заявки для открытия Drawer с деталями
+	infoKey: z.string().optional(), // Ключ заявки для открытия Drawer с доп. информацией
 });
 
 export const Route = createFileRoute("/app/bid/report")({

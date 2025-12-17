@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Trash2 } from "lucide-react";
+import { MdInfoOutline } from "react-icons/md";
 import type { BidListItem } from "@/entities/Bid/bid.type";
 import {
 	formatDateTime,
@@ -12,7 +13,8 @@ import {
 	formatContacts,
 } from "./BidsTable.shared";
 import { useDeleteBid } from "@/entities/Bid/useBids";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "@/entities/User/auth.context";
 
 interface BidsTableCardProps {
 	bid: BidListItem;
@@ -20,9 +22,13 @@ interface BidsTableCardProps {
 
 export function BidsTableCard({ bid }: BidsTableCardProps) {
 	const navigate = useNavigate();
+	const { user } = useContext(AuthContext);
 	const location = formatLocation(bid.ipLocation);
 	const deleteBidMutation = useDeleteBid();
 	const [isDeleting, setIsDeleting] = useState(false);
+
+	// Проверяем, не является ли план FREE (planId === 1)
+	const isNotFreePlan = user?.planId !== 1;
 
 	const handleDelete = async () => {
 		if (!confirm("Вы уверены, что хотите удалить эту заявку?")) {
@@ -96,6 +102,26 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 						<Eye className="h-3 w-3 mr-1" />
 						Просмотреть ответ
 					</Button>
+					{isNotFreePlan && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => {
+								navigate({
+									to: "/app/bid/report",
+									search: (prev) => ({
+										...prev,
+										infoKey: bid.key,
+										limit: prev.limit ?? 10,
+									}),
+								});
+							}}
+							className="h-7 px-2 text-xs text-blue-500 hover:text-blue-600"
+							title="Дополнительная информация"
+						>
+							<MdInfoOutline className="h-4 w-4" />
+						</Button>
+					)}
 					<Button
 						variant="ghost"
 						size="sm"

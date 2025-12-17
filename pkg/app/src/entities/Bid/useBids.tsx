@@ -96,6 +96,8 @@ export const useBidDetails = (key: string | undefined) => {
 		retry: false,
 		retryOnMount: false,
 		refetchOnWindowFocus: false,
+		staleTime: 60000, // Данные считаются актуальными 60 секунд
+		gcTime: 300000, // Кеш хранится 5 минут после того, как никто не использует данные
 	});
 };
 

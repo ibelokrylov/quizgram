@@ -30,6 +30,7 @@ import {
 import { BidsTableFree } from "./BidsTableFree";
 import { BidsTableBase } from "./BidsTableBase";
 import { BidDetailsDrawer } from "./BidDetailsDrawer";
+import { BidInfoDrawer } from "./BidInfoDrawer";
 import type { BidsListFilters } from "@/entities/Bid/bid.type";
 
 export function BidsReportPage() {
@@ -53,7 +54,9 @@ export function BidsReportPage() {
 				? true
 				: search.isFull === "false"
 					? false
-					: undefined,
+					: search.isFull === "all"
+						? undefined
+						: undefined,
 		isRead:
 			search.isRead === "true"
 				? true
@@ -63,18 +66,24 @@ export function BidsReportPage() {
 		limit: search.limit ?? 10,
 	};
 
-	// Устанавливаем значение по умолчанию для isFull (только для не-FREE планов)
+	// Устанавливаем дефолтное значение isFull=true при первой загрузке (только для не-FREE планов)
+	// Срабатывает только если в URL вообще нет параметров фильтрации
+	const hasAnyFilters =
+		search.quiz_uid || search.status || search.isFull || search.isRead;
 	useEffect(() => {
-		if (!isFreePlan && search.isFull === undefined) {
-			navigate({
-				search: (prev) => ({
-					...prev,
-					isFull: "true",
-				}),
-				replace: true,
-			});
+		if (!isFreePlan && !hasAnyFilters) {
+			navigate(
+				{
+					search: (prev) => ({
+						...prev,
+						isFull: "true",
+					}),
+					replace: true,
+				},
+				{ replace: true },
+			);
 		}
-	}, [isFreePlan, search.isFull, navigate]);
+	}, []); // Пустой массив зависимостей - срабатывает только при монтировании
 
 	// Получаем список квизов для фильтра
 	const { data: quizFilters = [] } = useQuizFilters();
@@ -89,12 +98,21 @@ export function BidsReportPage() {
 		error,
 	} = useInfiniteBids(filters);
 
-	// Получаем детали заявки, если указан параметр key
+	// Получаем детали заявки для основного drawer
+	// Благодаря кешированию (staleTime: 60s), повторные запросы будут использовать кеш
 	const {
 		data: bidDetails,
 		isLoading: isLoadingBidDetails,
 		isError: isErrorBidDetails,
 	} = useBidDetails(search.key);
+
+	// Получаем дополнительную информацию о заявке для info drawer
+	// Если key === infoKey, данные возьмутся из кеша без повторного запроса
+	const {
+		data: bidInfoDetails,
+		isLoading: isLoadingBidInfoDetails,
+		isError: isErrorBidInfoDetails,
+	} = useBidDetails(search.infoKey);
 
 	// Обновляем isRead в кэше после успешной загрузки деталей заявки
 	const markBidAsRead = useMarkBidAsRead();
@@ -107,6 +125,7 @@ export function BidsReportPage() {
 
 	// Управление состоянием Drawer
 	const isDrawerOpen = !!search.key;
+	const isInfoDrawerOpen = !!search.infoKey;
 
 	// Intersection Observer для бесконечного скролла
 	const observerTarget = useRef<HTMLDivElement | null>(null);
@@ -172,9 +191,11 @@ export function BidsReportPage() {
 
 	const handleResetFilters = () => {
 		// Очищаем все search params, оставляем только limit
+		// Для не-FREE планов устанавливаем дефолтное значение isFull=true
 		navigate({
 			search: {
 				limit: 10,
+				...(isFreePlan ? {} : { isFull: "true" }),
 			},
 			replace: true,
 		});
@@ -186,6 +207,19 @@ export function BidsReportPage() {
 			navigate({
 				search: (prev) => {
 					const { key, ...rest } = prev as any;
+					return rest;
+				},
+				replace: true,
+			});
+		}
+	};
+
+	const handleInfoDrawerOpenChange = (open: boolean) => {
+		if (!open) {
+			// Закрываем Info Drawer, удаляя параметр infoKey из URL
+			navigate({
+				search: (prev) => {
+					const { infoKey, ...rest } = prev as any;
 					return rest;
 				},
 				replace: true,
@@ -210,13 +244,12 @@ export function BidsReportPage() {
 	if (isError) {
 		const errorMessage = error instanceof Error ? error.message : undefined;
 		const translatedError = getTranslatedError(errorMessage, t);
-		
+
 		return (
 			<div className="p-4">
 				<Card className="p-4">
 					<p className="text-destructive">
-						{t("bids.error.load")}{" "}
-						{translatedError}
+						{t("bids.error.load")} {translatedError}
 					</p>
 				</Card>
 			</div>
@@ -268,120 +301,137 @@ export function BidsReportPage() {
 							isMobile && !isFiltersExpanded ? "hidden" : ""
 						}`}
 					>
-
-					{/* Фильтр по quiz_uid */}
-					<div className="space-y-2">
-						<label className="text-sm font-medium">{t("bids.quiz")}</label>
-						<Combobox
-							options={quizOptions}
-							value={filters.quiz_uid}
-							onValueChange={(value) => handleFilterChange("quiz_uid", value)}
-							placeholder={t("bids.quiz.select")}
-							searchPlaceholder={t("bids.quiz.search")}
-							emptyText={t("bids.quiz.notFound")}
-						/>
-					</div>
-
-					{/* Фильтр по status */}
-					<div className="space-y-2">
-						<label className="text-sm font-medium">{t("bids.status")}</label>
-						<Select
-							value={filters.status || "all"}
-							onValueChange={(value) =>
-								handleFilterChange(
-									"status",
-									value === "all" ? undefined : value,
-								)
-							}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder={t("bids.status.all")} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">{t("bids.status.all")}</SelectItem>
-								<SelectItem value="create">{t("bids.status.create")}</SelectItem>
-								<SelectItem value="in_progress">{t("bids.status.in_progress")}</SelectItem>
-								<SelectItem value="rejected">{t("bids.status.rejected")}</SelectItem>
-								<SelectItem value="success">{t("bids.status.success")}</SelectItem>
-								<SelectItem value="completed">{t("bids.status.completed")}</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-
-					{/* Фильтр по isRead - Все/Новые */}
-					<div className="space-y-2">
-						<label className="text-sm font-medium">{t("bids.list")}</label>
-						<Select
-							value={
-								filters.isRead === undefined
-									? "all"
-									: filters.isRead === false
-										? "new"
-										: "read"
-							}
-							onValueChange={(value) =>
-								handleFilterChange(
-									"isRead",
-									value === "all"
-										? undefined
-										: value === "new"
-											? false
-											: true,
-								)
-							}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder={t("bids.list.all")} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">{t("bids.list.all")}</SelectItem>
-								<SelectItem value="new">{t("bids.list.new")}</SelectItem>
-								<SelectItem value="read">{t("bids.list.read")}</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-
-					{/* Фильтр по isFull - только для планов отличных от FREE */}
-					{!isFreePlan && (
+						{/* Фильтр по quiz_uid */}
 						<div className="space-y-2">
-							<label className="text-sm font-medium">{t("bids.completed")}</label>
+							<label className="text-sm font-medium">{t("bids.quiz")}</label>
+							<Combobox
+								options={quizOptions}
+								value={filters.quiz_uid}
+								onValueChange={(value) => handleFilterChange("quiz_uid", value)}
+								placeholder={t("bids.quiz.select")}
+								searchPlaceholder={t("bids.quiz.search")}
+								emptyText={t("bids.quiz.notFound")}
+							/>
+						</div>
+
+						{/* Фильтр по status */}
+						<div className="space-y-2">
+							<label className="text-sm font-medium">{t("bids.status")}</label>
 							<Select
-								value={
-									filters.isFull === undefined
-										? "true"
-										: filters.isFull === true
-											? "true"
-											: "false"
-								}
+								value={filters.status || "all"}
 								onValueChange={(value) =>
 									handleFilterChange(
-										"isFull",
-										value === "all" ? undefined : value === "true",
+										"status",
+										value === "all" ? undefined : value,
 									)
 								}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder={t("bids.completed.yes")} />
+									<SelectValue placeholder={t("bids.status.all")} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">{t("bids.completed.all")}</SelectItem>
-									<SelectItem value="true">{t("bids.completed.yes")}</SelectItem>
-									<SelectItem value="false">{t("bids.completed.no")}</SelectItem>
+									<SelectItem value="all">{t("bids.status.all")}</SelectItem>
+									<SelectItem value="create">
+										{t("bids.status.create")}
+									</SelectItem>
+									<SelectItem value="in_progress">
+										{t("bids.status.in_progress")}
+									</SelectItem>
+									<SelectItem value="rejected">
+										{t("bids.status.rejected")}
+									</SelectItem>
+									<SelectItem value="success">
+										{t("bids.status.success")}
+									</SelectItem>
+									<SelectItem value="completed">
+										{t("bids.status.completed")}
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
-					)}
 
-					{/* Кнопки управления фильтрами */}
-					<div className="pt-2">
-						<Button
-							variant="outline"
-							className="w-full"
-							onClick={handleResetFilters}
-						>
-							{t("bids.filters.reset")}
-						</Button>
-					</div>
+						{/* Фильтр по isRead - Все/Новые */}
+						<div className="space-y-2">
+							<label className="text-sm font-medium">{t("bids.list")}</label>
+							<Select
+								value={
+									filters.isRead === undefined
+										? "all"
+										: filters.isRead === false
+											? "new"
+											: "read"
+								}
+								onValueChange={(value) =>
+									handleFilterChange(
+										"isRead",
+										value === "all"
+											? undefined
+											: value === "new"
+												? false
+												: true,
+									)
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder={t("bids.list.all")} />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">{t("bids.list.all")}</SelectItem>
+									<SelectItem value="new">{t("bids.list.new")}</SelectItem>
+									<SelectItem value="read">{t("bids.list.read")}</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						{/* Фильтр по isFull - только для планов отличных от FREE */}
+						{!isFreePlan && (
+							<div className="space-y-2">
+								<label className="text-sm font-medium">
+									{t("bids.completed")}
+								</label>
+								<Select
+									value={
+										search.isFull === "all"
+											? "all"
+											: search.isFull === "false"
+												? "false"
+												: "true" // По умолчанию или явный "true"
+									}
+									onValueChange={(value) =>
+										handleFilterChange(
+											"isFull",
+											value === "all" ? "all" : value,
+										)
+									}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder={t("bids.completed.yes")} />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">
+											{t("bids.completed.all")}
+										</SelectItem>
+										<SelectItem value="true">
+											{t("bids.completed.yes")}
+										</SelectItem>
+										<SelectItem value="false">
+											{t("bids.completed.no")}
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+						)}
+
+						{/* Кнопки управления фильтрами */}
+						<div className="pt-2">
+							<Button
+								variant="outline"
+								className="w-full"
+								onClick={handleResetFilters}
+							>
+								{t("bids.filters.reset")}
+							</Button>
+						</div>
 					</div>
 				</div>
 			</Card>
@@ -401,11 +451,15 @@ export function BidsReportPage() {
 								<p>{t("bids.completed.total", { total })}</p>
 								<p>{t("bids.shown.count", { count: shownBidsCount })}</p>
 								{deletedInLimitFull > 0 && (
-									<p>{t("bids.deleted.inLimit", { count: deletedInLimitFull })}</p>
+									<p>
+										{t("bids.deleted.inLimit", { count: deletedInLimitFull })}
+									</p>
 								)}
 								{isFreePlan && (
 									<>
-										<p>{t("bids.available.inLimit", { count: maxAvailableFull })}</p>
+										<p>
+											{t("bids.available.inLimit", { count: maxAvailableFull })}
+										</p>
 										{beyondLimitCount > 0 && (
 											<p className="text-destructive">
 												{t("bids.exceeded.limit", { count: beyondLimitCount })}
@@ -422,14 +476,8 @@ export function BidsReportPage() {
 						</p>
 					)}
 					{isLimitExceeded && (
-						<Button
-							variant="default"
-							className="ml-auto"
-							asChild
-						>
-							<Link to="/plans">
-								{t("bids.subscribe")}
-							</Link>
+						<Button variant="default" className="ml-auto" asChild>
+							<Link to="/plans">{t("bids.subscribe")}</Link>
 						</Button>
 					)}
 				</div>
@@ -460,6 +508,15 @@ export function BidsReportPage() {
 				bidDetails={bidDetails}
 				isLoading={isLoadingBidDetails}
 				isError={isErrorBidDetails}
+			/>
+
+			{/* Drawer с дополнительной информацией */}
+			<BidInfoDrawer
+				open={isInfoDrawerOpen}
+				onOpenChange={handleInfoDrawerOpenChange}
+				bidDetails={bidInfoDetails}
+				isLoading={isLoadingBidInfoDetails}
+				isError={isErrorBidInfoDetails}
 			/>
 		</div>
 	);

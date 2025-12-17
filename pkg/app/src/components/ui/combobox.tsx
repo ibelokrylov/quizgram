@@ -89,7 +89,7 @@ export function Combobox({
 									}}
 								>
 									<div
-										className="flex items-center w-full"
+										className="flex items-center w-full text-black dark:text-white"
 										style={{ pointerEvents: "auto" }}
 									>
 										{option.label}

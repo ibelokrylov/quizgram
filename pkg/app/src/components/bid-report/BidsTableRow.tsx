@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Eye, Trash2, ExternalLink } from "lucide-react";
-import { MdEmail, MdPhone, MdPerson, MdTextFields } from "react-icons/md";
+import {
+	MdEmail,
+	MdPhone,
+	MdPerson,
+	MdTextFields,
+	MdInfoOutline,
+} from "react-icons/md";
 import type { BidListItem } from "@/entities/Bid/bid.type";
 import {
 	formatDateTime,
@@ -13,7 +19,8 @@ import {
 	getContactsList,
 } from "./BidsTable.shared";
 import { useDeleteBid } from "@/entities/Bid/useBids";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "@/entities/User/auth.context";
 
 interface BidsTableRowProps {
 	bid: BidListItem;
@@ -21,9 +28,13 @@ interface BidsTableRowProps {
 
 export function BidsTableRow({ bid }: BidsTableRowProps) {
 	const navigate = useNavigate();
+	const { user } = useContext(AuthContext);
 	const location = formatLocation(bid.ipLocation);
 	const deleteBidMutation = useDeleteBid();
 	const [isDeleting, setIsDeleting] = useState(false);
+
+	// Проверяем, не является ли план FREE (planId === 1)
+	const isNotFreePlan = user?.planId !== 1;
 
 	const handleDelete = async () => {
 		if (!confirm("Вы уверены, что хотите удалить эту заявку?")) {
@@ -141,6 +152,26 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
 					>
 						<Eye className="h-4 w-4" />
 					</Button>
+					{isNotFreePlan && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => {
+								navigate({
+									to: "/app/bid/report",
+									search: (prev) => ({
+										...prev,
+										infoKey: bid.key,
+										limit: prev.limit ?? 10,
+									}),
+								});
+							}}
+							className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+							title="Дополнительная информация"
+						>
+							<MdInfoOutline className="h-5 w-5" />
+						</Button>
+					)}
 					<Button
 						variant="ghost"
 						size="sm"
