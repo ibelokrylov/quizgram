@@ -25,7 +25,6 @@ export const QuestionGroup = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: answersArray,
-      question: question,
     });
   }
 

@@ -15,7 +15,6 @@ export const RatingQuestion = () => {
           sendAnswer({
             question_uid: question.uid,
             answer: e,
-            question: question,
           })
         }
         precision={0.5}

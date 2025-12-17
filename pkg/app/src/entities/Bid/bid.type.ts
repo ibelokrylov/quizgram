@@ -16,6 +16,7 @@ export interface BidListItem {
 		city: string | null;
 		ip: string | null;
 	} | null;
+	info?: any | null; // Дополнительная информация из таблицы quiz_bid (только для planId != 1)
 }
 
 // Внутренняя структура данных (data внутри ответа)
@@ -51,10 +52,8 @@ export interface BidDetails {
 	key: string;
 	status: string;
 	isFull: boolean;
-	isRead: boolean; // Прочитана ли заявка
 	first: boolean; // Первый ли это запрос квиза
 	createdAt: string;
-	updatedAt: string;
 	quizName: string;
 	data: any; // Полные данные заявки (ответы, контакты и т.д.) - поле answer из таблицы
 	info?: any | null; // Дополнительная информация
@@ -63,9 +62,4 @@ export interface BidDetails {
 	contactsForm?: any[] | null; // Форма контактов из квиза
 	userInfo?: any | null; // Информация о пользователе из Telegram
 	initData?: string | null; // Telegram WebApp initData как строка
-	ipLocation?: {
-		country: string | null;
-		city: string | null;
-		ip: string | null;
-	} | null;
 }

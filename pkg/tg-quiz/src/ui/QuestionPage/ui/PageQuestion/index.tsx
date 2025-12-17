@@ -12,7 +12,6 @@ export const PageQuestion = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: question,
-      question: question,
     });
   }, []);
 

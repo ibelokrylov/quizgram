@@ -72,7 +72,8 @@ export const bids = new Elysia({ prefix: "/bids" })
               query,
               user.createdAt,
               bidMonthLimit,
-              planName
+              planName,
+              user.planId
             );
 
             // Для FREE плана убираем totalNotFull из ответа

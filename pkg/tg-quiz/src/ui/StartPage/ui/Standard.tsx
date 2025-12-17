@@ -1,6 +1,12 @@
-import { Button, Card, Image, Placeholder, Text } from '@telegram-apps/telegram-ui';
-import { useContext, useEffect } from 'react';
-import { AppContext, type QuizStartPageStandard } from '../../../App.context';
+import {
+  Button,
+  Card,
+  Image,
+  Placeholder,
+  Text,
+} from "@telegram-apps/telegram-ui";
+import { useContext, useEffect } from "react";
+import { AppContext, type QuizStartPageStandard } from "../../../App.context";
 
 export const Standard = () => {
   const { nextStage, quiz } = useContext(AppContext);
@@ -10,27 +16,27 @@ export const Standard = () => {
   const data = startPage.content;
 
   useEffect(() => {
-    const element = window.document.querySelector('#root');
+    const element = window.document.querySelector("#root");
     const url = data?.background_mobile;
-    const footer = document.querySelector('.footer__logo') as HTMLElement;
+    const footer = document.querySelector(".footer__logo") as HTMLElement;
 
     if (!element) return;
 
     if (!url) {
       //clear background
-      element.setAttribute('style', '');
+      element.setAttribute("style", "");
       // Сбрасываем стили футера
       if (footer) {
-        footer.style.position = '';
-        footer.style.bottom = '';
-        footer.style.left = '';
-        footer.style.transform = '';
+        footer.style.position = "";
+        footer.style.bottom = "";
+        footer.style.left = "";
+        footer.style.transform = "";
       }
       return;
     }
 
     element.setAttribute(
-      'style',
+      "style",
       `
         background-image: url(${url});
         background-size: cover;
@@ -42,67 +48,60 @@ export const Standard = () => {
         transition: background-image 0.3s ease-in-out;
         height: 100vh;
         width: 100vw;
-      `
+      `,
     );
 
     // Прибиваем футер к низу страницы по центру
     if (footer) {
-      footer.style.position = 'absolute';
-      footer.style.bottom = '6px';
-      footer.style.left = '50%';
-      footer.style.transform = 'translateX(-50%)';
+      footer.style.position = "absolute";
+      footer.style.bottom = "6px";
+      footer.style.left = "50%";
+      footer.style.transform = "translateX(-50%)";
     }
 
     // Cleanup при размонтировании
     return () => {
       if (footer) {
-        footer.style.position = '';
-        footer.style.bottom = '';
-        footer.style.left = '';
-        footer.style.transform = '';
+        footer.style.position = "";
+        footer.style.bottom = "";
+        footer.style.left = "";
+        footer.style.transform = "";
       }
 
-      element.setAttribute('style', '');
+      element.setAttribute("style", "");
     };
   }, [data?.background_mobile]);
 
   return (
     <>
-      {data?.background_mobile ? (
-        <div className='center__content'>
-          <div className='start-page__cards-container'>
+      {data ? (
+        <div className="center__content">
+          <div className="start-page__cards-container">
             {data?.name || data?.logo_url ? (
-              <Card type='ambient'>
-                <div className='card__chip start-page__card-chip'>
+              <Card type="ambient">
+                <div className="card__chip start-page__card-chip">
                   {data?.logo_url ? (
-                    <Image
-                      size={40}
-                      src={data.logo_url}
-                    />
+                    <Image size={40} src={data.logo_url} />
                   ) : null}
                   {data?.name ? (
-                    <Text
-                      weight={'3'}
-                      caps
-                    >
+                    <Text weight={"3"} caps>
                       {data.name}
                     </Text>
                   ) : null}
                 </div>
               </Card>
             ) : null}
-            <Card
-              type='ambient'
-              className='cards full standard'
-            >
+            <Card type="ambient" className="cards full standard">
               {data?.title || data?.description ? (
                 <Placeholder
                   header={data?.title}
                   description={data?.description}
                 />
               ) : null}
-              <div className='start-page__button-container'>
-                <Button onClick={nextStage}>{data?.button ?? 'Пройти опрос'}</Button>
+              <div className="start-page__button-container">
+                <Button onClick={nextStage}>
+                  {data?.button ?? "Пройти опрос"}
+                </Button>
               </div>
               {data?.company_name || data?.phone || data?.disclamer ? (
                 <Card.Cell

@@ -1,31 +1,31 @@
-import '@telegram-apps/telegram-ui/dist/styles.css';
+import "@telegram-apps/telegram-ui/dist/styles.css";
 
-import { AppRoot } from '@telegram-apps/telegram-ui';
-import { AppContextProvider } from './App.context.provider';
-import { Content } from './Content';
-import { useLaunchParams } from '@telegram-apps/sdk-react';
-import { useEffect } from 'react';
+import { AppRoot } from "@telegram-apps/telegram-ui";
+import { AppContextProvider } from "./App.context.provider";
+import { Content } from "./Content";
+// import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { useEffect } from "react";
 
 function App() {
-  const launchParams = useLaunchParams();
-  const isTelegramMiniApp = !!launchParams.platform;
+  // const launchParams = useLaunchParams();
+  // const isTelegramMiniApp = !!launchParams.platform;
 
   useEffect(() => {
     // Если это Telegram Mini App - ничего не делаем (Telegram управляет темой)
-    if (isTelegramMiniApp) {
-      return;
-    }
+    // if (isTelegramMiniApp) {
+    // return;
+    // }
 
     // Если это браузер - добавляем автодетект темы
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const updateTheme = (e: MediaQueryList | MediaQueryListEvent) => {
       if (e.matches) {
-        document.body.classList.add('dark');
-        document.body.classList.remove('light');
+        document.body.classList.add("dark");
+        document.body.classList.remove("light");
       } else {
-        document.body.classList.add('light');
-        document.body.classList.remove('dark');
+        document.body.classList.add("light");
+        document.body.classList.remove("dark");
       }
     };
 
@@ -33,16 +33,17 @@ function App() {
     updateTheme(mediaQuery);
 
     // Слушать изменения темы
-    mediaQuery.addEventListener('change', updateTheme);
+    mediaQuery.addEventListener("change", updateTheme);
 
     return () => {
-      mediaQuery.removeEventListener('change', updateTheme);
+      mediaQuery.removeEventListener("change", updateTheme);
     };
-  }, [isTelegramMiniApp]);
+    // }, [isTelegramMiniApp]);
+  }, []);
 
   return (
     <AppContextProvider>
-      <AppRoot className='app'>
+      <AppRoot className="app">
         <Content />
       </AppRoot>
     </AppContextProvider>

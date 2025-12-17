@@ -22,14 +22,21 @@ export const AuthContextProvider = (props: PropsWithChildren) => {
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setUser(query.data);
 			setIsAuth(true);
-			
+
 			// Устанавливаем язык из профиля пользователя, если он есть
 			// Но только если текущий язык в i18n не совпадает с языком из БД
 			// Это предотвращает перезапись языка, который пользователь только что выбрал
-			if (query.data.language && (query.data.language === "en" || query.data.language === "ru")) {
+			if (
+				query.data.language &&
+				(query.data.language === "en" || query.data.language === "ru")
+			) {
 				const currentLang = i18n.language || "en";
-				const normalizedCurrentLang = currentLang.startsWith("ru") ? "ru" : currentLang.startsWith("en") ? "en" : currentLang;
-				
+				const normalizedCurrentLang = currentLang.startsWith("ru")
+					? "ru"
+					: currentLang.startsWith("en")
+						? "en"
+						: currentLang;
+
 				// Устанавливаем язык только если он отличается от текущего
 				if (normalizedCurrentLang !== query.data.language) {
 					i18n.changeLanguage(query.data.language);

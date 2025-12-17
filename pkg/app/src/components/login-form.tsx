@@ -50,22 +50,24 @@ export function LoginForm({
 				if (Object.keys(err).length > 0) {
 					setError(err);
 				}
-			} else {
-				const res = await http<User>({
-					url: "/v1/auth/login",
-					method: "POST",
-					body: data,
-				});
-				if (res.data) {
-					ctx.setUser(res.data);
-					ctx.setIsAuth(true);
-				}
+				setLoading(false);
+				return;
+			}
+			const res = await http<User>({
+				url: "/v1/auth/login",
+				method: "POST",
+				body: data,
+			});
+			if (res.data) {
+				ctx.setUser(res.data);
+				ctx.setIsAuth(true);
+				setLoading(false);
 			}
 		} catch (e) {
 			toast.error("Not auth");
 			console.log(e);
+			setLoading(false);
 		}
-		setLoading(false);
 	}
 
 	return (

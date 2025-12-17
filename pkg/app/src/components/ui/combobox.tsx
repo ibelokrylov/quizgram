@@ -58,7 +58,7 @@ export function Combobox({
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-[300px] p-0" align="start">
+			<PopoverContent className="w-[300px] p-0" align="center">
 				<Command>
 					<CommandInput placeholder={searchPlaceholder} className="h-9" />
 					<CommandList>
@@ -69,6 +69,7 @@ export function Combobox({
 									key={option.value}
 									value={option.value}
 									keywords={[option.label]}
+									disabled={false}
 									onSelect={(selectedValue) => {
 										// cmdk возвращает значение в нижнем регистре, поэтому ищем опцию
 										const selectedOption = options.find(
@@ -89,7 +90,7 @@ export function Combobox({
 									}}
 								>
 									<div
-										className="flex items-center w-full text-black dark:text-white"
+										className="flex items-center w-full"
 										style={{ pointerEvents: "auto" }}
 									>
 										{option.label}

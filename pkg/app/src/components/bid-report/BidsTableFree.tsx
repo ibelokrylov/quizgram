@@ -38,9 +38,15 @@ export function BidsTableFree({
 					<table className="w-full border-collapse">
 						<thead>
 							<tr className="border-b">
-								<th className="text-left p-3 text-sm font-semibold">{t("bids.table.status")}</th>
-								<th className="text-left p-3 text-sm font-semibold">{t("bids.table.date")}</th>
-								<th className="text-left p-3 text-sm font-semibold">{t("bids.table.quiz")}</th>
+								<th className="text-left p-3 text-sm font-semibold">
+									{t("bids.table.status")}
+								</th>
+								<th className="text-left p-3 text-sm font-semibold">
+									{t("bids.table.date")}
+								</th>
+								<th className="text-left p-3 text-sm font-semibold">
+									{t("bids.table.quiz")}
+								</th>
 								<th className="text-left p-3 text-sm font-semibold">
 									{t("bids.table.contacts")}
 								</th>

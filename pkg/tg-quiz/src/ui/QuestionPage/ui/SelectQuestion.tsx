@@ -11,7 +11,6 @@ export const SelectQuestion = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: question.content?.variants?.[0] ?? '',
-      question: question,
     });
   }, []);
 
@@ -19,7 +18,6 @@ export const SelectQuestion = () => {
     sendAnswer({
       question_uid: question.uid,
       answer: value,
-      question: question.content?.title,
     });
   }
   return (

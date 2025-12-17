@@ -65,7 +65,9 @@ export const QuestionPage = () => {
       setShowSnackbar(true);
       return;
     }
-    if (!answer?.answer) {
+    // Проверяем, что answer существует и answer.answer не является null или undefined
+    // Для числовых значений (например, slide) 0 является валидным ответом
+    if (answer === null || answer === undefined || answer.answer === null || answer.answer === undefined) {
       setShowSnackbar(true);
       return;
     }

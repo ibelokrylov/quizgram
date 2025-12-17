@@ -2,15 +2,21 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2 } from "lucide-react";
-import { MdInfoOutline } from "react-icons/md";
+import { Eye, Trash2, ExternalLink } from "lucide-react";
+import {
+	MdEmail,
+	MdPhone,
+	MdPerson,
+	MdTextFields,
+	MdInfoOutline,
+} from "react-icons/md";
 import type { BidListItem } from "@/entities/Bid/bid.type";
 import {
 	formatDateTime,
 	getStatusText,
 	getStatusColor,
 	formatLocation,
-	formatContacts,
+	getContactsList,
 } from "./BidsTable.shared";
 import { useDeleteBid } from "@/entities/Bid/useBids";
 import { useState, useContext } from "react";
@@ -52,15 +58,22 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 				<div className="flex items-start justify-between gap-2">
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 mb-1">
-							<h3 className="font-semibold text-sm truncate">{bid.quizName}</h3>
+							<Link
+								to="/app/quiz/$uid"
+								params={{ uid: bid.uid }}
+								className="flex items-center gap-1.5 font-semibold text-sm text-primary hover:underline truncate"
+							>
+								<ExternalLink className="h-3.5 w-3.5 shrink-0" />
+								<span className="truncate">{bid.quizName}</span>
+							</Link>
 							<Badge
 								className={`text-xs px-1.5 py-0.5 shrink-0 ${getStatusColor(bid.status)}`}
 							>
 								{getStatusText(bid.status)}
 							</Badge>
 						</div>
-						<div className="text-xs text-muted-foreground space-y-0.5">
-							<div className="flex items-center gap-2">
+						<div className="text-xs text-muted-foreground space-y-1">
+							<div className="flex items-center gap-2 flex-wrap">
 								{!bid.isRead ? (
 									<Badge
 										variant="default"
@@ -69,40 +82,56 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 										New
 									</Badge>
 								) : null}
-								<span>{formatDateTime(bid.createdAt)}</span>
+								<Badge
+									variant="outline"
+									className="text-xs px-1.5 py-0.5 w-fit dark:bg-background/80"
+								>
+									{formatDateTime(bid.createdAt)}
+								</Badge>
 							</div>
 							{location && <p>{location}</p>}
-							<p>Контакты: {formatContacts(bid.contacts)}</p>
+							{(() => {
+								const contactsList = getContactsList(bid.contacts);
+								if (contactsList.length === 0) {
+									return null;
+								}
+								return (
+									<div className="flex flex-col gap-1">
+										{contactsList.map((contact, index) => {
+											const getIcon = () => {
+												switch (contact.type) {
+													case "email":
+														return <MdEmail className="h-3.5 w-3.5 shrink-0" />;
+													case "phone":
+														return <MdPhone className="h-3.5 w-3.5 shrink-0" />;
+													case "name":
+														return (
+															<MdPerson className="h-3.5 w-3.5 shrink-0" />
+														);
+													case "text":
+													default:
+														return (
+															<MdTextFields className="h-3.5 w-3.5 shrink-0" />
+														);
+												}
+											};
+											return (
+												<div key={index} className="flex items-center gap-1.5">
+													{getIcon()}
+													<span className="break-all text-sm">
+														{contact.value}
+													</span>
+												</div>
+											);
+										})}
+									</div>
+								);
+							})()}
 						</div>
 					</div>
 				</div>
-				<div className="flex items-center gap-2 pt-2 border-t">
-					<Link
-						to="/app/quiz/$uid"
-						params={{ uid: bid.uid }}
-						className="text-xs text-primary hover:underline"
-					>
-						Открыть квиз
-					</Link>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => {
-							navigate({
-								to: "/app/bid/report",
-								search: (prev) => ({
-									...prev,
-									key: bid.key,
-									limit: prev.limit ?? 10,
-								}),
-							});
-						}}
-						className="h-7 text-xs"
-					>
-						<Eye className="h-3 w-3 mr-1" />
-						Просмотреть ответ
-					</Button>
-					{isNotFreePlan && (
+				<div className="flex items-center justify-end gap-2 pt-2 border-t">
+					<div className="flex items-center gap-2">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -111,27 +140,47 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 									to: "/app/bid/report",
 									search: (prev) => ({
 										...prev,
-										infoKey: bid.key,
+										key: bid.key,
 										limit: prev.limit ?? 10,
 									}),
 								});
 							}}
-							className="h-7 px-2 text-xs text-blue-500 hover:text-blue-600"
-							title="Дополнительная информация"
+							className="h-8 w-8 p-0"
+							title="Просмотреть ответ"
 						>
-							<MdInfoOutline className="h-4 w-4" />
+							<Eye className="h-4 w-4" />
 						</Button>
-					)}
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={handleDelete}
-						disabled={isDeleting}
-						className="h-7 text-xs text-destructive hover:text-destructive"
-					>
-						<Trash2 className="h-3 w-3 mr-1" />
-						{isDeleting ? "Удаление..." : "Удалить"}
-					</Button>
+						{isNotFreePlan && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => {
+									navigate({
+										to: "/app/bid/report",
+										search: (prev) => ({
+											...prev,
+											infoKey: bid.key,
+											limit: prev.limit ?? 10,
+										}),
+									});
+								}}
+								className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+								title="Дополнительная информация"
+							>
+								<MdInfoOutline className="h-5 w-5" />
+							</Button>
+						)}
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleDelete}
+							disabled={isDeleting}
+							className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+							title={isDeleting ? "Удаление..." : "Удалить"}
+						>
+							<Trash2 className="h-4 w-4" />
+						</Button>
+					</div>
 				</div>
 			</div>
 		</Card>

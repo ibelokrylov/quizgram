@@ -11,14 +11,15 @@ export const LanguageToggle = () => {
 	const queryClient = useQueryClient();
 
 	const currentLanguage = i18n.language || "en";
-	const isRussian = currentLanguage === "ru" || currentLanguage.startsWith("ru");
+	const isRussian =
+		currentLanguage === "ru" || currentLanguage.startsWith("ru");
 
 	const toggleLanguage = async () => {
 		const newLanguage = isRussian ? "en" : "ru";
-		
+
 		// Меняем язык в интерфейсе
 		await i18n.changeLanguage(newLanguage);
-		
+
 		// Если пользователь авторизован, отправляем язык на сервер
 		if (isAuth) {
 			try {
@@ -27,12 +28,12 @@ export const LanguageToggle = () => {
 					method: "PUT",
 					body: { language: newLanguage },
 				});
-				
+
 				// Обновляем данные пользователя в контексте и кэше
 				if (user) {
 					const updatedUser = { ...user, language: newLanguage };
 					setUser(updatedUser);
-					
+
 					// Обновляем кэш React Query
 					queryClient.setQueryData(["user"], updatedUser);
 				}

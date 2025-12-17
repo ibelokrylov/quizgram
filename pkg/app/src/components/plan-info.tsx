@@ -26,9 +26,7 @@ export function PlanInfo({ className }: PlanInfoProps) {
 	if (planQuery.isError || !planQuery.data) {
 		return (
 			<Card className={`p-4 ${className || ""}`}>
-				<div className="text-destructive text-sm">
-					{t("plan.info.error")}
-				</div>
+				<div className="text-destructive text-sm">{t("plan.info.error")}</div>
 			</Card>
 		);
 	}
@@ -41,9 +39,7 @@ export function PlanInfo({ className }: PlanInfoProps) {
 			<div className="flex flex-col gap-4">
 				<div className="flex items-center justify-between">
 					<div className="flex flex-col gap-1">
-						<h3 className="font-semibold text-lg">
-							{t("plan.info.title")}
-						</h3>
+						<h3 className="font-semibold text-lg">{t("plan.info.title")}</h3>
 						<div className="flex items-center gap-2">
 							<Badge
 								variant={isFreePlan ? "secondary" : "default"}

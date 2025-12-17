@@ -6,15 +6,15 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
 const RootLayout = () => (
-  <QueryClientProvider client={queryClinet}>
-    <ContextHole>
-      <Outlet />
-      <Toaster />
-    </ContextHole>
-  </QueryClientProvider>
+	<QueryClientProvider client={queryClinet}>
+		<ContextHole>
+			<Outlet />
+			<Toaster />
+		</ContextHole>
+	</QueryClientProvider>
 );
 
 export const Route = createRootRoute({
-  component: RootLayout,
-  notFoundComponent: NotFound,
+	component: RootLayout,
+	notFoundComponent: NotFound,
 });

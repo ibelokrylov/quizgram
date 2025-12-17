@@ -1,0 +1,264 @@
+# Правила работы с файлами
+
+## Хранение файлов
+
+**⚠️ ВАЖНО: Файлы НИКОГДА не хранятся в базе данных или на сервере!**
+
+### Принципы работы с файлами
+
+1. **Все файлы хранятся в S3** (Amazon S3 или S3-совместимое хранилище)
+2. **В базе данных хранятся только метаданные и ссылки на файлы:**
+   - URL файла в S3
+   - S3 ключ (fileKey)
+   - Имя файла (fileName)
+   - Размер файла (fileSize)
+   - Тип файла (fileType)
+
+### Процесс обработки файлов
+
+#### 1. Загрузка файла от пользователя
+
+Когда пользователь отправляет файл:
+
+```typescript
+// ❌ НЕПРАВИЛЬНО - НЕ сохраняй файл в БД
+await db.insert(table).values({
+  file: fileBuffer // ❌ НИКОГДА так не делай!
+});
+
+// ✅ ПРАВИЛЬНО - сначала загрузи в S3, потом сохрани метаданные
+const uploadResult = await S3Service.uploadFile(file, fileName, folder);
+
+await db.insert(table).values({
+  fileUrl: uploadResult.fileURL,    // URL для доступа
+  fileKey: uploadResult.fileKey,    // Ключ в S3 для удаления
+  fileName: fileName,
+  fileSize: fileSize,
+  fileType: fileType,
+});
+```
+
+#### 2. Порядок операций (ОБЯЗАТЕЛЬНО!)
+
+**Последовательность при загрузке файла:**
+
+1. **Получить файл** от пользователя (FormData, multipart/form-data)
+2. **Загрузить файл в S3** через `S3Service.uploadFile()` или `QuizFileService.uploadQuizFile()`
+3. **Получить URL и метаданные** из результата загрузки
+4. **Сохранить метаданные в БД** (URL, ключ, размер, тип и т.д.)
+
+**Последовательность при удалении файла:**
+
+1. **Получить fileKey** из БД
+2. **Удалить файл из S3** через `S3Service.deleteFile(fileKey)`
+3. **Удалить запись из БД**
+
+### Сервисы для работы с файлами
+
+#### S3Service (`src/services/s3.service.ts`)
+
+Базовый сервис для работы с S3:
+
+```typescript
+// Загрузка файла
+const result = await S3Service.uploadFile(
+  file,           // File | Blob | Buffer | Uint8Array
+  fileName,       // Имя файла
+  folder          // Папка в S3 (опционально)
+);
+// result: { fileKey: string, fileURL: string }
+
+// Удаление файла
+await S3Service.deleteFile(fileKey);
+
+// Получение файла
+const buffer = await S3Service.getFile(fileKey);
+```
+
+#### FileService (`src/services/file.service.ts`)
+
+Сервис для загрузки файлов пользователей с валидацией:
+
+```typescript
+const result = await FileService.uploadFile(
+  file,
+  contentType,
+  fileName,
+  fileSize,
+  userId
+);
+```
+
+- Валидирует тип и размер файла
+- Определяет папку в S3 автоматически (images/videos/files)
+- Сохраняет информацию о файле в таблицу `user_file`
+
+#### QuizFileService (`src/services/quiz-file.service.ts`)
+
+Сервис для загрузки файлов квизов:
+
+```typescript
+const result = await QuizFileService.uploadQuizFile(
+  file,
+  quizId,
+  sessionKey
+);
+```
+
+- Загружает файл в папку для квизов
+- Сохраняет информацию о файле в таблицу `quiz_file`
+
+### Пример: Сохранение ответа с файлом в квизе
+
+```typescript
+// В service.ts (публичный API квизов)
+
+// 1. Проверяем, является ли ответ файлом
+const isFile = answerData.answer instanceof File || 
+               answerData.answer instanceof Blob;
+
+if (isFile) {
+  // 2. Загружаем файл в S3 через QuizFileService
+  const uploadResult = await QuizFileService.uploadQuizFile(
+    answerData.answer,
+    quiz[0].id,
+    userKey
+  );
+
+  // 3. Заменяем файл на метаданные с URL
+  processedAnswer = {
+    type: 'file',
+    fileName: answerData.answer.name,
+    fileSize: answerData.answer.size,
+    fileType: answerData.answer.type,
+    url: uploadResult.fileURL,     // ✅ URL для доступа
+    s3Key: uploadResult.fileKey    // ✅ Ключ для удаления
+  };
+}
+
+// 4. Сохраняем в БД только метаданные (не сам файл!)
+await db.update(quizBidTable).set({
+  answer: [{ 
+    question_uid: questionUid,
+    answer: processedAnswer,  // ✅ Объект с метаданными, а не файл
+    timestamp: new Date().toISOString()
+  }]
+});
+```
+
+### Таблицы для хранения метаданных файлов
+
+#### user_file
+
+Хранит информацию о файлах, загруженных пользователями:
+
+```typescript
+{
+  id: number,
+  uid: string,
+  userId: number,
+  fileName: string,
+  fileKey: string,    // Ключ в S3
+  fileUrl: string,    // URL для доступа
+  fileSize: number,
+  fileType: string,
+  createdAt: Date,
+}
+```
+
+#### quiz_file
+
+Хранит информацию о файлах, загруженных в ответах на квизы:
+
+```typescript
+{
+  id: number,
+  uid: string,
+  quizId: number,
+  fileName: string,
+  fileKey: string,    // Ключ в S3
+  fileUrl: string,    // URL для доступа
+  fileSize: number,
+  fileType: string,
+  sessionKey: string, // Для связи с ответами пользователя
+  createdAt: Date,
+}
+```
+
+### Конфигурация S3
+
+S3 настраивается через переменные окружения:
+
+```bash
+# S3 настройки
+S3_ENDPOINT=https://s3.twcstorage.ru
+S3_REGION=ru-1
+S3_BUCKET=your-bucket-name
+S3_ACCESS_KEY_ID=your-access-key
+S3_SECRET_ACCESS_KEY=your-secret-key
+S3_PUBLIC_URL=https://s3.twcstorage.ru/your-bucket-name
+```
+
+### Типы файлов и лимиты
+
+Максимальные размеры файлов определены в `src/helpers/file.helper.ts`:
+
+- **Изображения**: 5 MB
+- **Видео**: 100 MB
+- **Документы**: 20 MB
+
+### Безопасность
+
+1. **Валидация типа файла** - проверяй MIME-тип
+2. **Валидация размера файла** - не допускай слишком больших файлов
+3. **Уникальные имена файлов** - используй UUID для предотвращения конфликтов
+4. **Очистка неиспользуемых файлов** - удаляй файлы из S3 при удалении записей в БД
+
+### ❌ Что НЕ ДЕЛАТЬ
+
+```typescript
+// ❌ НЕ сохраняй файл в БД
+await db.insert(table).values({
+  file: fileBuffer,
+  fileData: await file.arrayBuffer()
+});
+
+// ❌ НЕ сохраняй файл на сервере
+await Bun.write(`./uploads/${fileName}`, file);
+
+// ❌ НЕ возвращай сам файл в API ответе (используй URL)
+return {
+  file: fileBuffer  // ❌ Плохо
+};
+```
+
+### ✅ Что ДЕЛАТЬ
+
+```typescript
+// ✅ Загрузи файл в S3
+const uploadResult = await S3Service.uploadFile(file, fileName, folder);
+
+// ✅ Сохрани метаданные в БД
+await db.insert(table).values({
+  fileUrl: uploadResult.fileURL,
+  fileKey: uploadResult.fileKey,
+  fileName: fileName,
+  fileSize: file.size,
+  fileType: file.type,
+});
+
+// ✅ Верни URL в API ответе
+return {
+  fileUrl: uploadResult.fileURL,  // ✅ Хорошо
+  fileName: fileName,
+};
+```
+
+## Резюме
+
+- ✅ **Файлы хранятся в S3**
+- ✅ **Метаданные хранятся в БД**
+- ✅ **Сначала загрузка в S3, потом сохранение метаданных**
+- ✅ **При удалении - сначала из S3, потом из БД**
+- ❌ **НЕ хранить файлы в БД**
+- ❌ **НЕ хранить файлы на сервере**

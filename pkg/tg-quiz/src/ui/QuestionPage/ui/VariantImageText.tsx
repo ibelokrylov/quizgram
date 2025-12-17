@@ -14,7 +14,6 @@ export const VariantImageText = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: question.content.variants[idx],
-      question: question,
     });
     setSelected(idx);
   }

@@ -1,5 +1,5 @@
-import { and, count, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
-import { db, quizBidTable, quizTable, userTable } from '../../db';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { db, quizBidTable, quizTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { BidsListFilters, UpdateBidStatus } from './model';
 
@@ -16,7 +16,8 @@ export abstract class BidsService {
     filters: BidsListFilters,
     userCreatedAt: Date,
     bidMonthLimit: number,
-    planName: string = "FREE"
+    planName: string = "FREE",
+    planId: number = 1
   ) {
     try {
       // Лимит заявок берется из базы данных (таблица plan.bid_month_limit)
@@ -107,7 +108,7 @@ export abstract class BidsService {
         1,
         0, 0, 0, 0
       ));
-      
+
       // Формируем базовые условия (общие для лимита и отображения)
       const baseWhereConditions: any[] = [
         sql`q.user_id = ${userId}`,
@@ -158,6 +159,7 @@ export abstract class BidsService {
             b.updated_at as "updatedAt",
             b.contacts,
             b.ip_location as "ipLocation",
+            b.info,
             q.name as "quizName",
             ROW_NUMBER() OVER (
               PARTITION BY DATE_TRUNC('month', b.created_at)
@@ -184,6 +186,7 @@ export abstract class BidsService {
           "updatedAt",
           contacts,
           "ipLocation",
+          info,
           "quizName"
         FROM ranked_bids
         ORDER BY "createdAt" DESC
@@ -203,6 +206,7 @@ export abstract class BidsService {
         updatedAt: Date | string;
         contacts: Record<string, string> | null;
         ipLocation: { country: string | null; city: string | null; ip: string | null } | null;
+        info: any | null;
         quizName: string;
       }>) || [];
 
@@ -304,30 +308,43 @@ export abstract class BidsService {
       const deletedInLimitFull = Number(deletedCountFullResultArray[0]?.count || 0);
 
       // Трансформируем данные для ответа
-      const transformedBids = bids.map(bid => ({
-        uid: bid.uid,
-        key: bid.key,
-        status: bid.status,
-        isFull: bid.isFull,
-        isRead: bid.isRead,
-        first: bid.first,
-        createdAt: bid.createdAt instanceof Date 
-          ? bid.createdAt.toISOString() 
-          : new Date(bid.createdAt).toISOString(),
-        updatedAt: bid.updatedAt instanceof Date 
-          ? bid.updatedAt.toISOString() 
-          : new Date(bid.updatedAt).toISOString(),
-        quizName: bid.quizName,
-        contacts: bid.contacts || null,
-        ipLocation: bid.ipLocation,
-      }));
+      // Поле info возвращаем только для пользователей с planId != 1
+      const transformedBids = bids.map(bid => {
+        const baseBid = {
+          uid: bid.uid,
+          key: bid.key,
+          status: bid.status,
+          isFull: bid.isFull,
+          isRead: bid.isRead,
+          first: bid.first,
+          createdAt: bid.createdAt instanceof Date
+            ? bid.createdAt.toISOString()
+            : new Date(bid.createdAt).toISOString(),
+          updatedAt: bid.updatedAt instanceof Date
+            ? bid.updatedAt.toISOString()
+            : new Date(bid.updatedAt).toISOString(),
+          quizName: bid.quizName,
+          contacts: bid.contacts || null,
+          ipLocation: bid.ipLocation,
+        };
+
+        // Добавляем поле info только для пользователей с planId != 1
+        if (planId !== 1) {
+          return {
+            ...baseBid,
+            info: bid.info ?? null,
+          };
+        }
+
+        return baseBid;
+      });
 
       // Проверяем, есть ли еще данные в рамках доступного лимита
       const hasMore = actualOffset + transformedBids.length < maxAvailable;
-      
+
       // Проверяем, есть ли заявки сверх лимита (общее количество больше доступного по месяцам)
       const hasMoreBeyondLimit = total > maxAvailable;
-      
+
       // Вычисляем количество заявок с isFull = true, которые не влезли из-за лимита тарифного плана
       const beyondLimitCount = Math.max(0, totalFull - maxAvailableFull);
 
@@ -375,8 +392,8 @@ export abstract class BidsService {
 
       return response;
     } catch (error) {
-      logger.error("Failed to get bids list", error as Error, { 
-        userId, 
+      logger.error("Failed to get bids list", error as Error, {
+        userId,
         filters,
         planName,
         errorMessage: error instanceof Error ? error.message : String(error),
@@ -449,7 +466,6 @@ export abstract class BidsService {
           key: quizBidTable.key,
           status: quizBidTable.status,
           isFull: quizBidTable.isFull,
-          isRead: quizBidTable.isRead,
           first: quizBidTable.first,
           data: quizBidTable.answer,
           info: quizBidTable.info,
@@ -458,9 +474,7 @@ export abstract class BidsService {
           contactsForm: quizBidTable.contactsForm,
           userInfo: quizBidTable.userInfo,
           initData: quizBidTable.initData,
-          ipLocation: quizBidTable.ipLocation,
           createdAt: quizBidTable.createdAt,
-          updatedAt: quizBidTable.updatedAt,
           quizName: quizTable.name,
         })
         .from(quizBidTable)
@@ -499,18 +513,13 @@ export abstract class BidsService {
         status: bidData.status,
       });
 
-      // Приводим ipLocation к правильному типу
-      const ipLocation = bidData.ipLocation as { country: string | null; city: string | null; ip: string | null } | null | undefined;
-
       return {
         uid: bidData.uid,
         key: bidData.key,
         status: bidData.status,
         isFull: bidData.isFull,
-        isRead: bidData.isRead,
         first: bidData.first,
         createdAt: bidData.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: bidData.updatedAt?.toISOString() || new Date().toISOString(),
         quizName: bidData.quizName,
         data: bidData.data,
         info: bidData.info,
@@ -519,7 +528,6 @@ export abstract class BidsService {
         contactsForm: bidData.contactsForm,
         userInfo: bidData.userInfo,
         initData: bidData.initData,
-        ipLocation,
       };
     } catch (error) {
       logger.error("Failed to get bid details", error as Error, { userId, key });

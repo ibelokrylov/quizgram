@@ -36,8 +36,9 @@ export const FileQuestion = () => {
   const type = question.content.type;
 
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -60,11 +61,20 @@ export const FileQuestion = () => {
 
     // Все проверки пройдены
     setError(null);
-    sendAnswer({
-      question_uid: question.uid,
-      answer: file,
-      question: question,
-    });
+    setUploading(true);
+
+    try {
+      await sendAnswer({
+        question_uid: question.uid,
+        answer: file,
+      });
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+      setError(`Ошибка при загрузке файла: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
+      e.target.value = ''; // Сбросить выбор файла
+    } finally {
+      setUploading(false);
+    }
   }
   return (
     <div className='files__container'>
@@ -74,8 +84,14 @@ export const FileQuestion = () => {
       <FileInput
         onChange={handleChange}
         label={label[type]}
+        disabled={uploading}
       />
-      {error ? <Snackbar onClose={() => setError(null)}>{error}</Snackbar> : null}
+      {uploading ? <Text>Загрузка файла...</Text> : null}
+      {error ? (
+        <Snackbar onClose={() => setError(null)}>
+          <Text>{error}</Text>
+        </Snackbar>
+      ) : null}
     </div>
   );
 };

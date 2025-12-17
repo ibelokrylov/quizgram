@@ -8,23 +8,26 @@ export const SliderQuestion = () => {
   const question = questions[current] as QuizQuestionSlide;
 
   const content = question.content?.options;
-  const [value, setValue] = useState<number>(content?.default_select ?? 50);
+  const defaultValue = content?.default_select ?? 50;
+  const [value, setValue] = useState<number>(defaultValue);
 
+  // Устанавливаем ответ при монтировании и при смене вопроса
   useEffect(() => {
+    const answerValue = content?.default_select ?? 50;
+    setValue(answerValue);
     setCurrentAnswer({
       question_uid: question.uid,
-      answer: content?.default_select ?? 50,
-      question: question,
+      answer: answerValue,
     });
-  }, []);
+  }, [question.uid, content?.default_select, setCurrentAnswer]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value === '') {
-      setValue(content?.step ?? content?.start ?? 1);
+      const newValue = content?.step ?? content?.start ?? 1;
+      setValue(newValue);
       setCurrentAnswer({
         question_uid: question.uid,
-        answer: content?.step ?? content?.start ?? 1,
-        question: question,
+        answer: newValue,
       });
       return;
     }
@@ -32,11 +35,11 @@ export const SliderQuestion = () => {
       return;
     }
     if (Number(e.target.value) < 0) {
-      setValue(1);
+      const newValue = 1;
+      setValue(newValue);
       setCurrentAnswer({
         question_uid: question.uid,
-        answer: 1,
-        question: question.content?.title,
+        answer: newValue,
       });
       return;
     }
@@ -46,11 +49,19 @@ export const SliderQuestion = () => {
     if (Number(e.target.value) % (content?.step ?? 1) !== 0) {
       return;
     }
-    setValue(Number(e.target.value));
+    const newValue = Number(e.target.value);
+    setValue(newValue);
     setCurrentAnswer({
       question_uid: question.uid,
-      answer: Number(e.target.value),
-      question: question,
+      answer: newValue,
+    });
+  }
+
+  function handleSliderChange(newValue: number) {
+    setValue(newValue);
+    setCurrentAnswer({
+      question_uid: question.uid,
+      answer: newValue,
     });
   }
 
@@ -69,7 +80,7 @@ export const SliderQuestion = () => {
         max={content?.end}
         step={content?.step}
         value={value}
-        onChange={(value) => setValue(value)}
+        onChange={handleSliderChange}
       />
       <div className='slider__question-values'>
         <Text>{content?.step ?? content?.start ?? 1}</Text>

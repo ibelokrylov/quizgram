@@ -6,8 +6,8 @@
 // Маппинг сообщений об ошибках на ключи переводов
 const errorMessageMap: Record<string, string> = {
 	// Общие ошибки
-	"Unauthorized": "error.unauthorized",
-	"Forbidden": "error.forbidden",
+	Unauthorized: "error.unauthorized",
+	Forbidden: "error.forbidden",
 	"Not found": "error.notFound",
 	"Not find user": "error.userNotFound",
 	"not find": "error.notFound",

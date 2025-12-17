@@ -113,32 +113,33 @@ export const Question = ({
 	return (
 		<>
 			{questions?.map((question, index) => (
-				<QuestionLayout
-					moveQuestionUp={moveQuestionUp}
-					moveQuestionDown={moveQuestionDown}
-					index={index}
-					key={question.uid}
-					question={question}
-					setQuestion={(q) => setQuestion(q, index)}
-					deleteQuestion={() => deleteQuestion(question.uid)}
-				>
+				<div key={question.uid} className="mb-6 md:mb-4 relative">
 					<CopyToClick text={question?.uid}>
-						<div className="text-xs text-gray-200 dark:text-gray-600 absolute top-[-16px] right-2">
+						<div className="text-xs text-gray-400 dark:text-gray-600 absolute bottom-[-16px] left-2 md:top-[-16px] md:right-2 md:bottom-auto md:left-auto z-10">
 							id: {question?.uid}
 						</div>
 					</CopyToClick>
-					{!question?.type ? (
-						<EmptyQuestion
-							showGroup={showGroup}
-							question={question}
-							setQuestion={(q) => setQuestion(q, index)}
-						/>
-					) : (
-						renderQuestion[question.type as keyof typeof renderQuestion]?.(
-							question,
-						)
-					)}
-				</QuestionLayout>
+					<QuestionLayout
+						moveQuestionUp={moveQuestionUp}
+						moveQuestionDown={moveQuestionDown}
+						index={index}
+						question={question}
+						setQuestion={(q) => setQuestion(q, index)}
+						deleteQuestion={() => deleteQuestion(question.uid)}
+					>
+						{!question?.type ? (
+							<EmptyQuestion
+								showGroup={showGroup}
+								question={question}
+								setQuestion={(q) => setQuestion(q, index)}
+							/>
+						) : (
+							renderQuestion[question.type as keyof typeof renderQuestion]?.(
+								question,
+							)
+						)}
+					</QuestionLayout>
+				</div>
 			))}
 			<Separator />
 			<div>

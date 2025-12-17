@@ -19,14 +19,15 @@ const answerBase = t.Object({
     t.String(),
     t.Number(),
     t.Boolean(),
-    t.Object({}),
+    // В ответах может приходить произвольный объект (например { value, url } для variant_image)
+    t.Record(t.String(), t.Any()),
     t.Array(t.Any()),
   ]),
   question: t.Optional(t.Union([
     t.String(),
     t.Object({
-      type: t.String(),
       uid: t.String(),
+      type: t.Optional(t.String()),
       order: t.Optional(t.Number()),
       content: t.Optional(t.Any()),
     }),
@@ -49,8 +50,8 @@ export const quizAnswerFormData = t.Object({
   question: t.Optional(t.Union([
     t.String(),
     t.Object({
-      type: t.String(),
       uid: t.String(),
+      type: t.Optional(t.String()),
       order: t.Optional(t.Number()),
       content: t.Optional(t.Any()),
     }),

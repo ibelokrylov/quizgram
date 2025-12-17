@@ -85,7 +85,7 @@ async function fetchBidDetails(key: string): Promise<BidDetails> {
 	const response = await http<{ message: string; data: BidDetails }>({
 		url: `/v1/bids/${key}`,
 	});
-	return response.data.data;
+	return response.data;
 }
 
 export const useBidDetails = (key: string | undefined) => {
@@ -123,4 +123,49 @@ export const useMarkBidAsRead = () => {
 			},
 		);
 	};
+};
+
+// Хук для обновления статуса заявки
+export const useUpdateBidStatus = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ key, status }: { key: string; status: string }) => {
+			await http({
+				url: "/v1/bids/status",
+				method: "PUT",
+				body: { key, status },
+			});
+		},
+		onSuccess: (_, variables) => {
+			// Обновляем кеш деталей заявки
+			queryClient.setQueryData(
+				["bids", "details", variables.key],
+				(oldData: BidDetails | undefined) => {
+					if (!oldData) return oldData;
+					return { ...oldData, status: variables.status };
+				},
+			);
+
+			// Обновляем кеш списка заявок
+			queryClient.setQueriesData(
+				{ queryKey: ["bids", "infinite"] },
+				(oldData: any) => {
+					if (!oldData) return oldData;
+
+					return {
+						...oldData,
+						pages: oldData.pages.map((page: any) => ({
+							...page,
+							data: page.data.map((bid: any) =>
+								bid.key === variables.key
+									? { ...bid, status: variables.status }
+									: bid,
+							),
+						})),
+					};
+				},
+			);
+		},
+	});
 };

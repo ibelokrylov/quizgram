@@ -29,6 +29,7 @@ export const bidListItem = t.Object({
     city: t.Nullable(t.String()),
     ip: t.Nullable(t.String()),
   }))), // Геолокация по IP
+  info: t.Optional(t.Nullable(t.Any())), // Дополнительная информация из таблицы quiz_bid (только для planId != 1)
 });
 
 export type BidListItem = typeof bidListItem.static;
@@ -69,10 +70,8 @@ export const bidDetails = t.Object({
   key: t.String(),
   status: t.String(),
   isFull: t.Boolean(),
-  isRead: t.Boolean(), // Прочитана ли заявка
   first: t.Boolean(), // Первый ли это запрос квиза
   createdAt: t.String(),
-  updatedAt: t.String(),
   quizName: t.String(),
   data: t.Any(), // Полные данные заявки (ответы, контакты и т.д.) - поле answer из таблицы
   info: t.Optional(t.Nullable(t.Any())), // Дополнительная информация (контакты и т.д.)
@@ -81,11 +80,6 @@ export const bidDetails = t.Object({
   contactsForm: t.Optional(t.Nullable(t.Any())), // Форма контактов из квиза
   userInfo: t.Optional(t.Nullable(t.Any())), // Информация о пользователе из Telegram
   initData: t.Optional(t.Nullable(t.String())), // Telegram WebApp initData как строка
-  ipLocation: t.Optional(t.Nullable(t.Object({
-    country: t.Nullable(t.String()),
-    city: t.Nullable(t.String()),
-    ip: t.Nullable(t.String()),
-  }))), // Геолокация по IP
 });
 
 

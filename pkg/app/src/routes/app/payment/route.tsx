@@ -1,13 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/app/payment')({
+export const Route = createFileRoute("/app/payment")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	return (
-		<div>
-			{/* Payment page content */}
-		</div>
-	);
+	return <div>{/* Payment page content */}</div>;
 }

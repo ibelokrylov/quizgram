@@ -16,6 +16,12 @@
         "--dsn",
         "postgres://postgres:postgres@localhost:5432/postgres"
       ]
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": [
+        "@browsermcp/mcp@latest"
+      ]
     }
   }
 }

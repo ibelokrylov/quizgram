@@ -165,7 +165,6 @@ export const DateMask = () => {
       sendAnswer({
         question_uid: question.uid,
         answer: formattedDate,
-        question: question,
       });
     }
   };

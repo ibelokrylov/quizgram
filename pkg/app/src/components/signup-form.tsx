@@ -1,10 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Field,
 	FieldDescription,
@@ -64,8 +59,11 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 				} else {
 					// Получаем текущий язык из i18n
 					const currentLanguage = i18n.language || "en";
-					const language = currentLanguage === "ru" || currentLanguage.startsWith("ru") ? "ru" : "en";
-					
+					const language =
+						currentLanguage === "ru" || currentLanguage.startsWith("ru")
+							? "ru"
+							: "en";
+
 					const res = await http<User>({
 						url: "/v1/auth/registration",
 						method: "POST",
@@ -80,10 +78,13 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 					if (res.data) {
 						ctx.setUser(res.data);
 						ctx.setIsAuth(true);
-						
+
 						// Устанавливаем язык из ответа сервера, если он есть
 						const userLanguage = res.data.language;
-						if (userLanguage && (userLanguage === "en" || userLanguage === "ru")) {
+						if (
+							userLanguage &&
+							(userLanguage === "en" || userLanguage === "ru")
+						) {
 							i18n.changeLanguage(userLanguage);
 						}
 					} else {

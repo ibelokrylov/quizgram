@@ -291,6 +291,9 @@ export abstract class QuizService {
         data.startPage.content.show_logo = true;
       }
       updateData.startPage = data.startPage;
+    } else if (quiz[0].startPage !== null) {
+      // Если startPage не передана в запросе, но есть в БД - удаляем её
+      updateData.startPage = null;
     }
 
     if (data.questionTitle !== undefined) {

@@ -11,7 +11,7 @@ export const DateQuestion = ({
 	setQuestion: (question: Quiz["question"][0]) => void;
 }) => {
 	const content = question?.content as QuizQuestionDate;
-	const [types, setTypes] = useState<string>("calendar");
+	const [types, setTypes] = useState<string>(content?.type ?? "calendar");
 	const { t } = useTranslation();
 
 	function onValueChange(v: string) {
@@ -20,15 +20,22 @@ export const DateQuestion = ({
 	}
 
 	useEffect(() => {
+		// Если тип уже сохранён — восстанавливаем UI из данных
+		if (content?.type && content.type !== types) {
+			setTypes(content.type);
+			return;
+		}
+
+		// Если тип ещё не задан — сохраняем дефолтный (чтобы переживал перезагрузку)
 		if (!content?.type) {
 			setQuestion({ ...question, content: { ...content, type: types } });
 		}
-	}, [content]);
+	}, [content?.type]);
 
 	return (
 		<Tabs
 			onValueChange={onValueChange}
-			defaultValue={types}
+			value={types}
 			className="w-[400px]"
 		>
 			<TabsList>

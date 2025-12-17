@@ -26,7 +26,12 @@ export const StartPage = () => {
 		try {
 			const newQuiz = {
 				...quiz,
-				startPage: { type: type, content: {} },
+				startPage: {
+					type: type,
+					content: {
+						title: "Заголовок страницы",
+					},
+				},
 			} as Quiz;
 			setQuiz(newQuiz);
 		} catch (err) {

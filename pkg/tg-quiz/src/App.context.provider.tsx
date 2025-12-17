@@ -1,6 +1,6 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
-import { useRawInitData, useLaunchParams } from "@telegram-apps/sdk-react";
+// import { useRawInitData, useLaunchParams } from "@telegram-apps/sdk-react";
 import { API_BASE_URL } from "./config";
 
 function getStartAppParam(): string | undefined {
@@ -18,8 +18,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   const [error, setError] = useState(false);
 
   // Получаем данные от Telegram SDK
-  const initData = useRawInitData();
-  const launchParams = useLaunchParams();
+  // const initData = useRawInitData();
+  // const launchParams = useLaunchParams();
 
   function generateStages(quiz: Quiz) {
     const stages = [];
@@ -54,10 +54,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Получаем uid из startapp параметра
       // Сначала пытаемся получить из launchParams (Telegram SDK)
       // Если не получилось - используем getStartAppParam() как fallback
-      const launchParamsTyped = launchParams as Record<string, unknown>;
-      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
-      const uidFromUrl = getStartAppParam();
-      const uid = uidFromLaunchParams || uidFromUrl;
+      // const launchParamsTyped = launchParams as Record<string, unknown>;
+      // const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
+      const uid = getStartAppParam();
+      // const uid = uidFromLaunchParams || uidFromUrl;
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
@@ -73,7 +73,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         },
         credentials: "include", // Для отправки cookies (bidToken)
         body: JSON.stringify({
-          initData: initData || undefined,
+          // initData: initData || undefined,
         }),
       });
 
@@ -143,6 +143,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   async function sendAnswer(answer: Record<string, unknown>) {
     const answerValue = answer.answer;
     const isFile = answerValue instanceof File || answerValue instanceof Blob;
+    
+    // Проверяем, является ли answer массивом (question_group) и содержит ли он файлы
+    const isArrayWithFiles = Array.isArray(answerValue) && 
+      answerValue.some((item: any) => item instanceof File || item instanceof Blob);
 
     // Извлекаем final_question для добавления в URL
     const finalQuestion = answer.final_question === true ? "true" : "false";
@@ -164,28 +168,91 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       ? { ...answerBody, key: quizKey }
       : answerBody;
 
-    if (isFile) {
+    if (isFile || isArrayWithFiles) {
       const formData = new FormData();
-      formData.append("answer", answerValue as File | Blob);
+      
+      if (isArrayWithFiles) {
+        // Для question_group с файлами: отправляем массив как JSON, а файлы отдельно
+        const answerArray = answerValue as any[];
+        const processedArray = answerArray.map((item, index) => {
+          // item должен быть объектом {question_uid, answer}
+          if (item && typeof item === 'object' && 'answer' in item) {
+            const itemAnswer = item.answer;
+            if (itemAnswer instanceof File || itemAnswer instanceof Blob) {
+              // Файлы отправляем отдельно с индексом
+              formData.append(`file_${index}`, itemAnswer);
+              // В массиве оставляем placeholder с сохранением question_uid
+              return { 
+                __isFile: true, 
+                __fileIndex: index,
+                question_uid: item.question_uid
+              };
+            }
+          }
+          // Если item сам является File (старая структура), обрабатываем как раньше
+          if (item instanceof File || item instanceof Blob) {
+            formData.append(`file_${index}`, item);
+            return { 
+              __isFile: true, 
+              __fileIndex: index
+            };
+          }
+          return item;
+        });
+        
+        // Отправляем обработанный массив как JSON
+        formData.append("answer", JSON.stringify(processedArray));
+        formData.append("is_question_group", "true");
+      } else {
+        // Обычный файл
+        formData.append("answer", answerValue as File | Blob);
+      }
 
       // Добавляем остальные поля из answerWithKey, если они есть
       Object.keys(answerWithKey).forEach((key) => {
         const value = answerWithKey[key];
-        if (value !== undefined && value !== null) {
-          formData.append(key, String(value));
+        if (value !== undefined && value !== null && key !== 'answer') {
+          // answer уже обработан выше, пропускаем его
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            formData.append(key, String(value));
+          } else {
+            formData.append(key, JSON.stringify(value));
+          }
         }
       });
 
-      await fetch(
+      // Логируем FormData для отладки
+      console.log('Sending FormData:', {
+        isFile,
+        isArrayWithFiles,
+        formDataEntries: Array.from(formData.entries()).map(([key, value]) => ({
+          key,
+          valueType: value instanceof File ? 'File' : value instanceof Blob ? 'Blob' : typeof value,
+          fileName: value instanceof File ? value.name : undefined,
+        })),
+      });
+
+      const response = await fetch(
         `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
         {
           method: "POST",
           body: formData,
+          // НЕ устанавливаем Content-Type - браузер установит его автоматически с boundary
         },
       );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to save answer');
+      }
     } else {
       // Отправляем ответ без quiz_all_question (он уже сохранен при получении квиза)
-      await fetch(
+      const response = await fetch(
         `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
         {
           method: "POST",
@@ -195,6 +262,16 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           body: JSON.stringify(answerWithKey),
         },
       );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to save answer');
+      }
     }
   }
 

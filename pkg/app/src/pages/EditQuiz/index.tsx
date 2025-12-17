@@ -225,7 +225,11 @@ export const EditQuiz = () => {
 								{t("edit-quiz.publish")}
 							</Button>
 						) : (
-							<div className={"text-xs text-gray-500 dark:text-gray-400 pt-0 lg:pt-3"}>
+							<div
+								className={
+									"text-xs text-gray-500 dark:text-gray-400 pt-0 lg:pt-3"
+								}
+							>
 								{t("edit-quiz.updated-at", {
 									date: format(
 										quiz?.updatedAt ?? new Date(),

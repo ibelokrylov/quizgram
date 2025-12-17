@@ -17,7 +17,6 @@ export const DateCalendar = () => {
     setCurrentAnswer({
       question_uid: question.uid,
       answer: value,
-      question: question,
     });
     setValue(value);
   }

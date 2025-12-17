@@ -321,7 +321,10 @@ function TextAreaNoBorder({
 				)}
 				{...restProps}
 			/>
-			<div className="absolute right-0 pointer-events-none" style={{ bottom: "-5px" }}>
+			<div
+				className="absolute right-0 pointer-events-none"
+				style={{ bottom: "-5px" }}
+			>
 				<span className="text-xs text-muted-foreground">{t("input.edit")}</span>
 			</div>
 			{maxLength !== undefined && (
