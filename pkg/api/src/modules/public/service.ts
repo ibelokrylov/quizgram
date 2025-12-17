@@ -2,7 +2,7 @@ import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { QuizFileService } from '../../services/quiz-file.service';
-import { TelegramService, TelegramUserInfo } from '../../services/telegram.service';
+import { TelegramService } from '../../services/telegram.service';
 import { PublicQuiz } from './models';
 
 export abstract class PublicService {
@@ -89,13 +89,13 @@ export abstract class PublicService {
 
     // Получаем квиз (включая вопросы)
     const quiz = await this.getQuizByUid(quizUid);
-    
+
     // Извлекаем вопросы из полученного квиза
     const questions = quiz.question || [];
-    
+
     // Извлекаем форму контактов из квиза
-    const contactsForm = quiz.contact && quiz.contact.length > 0 
-      ? quiz.contact[0].form || null 
+    const contactsForm = quiz.contact && quiz.contact.length > 0
+      ? quiz.contact[0].form || null
       : null;
 
     // Проверяем, существует ли уже запись с таким key
@@ -261,9 +261,33 @@ export abstract class PublicService {
     answerData: any,
     sessionToken?: string
   ): Promise<void> {
+    // Логируем входящие данные для отладки
+    logger.debug("saveQuizAnswer called", {
+      quizUid,
+      answerDataKeys: Object.keys(answerData || {}),
+      hasQuestionUid: 'question_uid' in (answerData || {}),
+      hasAnswer: 'answer' in (answerData || {}),
+      hasParentQuestionUid: 'parent_question_uid' in (answerData || {}),
+      answerType: typeof answerData?.answer,
+      questionUid: answerData?.question_uid,
+      answerValue: answerData?.answer,
+      parentQuestionUid: answerData?.parent_question_uid,
+    });
+
     // Извлекаем специальные поля из answerData
     // questions больше не обрабатывается здесь - они сохраняются при получении квиза
     const { final_question, ...cleanAnswerData } = answerData;
+
+    // Проверяем, что cleanAnswerData содержит нужные поля
+    logger.debug("After destructuring in saveQuizAnswer", {
+      quizUid,
+      cleanAnswerDataKeys: Object.keys(cleanAnswerData || {}),
+      hasQuestionUid: 'question_uid' in (cleanAnswerData || {}),
+      hasAnswer: 'answer' in (cleanAnswerData || {}),
+      questionUid: cleanAnswerData?.question_uid,
+      answerValue: cleanAnswerData?.answer,
+      isArray: Array.isArray(cleanAnswerData?.answer),
+    });
 
     try {
       // Получаем ID квиза
@@ -281,38 +305,150 @@ export abstract class PublicService {
       // Если токена нет, генерируем временный ключ
       const userKey = sessionToken || crypto.randomUUID();
 
-      // Обработка файла, если ответ является файлом
+      // Обработка ответа: может быть файлом, массивом (для question_group) или обычным значением
       let processedAnswer = answerData.answer;
-      if (answerData.answer instanceof File) {
-        try {
-          // Загружаем файл в S3 через QuizFileService
-          const uploadResult = await QuizFileService.uploadQuizFile(
-            answerData.answer,
-            quiz[0].id,
-            userKey
-          );
 
-          // Заменяем файл на URL загруженного файла
-          processedAnswer = {
-            type: 'file',
-            fileName: answerData.answer.name,
-            fileSize: answerData.answer.size,
-            fileType: answerData.answer.type,
-            url: uploadResult.fileURL,
-            s3Key: uploadResult.fileKey
-          };
+      // Проверяем, является ли ответ массивом (question_group)
+      if (Array.isArray(answerData.answer)) {
+        // Обрабатываем каждый элемент массива - может быть файлом
+        processedAnswer = await Promise.all(
+          answerData.answer.map(async (subAnswer: any) => {
+            // Проверяем, является ли элемент файлом
+            const isFile = subAnswer?.answer instanceof File ||
+              subAnswer?.answer instanceof Blob ||
+              (subAnswer?.answer &&
+                typeof subAnswer.answer === 'object' &&
+                'size' in subAnswer.answer &&
+                'type' in subAnswer.answer &&
+                // Исключаем объекты, которые уже содержат url и value (обработанные ответы)
+                !('url' in subAnswer.answer && 'value' in subAnswer.answer) &&
+                // Исключаем объекты, которые уже содержат type: 'file' (уже обработанные файлы)
+                !('type' in subAnswer.answer && subAnswer.answer.type === 'file') &&
+                ('name' in subAnswer.answer || 'stream' in subAnswer.answer));
 
-          logger.info("File uploaded successfully for quiz answer", {
-            quizUid,
-            fileName: answerData.answer.name,
-            fileURL: uploadResult.fileURL
-          });
-        } catch (fileError) {
-          logger.error("Failed to upload file for quiz answer", fileError as Error, {
-            quizUid,
-            fileName: answerData.answer.name
-          });
-          throw new Error(`Failed to upload file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+            if (isFile) {
+              try {
+                // Преобразуем в File/Blob для загрузки
+                const fileToUpload = subAnswer.answer instanceof File || subAnswer.answer instanceof Blob
+                  ? subAnswer.answer
+                  : subAnswer.answer as any;
+
+                // Загружаем файл в S3 через QuizFileService
+                const uploadResult = await QuizFileService.uploadQuizFile(
+                  fileToUpload,
+                  quiz[0].id,
+                  userKey
+                );
+
+                // Получаем метаданные файла
+                const fileName = fileToUpload instanceof File
+                  ? fileToUpload.name
+                  : (fileToUpload.name || 'file');
+                const fileSize = fileToUpload.size || 0;
+                const fileType = fileToUpload.type || 'application/octet-stream';
+
+                // Возвращаем обработанный ответ с URL файла
+                return {
+                  ...subAnswer,
+                  answer: {
+                    type: 'file',
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    fileType: fileType,
+                    url: uploadResult.fileURL,
+                    s3Key: uploadResult.fileKey
+                  }
+                };
+              } catch (fileError) {
+                logger.error("Failed to upload file for question_group sub-answer", fileError as Error, {
+                  quizUid,
+                  questionUid: subAnswer?.question_uid,
+                  fileName: (subAnswer.answer as any)?.name || 'unknown'
+                });
+                throw new Error(`Failed to upload file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+              }
+            } else {
+              // Если не файл, возвращаем как есть
+              return subAnswer;
+            }
+          })
+        );
+
+        logger.debug("Processed question_group answer array", {
+          quizUid,
+          questionUid: cleanAnswerData.question_uid,
+          subAnswersCount: processedAnswer.length,
+        });
+      } else {
+        // Обработка одиночного ответа (не массив)
+        // Проверяем, является ли ответ файлом (File, Blob или объект с признаками файла)
+        // Исключаем объекты, которые уже являются обработанными ответами (например, {url, value} для variant_image_text)
+        const isFile = answerData.answer instanceof File ||
+          answerData.answer instanceof Blob ||
+          (answerData.answer &&
+            typeof answerData.answer === 'object' &&
+            'size' in answerData.answer &&
+            'type' in answerData.answer &&
+            // Исключаем объекты, которые уже содержат url и value (обработанные ответы)
+            !('url' in answerData.answer && 'value' in answerData.answer) &&
+            // Исключаем объекты, которые уже содержат type: 'file' (уже обработанные файлы)
+            !('type' in answerData.answer && answerData.answer.type === 'file') &&
+            ('name' in answerData.answer || 'stream' in answerData.answer));
+
+        logger.debug("Checking if answer is a file", {
+          quizUid,
+          questionUid: cleanAnswerData.question_uid,
+          isFile,
+          answerType: typeof answerData.answer,
+          isFileInstance: answerData.answer instanceof File,
+          isBlobInstance: answerData.answer instanceof Blob,
+          hasSize: answerData.answer && typeof answerData.answer === 'object' && 'size' in answerData.answer,
+          hasUrl: answerData.answer && typeof answerData.answer === 'object' && 'url' in answerData.answer,
+        });
+
+        if (isFile) {
+          try {
+            // Преобразуем в File/Blob для загрузки
+            const fileToUpload = answerData.answer instanceof File || answerData.answer instanceof Blob
+              ? answerData.answer
+              : answerData.answer as any;
+
+            // Загружаем файл в S3 через QuizFileService
+            const uploadResult = await QuizFileService.uploadQuizFile(
+              fileToUpload,
+              quiz[0].id,
+              userKey
+            );
+
+            // Получаем метаданные файла
+            const fileName = fileToUpload instanceof File
+              ? fileToUpload.name
+              : (fileToUpload.name || 'file');
+            const fileSize = fileToUpload.size || 0;
+            const fileType = fileToUpload.type || 'application/octet-stream';
+
+            // Заменяем файл на URL загруженного файла
+            processedAnswer = {
+              type: 'file',
+              fileName: fileName,
+              fileSize: fileSize,
+              fileType: fileType,
+              url: uploadResult.fileURL,
+              s3Key: uploadResult.fileKey
+            };
+
+            logger.info("File uploaded successfully for quiz answer", {
+              quizUid,
+              fileName: fileName,
+              fileURL: uploadResult.fileURL
+            });
+          } catch (fileError) {
+            logger.error("Failed to upload file for quiz answer", fileError as Error, {
+              quizUid,
+              fileName: (answerData.answer as any)?.name || 'unknown'
+            });
+            throw new Error(`Failed to upload file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+          }
         }
       }
 
@@ -332,12 +468,22 @@ export abstract class PublicService {
       const timestamp = new Date().toISOString();
 
       // Обновляем данные ответа с временным штампом
+      // Для question_group сохраняем один ответ с массивом подвопросов
       const answerWithTimestamp = {
         ...cleanAnswerData,
-        answer: processedAnswer, // Используем обработанный ответ (с URL файла)
+        answer: processedAnswer, // Используем обработанный ответ (с URL файла или массив для question_group)
         timestamp,
         final_question, // Сохраняем флаг последнего вопроса
       };
+
+      logger.debug("Prepared answer data for saving", {
+        quizUid,
+        questionUid: cleanAnswerData.question_uid,
+        answerType: typeof processedAnswer,
+        isFileAnswer: processedAnswer && typeof processedAnswer === 'object' && 'type' in processedAnswer && processedAnswer.type === 'file',
+        answerKeys: processedAnswer && typeof processedAnswer === 'object' ? Object.keys(processedAnswer) : [],
+        finalQuestion: final_question,
+      });
 
       if (existingRecord.length > 0 && existingRecord[0]) {
         // Обновляем существующую запись
@@ -377,12 +523,17 @@ export abstract class PublicService {
           })
           .where(eq(quizBidTable.id, existingRecord[0].id));
 
-        logger.debug("Quiz answer updated in existing session", {
+        logger.info("Quiz answer updated in existing session", {
           quizUid,
           userKey,
           questionUid: cleanAnswerData.question_uid,
           totalAnswers: updatedAnswers.length,
           finalQuestion: final_question,
+          lastAnswerType: typeof updatedAnswers[updatedAnswers.length - 1]?.answer,
+          lastAnswerIsFile: updatedAnswers[updatedAnswers.length - 1]?.answer &&
+            typeof updatedAnswers[updatedAnswers.length - 1].answer === 'object' &&
+            'type' in updatedAnswers[updatedAnswers.length - 1].answer &&
+            updatedAnswers[updatedAnswers.length - 1].answer.type === 'file',
         });
       } else {
         // Если записи нет, пытаемся создать её (fallback на случай, если квиз был получен без создания сессии)
@@ -410,10 +561,15 @@ export abstract class PublicService {
           updatedAt: new Date(),
         });
 
-        logger.debug("Created new quiz session for answer", {
+        logger.info("Created new quiz session for answer", {
           quizUid,
           userKey,
           questionUid: cleanAnswerData.question_uid,
+          answerType: typeof newAnswer[0]?.answer,
+          answerIsFile: newAnswer[0]?.answer &&
+            typeof newAnswer[0].answer === 'object' &&
+            'type' in newAnswer[0].answer &&
+            newAnswer[0].answer.type === 'file',
         });
       }
 

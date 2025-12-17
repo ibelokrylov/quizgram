@@ -1,8 +1,8 @@
 import Elysia, { t } from "elysia";
 import { logger } from '../../lib/logger';
-import { SessionService } from '../../services/session.service';
 import { IpLocationService } from '../../services/ip-location.service';
-import { publicQuiz, quizAnswer, quizAnswersArray, quizAnswerFormData, quizContacts } from './models';
+import { SessionService } from '../../services/session.service';
+import { publicQuiz, quizContacts } from './models';
 import { PublicService } from './service';
 
 export const publicModule = new Elysia({ prefix: "/public" })
@@ -76,8 +76,8 @@ export const publicModule = new Elysia({ prefix: "/public" })
     // Получаем IP адрес и определяем геолокацию
     let ipLocation = null;
     try {
-      logger.debug('Starting IP location determination', { 
-        uid, 
+      logger.debug('Starting IP location determination', {
+        uid,
         url: ctx.request.url,
         headers: {
           'x-forwarded-for': ctx.request.headers.get('x-forwarded-for'),
@@ -85,18 +85,18 @@ export const publicModule = new Elysia({ prefix: "/public" })
           'cf-connecting-ip': ctx.request.headers.get('cf-connecting-ip'),
         }
       });
-      
+
       ipLocation = await IpLocationService.getLocationFromRequest(ctx.request, ctx.server);
-      
-      logger.info('IP location determined successfully', { 
-        uid, 
+
+      logger.info('IP location determined successfully', {
+        uid,
         ipLocation,
         hasCountry: !!ipLocation?.country,
         hasCity: !!ipLocation?.city,
         hasIp: !!ipLocation?.ip
       });
     } catch (error) {
-      logger.error('Failed to get IP location', error instanceof Error ? error : new Error(String(error)), { 
+      logger.error('Failed to get IP location', error instanceof Error ? error : new Error(String(error)), {
         uid,
         errorMessage: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
@@ -137,41 +137,134 @@ export const publicModule = new Elysia({ prefix: "/public" })
     const finalQuestion = query.final_question === 'true';
 
     try {
+      // Логируем тип body для отладки
+      logger.debug("Received request to save quiz answer", {
+        uid,
+        bodyType: typeof body,
+        isFormData: body instanceof FormData,
+        bodyConstructor: body?.constructor?.name,
+        bodyKeys: body && typeof body === 'object' ? Object.keys(body) : [],
+        finalQuestion,
+      });
+
       // Обрабатываем разные типы запросов
       let answersToProcess: any[] = [];
       let userKey: string | undefined;
 
       if (body instanceof FormData) {
-        // Обработка FormData (для загрузки файлов)
-        const answerFile = body.get('answer') as File;
         const questionUid = body.get('question_uid') as string;
         const keyFromBody = body.get('key') as string | null;
-        let questionData;
+        const isQuestionGroup = body.get('is_question_group') === 'true';
+        const answerValue = body.get('answer');
 
-        try {
-          const questionStr = body.get('question') as string;
-          questionData = questionStr ? JSON.parse(questionStr) : '';
-        } catch {
-          questionData = '';
-        }
-
-        const answerData = {
-          question_uid: questionUid,
-          answer: answerFile,
-          question: questionData,
-          final_question: finalQuestion,
-        };
-
-        answersToProcess = [answerData];
         // Используем key из body, если он есть
         userKey = keyFromBody || undefined;
 
-        logger.debug("Processing FormData answer", { uid, questionUid, fileName: answerFile.name, key: userKey, finalQuestion });
+        if (isQuestionGroup && answerValue && typeof answerValue === 'string') {
+          // Обработка question_group с файлами
+          try {
+            const answerArray = JSON.parse(answerValue) as any[];
+
+            // Собираем все файлы из FormData
+            const files: Map<number, File | Blob> = new Map();
+            for (const [key, value] of body.entries()) {
+              if (key.startsWith('file_')) {
+                const index = parseInt(key.replace('file_', ''), 10);
+                if (value instanceof File || value instanceof Blob) {
+                  files.set(index, value);
+                }
+              }
+            }
+
+            // Заменяем плейсхолдеры файлов на реальные файлы
+            const processedArray = answerArray.map((item, index) => {
+              if (item && typeof item === 'object' && item.__isFile === true && item.__fileIndex !== undefined) {
+                const file = files.get(item.__fileIndex);
+                if (file) {
+                  // question_uid должен быть сохранен в плейсхолдере
+                  return {
+                    question_uid: item.question_uid,
+                    answer: file,
+                  };
+                }
+              }
+              // Если item - это обычный объект с question_uid и answer, возвращаем как есть
+              return item;
+            });
+
+            // Для question_group сохраняем один ответ с массивом подвопросов
+            answersToProcess = [{
+              question_uid: questionUid, // UID родительского вопроса группы
+              answer: processedArray, // Массив ответов на подвопросы
+              final_question: finalQuestion,
+            }];
+
+            logger.debug("Processing question_group with files from FormData", {
+              uid,
+              parentQuestionUid: questionUid,
+              subAnswersCount: processedArray.length,
+              filesCount: files.size,
+              key: userKey,
+              finalQuestion,
+            });
+          } catch (parseError) {
+            logger.error("Failed to parse question_group answer array", parseError as Error, {
+              uid,
+              questionUid,
+              answerValue,
+            });
+            throw new Error("Failed to parse question_group answer array");
+          }
+        } else {
+          // Обработка обычного файла (не question_group)
+          // Проверяем, что файл действительно получен
+          // Используем более гибкую проверку, как в user/index.ts
+          let fileToProcess: File | Blob | null = null;
+          if (answerValue instanceof File) {
+            fileToProcess = answerValue;
+          } else if (answerValue instanceof Blob) {
+            fileToProcess = answerValue;
+          } else if (answerValue && typeof answerValue === "object" && "size" in answerValue) {
+            // Обрабатываем объект с признаками файла (может быть из Elysia)
+            fileToProcess = answerValue as Blob;
+          }
+
+          if (!fileToProcess) {
+            logger.error("File not found in FormData or invalid file type", {
+              uid,
+              questionUid,
+              answerFileType: typeof answerValue,
+              isFile: answerValue instanceof File,
+              isBlob: answerValue instanceof Blob,
+              hasSize: answerValue && typeof answerValue === "object" && "size" in answerValue,
+            });
+            throw new Error("File not found in FormData or invalid file type");
+          }
+
+          const answerData = {
+            question_uid: questionUid,
+            answer: fileToProcess,
+            final_question: finalQuestion,
+          };
+
+          answersToProcess = [answerData];
+
+          const fileName = fileToProcess instanceof File ? fileToProcess.name : 'file';
+          logger.debug("Processing FormData answer", {
+            uid,
+            questionUid,
+            fileName,
+            fileSize: fileToProcess.size,
+            fileType: fileToProcess.type,
+            key: userKey,
+            finalQuestion
+          });
+        }
       } else if (Array.isArray(body)) {
         // Обработка массива ответов (quizAnswersArray)
         // Извлекаем key из первого элемента массива, если он есть
         userKey = body[0]?.key || undefined;
-        
+
         // Обрабатываем каждый элемент массива
         answersToProcess = body.map((item) => {
           const { key: _, ...answerDataWithoutKey } = item;
@@ -181,11 +274,11 @@ export const publicModule = new Elysia({ prefix: "/public" })
           };
         });
 
-        logger.debug("Processing array of answers", { 
-          uid, 
-          answersCount: answersToProcess.length, 
-          key: userKey, 
-          finalQuestion 
+        logger.debug("Processing array of answers", {
+          uid,
+          answersCount: answersToProcess.length,
+          key: userKey,
+          finalQuestion
         });
       } else {
         // Обработка одного JSON ответа
@@ -195,23 +288,33 @@ export const publicModule = new Elysia({ prefix: "/public" })
 
         // Проверяем, является ли answer массивом (question_group)
         if (Array.isArray(body.answer)) {
-          // Обрабатываем question_group - каждый элемент массива становится отдельным ответом
-          answersToProcess = body.answer.map((subAnswer: any) => ({
-            question_uid: subAnswer.question_uid,
-            answer: subAnswer.answer,
-            question: subAnswer.question,
-            final_question: finalQuestion,
-            // Сохраняем информацию о родительском вопросе группы
-            parent_question_uid: body.question_uid,
-            parent_question: body.question,
-          }));
-
-          logger.debug("Processing question_group answer", { 
-            uid, 
+          // Логируем входящие данные для отладки
+          logger.debug("Processing question_group - input data", {
+            uid,
             parentQuestionUid: body.question_uid,
-            subAnswersCount: answersToProcess.length,
-            key: userKey, 
-            finalQuestion 
+            answerArrayLength: body.answer.length,
+            firstSubAnswer: body.answer[0],
+            allSubAnswers: body.answer.map((sa: any) => ({
+              hasQuestionUid: 'question_uid' in (sa || {}),
+              hasAnswer: 'answer' in (sa || {}),
+              questionUid: sa?.question_uid,
+              answerType: typeof sa?.answer,
+            })),
+          });
+
+          // Для question_group сохраняем один ответ с массивом подвопросов
+          answersToProcess = [{
+            question_uid: body.question_uid, // UID родительского вопроса группы
+            answer: body.answer, // Массив ответов на подвопросы
+            final_question: finalQuestion,
+          }];
+
+          logger.debug("Processing question_group answer", {
+            uid,
+            parentQuestionUid: body.question_uid,
+            subAnswersCount: body.answer.length,
+            key: userKey,
+            finalQuestion
           });
         } else {
           // Обычный одиночный ответ
@@ -222,11 +325,11 @@ export const publicModule = new Elysia({ prefix: "/public" })
 
           answersToProcess = [answerData];
 
-          logger.debug("Processing single JSON answer", { 
-            uid, 
-            questionUid: body.question_uid, 
-            key: userKey, 
-            finalQuestion 
+          logger.debug("Processing single JSON answer", {
+            uid,
+            questionUid: body.question_uid,
+            key: userKey,
+            finalQuestion
           });
         }
       }
@@ -239,7 +342,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
       }
 
       // Сохраняем все ответы (каждый ответ дополняет существующую запись)
-      // Для question_group сохраняем каждый под-ответ отдельно
+      // Для question_group сохраняем один ответ с массивом подвопросов
       for (const answerData of answersToProcess) {
         try {
           await PublicService.saveQuizAnswer(uid, answerData, sessionKey);
@@ -268,11 +371,9 @@ export const publicModule = new Elysia({ prefix: "/public" })
       };
     }
   }, {
-    body: t.Union([
-      quizAnswer,
-      quizAnswersArray,
-      quizAnswerFormData,
-    ]),
+    // НЕ указываем body - Elysia автоматически определит тип (JSON или FormData)
+    // Указываем type для поддержки multipart/form-data
+    type: 'multipart',
     params: t.Object({
       uid: t.String(),
     }),
