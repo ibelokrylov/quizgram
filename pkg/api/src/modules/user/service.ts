@@ -1,7 +1,16 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
 import { eq } from "drizzle-orm";
-import { codeTable, db, userTable, planTable, type User, type Plan } from "../../db";
+import {
+  codeTable,
+  db,
+  planTable,
+  userNotificationTable,
+  userTable,
+  type Plan,
+  type User,
+  type UserNotification,
+} from "../../db";
 import { logger } from "../../lib/logger";
 import { CodeService } from "../../services/code.service";
 import { MailService } from "../../services/mail.service";
@@ -80,6 +89,73 @@ export abstract class UserService {
       .update(codeTable)
       .set({ isActive: false })
       .where(eq(codeTable.id, foundCode.id));
+  }
+
+  /**
+   * Получение настроек уведомлений пользователя
+   */
+  static async getNotificationSettings(
+    userId: number,
+  ): Promise<UserNotification> {
+    const notifications = await db
+      .select()
+      .from(userNotificationTable)
+      .where(eq(userNotificationTable.userId, userId))
+      .limit(1);
+
+    if (!notifications[0]) {
+      const error = new Error("Notification settings not found");
+      error.name = "NotificationNotFoundError";
+      throw error;
+    }
+
+    return notifications[0];
+  }
+
+  /**
+   * Обновление настроек уведомлений пользователя
+   */
+  static async updateNotificationSettings(
+    userId: number,
+    settings: { telegram?: boolean; email?: boolean },
+  ): Promise<UserNotification> {
+    const existing = await db
+      .select()
+      .from(userNotificationTable)
+      .where(eq(userNotificationTable.userId, userId))
+      .limit(1);
+
+    if (!existing[0]) {
+      const error = new Error("Notification settings not found");
+      error.name = "NotificationNotFoundError";
+      throw error;
+    }
+
+    const updateData: Partial<UserNotification> = {
+      updatedAt: new Date(),
+    };
+
+    if (settings.telegram !== undefined) {
+      updateData.telegram = settings.telegram;
+    }
+
+    if (settings.email !== undefined) {
+      updateData.email = settings.email;
+    }
+
+    const [updated] = await db
+      .update(userNotificationTable)
+      .set(updateData)
+      .where(eq(userNotificationTable.userId, userId))
+      .returning();
+
+    if (!updated) {
+      const error = new Error("Failed to update notification settings");
+      error.name = "UpdateNotificationError";
+      throw error;
+    }
+
+    return updated;
   }
 
   /**
@@ -183,7 +259,7 @@ export abstract class UserService {
   static async updateLanguage(userId: number, language: string): Promise<void> {
     await db
       .update(userTable)
-      .set({ 
+      .set({
         language,
         updatedAt: new Date(),
       })

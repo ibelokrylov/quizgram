@@ -385,5 +385,16 @@
 	"error.deleteFile": "File deletion error",
 	"error.getUserPlan": "Failed to get user plan",
 	"error.getProfile": "Failed to get profile",
-	"input.edit": "Edit"
+	"input.edit": "Edit",
+	"notification.title": "Notifications",
+	"notification.description": "Manage notification settings",
+	"notification.settings.title": "Notification Settings",
+	"notification.settings.description": "Choose how you want to receive notifications",
+	"notification.settings.email": "Email notifications",
+	"notification.settings.email.description": "Receive notifications via email",
+	"notification.settings.telegram": "Telegram notifications",
+	"notification.settings.telegram.description": "Receive notifications via Telegram",
+	"notification.update.success": "Notification settings updated",
+	"notification.update.error": "Error updating notification settings",
+	"notification.load.error": "Error loading notification settings"
 }

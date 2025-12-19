@@ -198,4 +198,56 @@ export namespace UserModel {
 
   export type updateLanguageErrorResponse =
     typeof updateLanguageErrorResponse.static;
+
+  // Модель настроек уведомлений
+  export const userNotification = t.Object({
+    telegram: t.Boolean(),
+    email: t.Boolean(),
+  });
+
+  export type userNotification = typeof userNotification.static;
+
+  // Успешный ответ при получении настроек уведомлений
+  export const getNotificationSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: userNotification,
+  });
+
+  export type getNotificationSuccessResponse =
+    typeof getNotificationSuccessResponse.static;
+
+  // Ответ при ошибке получения настроек уведомлений
+  export const getNotificationErrorResponse = t.Object({
+    message: t.String(), // "get-notification@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type getNotificationErrorResponse =
+    typeof getNotificationErrorResponse.static;
+
+  // Тело запроса для обновления настроек уведомлений
+  export const updateNotificationBody = t.Object({
+    telegram: t.Optional(t.Boolean()),
+    email: t.Optional(t.Boolean()),
+  });
+
+  export type updateNotificationBody = typeof updateNotificationBody.static;
+
+  // Успешный ответ при обновлении настроек уведомлений
+  export const updateNotificationSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: userNotification,
+  });
+
+  export type updateNotificationSuccessResponse =
+    typeof updateNotificationSuccessResponse.static;
+
+  // Ответ при ошибке обновления настроек уведомлений
+  export const updateNotificationErrorResponse = t.Object({
+    message: t.String(), // "update-notification@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type updateNotificationErrorResponse =
+    typeof updateNotificationErrorResponse.static;
 }

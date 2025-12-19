@@ -550,5 +550,111 @@ export const user = new Elysia({ prefix: "/user" })
               }),
             },
           },
+        )
+        .get(
+          "/notification",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+            try {
+              const notification = await UserService.getNotificationSettings(
+                user.id,
+              );
+
+              const response: UserModel.getNotificationSuccessResponse = {
+                message: "ok",
+                data: {
+                  telegram: notification.telegram,
+                  email: notification.email,
+                },
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при получении настроек уведомлений",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+              ctx.set.status = 400;
+              const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+
+              const response: UserModel.getNotificationErrorResponse = {
+                message: "get-notification@error",
+                error: errorMessage,
+              };
+
+              return response;
+            }
+          },
+          {
+            response: {
+              200: UserModel.getNotificationSuccessResponse,
+              400: UserModel.getNotificationErrorResponse,
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
+        )
+        .put(
+          "/notification",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+            const { body, set } = ctx;
+            try {
+              const updated = await UserService.updateNotificationSettings(
+                user.id,
+                {
+                  telegram: body.telegram,
+                  email: body.email,
+                },
+              );
+
+              const response: UserModel.updateNotificationSuccessResponse = {
+                message: "ok",
+                data: {
+                  telegram: updated.telegram,
+                  email: updated.email,
+                },
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при обновлении настроек уведомлений",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+              set.status = 400;
+              const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+
+              const response: UserModel.updateNotificationErrorResponse = {
+                message: "update-notification@error",
+                error: errorMessage,
+              };
+
+              return response;
+            }
+          },
+          {
+            body: UserModel.updateNotificationBody,
+            response: {
+              200: UserModel.updateNotificationSuccessResponse,
+              400: UserModel.updateNotificationErrorResponse,
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
         ),
   );

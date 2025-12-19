@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppPaymentRouteRouteImport } from './routes/app/payment/route'
+import { Route as AppNotificationRouteRouteImport } from './routes/app/notification/route'
 import { Route as AppDashboardRouteRouteImport } from './routes/app/dashboard/route'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
 import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
@@ -57,6 +58,11 @@ const AppPaymentRouteRoute = AppPaymentRouteRouteImport.update({
   path: '/payment',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppNotificationRouteRoute = AppNotificationRouteRouteImport.update({
+  id: '/notification',
+  path: '/notification',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppDashboardRouteRoute = AppDashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
+  '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/notification'
     | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/notification'
     | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/registration'
     | '/app/dashboard'
+    | '/app/notification'
     | '/app/payment'
     | '/app/bid/report'
     | '/app/bid/statistic'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaymentRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/notification': {
+      id: '/app/notification'
+      path: '/notification'
+      fullPath: '/app/notification'
+      preLoaderRoute: typeof AppNotificationRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
@@ -283,6 +302,7 @@ const AppBidReportRouteRouteWithChildren =
 
 interface AppRouteRouteChildren {
   AppDashboardRouteRoute: typeof AppDashboardRouteRoute
+  AppNotificationRouteRoute: typeof AppNotificationRouteRoute
   AppPaymentRouteRoute: typeof AppPaymentRouteRoute
   AppBidReportRouteRoute: typeof AppBidReportRouteRouteWithChildren
   AppBidStatisticRouteRoute: typeof AppBidStatisticRouteRoute
@@ -291,6 +311,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardRouteRoute: AppDashboardRouteRoute,
+  AppNotificationRouteRoute: AppNotificationRouteRoute,
   AppPaymentRouteRoute: AppPaymentRouteRoute,
   AppBidReportRouteRoute: AppBidReportRouteRouteWithChildren,
   AppBidStatisticRouteRoute: AppBidStatisticRouteRoute,

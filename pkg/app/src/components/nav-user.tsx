@@ -2,6 +2,7 @@ import {
 	IconCreditCard,
 	IconDotsVertical,
 	IconLogout,
+	IconNotification,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useContext } from "react";
@@ -60,6 +61,10 @@ export function NavUser({
 
 	const handleBilling = () => {
 		navigate({ to: "/app/payment" });
+	};
+
+	const handleNotifications = () => {
+		navigate({ to: "/app/notification" });
 	};
 
 	const handleLogout = async () => {
@@ -148,10 +153,10 @@ export function NavUser({
 								<IconCreditCard />
 								{t("nav.user.billing")}
 							</DropdownMenuItem>
-							{/* <DropdownMenuItem> */}
-							{/*   <IconNotification /> */}
-							{/*   {t('nav.user.notifications')} */}
-							{/* </DropdownMenuItem> */}
+							<DropdownMenuItem onClick={handleNotifications}>
+								<IconNotification />
+								{t("nav.user.notifications")}
+							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={handleLogout}>

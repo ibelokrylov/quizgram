@@ -6,9 +6,11 @@ import {
   codeTable,
   db,
   planTable,
+  userNotificationTable,
   userPaymentTable,
   userTable,
   type NewUser,
+  type NewUserNotification,
   type NewUserPayment,
   type Plan,
   type User,
@@ -246,6 +248,30 @@ export abstract class AuthService {
         { userId: createdUser.id },
       );
       // Не прерываем регистрацию, если не удалось создать user_payment
+    }
+
+    // Создаём запись в user_notification с настройками по умолчанию
+    try {
+      const newUserNotification: NewUserNotification = {
+        userId: createdUser.id,
+        telegram: false,
+        email: true,
+      };
+
+      await db.insert(userNotificationTable).values(newUserNotification);
+
+      logger.info("Создана запись user_notification для нового пользователя", {
+        userId: createdUser.id,
+      });
+    } catch (notificationError) {
+      logger.error(
+        "Ошибка при создании user_notification при регистрации",
+        notificationError instanceof Error
+          ? notificationError
+          : new Error(String(notificationError)),
+        { userId: createdUser.id },
+      );
+      // Не прерываем регистрацию, если не удалось создать user_notification
     }
 
     // Генерируем код верификации

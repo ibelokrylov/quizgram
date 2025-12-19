@@ -385,5 +385,16 @@
 	"error.deleteFile": "Ошибка при удалении файла",
 	"error.getUserPlan": "Ошибка при получении тарифа",
 	"error.getProfile": "Ошибка при получении профиля",
-	"input.edit": "изменить"
+	"input.edit": "изменить",
+	"notification.title": "Уведомления",
+	"notification.description": "Управляйте настройками уведомлений",
+	"notification.settings.title": "Настройки уведомлений",
+	"notification.settings.description": "Выберите способы получения уведомлений",
+	"notification.settings.email": "Email уведомления",
+	"notification.settings.email.description": "Получать уведомления на email",
+	"notification.settings.telegram": "Telegram уведомления",
+	"notification.settings.telegram.description": "Получать уведомления в Telegram",
+	"notification.update.success": "Настройки уведомлений обновлены",
+	"notification.update.error": "Ошибка при обновлении настроек уведомлений",
+	"notification.load.error": "Ошибка при загрузке настроек уведомлений"
 }

@@ -13,6 +13,7 @@ import {
 import { quizOpenTable } from "./quiz/quiz-open";
 import { userTable } from "./user";
 import { userFileTable } from "./user-file";
+import { userNotificationTable } from "./user-notification";
 import { userPaymentTable } from "./user-payment";
 
 export const relations = defineRelations(
@@ -21,6 +22,7 @@ export const relations = defineRelations(
     plan: planTable,
     code: codeTable,
     userFile: userFileTable,
+    userNotification: userNotificationTable,
     userPayment: userPaymentTable,
     quiz: quizTable,
     quizContact: quizContactTable,
@@ -52,6 +54,10 @@ export const relations = defineRelations(
         from: r.user.id,
         to: r.userFile.userId,
       }),
+      notification: r.one.userNotification({
+        from: r.user.id,
+        to: r.userNotification.userId,
+      }),
       payment: r.one.userPayment({
         from: r.user.id,
         to: r.userPayment.userId,
@@ -82,6 +88,14 @@ export const relations = defineRelations(
     userFile: {
       user: r.one.user({
         from: r.userFile.userId,
+        to: r.user.id,
+      }),
+    },
+
+    // UserNotification relations
+    userNotification: {
+      user: r.one.user({
+        from: r.userNotification.userId,
         to: r.user.id,
       }),
     },
