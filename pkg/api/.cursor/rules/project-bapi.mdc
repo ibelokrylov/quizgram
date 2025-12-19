@@ -39,6 +39,16 @@ alwaysApply: true
   - Не используй другие ORM (TypeORM, Prisma и т.д.)
   - Документация: https://orm.drizzle.team/docs/overview
 
+### Telegram Bot API
+- **node-telegram-bot-api** для работы с Telegram ботами
+  - Все операции с Telegram Bot API должны использовать пакет `node-telegram-bot-api`
+  - Используй `TelegramBot` из `node-telegram-bot-api` для создания инстансов ботов
+  - **В dev режиме (NODE_ENV !== "production")**: автоматически используется polling
+  - **В production режиме**: используется webhook (настраивается отдельно)
+  - Боты создаются с `polling: false` в production, `polling: true` в dev
+  - Для обработки входящих сообщений используй webhook endpoints в production, polling в dev
+  - Документация: https://github.com/yagop/node-telegram-bot-api
+
 ## Правила кодирования
 
 ### TypeScript
@@ -278,6 +288,9 @@ const { user, body, set } = ctx as typeof ctx & { user: UserModel.upload };
 ✅ Используй `.state()` для объявления типизированного хранилища данных
 ✅ Используй `.guard()` с `beforeHandle` для установки данных в `ctx.store`
 ✅ Получай данные из `ctx.store` в обработчиках роутов (не деструктурируй из контекста)
+✅ Используй `node-telegram-bot-api` для всех операций с Telegram Bot API
+✅ В dev режиме автоматически используется polling (не требует настройки webhook)
+✅ В production режиме используй webhook endpoints для обработки входящих сообщений
 
 ## Чего избегать
 
@@ -294,4 +307,7 @@ const { user, body, set } = ctx as typeof ctx & { user: UserModel.upload };
 ❌ НЕ используй `console.log/error/warn` - всегда используй `logger` из `../lib/logger`
 ❌ НЕ деструктурируй данные из `ctx.store` напрямую в параметрах функции (используй `ctx.store.property`)
 ❌ НЕ используй type assertion для добавления данных в контекст (используй `.state()` и `ctx.store`)
+❌ НЕ используй другие библиотеки для работы с Telegram Bot API (используй только `node-telegram-bot-api`)
+❌ НЕ используй polling в production режиме (используй webhook endpoints)
+❌ НЕ настраивай webhook вручную в dev режиме (polling запускается автоматически)
 

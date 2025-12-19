@@ -1,12 +1,14 @@
 import { cors } from '@elysiajs/cors';
 import { Elysia } from "elysia";
-import { logger } from "./lib/logger";
 import { checkDatabaseConnection } from "./lib/db-check";
+import { logger } from "./lib/logger";
 import { auth } from "./modules/auth";
 import { bids } from "./modules/bids";
+import { payment } from "./modules/payment";
 import { publicModule } from './modules/public';
 import { quiz } from "./modules/quiz";
 import { startScheduler } from "./modules/scheduler";
+import { telegram } from "./modules/telegram";
 import { user } from "./modules/user";
 import { PlanService } from "./services/plan.service";
 import { initTelegramBotsOnStartup } from "./services/quiz-bot.service";
@@ -68,8 +70,11 @@ async function startApp() {
       .use(user)
       .use(quiz)
       .use(bids)
+      .use(payment)
       .use(publicModule)
     )
+    // Webhook'и для Telegram ботов (без префикса /v1, так как Telegram отправляет на указанный URL)
+    .use(telegram)
     .listen(5001);
 
   logger.info("Сервер запущен", {

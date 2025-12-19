@@ -8,6 +8,20 @@ import { QuizBotService as BaseTelegramBotService } from "./quiz-bot.service";
  */
 export abstract class CrmBotService extends BaseTelegramBotService {
   /**
+   * Настройка webhook для CRM-бота
+   * @param webhookUrl - URL для webhook (должен быть HTTPS в production)
+   */
+  static async setWebhook(webhookUrl: string): Promise<void> {
+    await BaseTelegramBotService.setWebhook("BOT_CRM_TOKEN", webhookUrl);
+  }
+
+  /**
+   * Удаление webhook для CRM-бота
+   */
+  static async deleteWebhook(): Promise<void> {
+    await BaseTelegramBotService.deleteWebhook("BOT_CRM_TOKEN");
+  }
+  /**
    * Обработка входящего апдейта от Telegram (webhook или polling).
    * Использует node-telegram-bot-api через базовый сервис.
    */
@@ -36,14 +50,12 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         updateId: update.update_id,
         chatId: message.chat.id,
       });
-      const name = (BaseTelegramBotService as any)
-        .getUserDisplayName(message) as string;
+      const name = BaseTelegramBotService.getUserDisplayName(message);
       const welcomeText =
         `Привет, ${name}! 👋\n\n` +
         "Я CRM-бот Quizgram. В ближайшее время здесь появятся уведомления и инструменты для работы с лидами.";
 
-      await (BaseTelegramBotService as any)
-        .sendMessage("BOT_CRM_TOKEN", message.chat.id, welcomeText);
+      await BaseTelegramBotService.sendMessage("BOT_CRM_TOKEN", message.chat.id, welcomeText);
       return;
     }
 
