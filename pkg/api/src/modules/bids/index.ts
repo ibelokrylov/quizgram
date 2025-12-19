@@ -1,20 +1,16 @@
 import Elysia, { t } from "elysia";
-import { eq } from "drizzle-orm";
-import type { User } from "../../db";
-import { db, planTable } from "../../db";
 import { logger } from "../../lib/logger";
-import { AuthService } from "../auth/service";
+import { AuthService, type UserWithPlan } from "../auth/service";
 import {
   BidsModel,
   bidsListFilters,
   bidsListResponse,
-  updateBidStatus,
-  bidDetails
+  updateBidStatus
 } from "./model";
 import { BidsService } from "./service";
 
 export const bids = new Elysia({ prefix: "/bids" })
-  .state("user", null as User | null)
+  .state("user", null as UserWithPlan | null)
   .guard(
     {
       async beforeHandle(ctx) {
@@ -24,7 +20,8 @@ export const bids = new Elysia({ prefix: "/bids" })
         } else {
           ctx.store.user = await AuthService.getUserFromToken(
             ctx.cookie.token.value.toString(),
-          );
+            true, // Подгружаем план пользователя
+          ) as UserWithPlan | null;
         }
       },
     },
@@ -41,22 +38,12 @@ export const bids = new Elysia({ prefix: "/bids" })
 
           try {
             const { query } = ctx;
-            
-            // Получаем план пользователя по planId с лимитом заявок из базы данных
-            const plans = await db
-              .select({ 
-                name: planTable.name,
-                bidMonthLimit: planTable.bidMonthLimit
-              })
-              .from(planTable)
-              .where(eq(planTable.id, user.planId))
-              .limit(1);
-            
-            const plan = plans[0];
+
+            // Используем план из пользователя (уже загружен через getUserFromToken)
             // Если план не найден, используем значения по умолчанию для FREE плана
-            const bidMonthLimit = plan?.bidMonthLimit ?? 10;
-            const planName = plan?.name ?? "FREE";
-            
+            const bidMonthLimit = user.plan?.bidMonthLimit ?? 10;
+            const planName = user.plan?.name ?? "FREE";
+
             // Для FREE тарифа запрещаем запрос незавершенных заявок (isFull=false)
             if (planName === "FREE" && query.isFull === false) {
               ctx.set.status = 403;
@@ -66,7 +53,7 @@ export const bids = new Elysia({ prefix: "/bids" })
               };
               return response;
             }
-            
+
             const result = await BidsService.getBidsList(
               user.id,
               query,
@@ -77,16 +64,16 @@ export const bids = new Elysia({ prefix: "/bids" })
             );
 
             // Для FREE плана убираем totalNotFull из ответа
-            const responseData = planName === "FREE" 
+            const responseData = planName === "FREE"
               ? {
-                  data: result.data,
-                  total: result.total,
-                  hasMore: result.hasMore,
-                  hasMoreBeyondLimit: result.hasMoreBeyondLimit,
-                  beyondLimitCount: result.beyondLimitCount,
-                  maxAvailableFull: result.maxAvailableFull,
-                  deletedInLimitFull: result.deletedInLimitFull,
-                }
+                data: result.data,
+                total: result.total,
+                hasMore: result.hasMore,
+                hasMoreBeyondLimit: result.hasMoreBeyondLimit,
+                beyondLimitCount: result.beyondLimitCount,
+                maxAvailableFull: result.maxAvailableFull,
+                deletedInLimitFull: result.deletedInLimitFull,
+              }
               : result;
 
             return {

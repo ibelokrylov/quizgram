@@ -5,8 +5,12 @@ import { eq } from "drizzle-orm";
 import {
   codeTable,
   db,
+  planTable,
+  userPaymentTable,
   userTable,
   type NewUser,
+  type NewUserPayment,
+  type Plan,
   type User,
 } from "../../db";
 import { logger } from "../../lib/logger";
@@ -16,6 +20,11 @@ import type { AuthModel } from "./model";
 
 // Возможные коды ошибок аутентификации
 const AUTH_ERROR_MESSAGE = "notification.user.no-authenticated";
+
+/**
+ * Тип пользователя с планом
+ */
+export type UserWithPlan = User & { plan: Plan | null };
 
 export abstract class AuthService {
   /**
@@ -59,8 +68,15 @@ export abstract class AuthService {
    * Получение пользователя по токену из cookie
    * Возвращает пользователя, если токен валиден, иначе null
    * Используется для оптимизации - избегает повторной проверки пароля при наличии валидной сессии
+   * 
+   * @param token - токен сессии
+   * @param plan - если true, подгружает план пользователя (по умолчанию false)
+   * @returns User | UserWithPlan | null в зависимости от параметра plan
    */
-  static async getUserFromToken(token: string): Promise<User | null> {
+  static async getUserFromToken(
+    token: string,
+    plan: boolean = false,
+  ): Promise<User | UserWithPlan | null> {
     if (!token) {
       return null;
     }
@@ -69,14 +85,37 @@ export abstract class AuthService {
       const { SessionService } = await import("../../services/session.service");
       const session = SessionService.parseSessionToken(token);
 
-      // Находим пользователя по ID из токена
-      const users = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.id, session.ID))
-        .limit(1);
+      if (plan) {
+        // Подгружаем пользователя с планом через leftJoin
+        const results = await db
+          .select({
+            user: userTable,
+            plan: planTable,
+          })
+          .from(userTable)
+          .leftJoin(planTable, eq(userTable.planId, planTable.id))
+          .where(eq(userTable.id, session.ID))
+          .limit(1);
 
-      return users[0] ?? null;
+        const result = results[0];
+        if (!result) {
+          return null;
+        }
+
+        return {
+          ...result.user,
+          plan: result.plan,
+        } as UserWithPlan;
+      } else {
+        // Обычный запрос без плана
+        const users = await db
+          .select()
+          .from(userTable)
+          .where(eq(userTable.id, session.ID))
+          .limit(1);
+
+        return users[0] ?? null;
+      }
     } catch (error) {
       // При ошибке парсинга токена возвращаем null
       return null;
@@ -162,6 +201,52 @@ export abstract class AuthService {
       .insert(userTable)
       .values(newUser)
       .returning();
+
+    // Создаём запись в user_payment с FREE планом
+    try {
+      // Получаем FREE план (id = 1)
+      const freePlan = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.id, 1))
+        .limit(1);
+
+      if (freePlan[0]) {
+        // Вычисляем finalDayAt: 30 дней от created_at + время 23:59:00
+        const createdAt = createdUser.createdAt;
+        const finalDayAt = new Date(createdAt);
+        finalDayAt.setDate(finalDayAt.getDate() + 30);
+        finalDayAt.setHours(23, 59, 0, 0);
+
+        const newUserPayment: NewUserPayment = {
+          userId: createdUser.id,
+          planId: 1, // FREE план
+          limit: freePlan[0].bidMonthLimit, // Используем bid_month_limit из плана
+          finalDayAt,
+        };
+
+        await db.insert(userPaymentTable).values(newUserPayment);
+
+        logger.info("Создана запись user_payment для нового пользователя", {
+          userId: createdUser.id,
+          planId: 1,
+          limit: freePlan[0].bidMonthLimit,
+        });
+      } else {
+        logger.warn("FREE план не найден при создании user_payment", {
+          userId: createdUser.id,
+        });
+      }
+    } catch (paymentError) {
+      logger.error(
+        "Ошибка при создании user_payment при регистрации",
+        paymentError instanceof Error
+          ? paymentError
+          : new Error(String(paymentError)),
+        { userId: createdUser.id },
+      );
+      // Не прерываем регистрацию, если не удалось создать user_payment
+    }
 
     // Генерируем код верификации
     try {

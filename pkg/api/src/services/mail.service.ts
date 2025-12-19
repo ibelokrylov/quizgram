@@ -20,7 +20,7 @@ function validateEmail(email: string): boolean {
 
 function validateMailConfig(): void {
   const errors: string[] = [];
-  
+
   if (!MAIL_HOST) {
     errors.push("MAIL_HOST environment variable is not set");
   }
@@ -30,7 +30,7 @@ function validateMailConfig(): void {
   if (!MAIL_PASS) {
     errors.push("MAIL_PASS environment variable is not set");
   }
-  
+
   if (errors.length > 0) {
     const errorMessage = [
       "SMTP configuration is incomplete:",
@@ -42,7 +42,7 @@ function validateMailConfig(): void {
       "Для Yandex используйте пароль приложения, а не обычный пароль!",
       "Создайте пароль приложения: https://passport.yandex.ru/profile",
     ].join("\n");
-    
+
     throw new Error(errorMessage);
   }
 }
@@ -131,7 +131,7 @@ async function sendMail(
       errorDetails.errorMessage = error.message;
       errorDetails.errorName = error.name;
       errorDetails.errorStack = error.stack;
-      
+
       // Дополнительные поля для SMTP ошибок
       if ('code' in error) {
         errorDetails.errorCode = (error as any).code;
@@ -163,31 +163,31 @@ const getTemplatesDir = (): string => {
   if (typeof import.meta !== "undefined" && import.meta.dirname) {
     return join(import.meta.dirname, "templates");
   }
-  
+
   // В Node.js с ES modules используем import.meta.url
   if (typeof import.meta !== "undefined" && import.meta.url) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     return join(__dirname, "templates");
   }
-  
+
   // В Node.js с CommonJS используем __dirname
   if (typeof __dirname !== "undefined") {
     return join(__dirname, "templates");
   }
-  
+
   // Fallback: пробуем разные варианты путей
   const possiblePaths = [
     join(process.cwd(), "src", "services", "templates"),
     join(process.cwd(), "bapi", "src", "services", "templates"),
   ];
-  
+
   for (const path of possiblePaths) {
     if (existsSync(path)) {
       return path;
     }
   }
-  
+
   // Если ничего не найдено, возвращаем первый вариант
   return possiblePaths[0];
 };
@@ -205,7 +205,7 @@ function loadTemplate(templateName: string, language?: string): string {
   // Определяем имя шаблона с учетом языка
   const templateKey = language === "en" ? `${templateName}_en` : templateName;
   const templateFile = language === "en" ? `${templateName}_en.html` : `${templateName}.html`;
-  
+
   if (templateCache.has(templateKey)) {
     return templateCache.get(templateKey)!;
   }
@@ -228,7 +228,7 @@ function loadTemplate(templateName: string, language?: string): string {
         // Продолжаем с основной ошибкой
       }
     }
-    
+
     logger.error(
       "Ошибка при загрузке шаблона",
       error instanceof Error ? error : new Error(String(error)),
@@ -296,6 +296,45 @@ export abstract class MailService {
     const template = loadTemplate("password_reset_notification", language);
     const html = renderTemplate(template, {});
     const subject = language === "en" ? "Password Successfully Changed" : "Пароль успешно изменен";
+    await sendMail(subject, html, email);
+  }
+
+  /**
+   * Отправка уведомления о предстоящем списании через 2 дня
+   * @param email - Email адрес получателя
+   * @param language - Язык пользователя ("en" или "ru"), по умолчанию "ru"
+   */
+  static async sendPaymentReminder(
+    email: string,
+    language: string = "ru",
+  ): Promise<void> {
+    // Используем простой шаблон без файла (можно будет добавить файл позже)
+    const subject = language === "en"
+      ? "Payment will be charged in 2 days"
+      : "Списание средств произойдет через 2 дня";
+
+    const html = language === "en"
+      ? `
+        <html>
+          <body>
+            <h2>Payment Reminder</h2>
+            <p>Hello!</p>
+            <p>We would like to inform you that your subscription payment will be automatically charged in 2 days.</p>
+            <p>Thank you for using our service!</p>
+          </body>
+        </html>
+      `
+      : `
+        <html>
+          <body>
+            <h2>Напоминание об оплате</h2>
+            <p>Здравствуйте!</p>
+            <p>Уведомляем вас, что через 2 дня произойдет автоматическое списание средств по вашей подписке.</p>
+            <p>Спасибо за использование нашего сервиса!</p>
+          </body>
+        </html>
+      `;
+
     await sendMail(subject, html, email);
   }
 }

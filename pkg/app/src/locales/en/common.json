@@ -267,6 +267,8 @@
 	"toast.error.quiz-not-load": "Error publishing quiz",
 	"payment.title": "Payment",
 	"payment.description": "Payment page is under development",
+	"payment.success": "Plan successfully updated: {{plan}}",
+	"payment.error": "Error updating plan",
 	"resizeImage.title": "Resize Image",
 	"resizeImage.targetSize": "Target size: {{width}}x{{height}}",
 	"resizeImage.currentSize": "Current size: {{width}}x{{height}}",

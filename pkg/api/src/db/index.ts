@@ -13,6 +13,7 @@ export * from "./quiz";
 export * from "./quiz/quiz-open";
 export * from "./user";
 export * from "./user-file";
+export * from "./user-payment";
 
 // Импортируем relations для передачи в drizzle
 import { relations } from "./relations";

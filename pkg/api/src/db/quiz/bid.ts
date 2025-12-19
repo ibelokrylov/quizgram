@@ -27,6 +27,7 @@ export const quizBidTable = pgTable("quiz_bid", {
   status: varchar("status", { length: 20 }).notNull().default("create"),
   isFull: boolean("is_full").notNull().default(false),
   isRead: boolean("is_read").notNull().default(false),
+  isEqualPaymentLimit: boolean("is_equal_payment_limit").notNull().default(false),
   info: jsonb("info").default(null), // Данные пользователя из Telegram после верификации
   initData: varchar("init_data", { length: 2048 }).default(""), // Telegram WebApp initData как строка
   userInfo: jsonb("user_info").default(null), // Данные пользователя из Telegram после верификации
@@ -36,6 +37,7 @@ export const quizBidTable = pgTable("quiz_bid", {
   updatedAt: timestamp("updated_at", { withTimezone: false })
     .defaultNow()
     .notNull(),
+  adminUpdatedAt: timestamp("admin_updated_at", { withTimezone: false }),
   deletedAt: timestamp("deleted_at", { withTimezone: false }),
   ipLocation: jsonb("ip_location").default(null), // Геолокация по IP: { country, city, ip }
 });

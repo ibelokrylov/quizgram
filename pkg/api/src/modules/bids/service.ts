@@ -20,19 +20,11 @@ export abstract class BidsService {
     planId: number = 1
   ) {
     try {
-      // Лимит заявок берется из базы данных (таблица plan.bid_month_limit)
-      const monthlyLimit = bidMonthLimit;
-
-      // Если план FREE и isFull не указан, по умолчанию показываем только завершенные заявки
+      // Если план FREE, всегда показываем только isFull=true AND isEqualPaymentLimit=true
       const effectiveFilters = { ...filters };
-      if (planName === "FREE" && effectiveFilters.isFull === undefined) {
+      if (planId === 1) {
         effectiveFilters.isFull = true;
       }
-
-      // Вычисляем количество месяцев с регистрации (округление вверх)
-      const now = new Date();
-      const monthsDiff = (now.getTime() - userCreatedAt.getTime()) / (1000 * 60 * 60 * 24 * 30.44); // Среднее количество дней в месяце
-      const monthsRegistered = Math.max(1, Math.ceil(monthsDiff)); // Минимум 1 месяц
 
       // Формируем условия для фильтрации
       const conditions = [
@@ -50,6 +42,10 @@ export abstract class BidsService {
 
       if (effectiveFilters.isFull !== undefined) {
         conditions.push(eq(quizBidTable.isFull, effectiveFilters.isFull));
+        // При запросе с isFull=true добавляем условие isEqualPaymentLimit=true
+        if (effectiveFilters.isFull === true) {
+          conditions.push(eq(quizBidTable.isEqualPaymentLimit, true));
+        }
       }
 
       if (effectiveFilters.isRead !== undefined) {
@@ -81,8 +77,12 @@ export abstract class BidsService {
         baseConditions.push(eq(quizBidTable.isRead, effectiveFilters.isRead));
       }
 
-      // Подсчет isFull = true
-      const totalFullConditions = [...baseConditions, eq(quizBidTable.isFull, true)];
+      // Подсчет isFull = true AND isEqualPaymentLimit = true
+      const totalFullConditions = [
+        ...baseConditions,
+        eq(quizBidTable.isFull, true),
+        eq(quizBidTable.isEqualPaymentLimit, true),
+      ];
       const totalFullResult = await db
         .select({ count: count() })
         .from(quizBidTable)
@@ -99,19 +99,10 @@ export abstract class BidsService {
         .where(and(...totalNotFullConditions));
       const totalNotFull = totalNotFullResult[0]?.count || 0;
 
-      // Получаем заявки с ограничением по месяцам через оконную функцию
-      // Берем по monthlyLimit заявок из каждого месяца, начиная с месяца регистрации
-      // Создаем дату начала месяца регистрации в UTC
-      const userCreatedAtMonth = new Date(Date.UTC(
-        userCreatedAt.getFullYear(),
-        userCreatedAt.getMonth(),
-        1,
-        0, 0, 0, 0
-      ));
-
-      // Формируем базовые условия (общие для лимита и отображения)
+      // Формируем базовые условия для SQL запроса
       const baseWhereConditions: any[] = [
         sql`q.user_id = ${userId}`,
+        sql`b.deleted_at IS NULL`, // Исключаем удаленные заявки
       ];
 
       if (effectiveFilters.quiz_uid) {
@@ -124,78 +115,47 @@ export abstract class BidsService {
 
       if (effectiveFilters.isFull !== undefined) {
         baseWhereConditions.push(sql`b.is_full = ${effectiveFilters.isFull}`);
+        // При запросе с isFull=true добавляем условие isEqualPaymentLimit=true
+        if (effectiveFilters.isFull === true) {
+          baseWhereConditions.push(sql`b.is_equal_payment_limit = true`);
+        }
       }
 
       if (effectiveFilters.isRead !== undefined) {
         baseWhereConditions.push(sql`b.is_read = ${effectiveFilters.isRead}`);
       }
 
-      // Передаем дату как ISO строку для правильной обработки PostgreSQL
-      baseWhereConditions.push(sql`DATE_TRUNC('month', b.created_at) >= DATE_TRUNC('month', ${userCreatedAtMonth.toISOString()}::timestamp)`);
-
-      // Условия для расчета лимита - ВКЛЮЧАЕМ удаленные заявки (чтобы они занимали место в лимите)
-      // Это важно для предотвращения обхода лимита: удаленные заявки все равно считаются в лимите
-      const whereConditionsForLimit = [...baseWhereConditions];
-      let combinedWhereForLimit = whereConditionsForLimit[0];
-      for (let i = 1; i < whereConditionsForLimit.length; i++) {
-        combinedWhereForLimit = sql`${combinedWhereForLimit} AND ${whereConditionsForLimit[i]}`;
+      // Объединяем условия
+      let combinedWhere = baseWhereConditions[0];
+      for (let i = 1; i < baseWhereConditions.length; i++) {
+        combinedWhere = sql`${combinedWhere} AND ${baseWhereConditions[i]}`;
       }
 
-      // Используем SQL с оконной функцией для нумерации заявок в каждом месяце
-      // Сначала ранжируем ВСЕ заявки (включая удаленные) для расчета лимита
-      // Затем фильтруем только неудаленные для отображения
-      const bidsWithRowNumber = await db.execute(sql`
-        WITH all_ranked_bids AS (
-          SELECT 
-            b.id,
-            b.deleted_at,
-            q.uid,
-            b.key,
-            b.status,
-            b.is_full as "isFull",
-            b.is_read as "isRead",
-            b.first,
-            b.created_at as "createdAt",
-            b.updated_at as "updatedAt",
-            b.contacts,
-            b.ip_location as "ipLocation",
-            b.info,
-            q.name as "quizName",
-            ROW_NUMBER() OVER (
-              PARTITION BY DATE_TRUNC('month', b.created_at)
-              ORDER BY b.id DESC
-            ) as row_num
-          FROM quiz_bid b
-          LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhereForLimit}
-        ),
-        ranked_bids AS (
-          SELECT *
-          FROM all_ranked_bids
-          WHERE row_num <= ${monthlyLimit}
-            AND deleted_at IS NULL
-        )
+      // Получаем заявки без ограничения по месяцам
+      const bidsResult = await db.execute(sql`
         SELECT 
-          uid,
-          key,
-          status,
-          "isFull",
-          "isRead",
-          first,
-          "createdAt",
-          "updatedAt",
-          contacts,
-          "ipLocation",
-          info,
-          "quizName"
-        FROM ranked_bids
-        ORDER BY "createdAt" DESC
+          q.uid,
+          b.key,
+          b.status,
+          b.is_full as "isFull",
+          b.is_read as "isRead",
+          b.first,
+          b.created_at as "createdAt",
+          b.updated_at as "updatedAt",
+          b.contacts,
+          b.ip_location as "ipLocation",
+          b.info,
+          q.name as "quizName"
+        FROM quiz_bid b
+        LEFT JOIN quiz q ON b.quiz_id = q.id
+        WHERE ${combinedWhere}
+        ORDER BY b.created_at DESC
         LIMIT ${effectiveFilters.limit || 10}
         OFFSET ${effectiveFilters.offset || 0}
       `);
 
       // В Drizzle ORM с postgres.js результат db.execute - это массив объектов напрямую
-      const bids = (bidsWithRowNumber as unknown as Array<{
+      const bids = (bidsResult as unknown as Array<{
         uid: string;
         key: string;
         status: string;
@@ -210,25 +170,12 @@ export abstract class BidsService {
         quizName: string;
       }>) || [];
 
-      // Подсчитываем общее количество доступных заявок (в пределах лимита по месяцам)
-      // Учитываем только неудаленные заявки, которые попали в лимит
+      // Подсчитываем общее количество доступных заявок
       const availableCountResult = await db.execute(sql`
-        WITH all_ranked_bids AS (
-          SELECT 
-            b.id,
-            b.deleted_at,
-            ROW_NUMBER() OVER (
-              PARTITION BY DATE_TRUNC('month', b.created_at)
-              ORDER BY b.id DESC
-            ) as row_num
-          FROM quiz_bid b
-          LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhereForLimit}
-        )
         SELECT COUNT(*)::int as count
-        FROM all_ranked_bids
-        WHERE row_num <= ${monthlyLimit}
-          AND deleted_at IS NULL
+        FROM quiz_bid b
+        LEFT JOIN quiz q ON b.quiz_id = q.id
+        WHERE ${combinedWhere}
       `);
 
       // В Drizzle ORM с postgres.js результат db.execute - это массив объектов напрямую
@@ -236,11 +183,12 @@ export abstract class BidsService {
       const maxAvailable = Number(countResult[0]?.count || 0);
       const actualOffset = effectiveFilters.offset || 0;
 
-      // Подсчитываем количество доступных заявок с isFull = true в пределах лимита
-      // Это нужно для расчета beyondLimitCount (только завершенные заявки)
+      // Подсчитываем количество доступных заявок с isFull = true AND isEqualPaymentLimit = true
       const whereConditionsForLimitFull: any[] = [
         sql`q.user_id = ${userId}`,
-        sql`b.is_full = true`, // Только завершенные заявки
+        sql`b.deleted_at IS NULL`,
+        sql`b.is_full = true`,
+        sql`b.is_equal_payment_limit = true`,
       ];
 
       if (effectiveFilters.quiz_uid) {
@@ -255,57 +203,23 @@ export abstract class BidsService {
         whereConditionsForLimitFull.push(sql`b.is_read = ${effectiveFilters.isRead}`);
       }
 
-      whereConditionsForLimitFull.push(sql`DATE_TRUNC('month', b.created_at) >= DATE_TRUNC('month', ${userCreatedAtMonth.toISOString()}::timestamp)`);
-
       let combinedWhereForLimitFull = whereConditionsForLimitFull[0];
       for (let i = 1; i < whereConditionsForLimitFull.length; i++) {
         combinedWhereForLimitFull = sql`${combinedWhereForLimitFull} AND ${whereConditionsForLimitFull[i]}`;
       }
 
       const availableCountFullResult = await db.execute(sql`
-        WITH all_ranked_bids AS (
-          SELECT 
-            b.id,
-            b.deleted_at,
-            ROW_NUMBER() OVER (
-              PARTITION BY DATE_TRUNC('month', b.created_at)
-              ORDER BY b.id DESC
-            ) as row_num
-          FROM quiz_bid b
-          LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhereForLimitFull}
-        )
         SELECT COUNT(*)::int as count
-        FROM all_ranked_bids
-        WHERE row_num <= ${monthlyLimit}
-          AND deleted_at IS NULL
+        FROM quiz_bid b
+        LEFT JOIN quiz q ON b.quiz_id = q.id
+        WHERE ${combinedWhereForLimitFull}
       `);
 
       const countFullResult = (availableCountFullResult as unknown as Array<{ count: number | string }>) || [];
       const maxAvailableFull = Number(countFullResult[0]?.count || 0);
 
-      // Подсчитываем количество удаленных заявок с isFull = true, которые влезли в лимит
-      const deletedCountFullResult = await db.execute(sql`
-        WITH all_ranked_bids AS (
-          SELECT 
-            b.id,
-            b.deleted_at,
-            ROW_NUMBER() OVER (
-              PARTITION BY DATE_TRUNC('month', b.created_at)
-              ORDER BY b.id DESC
-            ) as row_num
-          FROM quiz_bid b
-          LEFT JOIN quiz q ON b.quiz_id = q.id
-          WHERE ${combinedWhereForLimitFull}
-        )
-        SELECT COUNT(*)::int as count
-        FROM all_ranked_bids
-        WHERE row_num <= ${monthlyLimit}
-          AND deleted_at IS NOT NULL
-      `);
-
-      const deletedCountFullResultArray = (deletedCountFullResult as unknown as Array<{ count: number | string }>) || [];
-      const deletedInLimitFull = Number(deletedCountFullResultArray[0]?.count || 0);
+      // Для упрощения, deletedInLimitFull всегда 0 (так как мы не используем месячную логику)
+      const deletedInLimitFull = 0;
 
       // Трансформируем данные для ответа
       // Поле info возвращаем только для пользователей с planId != 1
@@ -353,7 +267,6 @@ export abstract class BidsService {
         filters: effectiveFilters,
         planName,
         bidMonthLimit,
-        monthsRegistered,
         requestedLimit: effectiveFilters.limit || 10,
         offset: actualOffset,
         total: totalFull,
@@ -435,6 +348,7 @@ export abstract class BidsService {
         .update(quizBidTable)
         .set({
           status: updateData.status,
+          adminUpdatedAt: new Date(),
         })
         .where(eq(quizBidTable.id, bidInfo[0].bidId));
 
@@ -504,6 +418,7 @@ export abstract class BidsService {
         .update(quizBidTable)
         .set({
           isRead: true,
+          adminUpdatedAt: new Date(),
         })
         .where(eq(quizBidTable.id, bidData.bidId));
 
@@ -568,7 +483,7 @@ export abstract class BidsService {
         .update(quizBidTable)
         .set({
           deletedAt: new Date(),
-          updatedAt: new Date(),
+          adminUpdatedAt: new Date(),
         })
         .where(eq(quizBidTable.id, bidInfo[0].bidId));
 

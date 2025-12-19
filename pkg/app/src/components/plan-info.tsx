@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useUserPlan } from "@/entities/User/useUserPlan";
 import { Loader } from "@/components/loader";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useUserPlan } from "@/entities/User/useUserPlan";
+import { useTranslation } from "react-i18next";
 
 interface PlanInfoProps {
 	className?: string;
@@ -34,6 +34,19 @@ export function PlanInfo({ className }: PlanInfoProps) {
 	const plan = planQuery.data;
 	const isFreePlan = plan.id === 1;
 
+	// Форматируем название плана для отображения
+	const getDisplayPlanName = (planName: string) => {
+		if (planName === "FREE") {
+			return t("plans.price.free");
+		}
+		if (planName === "BASE") {
+			return "Pro";
+		}
+		return planName;
+	};
+
+	const displayPlanName = getDisplayPlanName(plan.name);
+
 	return (
 		<Card className={`p-4 ${className || ""}`}>
 			<div className="flex flex-col gap-4">
@@ -45,7 +58,7 @@ export function PlanInfo({ className }: PlanInfoProps) {
 								variant={isFreePlan ? "secondary" : "default"}
 								className="text-sm"
 							>
-								{plan.name}
+								{displayPlanName}
 							</Badge>
 							{!isFreePlan && (
 								<span className="text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm";
-import { db, quizBidTable, quizTable, userTable } from "../../db";
+import { db, planTable, quizBidTable, quizTable, userPaymentTable, userTable } from "../../db";
 import { logger } from "../../lib/logger";
+import { MailService } from "../../services/mail.service";
 
 export abstract class SchedulerService {
   /**
@@ -283,5 +284,179 @@ export abstract class SchedulerService {
       questionsCount,
       answersCount,
     };
+  }
+
+  /**
+   * Обрабатывает платежи пользователей:
+   * - Отправляет письмо за 2 дня до окончания подписки (если extended=true)
+   * - Продлевает подписку автоматически, если она закончилась
+   */
+  static async processPayments() {
+    const startTime = Date.now();
+    logger.info("Начало обработки платежей");
+
+    try {
+      const now = new Date();
+      // Устанавливаем время на 00:00:00 для текущей даты
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+      // Дата через 2 дня (для проверки окончания подписки)
+      const twoDaysLater = new Date(today);
+      twoDaysLater.setDate(twoDaysLater.getDate() + 2);
+      twoDaysLater.setHours(23, 59, 59, 999);
+
+      logger.debug("Проверка платежей", {
+        now: now.toISOString(),
+        today: today.toISOString(),
+        twoDaysLater: twoDaysLater.toISOString(),
+      });
+
+      // Находим всех не удаленных пользователей с платными планами и user_payment
+      const usersWithPayments = await db
+        .select({
+          userId: userTable.id,
+          userLogin: userTable.login,
+          userLanguage: userTable.language,
+          userPaymentId: userPaymentTable.id,
+          planId: userPaymentTable.planId,
+          finalDayAt: userPaymentTable.finalDayAt,
+          extended: userPaymentTable.extended,
+          limit: userPaymentTable.limit,
+          currentLimit: userPaymentTable.currentLimit,
+          planName: planTable.name,
+          planBidMonthLimit: planTable.bidMonthLimit,
+        })
+        .from(userPaymentTable)
+        .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
+        .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
+        .where(
+          and(
+            isNull(userTable.deletedAt), // Только не удаленные пользователи
+            sql`${userPaymentTable.planId} != 1`, // Только платные планы
+          ),
+        );
+
+      if (usersWithPayments.length === 0) {
+        logger.debug("Нет пользователей с платными планами для обработки");
+        return;
+      }
+
+      logger.info("Найдено пользователей с платными планами", {
+        count: usersWithPayments.length,
+      });
+
+      let emailsSent = 0;
+      let subscriptionsExtended = 0;
+      let errors = 0;
+
+      for (const userPayment of usersWithPayments) {
+        try {
+          const finalDayAt = new Date(userPayment.finalDayAt);
+
+          // Проверяем, заканчивается ли подписка через 2 дня и extended=true
+          if (
+            userPayment.extended &&
+            finalDayAt >= today &&
+            finalDayAt <= twoDaysLater
+          ) {
+            // Отправляем письмо о предстоящем списании
+            try {
+              const userLanguage = userPayment.userLanguage || "ru";
+              await MailService.sendPaymentReminder(
+                userPayment.userLogin,
+                userLanguage,
+              );
+
+              logger.info("Отправлено письмо о предстоящем списании", {
+                userId: userPayment.userId,
+                email: userPayment.userLogin,
+                finalDayAt: finalDayAt.toISOString(),
+              });
+
+              emailsSent++;
+            } catch (emailError) {
+              logger.error(
+                "Ошибка при отправке письма о предстоящем списании",
+                emailError instanceof Error
+                  ? emailError
+                  : new Error(String(emailError)),
+                {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                },
+              );
+              errors++;
+            }
+          }
+
+          // Проверяем, закончилась ли подписка
+          if (finalDayAt < today) {
+            // Продлеваем подписку на 30 дней и обновляем лимиты
+            const newFinalDayAt = new Date(today);
+            newFinalDayAt.setDate(newFinalDayAt.getDate() + 30);
+            newFinalDayAt.setHours(23, 59, 0, 0);
+
+            // Обновляем user_payment
+            await db
+              .update(userPaymentTable)
+              .set({
+                finalDayAt: newFinalDayAt,
+                limit: userPayment.planBidMonthLimit, // Обновляем лимит из плана
+                currentLimit: 0, // Сбрасываем текущий лимит
+                extended: true,
+                month: 1,
+              })
+              .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+            // Обновляем план пользователя
+            await db
+              .update(userTable)
+              .set({
+                planId: userPayment.planId,
+                updatedAt: new Date(),
+              })
+              .where(eq(userTable.id, userPayment.userId));
+
+            logger.info("Подписка продлена автоматически", {
+              userId: userPayment.userId,
+              planId: userPayment.planId,
+              oldFinalDayAt: finalDayAt.toISOString(),
+              newFinalDayAt: newFinalDayAt.toISOString(),
+              newLimit: userPayment.planBidMonthLimit,
+            });
+
+            subscriptionsExtended++;
+          }
+        } catch (error) {
+          logger.error(
+            "Ошибка при обработке платежа пользователя",
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              userId: userPayment.userId,
+              userPaymentId: userPayment.userPaymentId,
+            },
+          );
+          errors++;
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      logger.info("Обработка платежей завершена", {
+        total: usersWithPayments.length,
+        emailsSent,
+        subscriptionsExtended,
+        errors,
+        durationMs: duration,
+      });
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logger.error(
+        "Ошибка при обработке платежей",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          durationMs: duration,
+        },
+      );
+    }
   }
 }

@@ -261,6 +261,8 @@
 	"plans.features.target_audience.paid": "для малого бизнеса и маркетологов с рекламой в Telegram",
 	"payment.title": "Оплата",
 	"payment.description": "Страница оплаты в разработке",
+	"payment.success": "План успешно обновлен: {{plan}}",
+	"payment.error": "Ошибка при обновлении плана",
 	"edit-quiz.publish": "Опубликовать",
 	"toast.error.quiz-load": "Квиз уже опубликован",
 	"toast.error.quiz-not-load": "Ошибка публикации квиза",

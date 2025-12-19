@@ -48,6 +48,16 @@ export function NavUser({
 
 	const planName = planQuery.data?.name;
 
+	// Форматируем название плана для отображения
+	const getDisplayPlanName = (name: string | undefined) => {
+		if (!name) return undefined;
+		if (name === "FREE") return t("plans.price.free");
+		if (name === "BASE") return "Pro";
+		return name;
+	};
+
+	const displayPlanName = getDisplayPlanName(planName);
+
 	const handleBilling = () => {
 		navigate({ to: "/app/payment" });
 	};
@@ -95,9 +105,9 @@ export function NavUser({
 								<span className="text-muted-foreground truncate text-xs">
 									{user.email}
 								</span>
-								{planName ? (
+								{displayPlanName ? (
 									<span className="text-muted-foreground truncate text-[10px]">
-										{planName}
+										{displayPlanName}
 									</span>
 								) : null}
 							</div>
@@ -120,9 +130,9 @@ export function NavUser({
 									<span className="text-muted-foreground truncate text-xs">
 										{user.email}
 									</span>
-									{planName ? (
+									{displayPlanName ? (
 										<span className="text-muted-foreground truncate text-[10px]">
-											{planName}
+											{displayPlanName}
 										</span>
 									) : null}
 								</div>

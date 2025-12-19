@@ -109,7 +109,6 @@ export const Question = ({
 			<QuestionGroup question={question} setQuestion={updateQuestion} />
 		),
 	} as const;
-	if (!questions?.length) return null;
 	return (
 		<>
 			{questions?.map((question, index) => (
@@ -141,7 +140,7 @@ export const Question = ({
 					</QuestionLayout>
 				</div>
 			))}
-			<Separator />
+			{questions?.length > 0 && <Separator />}
 			<div>
 				<Button variant={"outline"} onClick={addQuestion}>
 					<Plus /> {addButtonLabel}

@@ -1,5 +1,5 @@
-import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
-import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable } from '../../db';
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { QuizFileService } from '../../services/quiz-file.service';
 import { TelegramService } from '../../services/telegram.service';
@@ -603,9 +603,9 @@ export abstract class PublicService {
   ): Promise<void> {
 
     try {
-      // Получаем ID квиза
+      // Получаем ID квиза и userId владельца
       const quiz = await db
-        .select({ id: quizTable.id })
+        .select({ id: quizTable.id, userId: quizTable.userId })
         .from(quizTable)
         .where(eq(quizTable.uid, quizUid))
         .limit(1);
@@ -634,6 +634,62 @@ export abstract class PublicService {
         // form уже сохранен в contactsForm при получении квиза
         const existingAnswers = (existingRecord[0].answer as any[]) || [];
 
+        // Проверяем лимит платежа перед сохранением контактов
+        let isEqualPaymentLimit = false;
+        try {
+          // Получаем последнюю запись user_payment для владельца квиза
+          const userPayments = await db
+            .select()
+            .from(userPaymentTable)
+            .where(eq(userPaymentTable.userId, quiz[0].userId))
+            .orderBy(desc(userPaymentTable.createdAt))
+            .limit(1);
+
+          if (userPayments.length > 0 && userPayments[0]) {
+            const userPayment = userPayments[0];
+
+            // Проверяем, что currentLimit меньше limit
+            if (userPayment.currentLimit < userPayment.limit) {
+              // Увеличиваем currentLimit
+              await db
+                .update(userPaymentTable)
+                .set({
+                  currentLimit: sql`${userPaymentTable.currentLimit} + 1`,
+                })
+                .where(eq(userPaymentTable.id, userPayment.id));
+
+              isEqualPaymentLimit = true;
+
+              logger.info("Лимит платежа увеличен при сохранении контактов", {
+                userId: quiz[0].userId,
+                userPaymentId: userPayment.id,
+                currentLimit: userPayment.currentLimit + 1,
+                limit: userPayment.limit,
+                quizBidId: existingRecord[0].id,
+              });
+            } else {
+              logger.debug("Лимит платежа достигнут, не увеличиваем", {
+                userId: quiz[0].userId,
+                currentLimit: userPayment.currentLimit,
+                limit: userPayment.limit,
+              });
+            }
+          } else {
+            logger.debug("Запись user_payment не найдена для пользователя", {
+              userId: quiz[0].userId,
+            });
+          }
+        } catch (paymentError) {
+          logger.error(
+            "Ошибка при проверке лимита платежа",
+            paymentError instanceof Error
+              ? paymentError
+              : new Error(String(paymentError)),
+            { userId: quiz[0].userId, quizUid },
+          );
+          // Не прерываем сохранение контактов, если проверка лимита не удалась
+        }
+
         await db
           .update(quizBidTable)
           .set({
@@ -641,6 +697,7 @@ export abstract class PublicService {
             contacts: contactData.answers, // Сохраняем только answers пользователя
             // Статус не обновляем - он остается 'create', администратор обновит его вручную
             isFull: true, // Помечаем как полностью заполненный
+            isEqualPaymentLimit, // Устанавливаем флаг, если лимит был увеличен
             updatedAt: new Date(),
           })
           .where(eq(quizBidTable.id, existingRecord[0].id));
@@ -649,6 +706,7 @@ export abstract class PublicService {
           quizUid,
           userKey,
           isFull: true,
+          isEqualPaymentLimit,
           contactsCount: Object.keys(contactData.answers).length,
         });
       } else {
