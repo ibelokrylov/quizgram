@@ -19,14 +19,7 @@ interface BidDetailsDrawerProps {
   isError: boolean;
 }
 
-// Константы статусов заявок
-const BID_STATUSES = [
-  { value: 'create', label: 'Создана' },
-  { value: 'in_progress', label: 'В работе' },
-  { value: 'rejected', label: 'Отклонена' },
-  { value: 'success', label: 'Успешна' },
-  { value: 'completed', label: 'Завершена' },
-] as const;
+// Константы статусов заявок будут использоваться с переводами
 
 // Вспомогательные функции для извлечения данных
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,29 +60,29 @@ const formatPhoneNumber = (value: string): string => {
 
 // Компоненты для рендеринга различных типов ответов
 
-const VariantImageAnswer = ({ imageUrl }: { imageUrl: string }) => (
-  <div className='text-sm bg-muted p-3 rounded-md overflow-auto'>
+const VariantImageAnswer = ({ imageUrl, t }: { imageUrl: string; t: (key: string) => string }) => (
+  <div className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>
     <div className='flex justify-center'>
       <img
         src={imageUrl}
-        alt='Ответ'
+        alt={t('bids.details.answer')}
         className='rounded-md w-64 h-64 object-cover'
       />
     </div>
   </div>
 );
 
-const VariantImageTextAnswer = ({ imageUrl, text }: { imageUrl: string | null; text: string | null }) => {
+const VariantImageTextAnswer = ({ imageUrl, text, t }: { imageUrl: string | null; text: string | null; t: (key: string) => string }) => {
   if (imageUrl) {
     return (
-      <div className='text-sm bg-muted p-3 rounded-md'>
+      <div className='text-xs lg:text-sm bg-muted p-3 rounded-md'>
         <div className='space-y-2 md:flex md:flex-col md:items-center md:justify-center'>
           <img
             src={imageUrl}
-            alt='Ответ'
+            alt={t('bids.details.answer')}
             className='rounded-lg max-w-95 max-h-76.75 w-full h-auto object-contain md:mx-auto'
           />
-          {text && <p className='font-medium md:text-center'>{text}</p>}
+          {text && <p className='text-xs lg:text-sm font-medium md:text-center'>{text}</p>}
         </div>
       </div>
     );
@@ -97,8 +90,8 @@ const VariantImageTextAnswer = ({ imageUrl, text }: { imageUrl: string | null; t
 
   if (text) {
     return (
-      <div className='text-sm bg-muted p-3 rounded-md overflow-auto'>
-        <p className='font-medium md:text-center'>{text}</p>
+      <div className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>
+        <p className='text-xs lg:text-sm font-medium md:text-center'>{text}</p>
       </div>
     );
   }
@@ -107,45 +100,38 @@ const VariantImageTextAnswer = ({ imageUrl, text }: { imageUrl: string | null; t
 };
 
 const DateAnswer = ({ dateValue }: { dateValue: string }) => {
-  const date = new Date(dateValue);
-  if (isNaN(date.getTime())) return null;
-
-  const formattedDate = date.toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  if (!dateValue) return null;
 
   return (
-    <div className='text-sm bg-muted p-3 rounded-md overflow-auto'>
-      <p className='font-medium'>{formattedDate}</p>
+    <div className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>
+      <p className='text-xs lg:text-sm font-medium'>{dateValue}</p>
     </div>
   );
 };
 
-const FileAnswer = ({ fileUrl, fileName }: { fileUrl: string; fileName: string }) => (
-  <div className='text-sm bg-muted p-3 rounded-md'>
+const FileAnswer = ({ fileUrl, fileName, t }: { fileUrl: string; fileName: string; t: (key: string) => string }) => (
+  <div className='text-xs lg:text-sm bg-muted p-3 rounded-md'>
     <a
       href={fileUrl}
       target='_blank'
       rel='noopener noreferrer'
       className='flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity'
     >
-      <File className='h-5 w-5 shrink-0 text-muted-foreground' />
-      <span className='truncate font-medium'>{truncateFileName(fileName)}</span>
+      <File className='h-4 w-4 lg:h-5 lg:w-5 shrink-0 text-muted-foreground' />
+      <span className='truncate text-xs lg:text-sm font-medium'>{truncateFileName(fileName)}</span>
     </a>
   </div>
 );
 
-const PageAnswer = ({ text, url, contentType }: { text: string | null; url: string | null; contentType: string | null }) => (
-  <div className='text-sm bg-muted p-3 rounded-md space-y-3 md:flex md:flex-col md:items-center md:justify-center'>
-    {text && <p className='font-medium md:text-center'>{text}</p>}
+const PageAnswer = ({ text, url, contentType, t }: { text: string | null; url: string | null; contentType: string | null; t: (key: string) => string }) => (
+  <div className='text-xs lg:text-sm bg-muted p-3 rounded-md space-y-3 md:flex md:flex-col md:items-center md:justify-center'>
+    {text && <p className='text-xs lg:text-sm font-medium md:text-center'>{text}</p>}
     {url && (
       <div className='md:flex md:justify-center md:w-full'>
         {contentType === 'img' ? (
           <img
             src={url}
-            alt='Изображение'
+            alt={t('bids.details.image')}
             className='rounded-md max-w-full h-auto object-contain md:mx-auto'
           />
         ) : (
@@ -155,7 +141,7 @@ const PageAnswer = ({ text, url, contentType }: { text: string | null; url: stri
               className='w-full aspect-video'
               allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
               allowFullScreen
-              title='Видео'
+              title={t('bids.details.video')}
             />
           </div>
         )}
@@ -165,15 +151,15 @@ const PageAnswer = ({ text, url, contentType }: { text: string | null; url: stri
 );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const JsonAnswer = ({ answer }: { answer: any }) => <pre className='text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(answer, null, 2)}</pre>;
+const JsonAnswer = ({ answer }: { answer: any }) => <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(answer, null, 2)}</pre>;
 
 // Главный компонент рендеринга ответа
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AnswerRenderer = ({ answer, type }: { answer: any; type: string }) => {
+const AnswerRenderer = ({ answer, type, t }: { answer: any; type: string; t: (key: string) => string }) => {
   switch (type) {
     case 'variant_image': {
       const imageUrl = extractImageUrl(answer);
-      return imageUrl ? <VariantImageAnswer imageUrl={imageUrl} /> : null;
+      return imageUrl ? <VariantImageAnswer imageUrl={imageUrl} t={t} /> : null;
     }
 
     case 'variant_image_text': {
@@ -183,6 +169,7 @@ const AnswerRenderer = ({ answer, type }: { answer: any; type: string }) => {
         <VariantImageTextAnswer
           imageUrl={imageUrl}
           text={text}
+          t={t}
         />
       );
     }
@@ -195,11 +182,12 @@ const AnswerRenderer = ({ answer, type }: { answer: any; type: string }) => {
     case 'file':
       if (answer?.type === 'file') {
         const fileUrl = answer?.url;
-        const fileName = answer?.fileName || 'Файл';
+        const fileName = answer?.fileName || t('bids.details.file');
         return fileUrl ? (
           <FileAnswer
             fileUrl={fileUrl}
             fileName={fileName}
+            t={t}
           />
         ) : null;
       }
@@ -216,6 +204,7 @@ const AnswerRenderer = ({ answer, type }: { answer: any; type: string }) => {
             text={text}
             url={url}
             contentType={contentType}
+            t={t}
           />
         );
       }
@@ -225,11 +214,12 @@ const AnswerRenderer = ({ answer, type }: { answer: any; type: string }) => {
       // Проверяем, если это файл по структуре (answer.type === 'file')
       if (answer?.type === 'file') {
         const fileUrl = answer?.url;
-        const fileName = answer?.fileName || 'Файл';
+        const fileName = answer?.fileName || t('bids.details.file');
         return fileUrl ? (
           <FileAnswer
             fileUrl={fileUrl}
             fileName={fileName}
+            t={t}
           />
         ) : null;
       }
@@ -246,7 +236,7 @@ interface SubQuestionAnswerProps {
   questionTypeLabelByType: Map<string, string>;
 }
 
-const SubQuestionAnswer = ({ subAnswer, subQuestion, questionTypeLabelByType }: SubQuestionAnswerProps) => {
+const SubQuestionAnswer = ({ subAnswer, subQuestion, questionTypeLabelByType, t }: SubQuestionAnswerProps & { t: (key: string) => string }) => {
   const subQuestionUid = subAnswer?.question_uid;
   const subTitle = subQuestion?.content?.title || subQuestion?.title || null;
   const subTypeRaw = subQuestion?.type || 'unknown';
@@ -261,13 +251,14 @@ const SubQuestionAnswer = ({ subAnswer, subQuestion, questionTypeLabelByType }: 
         >
           {subTypeLabel}
         </Badge>
-        {subQuestionUid && <span className='text-xs text-muted-foreground'>{subQuestionUid}</span>}
+        {subQuestionUid && <span className='text-[10px] lg:text-xs text-muted-foreground'>{subQuestionUid}</span>}
       </div>
-      {subTitle && <div className='text-sm font-medium'>{subTitle}</div>}
+      {subTitle && <div className='text-xs lg:text-sm font-medium'>{subTitle}</div>}
       <div className={subTitle ? '' : 'pt-1'}>
         <AnswerRenderer
           answer={subAnswer?.answer ?? subAnswer}
           type={subTypeRaw}
+          t={t}
         />
       </div>
     </div>
@@ -286,7 +277,7 @@ interface QuestionGroupCardProps {
   typeLabel: string;
 }
 
-const QuestionGroupCard = ({ item, idx, questionFromQuiz, questionTypeLabelByType, title, typeLabel }: QuestionGroupCardProps) => {
+const QuestionGroupCard = ({ item, idx, questionFromQuiz, questionTypeLabelByType, title, typeLabel, t }: QuestionGroupCardProps & { t: (key: string) => string }) => {
   const questionUid = item?.question_uid ?? item?.question?.uid ?? null;
   const subQuestions = questionFromQuiz?.content?.questions || [];
 
@@ -309,7 +300,7 @@ const QuestionGroupCard = ({ item, idx, questionFromQuiz, questionTypeLabelByTyp
           {questionUid}
         </Badge>
       )}
-      {title && <div className='text-sm font-medium pt-1'>{title}</div>}
+      {title && <div className='text-xs lg:text-sm font-medium pt-1'>{title}</div>}
 
       <div className={title ? 'space-y-4' : 'pt-3 space-y-4'}>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -324,6 +315,7 @@ const QuestionGroupCard = ({ item, idx, questionFromQuiz, questionTypeLabelByTyp
               subAnswer={subAnswer}
               subQuestion={subQuestion}
               questionTypeLabelByType={questionTypeLabelByType}
+              t={t}
             />
           );
         })}
@@ -342,13 +334,13 @@ interface RegularQuestionCardProps {
   typeLabel: string;
 }
 
-const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel }: RegularQuestionCardProps) => {
+const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel, t }: RegularQuestionCardProps & { t: (key: string) => string }) => {
   const questionUid = item?.question_uid ?? item?.question?.uid ?? null;
 
   return (
     <div
       key={questionUid ?? idx}
-      className='relative rounded-md border bg-muted/30 p-3 space-y-2'
+      className='relative rounded-md border bg-muted/30 p-3 space-y-2 pb-7'
     >
       <Badge
         variant='secondary'
@@ -359,16 +351,17 @@ const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel }: RegularQu
       {questionUid && (
         <Badge
           variant='secondary'
-          className='absolute -bottom-7 right-[10px]'
+          className='absolute -bottom-5 right-[10px]'
         >
           {questionUid}
         </Badge>
       )}
-      {title && <div className='text-sm font-medium pt-1'>{title}</div>}
+      {title && <div className='text-xs lg:text-sm font-medium pt-1'>{title}</div>}
       <div className={title ? '' : 'pt-3'}>
         <AnswerRenderer
           answer={item?.answer ?? item}
           type={typeRaw}
+          t={t}
         />
       </div>
     </div>
@@ -378,7 +371,7 @@ const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel }: RegularQu
 // Компонент для отображения контакта
 interface ContactFieldProps {
   contactKey: string;
-  value: string;
+  // value: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactsForm?: any[] | null;
 }
@@ -391,17 +384,17 @@ const ContactField = ({ contactKey, value, contactsForm }: ContactFieldProps) =>
 
   return (
     <div>
-      <p className='text-sm text-muted-foreground'>{label}</p>
-      <p className='font-medium'>{displayValue}</p>
+      <p className='text-xs lg:text-sm text-muted-foreground'>{label}</p>
+      <p className='text-sm lg:text-base font-medium'>{displayValue}</p>
     </div>
   );
 };
 
 // Компонент для секции контактов
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ContactsSection = ({ contacts, contactsForm }: { contacts: Record<string, string>; contactsForm?: any[] | null }) => (
+const ContactsSection = ({ contacts, contactsForm, t }: { contacts: Record<string, string>; contactsForm?: any[] | null; t: (key: string) => string }) => (
   <div className='space-y-3 pt-4 border-t'>
-    <h3 className='font-semibold text-lg'>Контакты</h3>
+    <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.contacts')}</h3>
     <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
       {Object.entries(contacts).map(([key, value]) => (
         <ContactField
@@ -417,11 +410,11 @@ const ContactsSection = ({ contacts, contactsForm }: { contacts: Record<string, 
 
 // Компонент для секции Telegram информации
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TelegramUserSection = ({ userInfo }: { userInfo: any }) => (
+const TelegramUserSection = ({ userInfo, t }: { userInfo: any; t: (key: string) => string }) => (
   <div className='space-y-3 pt-4 border-t'>
-    <h3 className='font-semibold text-lg'>Пользователь Telegram</h3>
+    <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.telegramUser')}</h3>
     <div className='space-y-2'>
-      <pre className='text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(userInfo, null, 2)}</pre>
+      <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(userInfo, null, 2)}</pre>
     </div>
   </div>
 );
@@ -435,20 +428,30 @@ interface AnswersSectionProps {
   questionTypeLabelByType: Map<string, string>;
 }
 
-const AnswersSection = ({ data, questions, questionTypeLabelByType }: AnswersSectionProps) => {
+const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: AnswersSectionProps & { t: (key: string) => string }) => {
   if (!Array.isArray(data)) {
     return (
       <div className='space-y-3 pt-4 border-t'>
-        <h3 className='font-semibold text-lg'>Ответы</h3>
+        <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.answers')}</h3>
         <JsonAnswer answer={data} />
+      </div>
+    );
+  }
+
+  // Проверяем, есть ли ответы
+  if (data.length === 0) {
+    return (
+      <div className='space-y-3 pt-4 border-t'>
+        <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.answers')}</h3>
+        <p className='text-xs lg:text-sm text-muted-foreground'>{t('bids.details.noAnswers')}</p>
       </div>
     );
   }
 
   return (
     <div className='space-y-3 pt-4 border-t'>
-      <h3 className='font-semibold text-lg'>Ответы</h3>
-      <div className='space-y-7'>
+      <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.answers')}</h3>
+      <div className='space-y-6'>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {data.map((item: any, idx: number) => {
           const questionUid = item?.question_uid ?? item?.question?.uid ?? null;
@@ -479,6 +482,7 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType }: AnswersSec
                 questionTypeLabelByType={questionTypeLabelByType}
                 title={title}
                 typeLabel={typeLabel}
+                t={t}
               />
             );
           }
@@ -491,6 +495,7 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType }: AnswersSec
               title={title}
               typeRaw={typeRaw}
               typeLabel={typeLabel}
+              t={t}
             />
           );
         })}
@@ -501,21 +506,21 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType }: AnswersSec
 
 // Компонент для дополнительной информации
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AdditionalInfoSection = ({ info }: { info: any }) => (
+const AdditionalInfoSection = ({ info, t }: { info: any; t: (key: string) => string }) => (
   <div className='space-y-3 pt-4 border-t'>
-    <h3 className='font-semibold text-lg'>Дополнительная информация</h3>
+    <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.additionalInfo')}</h3>
     <div className='space-y-2'>
-      <pre className='text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(info, null, 2)}</pre>
+      <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(info, null, 2)}</pre>
     </div>
   </div>
 );
 
 // Компонент для Telegram initData
-const TelegramInitDataSection = ({ initData }: { initData: string }) => (
+const TelegramInitDataSection = ({ initData, t }: { initData: string; t: (key: string) => string }) => (
   <div className='space-y-3 pt-4 border-t'>
-    <h3 className='font-semibold text-lg'>Telegram initData</h3>
+    <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.telegramInitData')}</h3>
     <div className='space-y-2'>
-      <pre className='text-sm bg-muted p-3 rounded-md overflow-auto whitespace-pre-wrap break-all'>{initData}</pre>
+      <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto whitespace-pre-wrap break-all'>{initData}</pre>
     </div>
   </div>
 );
@@ -527,30 +532,40 @@ interface BidStatusSelectorProps {
   isPending: boolean;
 }
 
-const BidStatusSelector = ({ status, onStatusChange, isPending }: BidStatusSelectorProps) => (
-  <div>
-    <p className='text-sm text-muted-foreground'>Статус</p>
-    <Select
-      value={status}
-      onValueChange={onStatusChange}
-      disabled={isPending}
-    >
-      <SelectTrigger>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {BID_STATUSES.map((s) => (
-          <SelectItem
-            key={s.value}
-            value={s.value}
-          >
-            {s.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-);
+const BidStatusSelector = ({ status, onStatusChange, isPending, t }: BidStatusSelectorProps & { t: (key: string) => string }) => {
+  const BID_STATUSES = [
+    { value: 'create', label: t('bids.status.create') },
+    { value: 'in_progress', label: t('bids.status.in_progress') },
+    { value: 'rejected', label: t('bids.status.rejected') },
+    { value: 'success', label: t('bids.status.success') },
+    { value: 'completed', label: t('bids.status.completed') },
+  ] as const;
+
+  return (
+    <div>
+      <p className='text-xs lg:text-sm text-muted-foreground'>{t('bids.details.status.label')}</p>
+      <Select
+        value={status}
+        onValueChange={onStatusChange}
+        disabled={isPending}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {BID_STATUSES.map((s) => (
+            <SelectItem
+              key={s.value}
+              value={s.value}
+            >
+              {s.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 // Главный компонент
 export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, isError }: BidDetailsDrawerProps) {
@@ -573,9 +588,9 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
         key: bidDetails.key,
         status: newStatus,
       });
-      toast.success('Статус заявки обновлен');
+      toast.success(t('bids.details.statusUpdated'));
     } catch {
-      toast.error('Не удалось обновить статус заявки');
+      toast.error(t('bids.details.statusUpdateFailed'));
     }
   };
 
@@ -584,28 +599,30 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DrawerContent className='h-[90vh] max-h-[90vh]'>
+      <DrawerContent className='h-[98vh] max-h-[98vh]'>
         <div className='max-w-[1000px] mx-auto w-full h-full flex flex-col overflow-hidden'>
           <DrawerHeader className='shrink-0'>
             <div className='space-y-3'>
-              <DrawerTitle>{bidDetails ? `Заявка: №${bidDetails.key}` : 'Загрузка...'}</DrawerTitle>
+              <DrawerTitle className='text-base lg:text-lg'>{bidDetails ? t('bids.details.key', { key: bidDetails.key }) : t('bids.details.loading')}</DrawerTitle>
               {bidDetails && (
                 <div className='flex items-center gap-2 flex-wrap'>
-                  <Badge variant={bidDetails.isFull ? 'default' : 'secondary'}>{bidDetails.isFull ? 'Завершена' : 'Не завершена'}</Badge>
-                  {bidDetails.first && <Badge variant='outline'>Первая заявка</Badge>}
+                  <Badge variant={bidDetails.isFull ? 'default' : 'secondary'}>
+                    {bidDetails.isFull ? t('bids.details.completed.full') : t('bids.details.completed.notFull')}
+                  </Badge>
+                  {bidDetails.first && <Badge variant='outline'>{t('bids.details.first')}</Badge>}
                 </div>
               )}
               {bidDetails && (
-                <DrawerDescription className='flex items-center gap-2'>
-                  <span>Квиз: {bidDetails.quizName}</span>
+                <DrawerDescription className='flex items-center gap-2 text-xs lg:text-sm'>
+                  <span>{t('bids.details.quiz', { name: bidDetails.quizName })}</span>
                   <Link
                     to='/app/quiz/$uid'
                     params={{ uid: bidDetails.uid }}
                     target='_blank'
                     className='inline-flex items-center gap-1 text-primary hover:underline'
                   >
-                    <ExternalLink className='h-4 w-4' />
-                    Открыть редактор
+                    <ExternalLink className='h-3 w-3 lg:h-4 lg:w-4' />
+                    {t('bids.details.openEditor')}
                   </Link>
                 </DrawerDescription>
               )}
@@ -618,7 +635,7 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                 <Loader />
               </div>
             ) : isError ? (
-              <div className='text-destructive'>Ошибка при загрузке деталей заявки</div>
+              <div className='text-xs lg:text-sm text-destructive'>{t('bids.details.error')}</div>
             ) : bidDetails ? (
               <div className='space-y-6'>
                 {/* Основная информация */}
@@ -628,10 +645,11 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                       status={bidDetails.status}
                       onStatusChange={handleStatusChange}
                       isPending={updateBidStatus.isPending}
+                      t={t}
                     />
                     <div>
-                      <p className='text-sm text-muted-foreground'>Создана</p>
-                      <p className='font-medium'>{new Date(bidDetails.createdAt).toLocaleString('ru-RU')}</p>
+                      <p className='text-xs lg:text-sm text-muted-foreground'>{t('bids.details.created.label')}</p>
+                      <p className='text-sm lg:text-base font-medium'>{new Date(bidDetails.createdAt).toLocaleString('ru-RU')}</p>
                     </div>
                   </div>
                 </div>
@@ -641,11 +659,12 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                   <ContactsSection
                     contacts={bidDetails.contacts}
                     contactsForm={bidDetails.contactsForm}
+                    t={t}
                   />
                 )}
 
                 {/* Информация о пользователе Telegram */}
-                {bidDetails.userInfo && <TelegramUserSection userInfo={bidDetails.userInfo} />}
+                {bidDetails.userInfo && <TelegramUserSection userInfo={bidDetails.userInfo} t={t} />}
 
                 {/* Ответы на вопросы квиза */}
                 {bidDetails.data && (
@@ -653,14 +672,12 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                     data={bidDetails.data}
                     questions={bidDetails.questions}
                     questionTypeLabelByType={questionTypeLabelByType}
+                    t={t}
                   />
                 )}
 
-                {/* Дополнительная информация */}
-                {bidDetails.info && <AdditionalInfoSection info={bidDetails.info} />}
-
                 {/* Telegram initData */}
-                {bidDetails.initData && <TelegramInitDataSection initData={bidDetails.initData} />}
+                {bidDetails.initData && <TelegramInitDataSection initData={bidDetails.initData} t={t} />}
               </div>
             ) : null}
           </div>

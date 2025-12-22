@@ -182,7 +182,7 @@ export const EditQuiz = () => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex flex-col lg:flex-row gap-3 lg:gap-5 pt-3 px-4 lg:px-0">
+			<div className="flex flex-col lg:flex-row gap-3 lg:gap-5 pt-3 px-4 lg:px-0 lg:items-center">
 				<div
 					ref={nameContainerRef}
 					className="w-full lg:w-auto [&>div]:block lg:[&>div]:inline-block [&>div]:w-full lg:[&>div]:w-auto [&>div>input]:!w-full lg:[&>div>input]:!w-auto [&>div>input]:!max-w-full lg:[&>div>input]:!max-w-none"
@@ -205,7 +205,7 @@ export const EditQuiz = () => {
 				<div className="hidden lg:block">
 					<Separator orientation="vertical" />
 				</div>
-				<div className="flex flex-row gap-3 lg:gap-5 items-center justify-between lg:justify-start pt-2 pb-2">
+				<div className="flex flex-row gap-3 lg:gap-5 items-center justify-between lg:justify-start pt-2 pb-2 lg:pt-0 lg:pb-0">
 					<div
 						onClick={toggleActive}
 						className={"flex flex-row gap-2 items-center cursor-pointer"}
@@ -218,7 +218,7 @@ export const EditQuiz = () => {
 					<div className="hidden lg:block">
 						<Separator orientation="vertical" />
 					</div>
-					<div>
+					<div className="flex items-center">
 						{!isLoadToServer ? (
 							<Button onClick={saveToServer} color={"primary"}>
 								<CiSaveUp1 />
@@ -227,7 +227,7 @@ export const EditQuiz = () => {
 						) : (
 							<div
 								className={
-									"text-xs text-gray-500 dark:text-gray-400 pt-0 lg:pt-3"
+									"text-xs text-gray-500 dark:text-gray-400"
 								}
 							>
 								{t("edit-quiz.updated-at", {

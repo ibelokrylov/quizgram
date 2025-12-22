@@ -54,6 +54,7 @@ export interface BidDetails {
 	isFull: boolean;
 	first: boolean; // Первый ли это запрос квиза
 	createdAt: string;
+	updatedAt: string;
 	quizName: string;
 	data: any; // Полные данные заявки (ответы, контакты и т.д.) - поле answer из таблицы
 	info?: any | null; // Дополнительная информация

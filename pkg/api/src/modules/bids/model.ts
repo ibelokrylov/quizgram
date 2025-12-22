@@ -22,6 +22,7 @@ export const bidListItem = t.Object({
   first: t.Boolean(), // Первый ли это запрос квиза
   createdAt: t.String(),
   updatedAt: t.String(),
+  adminUpdatedAt: t.Optional(t.Nullable(t.String())), // Дата обновления администратором
   quizName: t.String(), // Добавляем имя квиза для отображения
   contacts: t.Optional(t.Nullable(t.Any())), // Контакты из info.contacts
   ipLocation: t.Optional(t.Nullable(t.Object({
@@ -72,6 +73,8 @@ export const bidDetails = t.Object({
   isFull: t.Boolean(),
   first: t.Boolean(), // Первый ли это запрос квиза
   createdAt: t.String(),
+  updatedAt: t.String(),
+  adminUpdatedAt: t.Optional(t.Nullable(t.String())), // Дата обновления администратором
   quizName: t.String(),
   data: t.Any(), // Полные данные заявки (ответы, контакты и т.д.) - поле answer из таблицы
   info: t.Optional(t.Nullable(t.Any())), // Дополнительная информация (контакты и т.д.)

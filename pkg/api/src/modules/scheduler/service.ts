@@ -6,7 +6,7 @@ import { MailService } from "../../services/mail.service";
 export abstract class SchedulerService {
   /**
    * Обрабатывает незавершенные заявки для платных пользователей
-   * Находит quiz_bid с isFull=false, info=null, созданные минимум 15 минут назад
+   * Находит quiz_bid с isFull=false, info=null, обновленные минимум N минут назад (из SCHEDULER_BIDS_MINUTES, по умолчанию 5)
    * Анализирует отвал и записывает информацию в info
    */
   static async processIncompleteBids() {
@@ -14,10 +14,17 @@ export abstract class SchedulerService {
     logger.info("Начало обработки незавершенных заявок");
 
     try {
-      // Вычисляем время 15 минут назад
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      // Читаем количество минут из переменной окружения, по умолчанию 5
+      const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+      const minutes = env.SCHEDULER_BIDS_MINUTES
+        ? parseInt(env.SCHEDULER_BIDS_MINUTES, 10)
+        : 5;
+
+      // Вычисляем время N минут назад
+      const minutesAgo = new Date(Date.now() - minutes * 60 * 1000);
       logger.debug("Время отсечки для обработки заявок", {
-        fifteenMinutesAgo: fifteenMinutesAgo.toISOString(),
+        minutes,
+        minutesAgo: minutesAgo.toISOString(),
       });
 
       // Находим всех платных пользователей (planId !== 1)
@@ -64,13 +71,14 @@ export abstract class SchedulerService {
       // Находим quiz_bid с условиями:
       // - isFull = false (незавершенные заявки)
       // - info = null
-      // - созданы минимум 15 минут назад
+      // - обновлены минимум N минут назад (из SCHEDULER_BIDS_MINUTES)
       // - принадлежат квизам платных пользователей
       logger.debug("Поиск заявок для обработки", {
         conditions: {
           isFull: false,
           infoIsNull: true,
-          createdAtBefore: fifteenMinutesAgo.toISOString(),
+          minutes,
+          updatedAtBefore: minutesAgo.toISOString(),
           quizIdsCount: quizIds.length,
         },
       });
@@ -88,7 +96,7 @@ export abstract class SchedulerService {
             inArray(quizBidTable.quizId, quizIds),
             eq(quizBidTable.isFull, false),
             sql`${quizBidTable.info} IS NULL`,
-            lt(quizBidTable.createdAt, fifteenMinutesAgo),
+            lt(quizBidTable.updatedAt, minutesAgo),
             isNull(quizBidTable.deletedAt),
           ),
         );

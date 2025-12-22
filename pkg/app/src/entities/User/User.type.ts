@@ -9,6 +9,8 @@ export const userZod = z.object({
 	name: z.string(),
 	planId: z.number(),
 	language: z.string().optional(),
+	integrationKey: z.string(),
+	telegramId: z.string().nullable().optional(),
 	// referral_id: z.number(),
 });
 

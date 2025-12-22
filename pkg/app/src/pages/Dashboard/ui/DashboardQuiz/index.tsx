@@ -91,16 +91,16 @@ export const DashboardQuiz = ({
 						className="hover:text-blue-400"
 						variant={"link"}
 						onClick={() =>
-							copy(import.meta.env.VITE_PUBLIC_QUIZ_URL + "/" + quiz.uid)
+							copy(import.meta.env.VITE_PUBLIC_QUIZ_URL + quiz.uid)
 						}
 					>
 						<IoCopySharp size={28} />
 						<div className="truncate w-48">
 							{import.meta.env.VITE_PUBLIC_QUIZ_URL?.replace(
-								"http",
+								"https://",
 								"",
-							)?.replace("://", "")}
-							/{quiz.uid}
+							)}
+							{quiz.uid}
 						</div>
 					</Button>
 				</div>

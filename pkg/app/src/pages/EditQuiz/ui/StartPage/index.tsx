@@ -41,7 +41,7 @@ export const StartPage = () => {
 	}
 
 	return (
-		<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+		<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-0.5">
 			<Card className="p-4 col-span-1">
 				<div className="flex flex-row gap-2 items-center justify-between">
 					<h2>{t("edit-quiz.start-page.standard.title")}</h2>

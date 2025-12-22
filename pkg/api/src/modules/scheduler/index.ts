@@ -1,6 +1,10 @@
 import { logger } from '../../lib/logger';
 import { SchedulerService } from './service';
 
+// Храним ID интервалов для возможности остановки
+let bidsIntervalId: Timer | null = null;
+let paymentsIntervalId: Timer | null = null;
+
 /**
  * Запускает scheduler для обработки незавершенных заявок и платежей
  * - Обработка незавершенных заявок: каждую 1 минуту
@@ -23,7 +27,7 @@ export function startScheduler() {
   });
 
   // Затем выполняем обработку незавершенных заявок каждую 1 минуту
-  const bidsIntervalId = setInterval(() => {
+  bidsIntervalId = setInterval(() => {
     SchedulerService.processIncompleteBids().catch((error) => {
       logger.error("Ошибка при выполнении scheduler (заявки)", error as Error);
     });
@@ -34,7 +38,6 @@ export function startScheduler() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
 
     // Проверяем, наступило ли время 00:00:00 (с небольшой погрешностью до 5 минут)
     if (hours === 0 && minutes < 5) {
@@ -52,7 +55,7 @@ export function startScheduler() {
   checkAndRunPayments();
 
   // Затем проверяем каждый час
-  const paymentsIntervalId = setInterval(() => {
+  paymentsIntervalId = setInterval(() => {
     checkAndRunPayments();
   }, PAYMENTS_CHECK_INTERVAL_MS);
 
@@ -69,20 +72,24 @@ export function startScheduler() {
     paymentsIntervalId.unref();
   }
 
-  // Обработка завершения процесса
-  if (typeof process !== 'undefined') {
-    process.on('SIGINT', () => {
-      logger.info("Остановка scheduler");
-      clearInterval(bidsIntervalId);
-      clearInterval(paymentsIntervalId);
-    });
+  return { bidsIntervalId, paymentsIntervalId };
+}
 
-    process.on('SIGTERM', () => {
-      logger.info("Остановка scheduler");
-      clearInterval(bidsIntervalId);
-      clearInterval(paymentsIntervalId);
-    });
+/**
+ * Останавливает scheduler и очищает все интервалы
+ */
+export async function stopScheduler(): Promise<void> {
+  logger.info("Остановка scheduler");
+
+  if (bidsIntervalId) {
+    clearInterval(bidsIntervalId);
+    bidsIntervalId = null;
   }
 
-  return { bidsIntervalId, paymentsIntervalId };
+  if (paymentsIntervalId) {
+    clearInterval(paymentsIntervalId);
+    paymentsIntervalId = null;
+  }
+
+  logger.info("Scheduler остановлен");
 }

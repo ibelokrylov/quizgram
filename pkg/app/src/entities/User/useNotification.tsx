@@ -33,8 +33,11 @@ export const useUpdateNotification = () => {
 			});
 			return data;
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["notification"] });
+		onSuccess: (data) => {
+			// Обновляем кэш напрямую данными из ответа сервера, избегая лишнего запроса
+			if (data) {
+				queryClient.setQueryData(["notification"], data);
+			}
 		},
 	});
 

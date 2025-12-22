@@ -1,26 +1,26 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import type { BidListItem } from "@/entities/Bid/bid.type";
+import { useDeleteBid } from "@/entities/Bid/useBids";
+import { AuthContext } from "@/entities/User/auth.context";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ExternalLink, Eye, Trash2 } from "lucide-react";
+import { useContext, useState } from "react";
 import {
 	MdEmail,
-	MdPhone,
-	MdPerson,
-	MdTextFields,
 	MdInfoOutline,
+	MdPerson,
+	MdPhone,
+	MdTextFields,
 } from "react-icons/md";
-import type { BidListItem } from "@/entities/Bid/bid.type";
 import {
 	formatDateTime,
-	getStatusText,
-	getStatusColor,
 	formatLocation,
 	getContactsList,
+	getStatusColor,
+	getStatusText,
 } from "./BidsTable.shared";
-import { useDeleteBid } from "@/entities/Bid/useBids";
-import { useState, useContext } from "react";
-import { AuthContext } from "@/entities/User/auth.context";
 
 interface BidsTableCardProps {
 	bid: BidListItem;
@@ -150,7 +150,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 						>
 							<Eye className="h-4 w-4" />
 						</Button>
-						{isNotFreePlan && (
+						{isNotFreePlan && bid.info && (
 							<Button
 								variant="ghost"
 								size="sm"

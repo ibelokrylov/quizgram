@@ -9,7 +9,7 @@ export const ContentLayout = (props: PropsWithChildren) => {
       <div className='content__body'>{props.children}</div>
       {quiz?.hideLogo ? null : (
         <Card className='footer__logo'>
-          <Text caps>
+          <Text caps weight={'3'}>
             Сделано в{' '}
             <a
               className='footer__logo-link'

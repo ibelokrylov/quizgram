@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { BidListItem } from '@/entities/Bid/bid.type';
 import { useDeleteBid } from '@/entities/Bid/useBids';
 import { AuthContext } from '@/entities/User/auth.context';
@@ -121,54 +122,73 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
       </TableCell>
       {/* Действия */}
       <TableCell className='p-3'>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => {
-              navigate({
-                to: '/app/bid/report',
-                search: (prev) => ({
-                  ...prev,
-                  key: bid.key,
-                  limit: prev.limit ?? 10,
-                }),
-              });
-            }}
-            className='h-8 w-8 p-0'
-            title='Просмотреть ответ'
-          >
-            <Eye className='h-4 w-4' />
-          </Button>
+        <div className='flex items-center justify-end gap-2'>
           {isNotFreePlan && bid.info && (
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => {
-                navigate({
-                  to: '/app/bid/report',
-                  search: (prev) => ({
-                    ...prev,
-                    infoKey: bid.key,
-                    limit: prev.limit ?? 10,
-                  }),
-                });
-              }}
-              className='h-8 w-8 p-0 text-blue-500 hover:text-blue-600'
-              title='Дополнительная информация'
-            >
-              <MdInfoOutline className='h-5 w-5' />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => {
+                    navigate({
+                      to: '/app/bid/report',
+                      search: (prev) => ({
+                        ...prev,
+                        infoKey: bid.key,
+                        limit: prev.limit ?? 10,
+                      }),
+                    });
+                  }}
+                  className='h-8 w-8 p-0 text-blue-500 hover:text-blue-600'
+                >
+                  <MdInfoOutline className='h-5 w-5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Дополнительная информация</p>
+              </TooltipContent>
+            </Tooltip>
           )}
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-          >
-            <Trash2 className='h-4 w-4' />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => {
+                  navigate({
+                    to: '/app/bid/report',
+                    search: (prev) => ({
+                      ...prev,
+                      key: bid.key,
+                      limit: prev.limit ?? 10,
+                    }),
+                  });
+                }}
+                className='h-8 w-8 p-0'
+              >
+                <Eye className='h-4 w-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Посмотреть ответ</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+              >
+                <Trash2 className='h-4 w-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Удалить</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </TableCell>
     </TableRow>

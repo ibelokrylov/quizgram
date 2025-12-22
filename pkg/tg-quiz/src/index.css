@@ -179,7 +179,7 @@ body {
 #root {
   width: 100%;
   height: 100%;
-  background-color: var(--tg-theme-bg-color, #ffffff);
+  background-color: var(--tgui--bg_color, #ffffff);
 }
 
 /* Дополнительные переменные для совместимости */
@@ -257,7 +257,7 @@ article {
 
 .cards.full {
   width: calc(100vw - 24px);
-  /* min-height: 400px; */
+  min-height: 400px;
 }
 
 .cards.standard {
@@ -620,5 +620,9 @@ article {
 @media screen and (max-width: 480px) {
   .variant__image-item {
     width: calc(50% - 4px);
+  }
+
+  .cards.full {
+    width: calc(100vw - 2px);
   }
 }

@@ -338,3 +338,33 @@ export function initTelegramBotsOnStartup(): void {
     );
   }
 }
+
+/**
+ * Останавливает все Telegram боты (останавливает polling и очищает кэш)
+ */
+export async function stopTelegramBots(): Promise<void> {
+  logger.info("Остановка Telegram ботов");
+
+  const bots = Array.from(BaseTelegramBotService["bots"].entries());
+
+  for (const [tokenEnvKey, bot] of bots) {
+    try {
+      // Останавливаем polling если он был запущен
+      if (bot.isPolling()) {
+        await bot.stopPolling();
+        logger.info("Polling остановлен для Telegram бота", { tokenEnvKey });
+      }
+    } catch (error) {
+      logger.error(
+        "Ошибка при остановке Telegram бота",
+        error instanceof Error ? error : new Error(String(error)),
+        { tokenEnvKey },
+      );
+    }
+  }
+
+  // Очищаем кэш ботов
+  BaseTelegramBotService["bots"].clear();
+
+  logger.info("Все Telegram боты остановлены");
+}

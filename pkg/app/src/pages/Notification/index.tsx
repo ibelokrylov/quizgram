@@ -6,12 +6,22 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { CopyToClick } from "@/components/ui/copy-to-click";
+import {
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+} from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
 	useNotification,
 	useUpdateNotification,
 } from "@/entities/User/useNotification";
+import { useUser } from "@/entities/User/useUser";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -19,6 +29,8 @@ export const NotificationPage = () => {
 	const { t } = useTranslation();
 	const { query } = useNotification();
 	const { mutation } = useUpdateNotification();
+	const { query: userQuery } = useUser();
+	const [isIntegrationKeyDrawerOpen, setIsIntegrationKeyDrawerOpen] = useState(false);
 
 	const handleToggle = async (
 		type: "telegram" | "email",
@@ -27,6 +39,11 @@ export const NotificationPage = () => {
 		try {
 			await mutation.mutateAsync({ [type]: value });
 			toast.success(t("notification.update.success"));
+
+			// Если включили telegram уведомления, показываем drawer с integrationKey
+			if (type === "telegram" && value) {
+				setIsIntegrationKeyDrawerOpen(true);
+			}
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -112,6 +129,67 @@ export const NotificationPage = () => {
 					</div>
 				</CardContent>
 			</Card>
+
+			{/* Drawer с integrationKey */}
+			<Drawer
+				open={isIntegrationKeyDrawerOpen}
+				onOpenChange={setIsIntegrationKeyDrawerOpen}
+			>
+				<DrawerContent>
+					<div className="max-w-[600px] mx-auto w-full">
+						<DrawerHeader>
+							<DrawerTitle>
+								{t("notification.integrationKey.title")}
+							</DrawerTitle>
+							<DrawerDescription>
+								{t("notification.integrationKey.description")}
+							</DrawerDescription>
+						</DrawerHeader>
+						<div className="p-4 space-y-4">
+							{userQuery.isLoading ? (
+								<div className="flex items-center justify-center min-h-[100px]">
+									<Loader />
+								</div>
+							) : userQuery.data?.integrationKey ? (
+								<div className="space-y-4">
+									<p className="text-sm text-muted-foreground">
+										{t("notification.integrationKey.instruction")}
+									</p>
+									<div className="space-y-2">
+										<Label>
+											{t("notification.integrationKey.label")}
+										</Label>
+										<CopyToClick text={userQuery.data.integrationKey}>
+											<div className="flex items-center gap-2 p-3 rounded-md border bg-muted/50 hover:bg-muted transition-colors">
+												<code className="flex-1 text-sm font-mono break-all">
+													{userQuery.data.integrationKey}
+												</code>
+											</div>
+										</CopyToClick>
+										<p className="text-xs text-muted-foreground">
+											{t("notification.integrationKey.hint")}
+										</p>
+									</div>
+									<div className="pt-2">
+										<a
+											href="https://t.me/Quiz_gramm_bot"
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+										>
+											@{t("notification.integrationKey.botUsername")}
+										</a>
+									</div>
+								</div>
+							) : (
+								<div className="text-muted-foreground">
+									{t("notification.integrationKey.error")}
+								</div>
+							)}
+						</div>
+					</div>
+				</DrawerContent>
+			</Drawer>
 		</div>
 	);
 };

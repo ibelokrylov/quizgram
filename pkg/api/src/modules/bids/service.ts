@@ -142,6 +142,7 @@ export abstract class BidsService {
           b.first,
           b.created_at as "createdAt",
           b.updated_at as "updatedAt",
+          b.admin_updated_at as "adminUpdatedAt",
           b.contacts,
           b.ip_location as "ipLocation",
           b.info,
@@ -164,6 +165,7 @@ export abstract class BidsService {
         first: boolean;
         createdAt: Date | string;
         updatedAt: Date | string;
+        adminUpdatedAt: Date | string | null;
         contacts: Record<string, string> | null;
         ipLocation: { country: string | null; city: string | null; ip: string | null } | null;
         info: any | null;
@@ -237,6 +239,11 @@ export abstract class BidsService {
           updatedAt: bid.updatedAt instanceof Date
             ? bid.updatedAt.toISOString()
             : new Date(bid.updatedAt).toISOString(),
+          adminUpdatedAt: bid.adminUpdatedAt
+            ? (bid.adminUpdatedAt instanceof Date
+              ? bid.adminUpdatedAt.toISOString()
+              : new Date(bid.adminUpdatedAt).toISOString())
+            : null,
           quizName: bid.quizName,
           contacts: bid.contacts || null,
           ipLocation: bid.ipLocation,
@@ -389,6 +396,8 @@ export abstract class BidsService {
           userInfo: quizBidTable.userInfo,
           initData: quizBidTable.initData,
           createdAt: quizBidTable.createdAt,
+          updatedAt: quizBidTable.updatedAt,
+          adminUpdatedAt: quizBidTable.adminUpdatedAt,
           quizName: quizTable.name,
         })
         .from(quizBidTable)
@@ -435,6 +444,8 @@ export abstract class BidsService {
         isFull: bidData.isFull,
         first: bidData.first,
         createdAt: bidData.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: bidData.updatedAt?.toISOString() || new Date().toISOString(),
+        adminUpdatedAt: bidData.adminUpdatedAt?.toISOString() || null,
         quizName: bidData.quizName,
         data: bidData.data,
         info: bidData.info,

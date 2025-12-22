@@ -135,7 +135,7 @@ export const Standard = () => {
 	// }
 
 	return (
-		<div className="flex flex-col gap-4">
+		<div className="flex flex-col gap-4 px-2 lg:px-0">
 			<Card className={"p-2 max-w-[1000px]"}>
 				<div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-0 sm:gap-x-4 w-full">
 					{loadingImage ? (

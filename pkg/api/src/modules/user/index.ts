@@ -51,6 +51,8 @@ export const user = new Elysia({ prefix: "/user" })
                   language: user.language ?? undefined,
                   createdAt: user.createdAt,
                   updatedAt: user.updatedAt,
+                  integrationKey: user.integrationKey,
+                  telegramId: user.telegramId ?? undefined,
                 },
               };
 

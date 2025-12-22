@@ -3,9 +3,8 @@ import {
 	IconFileAi,
 	IconFileDescription,
 	IconHelp,
-	IconInnerShadowTop,
 	IconSearch,
-	IconSettings,
+	IconSettings
 } from "@tabler/icons-react";
 import * as React from "react";
 import { TbReportMedical } from "react-icons/tb";
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AuthContext } from "@/entities/User/auth.context";
 import { Link } from "@tanstack/react-router";
+import { useTheme } from "next-themes";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChartBar } from "react-icons/fa6";
@@ -31,6 +31,8 @@ import { NavDocuments } from "./nav-documents";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { t } = useTranslation();
+	const { resolvedTheme } = useTheme();
+	const isDark = resolvedTheme === "dark";
 	const data = {
 		navMain: [
 			{
@@ -129,7 +131,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							className="data-[slot=sidebar-menu-button]:!p-1.5"
 						>
 							<Link to="/app">
-								<IconInnerShadowTop className="!size-5" />
+								<div>
+									<img
+										className="object-fill w-5 h-5"
+										src={isDark ? "/logo_dark.png" : "/logo_white.png"}
+									/>
+								</div>
 								<span className="text-base font-semibold">
 									{import.meta.env.VITE_PUBLIC_APP_NAME}
 								</span>
