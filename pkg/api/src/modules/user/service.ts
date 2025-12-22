@@ -30,6 +30,19 @@ export abstract class UserService {
   }
 
   /**
+   * Поиск пользователя по UID
+   */
+  static async findByUid(uid: string): Promise<User | null> {
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.uid, uid))
+      .limit(1);
+
+    return users[0] ?? null;
+  }
+
+  /**
    * Получение профиля пользователя по ID
    */
   static async getSessionProfile(userId: number): Promise<User> {
@@ -261,6 +274,19 @@ export abstract class UserService {
       .update(userTable)
       .set({
         language,
+        updatedAt: new Date(),
+      })
+      .where(eq(userTable.id, userId));
+  }
+
+  /**
+   * Обновление Telegram ID пользователя
+   */
+  static async updateTelegramId(userId: number, telegramId: string): Promise<void> {
+    await db
+      .update(userTable)
+      .set({
+        telegramId,
         updatedAt: new Date(),
       })
       .where(eq(userTable.id, userId));

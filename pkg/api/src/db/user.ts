@@ -1,6 +1,5 @@
 // Модель пользователя в Drizzle ORM (PostgreSQL)
 
-import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -29,9 +28,6 @@ export const userTable = pgTable("user", {
   quizCount: integer("quiz_count").notNull().default(0),
   paymentDateEnd: timestamp("payment_date_end", { withTimezone: false }),
   language: varchar("language", { length: 2 }).default("en"),
-  integrationKey: varchar("integration_key", { length: 36 })
-    .notNull()
-    .default(sql`gen_random_uuid()::text`),
   telegramId: varchar("telegram_id", { length: 50 }),
 });
 

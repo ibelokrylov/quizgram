@@ -20,7 +20,7 @@ jobs:
     name: Деплой на сервер
     runs-on: ubuntu-latest
     environment: prod
-    
+
     steps:
       - name: Проверка обязательных секретов
         run: |
@@ -73,26 +73,26 @@ jobs:
           DB_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
           DB_HOST="${{ secrets.POSTGRES_HOST }}"
           DB_NAME="${{ secrets.POSTGRES_DB }}"
-          
+
           # Используем POSTGRES_PORT из secrets, если он есть, иначе 5432
           if [ -n "${{ secrets.POSTGRES_PORT }}" ]; then
             DB_PORT="${{ secrets.POSTGRES_PORT }}"
           else
             DB_PORT="5432"
           fi
-          
+
           # Экранируем специальные символы в пароле для URL
           DB_PASSWORD_ESCAPED=$(echo "$DB_PASSWORD" | sed 's/@/%40/g' | sed 's/:/%3A/g' | sed 's/#/%23/g' | sed 's/\[/%5B/g' | sed 's/\]/%5D/g')
-          
+
           DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD_ESCAPED}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
-          
+
           echo "DATABASE_URL построена из отдельных secrets"
           echo "DB_HOST=${DB_HOST}"
           echo "DB_PORT=${DB_PORT}"
           echo "DB_NAME=${DB_NAME}"
           echo "DB_USER=${DB_USER}"
           echo "DATABASE_URL length: ${#DATABASE_URL}"
-          
+
           # Сохраняем в output для использования в следующих шагах
           echo "database_url=${DATABASE_URL}" >> $GITHUB_OUTPUT
           echo "db_port=${DB_PORT}" >> $GITHUB_OUTPUT
@@ -176,6 +176,7 @@ jobs:
             PORT=${{ secrets.PORT }}
             APP_NAME=${{ secrets.APP_NAME }}
             APP_URLS=${{ secrets.APP_URLS }}
+            CRM_URL=${{ secrets.CRM_URL }}
             
             S3_URL=${{ secrets.S3_URL }}
             S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}

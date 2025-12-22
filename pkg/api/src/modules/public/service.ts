@@ -1,8 +1,11 @@
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
-import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable } from '../../db';
+import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable, userTable } from '../../db';
 import { logger } from '../../lib/logger';
+import { MailService } from '../../services/mail.service';
+import { QuizBotService } from '../../services/quiz-bot.service';
 import { QuizFileService } from '../../services/quiz-file.service';
 import { TelegramService } from '../../services/telegram.service';
+import { UserService } from '../user/service';
 import { PublicQuiz } from './models';
 
 export abstract class PublicService {
@@ -709,6 +712,140 @@ export abstract class PublicService {
           isEqualPaymentLimit,
           contactsCount: Object.keys(contactData.answers).length,
         });
+
+        // Увеличиваем счётчик full
+        await this.incrementQuizFull(quizUid);
+
+        // Отправляем уведомление владельцу квиза только если isEqualPaymentLimit = true
+        if (!isEqualPaymentLimit) {
+          logger.debug("Уведомление не отправляется: isEqualPaymentLimit = false", {
+            quizUid,
+            userKey,
+            ownerId: quiz[0].userId,
+          });
+          return;
+        }
+
+        // Отправляем уведомление владельцу квиза
+        try {
+          // Получаем владельца квиза
+          const quizOwner = await db
+            .select()
+            .from(userTable)
+            .where(eq(userTable.id, quiz[0].userId))
+            .limit(1);
+
+          if (quizOwner.length > 0 && quizOwner[0]) {
+            const owner = quizOwner[0];
+
+            // Получаем настройки уведомлений владельца
+            try {
+              const notificationSettings = await UserService.getNotificationSettings(owner.id);
+
+              // Формируем URL для ссылки на ответ в CRM
+              // Используем универсальный подход: Bun.env работает в Bun, process.env в Node.js
+              const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+              const crmUrl = (env.CRM_URL || '').trim();
+              // Убираем завершающий слеш из CRM_URL, если он есть
+              const baseUrl = crmUrl.endsWith('/') ? crmUrl.slice(0, -1) : crmUrl;
+              const reportUrl = `${baseUrl}/app/bid/report?limit=10&isFull=true&key=${userKey}`;
+
+              if (!crmUrl) {
+                logger.warn("CRM_URL не установлен в переменных окружения", {
+                  quizUid,
+                  ownerId: owner.id,
+                });
+              }
+
+              logger.debug("Формирование уведомления для владельца квиза", {
+                quizUid,
+                ownerId: owner.id,
+                ownerEmail: owner.login,
+                ownerTelegramId: owner.telegramId,
+                notificationSettings: {
+                  email: notificationSettings.email,
+                  telegram: notificationSettings.telegram,
+                },
+                crmUrl,
+                reportUrl,
+              });
+
+              // Отправляем email уведомление, если включено
+              if (notificationSettings.email) {
+                try {
+                  const ownerLanguage = owner.language || 'ru';
+                  await MailService.sendNewBidNotification(
+                    owner.login,
+                    reportUrl,
+                    ownerLanguage,
+                  );
+                  logger.info("Email уведомление отправлено владельцу квиза", {
+                    quizUid,
+                    ownerId: owner.id,
+                    ownerEmail: owner.login,
+                  });
+                } catch (emailError) {
+                  logger.error(
+                    "Ошибка при отправке email уведомления владельцу квиза",
+                    emailError instanceof Error ? emailError : new Error(String(emailError)),
+                    { quizUid, ownerId: owner.id, ownerEmail: owner.login },
+                  );
+                  // Не прерываем выполнение, если email не отправился
+                }
+              }
+
+              // Отправляем Telegram уведомление, если включено
+              if (notificationSettings.telegram && owner.telegramId) {
+                try {
+                  // Преобразуем telegramId в число (chatId)
+                  const chatId = parseInt(owner.telegramId, 10);
+                  if (!isNaN(chatId)) {
+                    const ownerLanguage = owner.language || 'ru';
+                    // Используем HTML формат для ссылки: <a href="URL">Текст</a>
+                    const messageText = ownerLanguage === 'en'
+                      ? `🎉 <b>New quiz response received</b>\n\nYou have received a new response to your quiz.\n\n<a href="${reportUrl}">View Response</a>`
+                      : `🎉 <b>Получен новый ответ на квиз</b>\n\nВы получили новый ответ на ваш квиз.\n\n${reportUrl}`;
+
+                    await QuizBotService.sendMessage("BOT_CRM_TOKEN", chatId, messageText, "HTML", true);
+                    logger.info("Telegram уведомление отправлено владельцу квиза", {
+                      quizUid,
+                      ownerId: owner.id,
+                      chatId,
+                      reportUrl,
+                    });
+                  } else {
+                    logger.warn("Не удалось преобразовать telegramId в число", {
+                      quizUid,
+                      ownerId: owner.id,
+                      telegramId: owner.telegramId,
+                    });
+                  }
+                } catch (telegramError) {
+                  logger.error(
+                    "Ошибка при отправке Telegram уведомления владельцу квиза",
+                    telegramError instanceof Error ? telegramError : new Error(String(telegramError)),
+                    { quizUid, ownerId: owner.id, telegramId: owner.telegramId },
+                  );
+                  // Не прерываем выполнение, если Telegram не отправился
+                }
+              }
+            } catch (notificationError) {
+              logger.error(
+                "Ошибка при получении настроек уведомлений или отправке уведомления",
+                notificationError instanceof Error ? notificationError : new Error(String(notificationError)),
+                { quizUid, ownerId: owner.id },
+              );
+              // Не прерываем выполнение, если уведомление не отправилось
+            }
+          }
+        } catch (ownerError) {
+          logger.error(
+            "Ошибка при получении владельца квиза для отправки уведомления",
+            ownerError instanceof Error ? ownerError : new Error(String(ownerError)),
+            { quizUid, userId: quiz[0].userId },
+          );
+          // Не прерываем выполнение, если не удалось отправить уведомление
+        }
       } else {
         // Если записи нет, это ошибка - она должна быть создана при получении квиза
         logger.error("Quiz session not found for contacts - should be created when quiz is loaded", {
@@ -717,9 +854,6 @@ export abstract class PublicService {
         });
         throw new Error("Session not found. Please reload the quiz.");
       }
-
-      // Увеличиваем счётчик full
-      await this.incrementQuizFull(quizUid);
     } catch (error) {
       logger.error("Failed to save quiz contacts", error as Error, { quizUid, contactData });
       throw error;

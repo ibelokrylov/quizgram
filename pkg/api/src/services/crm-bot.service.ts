@@ -1,10 +1,12 @@
 import { logger } from "../lib/logger";
-import type { TelegramMessage, TelegramUpdate } from "./quiz-bot.service";
-import { QuizBotService as BaseTelegramBotService } from "./quiz-bot.service";
+import { UserService } from "../modules/user/service";
+import { BaseTelegramBotService, type TelegramMessage, type TelegramUpdate } from "./base-telegram-bot.service";
 
 /**
  * Сервис CRM-бота Quizgram.
- * Пока что обрабатывает только команду /start и отправляет приветственное сообщение.
+ * Обрабатывает:
+ * - команду /start - отправляет приветственное сообщение
+ * - UID пользователя (36 символов) - привязывает Telegram ID к пользователю в БД
  */
 export abstract class CrmBotService extends BaseTelegramBotService {
   /**
@@ -53,10 +55,86 @@ export abstract class CrmBotService extends BaseTelegramBotService {
       const name = BaseTelegramBotService.getUserDisplayName(message);
       const welcomeText =
         `Привет, ${name}! 👋\n\n` +
-        "Я CRM-бот Quizgram. В ближайшее время здесь появятся уведомления и инструменты для работы с лидами.";
+        "Я CRM-бот Quizgram.";
 
       await BaseTelegramBotService.sendMessage("BOT_CRM_TOKEN", message.chat.id, welcomeText);
       return;
+    }
+
+    // Проверяем, является ли сообщение UID (UUID формат - 36 символов)
+    if (text.length === 36) {
+      logger.debug("Обработка UID для привязки Telegram", {
+        updateId: update.update_id,
+        chatId: message.chat.id,
+        uid: text,
+      });
+
+      try {
+        // Ищем пользователя по UID
+        const user = await UserService.findByUid(text);
+
+        if (!user) {
+          logger.warn("Пользователь с указанным UID не найден", {
+            uid: text,
+            chatId: message.chat.id,
+          });
+          await BaseTelegramBotService.sendMessage(
+            "BOT_CRM_TOKEN",
+            message.chat.id,
+            "❌ Пользователь с указанным UID не найден.",
+          );
+          return;
+        }
+
+        // Проверяем, не привязан ли уже Telegram ID
+        if (user.telegramId) {
+          logger.warn("Попытка привязать Telegram ID к пользователю, у которого уже есть привязка", {
+            userId: user.id,
+            uid: user.uid,
+            existingTelegramId: user.telegramId,
+            chatId: message.chat.id,
+          });
+          await BaseTelegramBotService.sendMessage(
+            "BOT_CRM_TOKEN",
+            message.chat.id,
+            "⚠️ Этот пользователь уже привязан к боту. Обратитесь к администрации.",
+          );
+          return;
+        }
+
+        // Присваиваем telegramId пользователю
+        const telegramId = String(message.chat.id);
+        await UserService.updateTelegramId(user.id, telegramId);
+
+        logger.info("Telegram ID успешно привязан к пользователю", {
+          userId: user.id,
+          uid: user.uid,
+          telegramId,
+          chatId: message.chat.id,
+        });
+
+        await BaseTelegramBotService.sendMessage(
+          "BOT_CRM_TOKEN",
+          message.chat.id,
+          "✅ Ваш Telegram успешно привязан к аккаунту!",
+        );
+        return;
+      } catch (error) {
+        logger.error(
+          "Ошибка при привязке Telegram ID к пользователю",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            uid: text,
+            chatId: message.chat.id,
+          },
+        );
+        await BaseTelegramBotService.sendMessage(
+          "BOT_CRM_TOKEN",
+          message.chat.id,
+          "❌ Произошла ошибка при привязке аккаунта. Попробуйте позже.",
+        );
+        return;
+      }
     }
 
     // Остальные команды пока игнорируем

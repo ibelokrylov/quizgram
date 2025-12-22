@@ -30,7 +30,7 @@ export const NotificationPage = () => {
 	const { query } = useNotification();
 	const { mutation } = useUpdateNotification();
 	const { query: userQuery } = useUser();
-	const [isIntegrationKeyDrawerOpen, setIsIntegrationKeyDrawerOpen] = useState(false);
+	const [isUidDrawerOpen, setIsUidDrawerOpen] = useState(false);
 
 	const handleToggle = async (
 		type: "telegram" | "email",
@@ -40,9 +40,9 @@ export const NotificationPage = () => {
 			await mutation.mutateAsync({ [type]: value });
 			toast.success(t("notification.update.success"));
 
-			// Если включили telegram уведомления, показываем drawer с integrationKey
+			// Если включили telegram уведомления, показываем drawer с uid
 			if (type === "telegram" && value) {
-				setIsIntegrationKeyDrawerOpen(true);
+				setIsUidDrawerOpen(true);
 			}
 		} catch (error) {
 			toast.error(
@@ -130,10 +130,10 @@ export const NotificationPage = () => {
 				</CardContent>
 			</Card>
 
-			{/* Drawer с integrationKey */}
+			{/* Drawer с uid */}
 			<Drawer
-				open={isIntegrationKeyDrawerOpen}
-				onOpenChange={setIsIntegrationKeyDrawerOpen}
+				open={isUidDrawerOpen}
+				onOpenChange={setIsUidDrawerOpen}
 			>
 				<DrawerContent>
 					<div className="max-w-[600px] mx-auto w-full">
@@ -150,7 +150,7 @@ export const NotificationPage = () => {
 								<div className="flex items-center justify-center min-h-[100px]">
 									<Loader />
 								</div>
-							) : userQuery.data?.integrationKey ? (
+							) : userQuery.data?.uid ? (
 								<div className="space-y-4">
 									<p className="text-sm text-muted-foreground">
 										{t("notification.integrationKey.instruction")}
@@ -159,10 +159,10 @@ export const NotificationPage = () => {
 										<Label>
 											{t("notification.integrationKey.label")}
 										</Label>
-										<CopyToClick text={userQuery.data.integrationKey}>
+										<CopyToClick text={userQuery.data.uid}>
 											<div className="flex items-center gap-2 p-3 rounded-md border bg-muted/50 hover:bg-muted transition-colors">
 												<code className="flex-1 text-sm font-mono break-all">
-													{userQuery.data.integrationKey}
+													{userQuery.data.uid}
 												</code>
 											</div>
 										</CopyToClick>

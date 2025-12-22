@@ -197,7 +197,6 @@ export abstract class AuthService {
       planId: 1, // По умолчанию бесплатный план
       isVerification: false,
       language: payload.language || "en", // Сохраняем язык или используем "en" по умолчанию
-      integrationKey: crypto.randomUUID(), // Генерируем integration key для интеграций
       telegramId: null, // По умолчанию null
     };
 
