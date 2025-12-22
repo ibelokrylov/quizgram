@@ -77,11 +77,10 @@ export abstract class BidsService {
         baseConditions.push(eq(quizBidTable.isRead, effectiveFilters.isRead));
       }
 
-      // Подсчет isFull = true AND isEqualPaymentLimit = true
+      // Подсчет isFull = true (без учета isEqualPaymentLimit)
       const totalFullConditions = [
         ...baseConditions,
         eq(quizBidTable.isFull, true),
-        eq(quizBidTable.isEqualPaymentLimit, true),
       ];
       const totalFullResult = await db
         .select({ count: count() })
@@ -292,16 +291,16 @@ export abstract class BidsService {
         totalNotFull?: number;
         hasMore: boolean;
         hasMoreBeyondLimit: boolean;
-        beyondLimitCount: number; // Количество заявок, которые не влезли из-за лимита тарифного плана
-        maxAvailableFull: number; // Количество доступных заявок с isFull = true в пределах лимита тарифного плана
+        beyondLimitCount: number; // Количество заявок с isFull=true, которые не влезли из-за лимита (не isEqualPaymentLimit)
+        maxAvailableFull: number; // Количество доступных заявок с isFull=true AND isEqualPaymentLimit=true
         deletedInLimitFull: number; // Количество удаленных заявок с isFull = true, которые влезли в лимит
       } = {
         data: transformedBids,
-        total: totalFull, // Количество isFull = true
+        total: totalFull, // Все заявки где isFull = true
         hasMore,
         hasMoreBeyondLimit,
-        beyondLimitCount, // Количество заявок, которые не влезли из-за лимита тарифного плана
-        maxAvailableFull, // Количество доступных заявок с isFull = true в пределах лимита тарифного плана
+        beyondLimitCount, // Количество заявок с isFull=true, которые не влезли из-за лимита (не isEqualPaymentLimit)
+        maxAvailableFull, // Количество доступных заявок с isFull=true AND isEqualPaymentLimit=true
         deletedInLimitFull, // Количество удаленных заявок с isFull = true, которые влезли в лимит
       };
 
