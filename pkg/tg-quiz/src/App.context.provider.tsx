@@ -3,10 +3,10 @@ import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
 
-function getStartAppParam(): string | undefined {
-  const uid = window.location.search.split("startapp=")[1];
-  return uid;
-}
+// function getStartAppParam(): string | undefined {
+//   const uid = window.location.search.split("startapp=")[1];
+//   return uid;
+// }
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
@@ -54,10 +54,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Получаем uid из startapp параметра
       // Сначала пытаемся получить из launchParams (Telegram SDK)
       // Если не получилось - используем getStartAppParam() как fallback
-      // const launchParamsTyped = launchParams as Record<string, unknown>;
-      // const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
-      const uid = getStartAppParam();
-      // const uid = uidFromLaunchParams;
+      const launchParamsTyped = launchParams as Record<string, unknown>;
+      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
+      // const uid = getStartAppParam();
+      const uid = uidFromLaunchParams;
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
