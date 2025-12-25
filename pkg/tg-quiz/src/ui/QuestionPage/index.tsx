@@ -60,7 +60,7 @@ export const QuestionPage = () => {
     if (
       question.type === "question_group" &&
       question?.content?.questions?.length !==
-        (answer.answer as Record<string, unknown>[])?.length
+      (answer.answer as Record<string, unknown>[])?.length
     ) {
       setShowSnackbar(true);
       return;
@@ -94,7 +94,7 @@ export const QuestionPage = () => {
   }
 
   return (
-    <div>
+    <div className='content__question'>
       {questions.length > 1 ? (
         <div className="question__counter">
           <Text>

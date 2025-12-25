@@ -21,7 +21,7 @@ export const Standard = () => {
         <div className="center__content">
           <div className="start-page__cards-container">
             {data?.name || data?.logo_url ? (
-              <Card type="ambient">
+              <Card>
                 <div className="card__chip start-page__card-chip">
                   {data?.logo_url ? (
                     <Image size={40} src={data.logo_url} />
