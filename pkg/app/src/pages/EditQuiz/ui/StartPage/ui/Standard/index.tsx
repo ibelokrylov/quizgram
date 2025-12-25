@@ -63,7 +63,6 @@ export const Standard = () => {
 		...defaultPage,
 		...(startPage ?? {}),
 	});
-	const [loadingImage, setLoadingImage] = useState(false);
 
 	function changePage(page: QuizStartPageStandard) {
 		setPage(page);
@@ -72,14 +71,6 @@ export const Standard = () => {
 			...quiz,
 			startPage: { ...quiz?.startPage, content: page },
 		} as Quiz);
-	}
-
-	function handleFinal(value: string, type: "image" | "mobile") {
-		if (type === "image") {
-			changePage({ ...page, background: value });
-		} else if (type === "mobile") {
-			changePage({ ...page, background_mobile: value });
-		}
 	}
 
 	async function deleteFile(
@@ -97,17 +88,6 @@ export const Standard = () => {
 			console.log(err);
 		} finally {
 			changeLoading?.(false);
-		}
-	}
-
-	async function handleDeleteImage(type: "image" | "mobile") {
-		const url = type === "image" ? page?.background : page?.background_mobile;
-		if (!url) return;
-		await deleteFile(url, setLoadingImage);
-		if (type === "image") {
-			changePage({ ...page, background: undefined });
-		} else if (type === "mobile") {
-			changePage({ ...page, background_mobile: undefined });
 		}
 	}
 
