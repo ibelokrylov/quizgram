@@ -1,4 +1,4 @@
-// import { useLaunchParams, useRawInitData } from "@telegram-apps/sdk-react";
+import { useLaunchParams, useRawInitData } from "@telegram-apps/sdk-react";
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
@@ -18,8 +18,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   const [error, setError] = useState(false);
 
   // Получаем данные от Telegram SDK
-  // const initData = useRawInitData();
-  // const launchParams = useLaunchParams();
+  const initData = useRawInitData();
+  const launchParams = useLaunchParams();
 
   function generateStages(quiz: Quiz) {
     const stages = [];
@@ -74,7 +74,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         },
         credentials: "include", // Для отправки cookies (bidToken)
         body: JSON.stringify({
-          // initData: initData || undefined,
+          initData: initData || undefined,
         }),
       });
 
