@@ -189,6 +189,11 @@ jobs:
             
             BOT_QUIZ_TOKEN=${{ secrets.BOT_TOKEN }}
             BOT_CRM_TOKEN=${{ secrets.BOT_TOKEN_DEV }}
+            BOT_SUPPORT_TOKEN=${{ secrets.BOT_SUPPORT_TOKEN }}
+            
+            CRYPTO_PAY_TOKEN=${{ secrets.CRYPTO_PAY_TOKEN }}
+            
+            URL_ORIGIN=${{ secrets.URL_ORIGIN }}
           ENV
           EOF
 

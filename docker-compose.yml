@@ -78,7 +78,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     env_file:
-      - .env
+      - pkg/api/.env
     volumes:
       # Монтируем директорию логов на хост для сохранения при перезапуске контейнера
       - ./logs/api:/app/pkg/api/logs
