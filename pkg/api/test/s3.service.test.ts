@@ -229,7 +229,7 @@ test("7. Генерация presigned URL", async () => {
   );
 
   expect(presignedURL).toBeDefined();
-  expect(presignedURL).toContain("http://");
+  expect(presignedURL).toMatch(/^https?:\/\//); // Может быть http:// или https://
   expect(presignedURL).toContain(uploadResult.fileKey);
 });
 
@@ -265,7 +265,7 @@ test("8. Генерация presigned URL с максимальным време
   );
 
   expect(presignedURL).toBeDefined();
-  expect(presignedURL).toContain("http://");
+  expect(presignedURL).toMatch(/^https?:\/\//); // Может быть http:// или https://
 });
 
 test("9. Удаление файла из S3", async () => {
