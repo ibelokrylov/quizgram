@@ -313,7 +313,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         setLoading,
         quiz,
         setQuiz,
-        currentStage,
+        currentStage: currentStage || "404", // Гарантируем, что currentStage всегда строка
         setCurrentStage,
         nextStage,
         sendAnswer,

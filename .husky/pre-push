@@ -16,3 +16,38 @@ else
   exit 1
 fi
 
+echo ""
+echo "🔨 Сборка pkg/app..."
+
+cd ../app
+
+if bun run build; then
+  echo "✅ pkg/app собран успешно!"
+else
+  echo ""
+  echo "❌ Ошибка сборки pkg/app! Push заблокирован."
+  echo ""
+  echo "Исправьте ошибки сборки перед push."
+  echo "Для принудительного push используйте: git push --no-verify"
+  exit 1
+fi
+
+echo ""
+echo "🔨 Сборка pkg/tg-quiz..."
+
+cd ../tg-quiz
+
+if bun run build; then
+  echo "✅ pkg/tg-quiz собран успешно!"
+else
+  echo ""
+  echo "❌ Ошибка сборки pkg/tg-quiz! Push заблокирован."
+  echo ""
+  echo "Исправьте ошибки сборки перед push."
+  echo "Для принудительного push используйте: git push --no-verify"
+  exit 1
+fi
+
+echo ""
+echo "✅ Все проверки пройдены! Push разрешен."
+
