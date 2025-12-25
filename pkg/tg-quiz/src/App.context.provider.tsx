@@ -1,6 +1,6 @@
+import { useLaunchParams, useRawInitData } from "@telegram-apps/sdk-react";
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
-// import { useRawInitData, useLaunchParams } from "@telegram-apps/sdk-react";
 import { API_BASE_URL } from "./config";
 
 function getStartAppParam(): string | undefined {
@@ -18,8 +18,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   const [error, setError] = useState(false);
 
   // Получаем данные от Telegram SDK
-  // const initData = useRawInitData();
-  // const launchParams = useLaunchParams();
+  const initData = useRawInitData();
+  const launchParams = useLaunchParams();
 
   function generateStages(quiz: Quiz) {
     const stages = [];
@@ -54,10 +54,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Получаем uid из startapp параметра
       // Сначала пытаемся получить из launchParams (Telegram SDK)
       // Если не получилось - используем getStartAppParam() как fallback
-      // const launchParamsTyped = launchParams as Record<string, unknown>;
-      // const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
-      const uid = getStartAppParam();
-      // const uid = uidFromLaunchParams || uidFromUrl;
+      const launchParamsTyped = launchParams as Record<string, unknown>;
+      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
+      // const uid = getStartAppParam();
+      const uid = uidFromLaunchParams;
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
@@ -73,7 +73,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         },
         credentials: "include", // Для отправки cookies (bidToken)
         body: JSON.stringify({
-          // initData: initData || undefined,
+          initData: initData || undefined,
         }),
       });
 
@@ -143,9 +143,9 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   async function sendAnswer(answer: Record<string, unknown>) {
     const answerValue = answer.answer;
     const isFile = answerValue instanceof File || answerValue instanceof Blob;
-    
+
     // Проверяем, является ли answer массивом (question_group) и содержит ли он файлы
-    const isArrayWithFiles = Array.isArray(answerValue) && 
+    const isArrayWithFiles = Array.isArray(answerValue) &&
       answerValue.some((item: any) => item instanceof File || item instanceof Blob);
 
     // Извлекаем final_question для добавления в URL
@@ -170,7 +170,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
 
     if (isFile || isArrayWithFiles) {
       const formData = new FormData();
-      
+
       if (isArrayWithFiles) {
         // Для question_group с файлами: отправляем массив как JSON, а файлы отдельно
         const answerArray = answerValue as any[];
@@ -182,8 +182,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
               // Файлы отправляем отдельно с индексом
               formData.append(`file_${index}`, itemAnswer);
               // В массиве оставляем placeholder с сохранением question_uid
-              return { 
-                __isFile: true, 
+              return {
+                __isFile: true,
                 __fileIndex: index,
                 question_uid: item.question_uid
               };
@@ -192,14 +192,14 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           // Если item сам является File (старая структура), обрабатываем как раньше
           if (item instanceof File || item instanceof Blob) {
             formData.append(`file_${index}`, item);
-            return { 
-              __isFile: true, 
+            return {
+              __isFile: true,
               __fileIndex: index
             };
           }
           return item;
         });
-        
+
         // Отправляем обработанный массив как JSON
         formData.append("answer", JSON.stringify(processedArray));
         formData.append("is_question_group", "true");

@@ -1,20 +1,20 @@
 import "@telegram-apps/telegram-ui/dist/styles.css";
 
+import { useLaunchParams } from '@telegram-apps/sdk-react';
 import { AppRoot } from "@telegram-apps/telegram-ui";
+import { useEffect } from "react";
 import { AppContextProvider } from "./App.context.provider";
 import { Content } from "./Content";
-// import { useLaunchParams } from '@telegram-apps/sdk-react';
-import { useEffect } from "react";
 
 function App() {
-  // const launchParams = useLaunchParams();
-  // const isTelegramMiniApp = !!launchParams.platform;
+  const launchParams = useLaunchParams();
+  const isTelegramMiniApp = !!launchParams.platform;
 
   useEffect(() => {
     // Если это Telegram Mini App - ничего не делаем (Telegram управляет темой)
-    // if (isTelegramMiniApp) {
-    // return;
-    // }
+    if (isTelegramMiniApp) {
+      return;
+    }
 
     // Если это браузер - добавляем автодетект темы
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
