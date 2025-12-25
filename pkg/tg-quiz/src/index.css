@@ -256,7 +256,8 @@ article {
 }
 
 .cards.full {
-  width: calc(100vw - 24px);
+  max-width: 800px;
+  width: 100%;
 }
 
 .cards.standard {
@@ -622,6 +623,6 @@ article {
   }
 
   .cards.full {
-    width: calc(100vw - 2px);
+    max-width: 800px;
   }
 }

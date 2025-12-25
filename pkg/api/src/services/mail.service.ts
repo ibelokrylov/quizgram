@@ -83,6 +83,7 @@ function getTransporter(): nodemailer.Transporter {
     connectionTimeout: 10000, // 10 секунд
     greetingTimeout: 10000,
     socketTimeout: 30000,
+    debug: true
   });
 
   return transporter;
@@ -140,7 +141,7 @@ async function sendMail(
         response?: string;
         responseCode?: number;
       };
-      
+
       const smtpError = error as unknown;
       if (typeof smtpError === 'object' && smtpError !== null) {
         if ('code' in smtpError && typeof smtpError.code === 'string') {
@@ -411,12 +412,12 @@ export abstract class MailService {
     };
 
     const displayPlanName = getDisplayPlanName(currentPlanName);
-    
+
     // Форматируем дату окончания
-    const dateObj = typeof expirationDate === "string" 
-      ? new Date(expirationDate) 
+    const dateObj = typeof expirationDate === "string"
+      ? new Date(expirationDate)
       : expirationDate;
-    
+
     const formattedDate = dateObj.toLocaleDateString(
       language === "en" ? "en-US" : "ru-RU",
       { year: "numeric", month: "long", day: "numeric" }

@@ -5,7 +5,7 @@ import {
   Placeholder,
   Text,
 } from "@telegram-apps/telegram-ui";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { AppContext, type QuizStartPageStandard } from "../../../App.context";
 
 export const Standard = () => {
@@ -14,63 +14,6 @@ export const Standard = () => {
   const startPage = quiz?.startPage as QuizStartPageStandard;
 
   const data = startPage.content;
-
-  useEffect(() => {
-    const element = window.document.querySelector("#root");
-    const url = data?.background_mobile;
-    const footer = document.querySelector(".footer__logo") as HTMLElement;
-
-    if (!element) return;
-
-    if (!url) {
-      //clear background
-      element.setAttribute("style", "");
-      // Сбрасываем стили футера
-      if (footer) {
-        footer.style.position = "";
-        footer.style.bottom = "";
-        footer.style.left = "";
-        footer.style.transform = "";
-      }
-      return;
-    }
-
-    element.setAttribute(
-      "style",
-      `
-        background-image: url(${url});
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-color: transparent;
-        opacity: 1;
-        transition: background-image 0.3s ease-in-out;
-        height: 100vh;
-        width: 100vw;
-      `,
-    );
-
-    // Прибиваем футер к низу страницы по центру
-    if (footer) {
-      footer.style.position = "absolute";
-      footer.style.bottom = "6px";
-      footer.style.left = "50%";
-      footer.style.transform = "translateX(-50%)";
-    }
-
-    // Cleanup при размонтировании
-    return () => {
-      if (footer) {
-        footer.style.position = "";
-        footer.style.bottom = "";
-        footer.style.left = "";
-        footer.style.transform = "";
-      }
-
-      element.setAttribute("style", "");
-    };
-  }, [data?.background_mobile]);
 
   return (
     <>
@@ -91,7 +34,7 @@ export const Standard = () => {
                 </div>
               </Card>
             ) : null}
-            <Card type="ambient" className="cards full standard">
+            <Card className="cards full standard">
               {data?.title || data?.description ? (
                 <Placeholder
                   header={data?.title}
