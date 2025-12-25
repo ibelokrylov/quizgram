@@ -5,12 +5,12 @@ export const userPasswordForgotZod = z.object({
 });
 
 export const userPasswordForgotStartZod = z.object({
-	code: z.string().min(10),
+	code: z.string().length(6).regex(/^\d+$/, "Код должен содержать только цифры"),
 	email: z.email(),
 });
 
 export const userPasswordForgotEndZod = z.object({
-	code: z.string().min(10),
+	code: z.string().length(6).regex(/^\d+$/, "Код должен содержать только цифры"),
 	email: z.email(),
 	password: z.string().min(8),
 });

@@ -8,6 +8,38 @@ import { TelegramService } from '../../services/telegram.service';
 import { UserService } from '../user/service';
 import { PublicQuiz } from './models';
 
+// Типы для ответов квиза
+type AnswerValue = string | number | boolean | File | Blob | { type: string; [key: string]: unknown } | null;
+type StoredAnswer = {
+  question_uid: string;
+  answer: AnswerValue;
+  timestamp?: string;
+  [key: string]: unknown;
+};
+type StoredAnswerArray = StoredAnswer[];
+
+// Type guard для проверки, является ли значение File-подобным объектом
+function isFileLike(value: unknown): value is File | Blob | { name?: string; size?: number; type?: string; stream?: unknown } {
+  if (value instanceof File || value instanceof Blob) {
+    return true;
+  }
+  if (typeof value === 'object' && value !== null) {
+    return 'name' in value || 'stream' in value;
+  }
+  return false;
+}
+
+// Type guard для получения имени файла
+function getFileName(value: unknown): string {
+  if (value instanceof File) {
+    return value.name;
+  }
+  if (isFileLike(value) && typeof value === 'object' && value !== null && 'name' in value) {
+    return String(value.name);
+  }
+  return 'unknown';
+}
+
 export abstract class PublicService {
   static async getQuizByUid(uid: string): Promise<PublicQuiz> {
     const quiz = await db.select()
@@ -200,7 +232,7 @@ export abstract class PublicService {
    */
   static async incrementQuizOpened(quizUid: string, incrementUnique: boolean = false): Promise<void> {
     try {
-      const updateSet: Record<string, any> = {
+      const updateSet: Record<string, ReturnType<typeof sql>> = {
         opened: sql`${quizOpenTable.opened} + 1`,
       };
 
@@ -334,7 +366,11 @@ export abstract class PublicService {
                 // Преобразуем в File/Blob для загрузки
                 const fileToUpload = subAnswer.answer instanceof File || subAnswer.answer instanceof Blob
                   ? subAnswer.answer
-                  : subAnswer.answer as any;
+                  : isFileLike(subAnswer.answer) ? subAnswer.answer as File | Blob : null;
+                
+                if (!fileToUpload) {
+                  throw new Error('Invalid file format');
+                }
 
                 // Загружаем файл в S3 через QuizFileService
                 const uploadResult = await QuizFileService.uploadQuizFile(
@@ -366,7 +402,7 @@ export abstract class PublicService {
                 logger.error("Failed to upload file for question_group sub-answer", fileError as Error, {
                   quizUid,
                   questionUid: subAnswer?.question_uid,
-                  fileName: (subAnswer.answer as any)?.name || 'unknown'
+                  fileName: getFileName(subAnswer.answer)
                 });
                 throw new Error(`Failed to upload file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
               }
@@ -414,7 +450,11 @@ export abstract class PublicService {
             // Преобразуем в File/Blob для загрузки
             const fileToUpload = answerData.answer instanceof File || answerData.answer instanceof Blob
               ? answerData.answer
-              : answerData.answer as any;
+              : isFileLike(answerData.answer) ? answerData.answer as File | Blob : null;
+            
+            if (!fileToUpload) {
+              throw new Error('Invalid file format');
+            }
 
             // Загружаем файл в S3 через QuizFileService
             const uploadResult = await QuizFileService.uploadQuizFile(
@@ -448,7 +488,7 @@ export abstract class PublicService {
           } catch (fileError) {
             logger.error("Failed to upload file for quiz answer", fileError as Error, {
               quizUid,
-              fileName: (answerData.answer as any)?.name || 'unknown'
+              fileName: getFileName(answerData.answer)
             });
             throw new Error(`Failed to upload file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
           }
@@ -490,7 +530,7 @@ export abstract class PublicService {
 
       if (existingRecord.length > 0 && existingRecord[0]) {
         // Обновляем существующую запись
-        const existingAnswers = (existingRecord[0].answer as any[]) || [];
+        const existingAnswers = (existingRecord[0].answer as unknown as StoredAnswerArray) || [];
 
         // Проверяем, есть ли уже ответ на этот вопрос
         const existingAnswerIndex = existingAnswers.findIndex(
@@ -635,17 +675,21 @@ export abstract class PublicService {
       if (existingRecord.length > 0 && existingRecord[0]) {
         // Обновляем существующую запись: сохраняем только answers в contacts
         // form уже сохранен в contactsForm при получении квиза
-        const existingAnswers = (existingRecord[0].answer as any[]) || [];
+        const existingAnswers = (existingRecord[0].answer as unknown as StoredAnswerArray) || [];
 
         // Проверяем лимит платежа перед сохранением контактов
         let isEqualPaymentLimit = false;
         try {
-          // Получаем последнюю запись user_payment для владельца квиза
+          // Получаем активную запись user_payment для владельца квиза
           const userPayments = await db
             .select()
             .from(userPaymentTable)
-            .where(eq(userPaymentTable.userId, quiz[0].userId))
-            .orderBy(desc(userPaymentTable.createdAt))
+            .where(
+              and(
+                eq(userPaymentTable.userId, quiz[0].userId),
+                eq(userPaymentTable.isActive, true)
+              )
+            )
             .limit(1);
 
           if (userPayments.length > 0 && userPayments[0]) {

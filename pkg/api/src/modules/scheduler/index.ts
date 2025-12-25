@@ -1,95 +1,30 @@
 import { logger } from '../../lib/logger';
-import { SchedulerService } from './service';
-
-// Храним ID интервалов для возможности остановки
-let bidsIntervalId: Timer | null = null;
-let paymentsIntervalId: Timer | null = null;
 
 /**
- * Запускает scheduler для обработки незавершенных заявок и платежей
- * - Обработка незавершенных заявок: каждую 1 минуту
- * - Обработка платежей: каждый день в 00:00:00
+ * Запускает scheduler для обработки незавершенных заявок
+ * 
+ * Примечание: Все задачи scheduler теперь запускаются через @elysiajs/cron в Elysia app:
+ * - Обработка незавершенных заявок: каждую 1 минуту (cron: каждую минуту)
+ * - Обработка платежей: каждые 20 минут в период 00:00-02:00 (cron: 0,20,40 0-1 * * * и 0 2 * * *)
+ * 
+ * Эта функция оставлена для совместимости, но больше не выполняет никаких действий.
+ * Все cron jobs настраиваются в src/index.ts
  */
 export function startScheduler() {
-  const BIDS_INTERVAL_MS = 1 * 60 * 1000; // 1 минута
-  const PAYMENTS_CHECK_INTERVAL_MS = 60 * 60 * 1000; // Проверяем каждый час, чтобы не пропустить 00:00:00
-
-  logger.info("Scheduler запущен", {
+  logger.info("Scheduler настроен через @elysiajs/cron", {
     tasks: [
-      { name: "Обработка незавершенных заявок", interval: "1 минута" },
-      { name: "Обработка платежей", schedule: "каждый день в 00:00:00" },
+      { name: "Обработка незавершенных заявок", schedule: "каждую 1 минуту (cron: каждую минуту)" },
+      { name: "Обработка платежей", schedule: "каждые 20 минут в период 00:00-02:00 (cron: 0,20,40 0-1 * * * и 0 2 * * *)" },
     ],
   });
-
-  // Выполняем обработку незавершенных заявок сразу при запуске
-  SchedulerService.processIncompleteBids().catch((error) => {
-    logger.error("Ошибка при первом запуске scheduler (заявки)", error as Error);
-  });
-
-  // Затем выполняем обработку незавершенных заявок каждую 1 минуту
-  bidsIntervalId = setInterval(() => {
-    SchedulerService.processIncompleteBids().catch((error) => {
-      logger.error("Ошибка при выполнении scheduler (заявки)", error as Error);
-    });
-  }, BIDS_INTERVAL_MS);
-
-  // Функция для проверки и запуска обработки платежей
-  const checkAndRunPayments = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    // Проверяем, наступило ли время 00:00:00 (с небольшой погрешностью до 5 минут)
-    if (hours === 0 && minutes < 5) {
-      logger.info("Запуск обработки платежей", {
-        time: now.toISOString(),
-      });
-
-      SchedulerService.processPayments().catch((error) => {
-        logger.error("Ошибка при выполнении scheduler (платежи)", error as Error);
-      });
-    }
-  };
-
-  // Выполняем проверку сразу при запуске (на случай если сервер запустился в 00:00:00)
-  checkAndRunPayments();
-
-  // Затем проверяем каждый час
-  paymentsIntervalId = setInterval(() => {
-    checkAndRunPayments();
-  }, PAYMENTS_CHECK_INTERVAL_MS);
-
-  // Не держим процесс живым только из-за таймера scheduler
-  // В Node.js/Bun у таймера есть метод unref, но его может не быть в типах
-  // @ts-ignore
-  if (typeof bidsIntervalId.unref === "function") {
-    // @ts-ignore
-    bidsIntervalId.unref();
-  }
-  // @ts-ignore
-  if (typeof paymentsIntervalId.unref === "function") {
-    // @ts-ignore
-    paymentsIntervalId.unref();
-  }
-
-  return { bidsIntervalId, paymentsIntervalId };
 }
 
 /**
  * Останавливает scheduler и очищает все интервалы
+ * 
+ * Примечание: Остановка cron jobs теперь выполняется через store в graceful shutdown.
+ * Эта функция оставлена для совместимости, но больше не выполняет никаких действий.
  */
 export async function stopScheduler(): Promise<void> {
-  logger.info("Остановка scheduler");
-
-  if (bidsIntervalId) {
-    clearInterval(bidsIntervalId);
-    bidsIntervalId = null;
-  }
-
-  if (paymentsIntervalId) {
-    clearInterval(paymentsIntervalId);
-    paymentsIntervalId = null;
-  }
-
-  logger.info("Scheduler остановлен");
+  logger.info("Scheduler остановка выполняется через graceful shutdown (cron jobs останавливаются через store)");
 }

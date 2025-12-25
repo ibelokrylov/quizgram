@@ -145,7 +145,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 									}),
 								});
 							}}
-							className="h-8 w-8 p-0"
+							className="h-8 w-8 p-0 hover:text-white dark:hover:text-accent-foreground"
 							title="Просмотреть ответ"
 						>
 							<Eye className="h-4 w-4" />
@@ -164,7 +164,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 										}),
 									});
 								}}
-								className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+								className="h-8 w-8 p-0 text-blue-500 hover:text-white dark:hover:text-blue-600"
 								title="Дополнительная информация"
 							>
 								<MdInfoOutline className="h-5 w-5" />
@@ -175,7 +175,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
 							size="sm"
 							onClick={handleDelete}
 							disabled={isDeleting}
-							className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+							className="h-8 w-8 p-0 text-destructive hover:text-white dark:hover:text-destructive"
 							title={isDeleting ? "Удаление..." : "Удалить"}
 						>
 							<Trash2 className="h-4 w-4" />

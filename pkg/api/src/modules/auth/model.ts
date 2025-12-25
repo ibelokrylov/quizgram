@@ -68,6 +68,13 @@ export namespace AuthModel {
         description: "Язык интерфейса: 'en' или 'ru'",
       }),
     ),
+    referralCode: t.Optional(
+      t.String({
+        minLength: 1,
+        maxLength: 20,
+        description: "Реферальный код",
+      }),
+    ),
   });
 
   export type registrationBody = typeof registrationBody.static;
@@ -110,7 +117,8 @@ export namespace AuthModel {
   // Тело запроса для проверки кода восстановления пароля (начало)
   export const verifyResetPasswordStartBody = t.Object({
     code: t.String({
-      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", // UUID формат
+      pattern: "^\\d{6}$", // 6-значный цифровой код
+      description: "Код должен содержать 6 цифр",
     }),
     email: t.String({
       format: "email",
@@ -140,7 +148,8 @@ export namespace AuthModel {
   // Тело запроса для завершения восстановления пароля
   export const forgotPasswordEndBody = t.Object({
     code: t.String({
-      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", // UUID формат
+      pattern: "^\\d{6}$", // 6-значный цифровой код
+      description: "Код должен содержать 6 цифр",
     }),
     email: t.String({
       format: "email",

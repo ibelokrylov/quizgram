@@ -1,0 +1,215 @@
+# Правила TypeScript
+
+## Type Assertions vs Satisfies
+
+### ❌ НЕ используй `as` для type assertions
+
+```typescript
+// ❌ Плохо - `as` отключает проверку типов
+const user = { id: 1, name: "John" } as User;
+const data = response as UserData;
+const value = input as string;
+```
+
+### ✅ Используй `satisfies` вместо `as`
+
+```typescript
+// ✅ Хорошо - `satisfies` сохраняет проверку типов
+const user = { id: 1, name: "John" } satisfies User;
+const data = response satisfies UserData;
+const value = input satisfies string;
+```
+
+## Почему `satisfies` лучше?
+
+- **Type Safety**: `satisfies` проверяет, что значение соответствует типу, но не изменяет его
+- **Inference**: TypeScript может вывести более точный тип из значения
+- **Compile-time errors**: Ошибки обнаруживаются на этапе компиляции, а не в runtime
+
+### Пример разницы
+
+```typescript
+type User = { id: number; name: string };
+
+// ❌ `as` позволяет некорректные данные
+const badUser = { id: 1 } as User; // Компилируется, но неправильно!
+
+// ✅ `satisfies` требует корректные данные
+const goodUser = { id: 1 } satisfies User; // ❌ Ошибка компиляции: отсутствует 'name'
+const goodUser = { id: 1, name: "John" } satisfies User; // ✅ OK
+```
+
+## Исключения
+
+`as` допустим только в следующих случаях:
+
+### 1. Error handling в catch блоках
+
+```typescript
+try {
+  // ...
+} catch (error) {
+  // ✅ OK - error имеет тип unknown
+  logger.error("Error occurred", error as Error);
+}
+```
+
+### 2. Namespace imports
+
+```typescript
+// ✅ OK - это не type assertion, а namespace import
+import * as React from "react";
+import * as DateUtils from "./date-utils";
+```
+
+### 3. SQL алиасы
+
+```typescript
+// ✅ OK - это SQL синтаксис, не TypeScript
+const query = sql`
+  SELECT 
+    COUNT(*) as total,
+    SUM(amount) as sum
+  FROM orders
+`;
+```
+
+### 4. Type narrowing для unknown/any из внешних API
+
+Если данные приходят из внешнего API без типов:
+
+```typescript
+// ✅ Допустимо с проверкой в runtime
+const response = await fetch("/api/data");
+const data = await response.json() as unknown;
+
+// Лучше - добавь валидацию
+const data = await response.json();
+if (isValidUserData(data)) {
+  // TypeScript знает, что data это UserData
+}
+```
+
+### 5. FormData и body в Elysia
+
+```typescript
+// ✅ Допустимо для form data, где нельзя применить satisfies
+const body = ctx.body as PaymentWebhookBody;
+const field = body.get('name') as string;
+```
+
+### 6. Type casting для совместимости библиотек
+
+```typescript
+// ✅ Допустимо когда библиотека требует специфичный тип
+return new Response(buffer as BodyInit, {
+  headers: { 'Content-Type': 'application/xlsx' }
+});
+```
+
+## Что исправлять в первую очередь
+
+### Высокий приоритет
+
+1. **State инициализация**
+   ```typescript
+   // ❌ Плохо
+   .state("user", null as User | null)
+   
+   // ✅ Хорошо
+   .state("user", null satisfies User | null)
+   ```
+
+2. **Объекты с известной структурой**
+   ```typescript
+   // ❌ Плохо
+   const user = { id: 1, email: "test@test.com" } as UserWithPlan;
+   
+   // ✅ Хорошо
+   const user = { id: 1, email: "test@test.com" } satisfies UserWithPlan;
+   ```
+
+3. **Приведение к any**
+   ```typescript
+   // ❌ Очень плохо - теряется вся типизация
+   const value = data as any;
+   
+   // ✅ Хорошо - создай правильный тип
+   type ExpectedType = { field: string };
+   const value = data satisfies ExpectedType;
+   ```
+
+### Средний приоритет
+
+4. **Response type assertions**
+   ```typescript
+   // ❌ Плохо
+   const result = response as unknown as QuizUpdateResponse;
+   
+   // ✅ Хорошо - добавь runtime валидацию
+   const result = QuizUpdateResponseSchema.parse(response);
+   ```
+
+### Низкий приоритет (можно оставить)
+
+5. **Error handling** - можно оставить `as Error`
+6. **FormData operations** - можно оставить `as string`
+7. **SQL aliases** - это не TypeScript assertions
+
+## Best Practices
+
+1. **Используй Zod схемы для валидации**
+   ```typescript
+   import { z } from "zod";
+   
+   const UserSchema = z.object({
+     id: z.number(),
+     name: z.string(),
+   });
+   
+   // Валидация + типизация
+   const user = UserSchema.parse(input);
+   ```
+
+2. **Создавай type guards**
+   ```typescript
+   function isUser(value: unknown): value is User {
+     return (
+       typeof value === "object" &&
+       value !== null &&
+       "id" in value &&
+       "name" in value
+     );
+   }
+   ```
+
+3. **Предпочитай type inference**
+   ```typescript
+   // ❌ Плохо
+   const config = {
+     timeout: 3000,
+     retries: 3,
+   } as Config;
+   
+   // ✅ Хорошо
+   const config: Config = {
+     timeout: 3000,
+     retries: 3,
+   };
+   ```
+
+## TypeScript Configuration
+
+Убедись, что в `tsconfig.json` включены строгие проверки:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```

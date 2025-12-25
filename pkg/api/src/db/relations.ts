@@ -2,6 +2,7 @@
 
 import { defineRelations } from "drizzle-orm";
 import { codeTable } from "./code";
+import { paymentTable } from "./payment";
 import { planTable } from "./plan";
 import {
   quizBidTable,
@@ -11,19 +12,24 @@ import {
   quizThxPageTable,
 } from "./quiz";
 import { quizOpenTable } from "./quiz/quiz-open";
+import { upLimitTable } from "./up-limit";
 import { userTable } from "./user";
 import { userFileTable } from "./user-file";
 import { userNotificationTable } from "./user-notification";
 import { userPaymentTable } from "./user-payment";
+import { userPaymentProTable } from "./user-payment-pro";
 
 export const relations = defineRelations(
   {
     user: userTable,
     plan: planTable,
     code: codeTable,
+    payment: paymentTable,
+    upLimit: upLimitTable,
     userFile: userFileTable,
     userNotification: userNotificationTable,
     userPayment: userPaymentTable,
+    userPaymentPro: userPaymentProTable,
     quiz: quizTable,
     quizContact: quizContactTable,
     quizThxPage: quizThxPageTable,
@@ -100,6 +106,18 @@ export const relations = defineRelations(
       }),
     },
 
+    // Payment relations
+    payment: {
+      user: r.one.user({
+        from: r.payment.userId,
+        to: r.user.id,
+      }),
+      plan: r.one.plan({
+        from: r.payment.planId,
+        to: r.plan.id,
+      }),
+    },
+
     // UserPayment relations
     userPayment: {
       user: r.one.user({
@@ -109,6 +127,30 @@ export const relations = defineRelations(
       plan: r.one.plan({
         from: r.userPayment.planId,
         to: r.plan.id,
+      }),
+      payment: r.one.payment({
+        from: r.userPayment.paymentId,
+        to: r.payment.id,
+      }),
+    },
+
+    // UpLimit relations
+    upLimit: {
+      userPaymentPros: r.many.userPaymentPro({
+        from: r.upLimit.id,
+        to: r.userPaymentPro.upLimitId,
+      }),
+    },
+
+    // UserPaymentPro relations
+    userPaymentPro: {
+      user: r.one.user({
+        from: r.userPaymentPro.userId,
+        to: r.user.id,
+      }),
+      upLimit: r.one.upLimit({
+        from: r.userPaymentPro.upLimitId,
+        to: r.upLimit.id,
       }),
     },
 

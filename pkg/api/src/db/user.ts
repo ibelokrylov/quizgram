@@ -25,6 +25,7 @@ export const userTable = pgTable("user", {
   name: varchar("name", { length: 250 }),
   planId: integer("plan_id").notNull().default(1),
   referralId: integer("referral_id"),
+  referralCode: varchar("referral_code", { length: 20 }).unique(),
   quizCount: integer("quiz_count").notNull().default(0),
   paymentDateEnd: timestamp("payment_date_end", { withTimezone: false }),
   language: varchar("language", { length: 2 }).default("en"),

@@ -2,7 +2,7 @@
 // Автоматически создаёт планы при запуске приложения, если их нет
 
 import { eq, sql } from "drizzle-orm";
-import { db, planTable, type Plan } from "../db";
+import { db, planTable, type Plan, upLimitTable } from "../db";
 import { logger } from "../lib/logger";
 
 export abstract class PlanService {
@@ -13,12 +13,13 @@ export abstract class PlanService {
   static async scanPlanAndCreate(): Promise<void> {
     const plans: Array<{
       id: number;
-      name: "FREE" | "BASE";
+      name: "FREE" | "BASE" | "PRO_PLUS";
       bidMonthLimit: number;
       price: number;
     }> = [
       { id: 1, name: "FREE", bidMonthLimit: 10, price: 0 },
       { id: 2, name: "BASE", bidMonthLimit: 100, price: 900 },
+      { id: 3, name: "PRO_PLUS", bidMonthLimit: 200, price: 1600 }, // Базовый лимит 200 заявок, базовая цена 1600 ₽
     ];
 
     for (const planInfo of plans) {
@@ -37,13 +38,61 @@ export abstract class PlanService {
         );
       }
     }
+
+    // Создаём записи up_limit для тарифа Pro+
+    await this.scanUpLimitsAndCreate();
+  }
+
+  /**
+   * Создаёт записи up_limit для тарифа Pro+
+   * Цены указаны в рублях (не в копейках)
+   */
+  static async scanUpLimitsAndCreate(): Promise<void> {
+    const upLimits: Array<{ bid: number; price: number }> = [
+      { bid: 100, price: 600 }, // +100 ставок (итого 300) = 600 ₽
+      { bid: 300, price: 2050 }, // +300 ставок (итого 500) = 2050 ₽
+      { bid: 800, price: 4300 }, // +800 ставок (итого 1000) = 4300 ₽
+      { bid: 2800, price: 9300 }, // +2800 ставок (итого 3000) = 9300 ₽
+      { bid: 4800, price: 13300 }, // +4800 ставок (итого 5000) = 13300 ₽
+    ];
+
+    for (const upLimitInfo of upLimits) {
+      try {
+        await this.checkAndCreateUpLimit(upLimitInfo.bid, upLimitInfo.price);
+      } catch (error) {
+        logger.error(
+          `Ошибка при создании up_limit для ${upLimitInfo.bid} заявок`,
+          error instanceof Error ? error : new Error(String(error)),
+          { bid: upLimitInfo.bid, price: upLimitInfo.price },
+        );
+      }
+    }
+  }
+
+  /**
+   * Проверяет существование up_limit и создаёт его, если он отсутствует
+   */
+  private static async checkAndCreateUpLimit(
+    bid: number,
+    price: number,
+  ): Promise<void> {
+    const existingUpLimits = await db
+      .select()
+      .from(upLimitTable)
+      .where(eq(upLimitTable.bid, bid))
+      .limit(1);
+
+    if (existingUpLimits.length === 0) {
+      await db.insert(upLimitTable).values({ bid, price });
+      logger.info(`UpLimit создан`, { bid, price });
+    }
   }
 
   /**
    * Проверяет существование плана и создаёт его, если он отсутствует
    */
   private static async checkAndCreatePlan(
-    name: "FREE" | "BASE",
+    name: "FREE" | "BASE" | "PRO_PLUS",
     id: number,
     price: number,
     bidLimit: number,

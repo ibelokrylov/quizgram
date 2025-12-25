@@ -55,13 +55,26 @@ type QuizUpdateResponse = {
 	errors: string[];
 };
 
+// Type guards для безопасного доступа к объектам по ключам
+function isValidPlanStageKey(key: number | undefined): key is keyof typeof planStages {
+	return key !== undefined && key in planStages;
+}
+
+function isValidIconKey(key: string): key is keyof typeof icons {
+	return key in icons;
+}
+
+function isValidStageKey(key: string): key is keyof typeof renderStage {
+	return key in renderStage;
+}
+
 export const EditQuiz = () => {
 	const { user } = useContext(AuthContext);
 	const { quiz, isLoadToServer, setQuiz, setIsLoadToServer } =
 		useContext(CreateQuizContext);
 	const { t } = useTranslation();
 	const currentStages =
-		planStages[(user?.planId as keyof typeof planStages) ?? 1];
+		planStages[isValidPlanStageKey(user?.planId) ? user.planId : 1] ?? planStages[1];
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [name, setName] = useState(quiz?.name);
@@ -73,7 +86,7 @@ export const EditQuiz = () => {
 	);
 
 	const [stage, setStage] = useState<string>(
-		currentStages.has(location.hash) ? location.hash : "start",
+		currentStages?.has(location.hash) ? location.hash : "start",
 	);
 
 	useEffect(() => {
@@ -109,7 +122,7 @@ export const EditQuiz = () => {
 		};
 	}, [isMobile]);
 	function handleStageChange(stage: string) {
-		if (currentStages.has(stage)) {
+		if (currentStages?.has(stage)) {
 			setStage(stage);
 			navigate({ hash: stage });
 		}
@@ -120,7 +133,7 @@ export const EditQuiz = () => {
 			await http({ url: `/v1/quiz/active/${quiz?.uid}`, method: "POST" });
 			toast.success(t("edit-quiz.active.success"));
 			setActive(!active);
-			setQuiz({ ...quiz, isActive: !active } as Quiz);
+			setQuiz({ ...quiz, isActive: !active } satisfies Quiz);
 		} catch (err) {
 			console.log(err);
 		}
@@ -139,7 +152,7 @@ export const EditQuiz = () => {
 				method: "PUT",
 				body: { name },
 			});
-			setQuiz({ ...quiz, name } as Quiz);
+			setQuiz({ ...quiz, name } satisfies Quiz);
 		} catch (err) {
 			console.log(err);
 		}
@@ -169,7 +182,8 @@ export const EditQuiz = () => {
 
 			// Сервер возвращает { ok: string[], errors: string[] } напрямую
 			// Функция http делает type assertion, но реально возвращает данные напрямую
-			const result = response as unknown as QuizUpdateResponse;
+			// TODO: Добавить Zod валидацию для response
+			const result = response satisfies QuizUpdateResponse;
 			if (!result.errors || result.errors.length === 0) {
 				await set(quiz.uid, { data: quiz, isLoadToServer: true });
 				setIsLoadToServer(true);
@@ -251,13 +265,13 @@ export const EditQuiz = () => {
 						onClick={() => handleStageChange(st)}
 						className={cn(
 							st === stage
-								? "bg-primary text-primary-foreground"
+								? "bg-accent text-accent-foreground"
 								: "bg-secondary text-secondary-foreground dark:bg-background/80 dark:border-input/80 dark:text-foreground dark:hover:bg-accent/30",
 							"cursor-pointer p-4 transition-all",
 						)}
 					>
 						<div className="flex flex-row gap-2 items-center">
-							<div>{icons[st as keyof typeof icons]}</div>
+							<div>{isValidIconKey(st) ? icons[st] : null}</div>
 							<div>{t(`edit-quiz.stages.${st}`)}</div>
 						</div>
 					</Card>
@@ -265,7 +279,7 @@ export const EditQuiz = () => {
 			</div>
 			<Separator />
 			<div key={quiz?.uid}>
-				{renderStage[stage as keyof typeof renderStage]}
+				{isValidStageKey(stage) ? renderStage[stage] : null}
 			</div>
 		</div>
 	);

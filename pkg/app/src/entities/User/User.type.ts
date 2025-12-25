@@ -20,6 +20,7 @@ export const userRegistrationZod = z.object({
 	password: z.string().min(8),
 	remember: z.boolean().optional(),
 	name: z.string(),
+	referralCode: z.string().optional(),
 });
 export type UserRegistration = z.infer<typeof userRegistrationZod>;
 

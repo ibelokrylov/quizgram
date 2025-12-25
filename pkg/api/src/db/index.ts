@@ -8,13 +8,17 @@ import { logger } from "../lib/logger";
 
 // Импортируем таблицы, чтобы было удобно использовать их вместе с db
 export * from "./code";
+export * from "./migration";
+export * from "./payment";
 export * from "./plan";
 export * from "./quiz";
 export * from "./quiz/quiz-open";
+export * from "./up-limit";
 export * from "./user";
 export * from "./user-file";
 export * from "./user-notification";
 export * from "./user-payment";
+export * from "./user-payment-pro";
 
 // Импортируем relations для передачи в drizzle
 import { relations } from "./relations";

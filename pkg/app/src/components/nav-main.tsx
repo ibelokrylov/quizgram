@@ -50,7 +50,7 @@ export function NavMain({
 						<SidebarMenuButton
 							onClick={createQuiz}
 							tooltip="Quick Create"
-							className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+							className="bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear"
 						>
 							<IconCirclePlusFilled />
 							<span>{t("nav.quiz.create")}</span>

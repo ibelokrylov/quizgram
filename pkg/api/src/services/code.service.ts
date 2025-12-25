@@ -44,10 +44,12 @@ export abstract class CodeService {
     }
 
     // Если код истёк или не существует - создаём новый
+    // Генерируем 6-значный цифровой код
+    const codeValue = Math.floor(100000 + Math.random() * 900000).toString();
     const newCode: NewCode = {
       type,
       userId,
-      value: crypto.randomUUID(),
+      value: codeValue,
       life: new Date(Date.now() + 15 * 60 * 1000), // 15 минут
       nextMailSendAvailable: new Date(),
       isActive: true,

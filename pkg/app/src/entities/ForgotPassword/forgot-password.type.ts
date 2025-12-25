@@ -6,11 +6,11 @@ export const firstStepForgotPassword = z.object({
 
 export const startForgotPassword = z.object({
 	email: z.email(),
-	code: z.string().min(36).max(36),
+	code: z.string().length(6).regex(/^\d+$/, "Код должен содержать только цифры"),
 });
 
 export const finalForgotPassword = z.object({
 	email: z.email(),
-	code: z.string().min(36).max(36),
+	code: z.string().length(6).regex(/^\d+$/, "Код должен содержать только цифры"),
 	password: z.string().min(8),
 });

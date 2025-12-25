@@ -30,6 +30,7 @@ async function createSchema() {
     await sql`GRANT ALL ON SCHEMA public TO public`;
 
     console.log("✅ Схема public успешно создана");
+    process.exit(0);
   } catch (error) {
     console.error("❌ Ошибка при создании схемы public:", error);
     process.exit(1);

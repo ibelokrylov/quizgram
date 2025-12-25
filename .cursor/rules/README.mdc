@@ -13,6 +13,7 @@ alwaysApply: true
 - **`language.mdc`** - Правила использования русского языка
 - **`project-structure.mdc`** - Структура монорепозитория
 - **`testing.mdc`** - Правила тестирования с Bun
+- **`typescript.mdc`** - Правила TypeScript: satisfies вместо as, type safety
 
 ## Правила для пакетов
 

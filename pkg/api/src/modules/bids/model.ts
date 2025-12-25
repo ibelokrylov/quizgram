@@ -12,6 +12,16 @@ export const bidsListFilters = t.Object({
 
 export type BidsListFilters = typeof bidsListFilters.static;
 
+// Модель для фильтров экспорта (без limit и offset)
+export const bidsExportFilters = t.Object({
+  quiz_uid: t.Optional(t.String()),
+  status: t.Optional(t.String()),
+  isFull: t.Optional(t.Boolean()),
+  isRead: t.Optional(t.Boolean()),
+});
+
+export type BidsExportFilters = typeof bidsExportFilters.static;
+
 // Модель для ответа со списком заявок
 export const bidListItem = t.Object({
   uid: t.String(), // UUID квиза

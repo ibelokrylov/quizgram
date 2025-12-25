@@ -13,15 +13,22 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSeparator,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
 	userPasswordForgotStartZod,
 	userPasswordForgotZod,
 } from "@/entities/User/user-password-forgot.type";
 import { verificationEmailZod } from "@/entities/User/Verification.email.type";
 import http from "@/lib/http";
-import { useState, type ChangeEvent } from "react";
+import { getTranslatedError } from "@/lib/error-mapper";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Input } from "./ui/input";
 import { queryClinet } from "@/app/query-client";
 
 type FormType = "email" | "password";
@@ -35,14 +42,18 @@ export function OTPForm({
 	payload?: Record<string, never>;
 }) {
 	const [code, setCode] = useState("");
-	const [error, setError] = useState(false);
+	const [error, setError] = useState<boolean>(false);
 	const [loading, setLoading] = useState(false);
+	const autoSubmitRef = useRef(false);
 
 	const { t } = useTranslation();
 
 	async function email() {
+		if (code.length !== 6 || loading) return;
+		
 		setError(false);
 		setLoading(true);
+		autoSubmitRef.current = false;
 		try {
 			verificationEmailZod.parse({ code });
 			await http({
@@ -51,16 +62,19 @@ export function OTPForm({
 				body: { code },
 			});
 			queryClinet.invalidateQueries({ queryKey: ["user"] });
-		} catch (err) {
-			console.log(err);
+			toast.success(t("verification.email.success") || "Email verified successfully");
+		} catch (err: any) {
 			setError(true);
 			setLoading(false);
 		}
 	}
 
 	async function password() {
+		if (code.length !== 6 || loading) return;
+		
 		setError(false);
 		setLoading(true);
+		autoSubmitRef.current = false;
 		try {
 			if (!payload?.email) throw new Error("Email required");
 			userPasswordForgotZod.parse({ code });
@@ -69,8 +83,8 @@ export function OTPForm({
 				body: { code, email: payload?.email },
 				method: "POST",
 			});
-		} catch (err) {
-			console.log(err);
+			toast.success(t("forgot-password.code.success") || "Code verified successfully");
+		} catch (err: any) {
 			setError(true);
 			setLoading(false);
 		}
@@ -81,26 +95,29 @@ export function OTPForm({
 		setCode("");
 		try {
 			await http({ url: "/v1/user/resend-verification" });
-			toast.success("OK");
-		} catch (err) {
-			console.log(err);
-			toast.error("some error");
+			toast.success(t("verification.email.resendSuccess") || "Verification code sent");
+		} catch (err: any) {
+			const errorMessage = err?.error || err?.message || "error.unknown";
+			const translatedError = getTranslatedError(errorMessage, t);
+			toast.error(translatedError);
 		}
 	}
 
 	async function passwordResend() {
 		if (!payload?.email) throw new Error("Email required");
+		setError(false);
+		setCode("");
 		try {
-			userPasswordForgotStartZod.parse({ code, login: payload.email });
 			await http({
 				url: "/v1/auth/forgot-password",
 				method: "POST",
 				body: { login: payload.email },
 			});
-			setLoading(false);
-		} catch (err) {
-			console.log(err);
-			setLoading(false);
+			toast.success(t("forgot-password.code.resendSuccess") || "Code sent");
+		} catch (err: any) {
+			const errorMessage = err?.error || err?.message || "error.unknown";
+			const translatedError = getTranslatedError(errorMessage, t);
+			toast.error(translatedError);
 		}
 	}
 
@@ -114,10 +131,22 @@ export function OTPForm({
 		password: password,
 	};
 
-	function change(e: ChangeEvent<HTMLInputElement>) {
+	function handleCodeChange(value: string) {
 		setError(false);
-		setCode(e.target.value);
+		setCode(value);
+		// Сбрасываем флаг автоматической отправки при изменении кода
+		if (value.length < 6) {
+			autoSubmitRef.current = false;
+		}
 	}
+
+	// Автоматическая отправка при вводе всех 6 цифр
+	useEffect(() => {
+		if (code.length === 6 && !loading && !error && !autoSubmitRef.current) {
+			autoSubmitRef.current = true;
+			sendCode[formType]();
+		}
+	}, [code.length, loading, error, formType]);
 
 	return (
 		<div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -132,15 +161,34 @@ export function OTPForm({
 					<CardContent>
 						<FieldGroup>
 							<Field>
-								<FieldLabel htmlFor="otp">
+								<FieldLabel>
 									{t(`verification.${formType}.code`)}
 								</FieldLabel>
-								<Input value={code} aria-invalid={error} onChange={change} />
+								<InputOTP
+									maxLength={6}
+									value={code}
+									onChange={handleCodeChange}
+									pattern={REGEXP_ONLY_DIGITS}
+									aria-invalid={error}
+								>
+									<InputOTPGroup>
+										<InputOTPSlot index={0} />
+										<InputOTPSlot index={1} />
+										<InputOTPSlot index={2} />
+									</InputOTPGroup>
+									<InputOTPSeparator />
+									<InputOTPGroup>
+										<InputOTPSlot index={3} />
+										<InputOTPSlot index={4} />
+										<InputOTPSlot index={5} />
+									</InputOTPGroup>
+								</InputOTP>
 							</Field>
 							<FieldGroup>
 								<Button
 									onClick={sendCode[formType]}
-									disabled={code.length === 0 || loading}
+									disabled={code.length !== 6 || loading || error}
+									loading={loading}
 								>
 									{t(`verification.${formType}.button`)}
 								</Button>

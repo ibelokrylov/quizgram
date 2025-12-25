@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Запуск тестов перед push..."
+
+cd pkg/api
+
+if bun test; then
+  echo "✅ Все тесты прошли успешно!"
+else
+  echo ""
+  echo "❌ Тесты не прошли! Push заблокирован."
+  echo ""
+  echo "Исправьте ошибки в тестах перед push."
+  echo "Для принудительного push используйте: git push --no-verify"
+  exit 1
+fi
+

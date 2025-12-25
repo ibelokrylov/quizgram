@@ -37,7 +37,8 @@ export namespace UserModel {
   // Тело запроса для верификации email
   export const verificationEmailBody = t.Object({
     code: t.String({
-      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", // UUID формат
+      pattern: "^\\d{6}$", // 6-значный цифровой код
+      description: "Код должен содержать 6 цифр",
     }),
   });
 

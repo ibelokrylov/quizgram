@@ -1,11 +1,13 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   codeTable,
   db,
   planTable,
+  upLimitTable,
   userNotificationTable,
+  userPaymentProTable,
   userTable,
   type Plan,
   type User,
@@ -230,6 +232,7 @@ export abstract class UserService {
 
   /**
    * Получение плана пользователя по userId
+   * Для Pro+ учитывает дополнительные заявки из user_payment_pro
    */
   static async getUserPlan(userId: number): Promise<Plan> {
     const user = await this.findById(userId);
@@ -253,6 +256,33 @@ export abstract class UserService {
       const error = new Error("Plan not found");
       error.name = "PlanNotFoundError";
       throw error;
+    }
+
+    // Для Pro+ проверяем дополнительные заявки
+    if (plan.name === "PRO_PLUS") {
+      const userPaymentPro = await db
+        .select({
+          upLimitId: userPaymentProTable.upLimitId,
+        })
+        .from(userPaymentProTable)
+        .where(eq(userPaymentProTable.userId, userId))
+        .limit(1);
+
+      if (userPaymentPro.length > 0 && userPaymentPro[0].upLimitId) {
+        const upLimit = await db
+          .select()
+          .from(upLimitTable)
+          .where(eq(upLimitTable.id, userPaymentPro[0].upLimitId))
+          .limit(1);
+
+        if (upLimit.length > 0) {
+          // Возвращаем план с обновленным лимитом (базовый + дополнительный)
+          return {
+            ...plan,
+            bidMonthLimit: plan.bidMonthLimit + upLimit[0].bid,
+          };
+        }
+      }
     }
 
     return plan;

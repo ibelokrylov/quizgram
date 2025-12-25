@@ -94,7 +94,13 @@ export const PlansPage = () => {
 					>
 						<CardHeader className="space-y-2">
 							<div>
-								<CardTitle className="text-lg">{plan.name}</CardTitle>
+								<CardTitle className="text-lg">
+									{plan.name === "FREE" 
+										? t("plans.price.free")
+										: plan.name === "BASE"
+										? "Pro"
+										: plan.name}
+								</CardTitle>
 								<CardDescription className="text-base text-foreground mt-1">
 									{plan.price}
 								</CardDescription>

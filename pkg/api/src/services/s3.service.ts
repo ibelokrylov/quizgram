@@ -1,20 +1,15 @@
 // Сервис для работы с S3 (AWS S3 и S3-совместимые хранилища)
+// Использует нативный Bun S3 API
 // Аналог S3Service из Go API
 
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, write } from "bun";
 import { logger } from "../lib/logger";
 
-const S3_ACCESS_KEY = process.env.S3_ACCESS_KEY;
-const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-const S3_REGION = process.env.S3_REGION || "us-east-1";
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
-const S3_URL = process.env.S3_URL; // Базовый URL для S3-совместимого хранилища
+const S3_ACCESS_KEY = typeof Bun !== "undefined" ? Bun.env.S3_ACCESS_KEY : process.env.S3_ACCESS_KEY;
+const S3_SECRET_ACCESS_KEY = typeof Bun !== "undefined" ? Bun.env.S3_SECRET_ACCESS_KEY : process.env.S3_SECRET_ACCESS_KEY;
+const S3_REGION = typeof Bun !== "undefined" ? Bun.env.S3_REGION : process.env.S3_REGION || "us-east-1";
+const S3_BUCKET_NAME = typeof Bun !== "undefined" ? Bun.env.S3_BUCKET_NAME : process.env.S3_BUCKET_NAME;
+const S3_URL = typeof Bun !== "undefined" ? Bun.env.S3_URL : process.env.S3_URL; // Базовый URL для S3-совместимого хранилища
 
 export interface UploadResult {
   fileName: string;
@@ -42,18 +37,20 @@ function getS3Client(): S3Client {
     throw new Error("S3_BUCKET_NAME is not set in environment variables");
   }
 
-  const clientConfig: any = {
-    region: S3_REGION,
-    credentials: {
-      accessKeyId: S3_ACCESS_KEY,
-      secretAccessKey: S3_SECRET_ACCESS_KEY,
-    },
+  const clientConfig = {
+    accessKeyId: S3_ACCESS_KEY,
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
+    bucket: S3_BUCKET_NAME,
+  } as {
+    accessKeyId: string;
+    secretAccessKey: string;
+    bucket: string;
+    endpoint?: string;
   };
 
   // Если указан S3_URL, настраиваем кастомный endpoint (для S3-совместимых хранилищ)
   if (S3_URL) {
     clientConfig.endpoint = S3_URL;
-    clientConfig.forcePathStyle = true; // Используем path-style адресацию
   }
 
   s3Client = new S3Client(clientConfig);
@@ -103,7 +100,6 @@ export abstract class S3Service {
     folder?: string,
   ): Promise<UploadResult> {
     const client = getS3Client();
-    const bucket = getBucket();
 
     // Генерируем уникальное имя файла
     const ext = originalFileName.includes(".")
@@ -115,24 +111,18 @@ export abstract class S3Service {
     const fileKey = folder ? `${folder}/${fileName}` : fileName;
 
     try {
-      // Используем Upload для поддержки больших файлов и автоматической multipart загрузки
-      // Upload автоматически обрабатывает разные типы входных данных
-      const upload = new Upload({
-        client,
-        params: {
-          Bucket: bucket,
-          Key: fileKey,
-          Body: file,
-        },
-      });
+      // Получаем ссылку на файл в S3
+      const s3File = client.file(fileKey);
 
-      await upload.done();
+      // Записываем данные в S3
+      // Bun.write автоматически обрабатывает разные типы входных данных
+      await write(s3File, file);
 
       // Формируем URL файла
       const fileURL = buildFileURL(fileKey);
 
       logger.info("Файл успешно загружен в S3", {
-        bucket,
+        bucket: getBucket(),
         fileKey,
         fileURL,
         originalFileName,
@@ -147,7 +137,7 @@ export abstract class S3Service {
       logger.error(
         "Ошибка при загрузке файла в S3",
         error instanceof Error ? error : new Error(String(error)),
-        { bucket, fileKey, originalFileName },
+        { bucket: getBucket(), fileKey, originalFileName },
       );
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -162,49 +152,22 @@ export abstract class S3Service {
    */
   static async getFile(fileKey: string): Promise<Buffer> {
     const client = getS3Client();
-    const bucket = getBucket();
 
     try {
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: fileKey,
-      });
+      const s3File = client.file(fileKey);
 
-      const response = await client.send(command);
-
-      if (!response.Body) {
-        throw new Error("File body is empty");
+      // Проверяем существование файла
+      const exists = await s3File.exists();
+      if (!exists) {
+        throw new Error(`File not found: ${fileKey}`);
       }
 
-      // Преобразуем поток в Buffer
-      const chunks: Uint8Array[] = [];
-      
-      // response.Body может быть ReadableStream или другим типом
-      if (response.Body instanceof ReadableStream) {
-        const reader = response.Body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value) chunks.push(value);
-        }
-      } else {
-        // Для других типов (например, в Node.js это может быть Readable)
-        const stream = response.Body as any;
-        if (stream[Symbol.asyncIterator]) {
-          for await (const chunk of stream) {
-            chunks.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk));
-          }
-        } else {
-          // Fallback: пытаемся преобразовать в Buffer напрямую
-          const arrayBuffer = await stream.arrayBuffer();
-          chunks.push(new Uint8Array(arrayBuffer));
-        }
-      }
-
-      const buffer = Buffer.concat(chunks);
+      // Читаем файл как ArrayBuffer и преобразуем в Buffer
+      const arrayBuffer = await s3File.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
       logger.info("Файл успешно загружен из S3", {
-        bucket,
+        bucket: getBucket(),
         fileKey,
       });
 
@@ -213,7 +176,7 @@ export abstract class S3Service {
       logger.error(
         "Ошибка при загрузке файла из S3",
         error instanceof Error ? error : new Error(String(error)),
-        { bucket, fileKey },
+        { bucket: getBucket(), fileKey },
       );
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -233,24 +196,22 @@ export abstract class S3Service {
     expirationSeconds: number = 3600,
   ): Promise<string> {
     const client = getS3Client();
-    const bucket = getBucket();
 
     // Максимальное время жизни presigned URL в S3 - 7 дней
     const maxExpiration = 7 * 24 * 60 * 60; // 604800 секунд
     const expiration = Math.min(expirationSeconds, maxExpiration);
 
     try {
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: fileKey,
-      });
+      const s3File = client.file(fileKey);
 
-      const url = await getSignedUrl(client, command, {
+      // Генерируем presigned URL
+      // Bun S3 API поддерживает presign синхронно
+      const url = s3File.presign({
         expiresIn: expiration,
       });
 
       logger.info("Presigned URL успешно сгенерирован", {
-        bucket,
+        bucket: getBucket(),
         fileKey,
         expiration,
       });
@@ -260,7 +221,7 @@ export abstract class S3Service {
       logger.error(
         "Ошибка при генерации presigned URL",
         error instanceof Error ? error : new Error(String(error)),
-        { bucket, fileKey },
+        { bucket: getBucket(), fileKey },
       );
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -274,25 +235,22 @@ export abstract class S3Service {
    */
   static async deleteFile(fileKey: string): Promise<void> {
     const client = getS3Client();
-    const bucket = getBucket();
 
     try {
-      const command = new DeleteObjectCommand({
-        Bucket: bucket,
-        Key: fileKey,
-      });
+      const s3File = client.file(fileKey);
 
-      await client.send(command);
+      // Удаляем файл
+      await s3File.delete();
 
       logger.info("Файл успешно удален из S3", {
-        bucket,
+        bucket: getBucket(),
         fileKey,
       });
     } catch (error) {
       logger.error(
         "Ошибка при удалении файла из S3",
         error instanceof Error ? error : new Error(String(error)),
-        { bucket, fileKey },
+        { bucket: getBucket(), fileKey },
       );
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

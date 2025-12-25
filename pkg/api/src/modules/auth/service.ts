@@ -85,7 +85,7 @@ export abstract class AuthService {
 
     try {
       const { SessionService } = await import("../../services/session.service");
-      const session = SessionService.parseSessionToken(token);
+      const session = await SessionService.parseSessionToken(token);
 
       if (plan) {
         // Подгружаем пользователя с планом через leftJoin
@@ -107,7 +107,7 @@ export abstract class AuthService {
         return {
           ...result.user,
           plan: result.plan,
-        } as UserWithPlan;
+        } satisfies UserWithPlan;
       } else {
         // Обычный запрос без плана
         const users = await db
@@ -168,8 +168,58 @@ export abstract class AuthService {
   }
 
   /**
+   * Генерация уникального реферального кода
+   */
+  static async generateReferralCode(): Promise<string> {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Исключаем похожие символы (0, O, I, 1)
+    let code: string;
+    let isUnique = false;
+
+    // Пытаемся сгенерировать уникальный код (максимум 10 попыток)
+    for (let attempt = 0; attempt < 10; attempt++) {
+      code = "";
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      // Проверяем уникальность
+      const existingUsers = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.referralCode, code))
+        .limit(1);
+
+      if (existingUsers.length === 0) {
+        isUnique = true;
+        break;
+      }
+    }
+
+    if (!isUnique || !code!) {
+      throw new Error("Failed to generate unique referral code");
+    }
+
+    return code!;
+  }
+
+  /**
+   * Поиск пользователя по реферальному коду
+   */
+  static async findByReferralCode(referralCode: string): Promise<User | null> {
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.referralCode, referralCode))
+      .limit(1);
+
+    return users[0] ?? null;
+  }
+
+  /**
    * Регистрация нового пользователя:
+   * - проверка реферального кода (если указан)
    * - создание пользователя
+   * - генерация реферального кода для нового пользователя
    * - генерация кода верификации
    * - отправка email с кодом
    * - генерация токена сессии
@@ -185,8 +235,23 @@ export abstract class AuthService {
       throw error;
     }
 
+    // Проверяем реферальный код, если он указан
+    let referralId: number | null = null;
+    if (payload.referralCode) {
+      const referrer = await this.findByReferralCode(payload.referralCode);
+      if (!referrer) {
+        const error = new Error("Invalid referral code");
+        error.name = "RegistrationError";
+        throw error;
+      }
+      referralId = referrer.id;
+    }
+
     // Хешируем пароль
     const hashedPassword = await this.hashPassword(payload.password);
+
+    // Генерируем реферальный код для нового пользователя
+    const referralCode = await this.generateReferralCode();
 
     // Создаём нового пользователя
     const newUser: NewUser = {
@@ -198,6 +263,8 @@ export abstract class AuthService {
       isVerification: false,
       language: payload.language || "en", // Сохраняем язык или используем "en" по умолчанию
       telegramId: null, // По умолчанию null
+      referralId,
+      referralCode,
     };
 
     const [createdUser] = await db
@@ -215,10 +282,10 @@ export abstract class AuthService {
         .limit(1);
 
       if (freePlan[0]) {
-        // Вычисляем finalDayAt: 30 дней от created_at + время 23:59:00
+        // Вычисляем finalDayAt: +1 месяц от created_at + время 23:59:00
         const createdAt = createdUser.createdAt;
         const finalDayAt = new Date(createdAt);
-        finalDayAt.setDate(finalDayAt.getDate() + 30);
+        finalDayAt.setMonth(finalDayAt.getMonth() + 1);
         finalDayAt.setHours(23, 59, 0, 0);
 
         const newUserPayment: NewUserPayment = {

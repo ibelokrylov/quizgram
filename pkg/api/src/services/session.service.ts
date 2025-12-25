@@ -1,9 +1,18 @@
 // Сервис для работы с сессиями через JWT токены
+// Использует библиотеку jose для прямой работы с JWT
 // Аналог SessionService из Go API
 
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_SECRET = typeof Bun !== "undefined" ? Bun.env.JWT_SECRET : process.env.JWT_SECRET || "";
+
+// Получаем секретный ключ для JWT
+function getSecretKey(): Uint8Array {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+  return new TextEncoder().encode(JWT_SECRET);
+}
 
 export interface UserSession {
   ID: number;
@@ -13,19 +22,24 @@ export interface BidSession {
   quizUIDs: string[];
 }
 
+// Тип для payload с обёрткой data
+interface JWTPayload<T> {
+  data: T;
+}
+
 export abstract class SessionService {
   /**
    * Генерация JWT токена для пользователя
    */
-  static generateSessionToken(userId: number): string {
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET environment variable is not set");
-    }
+  static async generateSessionToken(userId: number): Promise<string> {
+    const secretKey = getSecretKey();
+    const payload: JWTPayload<UserSession> = { data: { ID: userId } };
 
-    const payload: UserSession = { ID: userId };
-    const token = jwt.sign({ data: payload }, JWT_SECRET, {
-      algorithm: "HS256",
-    });
+    const token = await new SignJWT(payload as unknown as Record<string, unknown>)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("30d") // Токен действителен 30 дней
+      .sign(secretKey);
 
     return token;
   }
@@ -33,27 +47,27 @@ export abstract class SessionService {
   /**
    * Парсинг JWT токена и извлечение данных сессии
    */
-  static parseSessionToken(tokenString: string): UserSession {
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET environment variable is not set");
-    }
+  static async parseSessionToken(tokenString: string): Promise<UserSession> {
+    const secretKey = getSecretKey();
 
     try {
-      const decoded = jwt.verify(tokenString, JWT_SECRET, {
+      const { payload } = await jwtVerify(tokenString, secretKey, {
         algorithms: ["HS256"],
-      }) as { data: UserSession };
+      });
 
-      if (!decoded.data || !decoded.data.ID) {
+      const decoded = payload as unknown as JWTPayload<UserSession>;
+
+      if (!decoded || !decoded.data || !decoded.data.ID) {
         throw new Error("Invalid token structure");
       }
 
       return decoded.data;
     } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
+      if (error instanceof Error) {
+        if (error.message.includes("expired") || error.message.includes("Expired") || error.message.includes("JWTExpired")) {
+          throw new Error("Token has expired");
+        }
         throw new Error(`Token parsing error: ${error.message}`);
-      }
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new Error("Token has expired");
       }
       throw error;
     }
@@ -62,15 +76,15 @@ export abstract class SessionService {
   /**
    * Генерация JWT токена для bid (с массивом quizUIDs)
    */
-  static generateBidToken(quizUIDs: string[]): string {
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET environment variable is not set");
-    }
+  static async generateBidToken(quizUIDs: string[]): Promise<string> {
+    const secretKey = getSecretKey();
+    const payload: JWTPayload<BidSession> = { data: { quizUIDs } };
 
-    const payload: BidSession = { quizUIDs };
-    const token = jwt.sign({ data: payload }, JWT_SECRET, {
-      algorithm: "HS256",
-    });
+    const token = await new SignJWT(payload as unknown as Record<string, unknown>)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d") // Токен действителен 7 дней
+      .sign(secretKey);
 
     return token;
   }
@@ -78,8 +92,8 @@ export abstract class SessionService {
   /**
    * Добавление quizUID в существующий токен
    */
-  static addQuizUIDToToken(tokenString: string, quizUID: string): string {
-    const session = this.parseBidToken(tokenString);
+  static async addQuizUIDToToken(tokenString: string, quizUID: string): Promise<string> {
+    const session = await this.parseBidToken(tokenString);
 
     // Проверяем, нет ли уже этого quizUID в массиве
     if (!session.quizUIDs.includes(quizUID)) {
@@ -92,27 +106,27 @@ export abstract class SessionService {
   /**
    * Парсинг JWT bid токена и извлечение данных сессии
    */
-  static parseBidToken(tokenString: string): BidSession {
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET environment variable is not set");
-    }
+  static async parseBidToken(tokenString: string): Promise<BidSession> {
+    const secretKey = getSecretKey();
 
     try {
-      const decoded = jwt.verify(tokenString, JWT_SECRET, {
+      const { payload } = await jwtVerify(tokenString, secretKey, {
         algorithms: ["HS256"],
-      }) as { data: BidSession };
+      });
 
-      if (!decoded.data || !decoded.data.quizUIDs || !Array.isArray(decoded.data.quizUIDs)) {
+      const decoded = payload as unknown as JWTPayload<BidSession>;
+
+      if (!decoded || !decoded.data || !decoded.data.quizUIDs || !Array.isArray(decoded.data.quizUIDs)) {
         throw new Error("Invalid token structure");
       }
 
       return decoded.data;
     } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
+      if (error instanceof Error) {
+        if (error.message.includes("expired") || error.message.includes("Expired") || error.message.includes("JWTExpired")) {
+          throw new Error("Token has expired");
+        }
         throw new Error(`Token parsing error: ${error.message}`);
-      }
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new Error("Token has expired");
       }
       throw error;
     }

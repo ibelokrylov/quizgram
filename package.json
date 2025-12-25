@@ -5,7 +5,8 @@
   "scripts": {
     "dev:api": "--workspace=pkg/api dev",
     "dev:app": "--workspace=pkg/app dev",
-    "dev:tg-quiz": "--workspace=pkg/tg-quiz dev"
+    "dev:tg-quiz": "--workspace=pkg/tg-quiz dev",
+    "prepare": "husky"
   },
   "workspaces": {
     "packages": [
@@ -41,6 +42,7 @@
     }
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "shadcn": "^3.6.1"
   }
 }

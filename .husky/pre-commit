@@ -1,0 +1,72 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Проверка перед коммитом..."
+
+# Получаем список изменённых файлов
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Проверяем, есть ли изменения в pkg/api
+API_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/api/" || true)
+
+if [ -n "$API_CHANGED" ]; then
+  echo "📦 Проверка TypeScript типов для pkg/api..."
+  cd pkg/api
+  
+  if bun x tsc --noEmit; then
+    echo "✅ TypeScript типы корректны"
+  else
+    echo ""
+    echo "❌ Ошибки в TypeScript типах в pkg/api! Коммит заблокирован."
+    echo ""
+    echo "Исправьте ошибки типов перед коммитом."
+    echo "Для принудительного коммита используйте: git commit --no-verify"
+    exit 1
+  fi
+  
+  cd ../..
+fi
+
+# Проверяем, есть ли изменения в pkg/app
+APP_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/app/" || true)
+
+if [ -n "$APP_CHANGED" ]; then
+  echo "📦 Проверка TypeScript типов для pkg/app..."
+  cd pkg/app
+  
+  if bun x tsc --noEmit; then
+    echo "✅ TypeScript типы корректны"
+  else
+    echo ""
+    echo "❌ Ошибки в TypeScript типах в pkg/app! Коммит заблокирован."
+    echo ""
+    echo "Исправьте ошибки типов перед коммитом."
+    echo "Для принудительного коммита используйте: git commit --no-verify"
+    exit 1
+  fi
+  
+  cd ../..
+fi
+
+# Проверяем, есть ли изменения в pkg/tg-quiz
+TG_QUIZ_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/tg-quiz/" || true)
+
+if [ -n "$TG_QUIZ_CHANGED" ]; then
+  echo "📦 Проверка TypeScript типов для pkg/tg-quiz..."
+  cd pkg/tg-quiz
+  
+  if bun x tsc --noEmit; then
+    echo "✅ TypeScript типы корректны"
+  else
+    echo ""
+    echo "❌ Ошибки в TypeScript типах в pkg/tg-quiz! Коммит заблокирован."
+    echo ""
+    echo "Исправьте ошибки типов перед коммитом."
+    echo "Для принудительного коммита используйте: git commit --no-verify"
+    exit 1
+  fi
+  
+  cd ../..
+fi
+
+echo "✅ Все проверки пройдены!"

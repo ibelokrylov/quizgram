@@ -8,15 +8,23 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSeparator,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
 	finalForgotPassword,
 	firstStepForgotPassword,
 	startForgotPassword,
 } from "@/entities/ForgotPassword/forgot-password.type";
 import { AuthContext } from "@/entities/User/auth.context";
 import http from "@/lib/http";
+import { getTranslatedError } from "@/lib/error-mapper";
 import { cn } from "@/lib/utils";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -52,9 +60,12 @@ export const ForgotPassword = ({
 		undefined,
 	);
 	const [loading, setLoading] = useState(false);
+	const autoSubmitRef = useRef(false);
 
 	async function sendData() {
+		if (loading) return;
 		setLoading(true);
+		autoSubmitRef.current = false;
 		try {
 			let body = {};
 			let err = {};
@@ -111,13 +122,27 @@ export const ForgotPassword = ({
 				toast.success(t("forgot-password.success"));
 				navigate({ to: "/" });
 			}
-		} catch (err) {
+		} catch (err: any) {
 			setLoading(false);
-			console.log(err);
+			const errorMessage = err?.error || err?.message || "error.unknown";
+			const translatedError = getTranslatedError(errorMessage, t);
+			
+			// Устанавливаем ошибку для текущего поля
+			const fieldError: Record<string, boolean> = {};
+			if (stage === "login") {
+				fieldError.login = true;
+			} else if (stage === "code") {
+				fieldError.code = true;
+			} else if (stage === "password") {
+				fieldError.password = true;
+			}
+			setError(fieldError);
+			toast.error(translatedError);
 		}
 	}
 
 	function change(value: string, type: Data) {
+		// Сбрасываем ошибку при изменении поля
 		if (error && Object.keys(error).length) {
 			const oldErr = { ...error };
 			if (type === "confirmPassword") {
@@ -133,7 +158,26 @@ export const ForgotPassword = ({
 		}
 
 		setData({ ...data, [type]: value });
+		
+		// Сбрасываем флаг автоматической отправки при изменении кода
+		if (type === "code" && value.length < 6) {
+			autoSubmitRef.current = false;
+		}
 	}
+
+	// Автоматическая отправка при вводе всех 6 цифр кода
+	useEffect(() => {
+		if (
+			stage === "code" &&
+			data.code?.length === 6 &&
+			!loading &&
+			!error?.code &&
+			!autoSubmitRef.current
+		) {
+			autoSubmitRef.current = true;
+			sendData();
+		}
+	}, [data.code?.length, stage, loading, error?.code]);
 
 	function reset() {
 		setData({ login: data.login });
@@ -165,16 +209,29 @@ export const ForgotPassword = ({
 								</Field>
 								{stage === "code" || stage === "password" ? (
 									<Field>
-										<FieldLabel htmlFor="code">
+										<FieldLabel>
 											{t("forgot-password.code.label")}
 										</FieldLabel>
-										<Input
-											id="code"
-											type="text"
-											onChange={(e) => change(e.target.value, "code")}
+										<InputOTP
+											maxLength={6}
+											value={data.code || ""}
+											onChange={(value) => change(value, "code")}
+											pattern={REGEXP_ONLY_DIGITS}
 											disabled={stage !== "code"}
-											aria-invalid={error?.code}
-										/>
+											aria-invalid={!!error?.code}
+										>
+											<InputOTPGroup>
+												<InputOTPSlot index={0} />
+												<InputOTPSlot index={1} />
+												<InputOTPSlot index={2} />
+											</InputOTPGroup>
+											<InputOTPSeparator />
+											<InputOTPGroup>
+												<InputOTPSlot index={3} />
+												<InputOTPSlot index={4} />
+												<InputOTPSlot index={5} />
+											</InputOTPGroup>
+										</InputOTP>
 									</Field>
 								) : null}
 								{stage === "password" ? (
@@ -209,6 +266,7 @@ export const ForgotPassword = ({
 									<Button
 										disabled={loading || error !== undefined}
 										onClick={sendData}
+										loading={loading}
 									>
 										{t("forgot-password.button")}
 									</Button>

@@ -15,10 +15,12 @@ import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppReferralRouteImport } from './routes/app/referral'
 import { Route as AppPaymentRouteRouteImport } from './routes/app/payment/route'
 import { Route as AppNotificationRouteRouteImport } from './routes/app/notification/route'
 import { Route as AppDashboardRouteRouteImport } from './routes/app/dashboard/route'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
+import { Route as AppPaymentWaitingRouteRouteImport } from './routes/app/payment/waiting/route'
 import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
 import { Route as AppBidReportRouteRouteImport } from './routes/app/bid/report/route'
 import { Route as AppBidReportStatisticRouteRouteImport } from './routes/app/bid/report/statistic/route'
@@ -53,6 +55,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppReferralRoute = AppReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPaymentRouteRoute = AppPaymentRouteRouteImport.update({
   id: '/payment',
   path: '/payment',
@@ -72,6 +79,11 @@ const AppQuizUidRoute = AppQuizUidRouteImport.update({
   id: '/quiz/$uid',
   path: '/quiz/$uid',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppPaymentWaitingRouteRoute = AppPaymentWaitingRouteRouteImport.update({
+  id: '/waiting',
+  path: '/waiting',
+  getParentRoute: () => AppPaymentRouteRoute,
 } as any)
 const AppBidStatisticRouteRoute = AppBidStatisticRouteRouteImport.update({
   id: '/bid/statistic',
@@ -99,9 +111,11 @@ export interface FileRoutesByFullPath {
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
-  '/app/payment': typeof AppPaymentRouteRoute
+  '/app/payment': typeof AppPaymentRouteRouteWithChildren
+  '/app/referral': typeof AppReferralRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
+  '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
   '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
@@ -114,9 +128,11 @@ export interface FileRoutesByTo {
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
-  '/app/payment': typeof AppPaymentRouteRoute
+  '/app/payment': typeof AppPaymentRouteRouteWithChildren
+  '/app/referral': typeof AppReferralRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
+  '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
   '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
@@ -130,9 +146,11 @@ export interface FileRoutesById {
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
-  '/app/payment': typeof AppPaymentRouteRoute
+  '/app/payment': typeof AppPaymentRouteRouteWithChildren
+  '/app/referral': typeof AppReferralRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
+  '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
   '/app/bid/report/statistic': typeof AppBidReportStatisticRouteRoute
 }
@@ -148,8 +166,10 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
+    | '/app/referral'
     | '/app/bid/report'
     | '/app/bid/statistic'
+    | '/app/payment/waiting'
     | '/app/quiz/$uid'
     | '/app/bid/report/statistic'
   fileRoutesByTo: FileRoutesByTo
@@ -163,8 +183,10 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
+    | '/app/referral'
     | '/app/bid/report'
     | '/app/bid/statistic'
+    | '/app/payment/waiting'
     | '/app/quiz/$uid'
     | '/app/bid/report/statistic'
   id:
@@ -178,8 +200,10 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
+    | '/app/referral'
     | '/app/bid/report'
     | '/app/bid/statistic'
+    | '/app/payment/waiting'
     | '/app/quiz/$uid'
     | '/app/bid/report/statistic'
   fileRoutesById: FileRoutesById
@@ -237,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/referral': {
+      id: '/app/referral'
+      path: '/referral'
+      fullPath: '/app/referral'
+      preLoaderRoute: typeof AppReferralRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/payment': {
       id: '/app/payment'
       path: '/payment'
@@ -265,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQuizUidRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/payment/waiting': {
+      id: '/app/payment/waiting'
+      path: '/waiting'
+      fullPath: '/app/payment/waiting'
+      preLoaderRoute: typeof AppPaymentWaitingRouteRouteImport
+      parentRoute: typeof AppPaymentRouteRoute
+    }
     '/app/bid/statistic': {
       id: '/app/bid/statistic'
       path: '/bid/statistic'
@@ -289,6 +327,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppPaymentRouteRouteChildren {
+  AppPaymentWaitingRouteRoute: typeof AppPaymentWaitingRouteRoute
+}
+
+const AppPaymentRouteRouteChildren: AppPaymentRouteRouteChildren = {
+  AppPaymentWaitingRouteRoute: AppPaymentWaitingRouteRoute,
+}
+
+const AppPaymentRouteRouteWithChildren = AppPaymentRouteRoute._addFileChildren(
+  AppPaymentRouteRouteChildren,
+)
+
 interface AppBidReportRouteRouteChildren {
   AppBidReportStatisticRouteRoute: typeof AppBidReportStatisticRouteRoute
 }
@@ -303,7 +353,8 @@ const AppBidReportRouteRouteWithChildren =
 interface AppRouteRouteChildren {
   AppDashboardRouteRoute: typeof AppDashboardRouteRoute
   AppNotificationRouteRoute: typeof AppNotificationRouteRoute
-  AppPaymentRouteRoute: typeof AppPaymentRouteRoute
+  AppPaymentRouteRoute: typeof AppPaymentRouteRouteWithChildren
+  AppReferralRoute: typeof AppReferralRoute
   AppBidReportRouteRoute: typeof AppBidReportRouteRouteWithChildren
   AppBidStatisticRouteRoute: typeof AppBidStatisticRouteRoute
   AppQuizUidRoute: typeof AppQuizUidRoute
@@ -312,7 +363,8 @@ interface AppRouteRouteChildren {
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardRouteRoute: AppDashboardRouteRoute,
   AppNotificationRouteRoute: AppNotificationRouteRoute,
-  AppPaymentRouteRoute: AppPaymentRouteRoute,
+  AppPaymentRouteRoute: AppPaymentRouteRouteWithChildren,
+  AppReferralRoute: AppReferralRoute,
   AppBidReportRouteRoute: AppBidReportRouteRouteWithChildren,
   AppBidStatisticRouteRoute: AppBidStatisticRouteRoute,
   AppQuizUidRoute: AppQuizUidRoute,

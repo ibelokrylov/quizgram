@@ -18,11 +18,11 @@ export const publicModule = new Elysia({ prefix: "/public" })
     // Проверяем валидность bidToken, если он есть
     if (bidToken) {
       try {
-        session = SessionService.parseBidToken(bidToken.toString());
+        session = await SessionService.parseBidToken(bidToken.toString());
         // Проверяем, есть ли текущий quizUID в массиве
         if (!session.quizUIDs.includes(uid)) {
           // Добавляем quizUID в токен
-          const updatedToken = SessionService.addQuizUIDToToken(bidToken.toString(), uid);
+          const updatedToken = await SessionService.addQuizUIDToToken(bidToken.toString(), uid);
           ctx.cookie.bidToken.set({
             value: updatedToken,
             httpOnly: true,
@@ -43,7 +43,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
     // Если токена нет или он невалиден - создаем новый
     if (!session) {
       // Генерируем JWT с массивом quizUIDs (содержащим текущий uid)
-      const token = SessionService.generateBidToken([uid]);
+      const token = await SessionService.generateBidToken([uid]);
 
       // Устанавливаем cookie с токеном
       ctx.cookie.bidToken.set({
@@ -170,8 +170,9 @@ export const publicModule = new Elysia({ prefix: "/public" })
             for (const [key, value] of body.entries()) {
               if (key.startsWith('file_')) {
                 const index = parseInt(key.replace('file_', ''), 10);
-                if (value instanceof File || value instanceof Blob) {
-                  files.set(index, value);
+                const valueAsAny = value as any;
+                if (valueAsAny instanceof File || valueAsAny instanceof Blob) {
+                  files.set(index, valueAsAny);
                 }
               }
             }
@@ -220,10 +221,11 @@ export const publicModule = new Elysia({ prefix: "/public" })
           // Проверяем, что файл действительно получен
           // Используем более гибкую проверку, как в user/index.ts
           let fileToProcess: File | Blob | null = null;
-          if (answerValue instanceof File) {
-            fileToProcess = answerValue;
-          } else if (answerValue instanceof Blob) {
-            fileToProcess = answerValue;
+          const answerValueAsAny = answerValue as any;
+          if (answerValueAsAny instanceof File) {
+            fileToProcess = answerValueAsAny;
+          } else if (answerValueAsAny instanceof Blob) {
+            fileToProcess = answerValueAsAny;
           } else if (answerValue && typeof answerValue === "object" && "size" in answerValue) {
             // Обрабатываем объект с признаками файла (может быть из Elysia)
             fileToProcess = answerValue as Blob;
@@ -282,19 +284,36 @@ export const publicModule = new Elysia({ prefix: "/public" })
         });
       } else {
         // Обработка одного JSON ответа
+        // Проверяем, что body является объектом
+        if (!body || typeof body !== 'object' || body instanceof FormData) {
+          throw new Error("Invalid body type: expected object");
+        }
+        
+        // Используем более точный тип вместо Record<string, any>
+        type AnswerBody = {
+          question_uid: string;
+          answer: unknown;
+          question?: unknown;
+          key?: string;
+          final_question?: boolean;
+          [key: string]: unknown;
+        };
+        
+        const bodyAsRecord = body as AnswerBody;
+        
         // Извлекаем key из body и удаляем его из answerData
-        userKey = body.key || undefined;
-        const { key: _, ...answerDataWithoutKey } = body;
+        userKey = bodyAsRecord.key || undefined;
+        const { key: _, ...answerDataWithoutKey } = bodyAsRecord;
 
         // Проверяем, является ли answer массивом (question_group)
-        if (Array.isArray(body.answer)) {
+        if (Array.isArray(bodyAsRecord.answer)) {
           // Логируем входящие данные для отладки
           logger.debug("Processing question_group - input data", {
             uid,
-            parentQuestionUid: body.question_uid,
-            answerArrayLength: body.answer.length,
-            firstSubAnswer: body.answer[0],
-            allSubAnswers: body.answer.map((sa: any) => ({
+            parentQuestionUid: bodyAsRecord.question_uid,
+            answerArrayLength: bodyAsRecord.answer.length,
+            firstSubAnswer: bodyAsRecord.answer[0],
+            allSubAnswers: bodyAsRecord.answer.map((sa: any) => ({
               hasQuestionUid: 'question_uid' in (sa || {}),
               hasAnswer: 'answer' in (sa || {}),
               questionUid: sa?.question_uid,
@@ -304,15 +323,15 @@ export const publicModule = new Elysia({ prefix: "/public" })
 
           // Для question_group сохраняем один ответ с массивом подвопросов
           answersToProcess = [{
-            question_uid: body.question_uid, // UID родительского вопроса группы
-            answer: body.answer, // Массив ответов на подвопросы
+            question_uid: bodyAsRecord.question_uid, // UID родительского вопроса группы
+            answer: bodyAsRecord.answer, // Массив ответов на подвопросы
             final_question: finalQuestion,
           }];
 
           logger.debug("Processing question_group answer", {
             uid,
-            parentQuestionUid: body.question_uid,
-            subAnswersCount: body.answer.length,
+            parentQuestionUid: bodyAsRecord.question_uid,
+            subAnswersCount: bodyAsRecord.answer.length,
             key: userKey,
             finalQuestion
           });
@@ -327,7 +346,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
 
           logger.debug("Processing single JSON answer", {
             uid,
-            questionUid: body.question_uid,
+            questionUid: bodyAsRecord.question_uid,
             key: userKey,
             finalQuestion
           });

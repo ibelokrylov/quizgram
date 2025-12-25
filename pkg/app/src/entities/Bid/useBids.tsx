@@ -5,6 +5,8 @@ import {
 	useMutation,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import type { BidsListData, BidsListFilters, BidDetails } from "./bid.type";
 
 async function fetchBids(filters: BidsListFilters = {}): Promise<BidsListData> {
@@ -166,6 +168,77 @@ export const useUpdateBidStatus = () => {
 					};
 				},
 			);
+		},
+	});
+};
+
+// Хук для экспорта заявок
+export const useExportBids = () => {
+	const { t } = useTranslation("common");
+
+	return useMutation({
+		mutationFn: async ({
+			filters,
+			format,
+		}: {
+			filters: Omit<BidsListFilters, "limit" | "offset">;
+			format: "csv" | "excel";
+		}) => {
+			// Формируем query параметры
+			const params = new URLSearchParams();
+			params.append("format", format);
+			if (filters.quiz_uid) params.append("quiz_uid", filters.quiz_uid);
+			if (filters.status) params.append("status", filters.status);
+			if (filters.isFull !== undefined)
+				params.append("isFull", String(filters.isFull));
+			if (filters.isRead !== undefined)
+				params.append("isRead", String(filters.isRead));
+
+			const queryString = params.toString();
+			const url = `/v1/bids/export${queryString ? `?${queryString}` : ""}`;
+
+			// Делаем запрос для получения файла
+			const apiUrl = import.meta.env.VITE_PUBLIC_API_URL + url;
+			const response = await fetch(apiUrl, {
+				credentials: "include",
+				method: "GET",
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData?.error || "Failed to export bids");
+			}
+
+			// Получаем файл как Blob
+			const blob = await response.blob();
+
+			// Определяем имя файла из заголовка Content-Disposition или генерируем
+			const contentDisposition = response.headers.get("Content-Disposition");
+			let fileName = `bids_report_${new Date().toISOString().split("T")[0]}.${format === "csv" ? "csv" : "xlsx"}`;
+
+			if (contentDisposition) {
+				const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+				if (fileNameMatch) {
+					fileName = fileNameMatch[1];
+				}
+			}
+
+			// Создаем временную ссылку и скачиваем файл
+			const downloadUrl = window.URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = downloadUrl;
+			link.download = fileName;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(downloadUrl);
+
+			toast.success(t("bids.export.success"));
+		},
+		onError: (error: Error) => {
+			toast.error(t("bids.export.error"), {
+				description: error.message,
+			});
 		},
 	});
 };

@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -26,11 +27,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -43,84 +39,78 @@
 
 :root {
   --radius: 0.625rem;
-  /* Светлая палитра, согласованная с tgui (Telegram WebApp) */
-  --background: #ffffff; /* --tgui--bg_color / --tg-theme-bg-color */
-  --foreground: #000000; /* --tgui--text_color / --tg-theme-text-color */
-  --card: #ffffff; /* --tgui--card_bg_color / section_bg_color */
-  --card-foreground: #000000;
-  --popover: #ffffff; /* всплывающие панели на белом фоне */
-  --popover-foreground: #000000;
-  --primary: #007aff; /* --tgui--button_color / --tg-theme-button-color */
-  --primary-foreground: #ffffff; /* --tgui--button_text_color */
-  --secondary: #efeff4; /* --tgui--secondary_bg_color */
-  --secondary-foreground: #000000;
-  --muted: #f4f4f7; /* --tgui--tertiary_bg_color */
-  --muted-foreground: #707579; /* --tgui--hint_color / subtitle */
-  --accent: #007aff; /* --tgui--accent_text_color / link_color */
-  --accent-foreground: #ffffff;
-  --destructive: #e53935; /* --tgui--destructive_text_color */
-  --border: #e0e0e0; /* --tgui--section_seperator_color */
-  --input: #e0e0e0;
-  --ring: #a2c6ff; /* мягкий обводочный цвет на основе primary */
-  /* Примеры для графиков – на основе основных акцентов tgui */
-  --chart-1: #007aff; /* primary_code_highlight (синий) */
-  --chart-2: #31d158; /* green */
-  --chart-3: #e53935; /* destructive */
-  --chart-4: #b00fb4; /* secondary_code_highlight */
-  --chart-5: #3a9f20; /* tertiary_code_highlight */
-  /* Sidebar стилизуем под светлый Telegram */
-  --sidebar: #f6f6fa; /* --tgui--quartenary_bg_color */
-  --sidebar-foreground: #000000;
-  --sidebar-primary: #007aff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #e0e0e0;
-  --sidebar-ring: #a2c6ff;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0.55 0.22 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.94 0.002 264);
+  --secondary-foreground: oklch(0 0 0);
+  --muted: oklch(0.96 0.002 264);
+  --muted-foreground: oklch(0.5 0.005 264);
+  --accent: oklch(0.5898 0.1513 248.79);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.6 0.22 25);
+  --border: oklch(0.89 0.002 264);
+  --input: oklch(0.89 0.002 264);
+  --ring: oklch(0.78 0.12 250);
+  --sidebar: oklch(0.97 0.002 264);
+  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-primary: oklch(0.55 0.22 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(1 0 0);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-border: oklch(0.89 0.002 264);
+  --sidebar-ring: oklch(0.78 0.12 250);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
 }
 
 .dark {
-  /* Тёмная палитра, согласованная с tgui (Telegram WebApp) */
-  --background: #212121; /* --tgui--bg_color / --tg-theme-bg-color (dark) */
-  --foreground: #ffffff; /* --tgui--text_color */
-  --card: #2d2d2d; /* --tgui--card_bg_color */
-  --card-foreground: #ffffff;
-  --popover: #2d2d2d; /* поверх тёмного фона */
-  --popover-foreground: #ffffff;
-  /* В тёмной теме тоже оставляем синий акцент вместо фиолетового */
-  --primary: #007aff; /* синий Telegram, вместо фиолетового */
-  --primary-foreground: #ffffff;
-  --secondary: #151515; /* --tgui--secondary_bg_color (dark) */
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a; /* --tgui--tertiary_bg_color (dark) */
-  --muted-foreground: #aaaaaa; /* --tgui--hint_color (dark) */
-  --accent: #007aff; /* единый синий акцент */
-  --accent-foreground: #ffffff;
-  --destructive: #ff595a; /* --tgui--destructive_text_color (dark) */
-  --border: #2f2f2f; /* --tgui--section_seperator_color (dark) */
-  --input: #2f2f2f;
-  --ring: #007aff; /* подчёркиваем focus тем же синим акцентом */
-  /* Графики – на основе тёмной палитры tgui */
-  --chart-1: #007aff; /* основной синий */
-  --chart-2: #2b82ff; /* более светлый синий */
-  --chart-3: #32d851; /* green */
-  --chart-4: #ff595a; /* destructive_background */
-  --chart-5: #55c74f; /* дополнительный зелёный */
-  /* Sidebar под тёмный Telegram */
-  --sidebar: #212121; /* section_bg_color (dark) */
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #007aff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2d2d2d;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #2f2f2f;
-  --sidebar-ring: #007aff;
+  --background: oklch(0.25 0.002 264);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.32 0.002 264);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.32 0.002 264);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.55 0.22 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.15 0.002 264);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.18 0.002 264);
+  --muted-foreground: oklch(0.7 0.002 264);
+  --accent: oklch(0.5898 0.1513 248.79);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.34 0.002 264);
+  --input: oklch(0.34 0.002 264);
+  --ring: oklch(0.55 0.22 250);
+  --sidebar: oklch(0.25 0.002 264);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.55 0.22 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.32 0.002 264);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.34 0.002 264);
+  --sidebar-ring: oklch(0.55 0.22 250);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

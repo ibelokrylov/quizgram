@@ -133,17 +133,28 @@ async function sendMail(
       errorDetails.errorStack = error.stack;
 
       // Дополнительные поля для SMTP ошибок
-      if ('code' in error) {
-        errorDetails.errorCode = (error as any).code;
-      }
-      if ('command' in error) {
-        errorDetails.smtpCommand = (error as any).command;
-      }
-      if ('response' in error) {
-        errorDetails.smtpResponse = (error as any).response;
-      }
-      if ('responseCode' in error) {
-        errorDetails.smtpResponseCode = (error as any).responseCode;
+      // Type guard для проверки SMTP ошибки
+      type SMTPError = Error & {
+        code?: string;
+        command?: string;
+        response?: string;
+        responseCode?: number;
+      };
+      
+      const smtpError = error as unknown;
+      if (typeof smtpError === 'object' && smtpError !== null) {
+        if ('code' in smtpError && typeof smtpError.code === 'string') {
+          errorDetails.errorCode = smtpError.code;
+        }
+        if ('command' in smtpError && typeof smtpError.command === 'string') {
+          errorDetails.smtpCommand = smtpError.command;
+        }
+        if ('response' in smtpError && typeof smtpError.response === 'string') {
+          errorDetails.smtpResponse = smtpError.response;
+        }
+        if ('responseCode' in smtpError && typeof smtpError.responseCode === 'number') {
+          errorDetails.smtpResponseCode = smtpError.responseCode;
+        }
       }
     }
 
@@ -307,19 +318,123 @@ export abstract class MailService {
   static async sendPaymentReminder(
     email: string,
     language: string = "ru",
+    paymentUrl?: string,
   ): Promise<void> {
-    // Используем простой шаблон без файла (можно будет добавить файл позже)
+    // Если есть ссылка на оплату, отправляем другой вариант письма
+    if (paymentUrl) {
+      const subject = language === "en"
+        ? "Payment Required: Your Subscription Has Expired"
+        : "Требуется оплата: Ваша подписка истекла";
+
+      const html = language === "en"
+        ? `
+          <html>
+            <body>
+              <h2>Payment Required</h2>
+              <p>Hello!</p>
+              <p>Your subscription has expired and requires payment to continue using our service.</p>
+              <p>Please click the link below to make a payment:</p>
+              <p><a href="${paymentUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Pay Now</a></p>
+              <p>If the button doesn't work, copy and paste this link into your browser:</p>
+              <p>${paymentUrl}</p>
+              <p>Thank you for using our service!</p>
+            </body>
+          </html>
+        `
+        : `
+          <html>
+            <body>
+              <h2>Требуется оплата</h2>
+              <p>Здравствуйте!</p>
+              <p>Ваша подписка истекла и требует оплаты для продолжения использования нашего сервиса.</p>
+              <p>Пожалуйста, перейдите по ссылке ниже чтобы оплатить:</p>
+              <p><a href="${paymentUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Оплатить сейчас</a></p>
+              <p>Если кнопка не работает, скопируйте и вставьте эту ссылку в браузер:</p>
+              <p>${paymentUrl}</p>
+              <p>Спасибо за использование нашего сервиса!</p>
+            </body>
+          </html>
+        `;
+
+      await sendMail(subject, html, email);
+    } else {
+      // Если нет ссылки на оплату, отправляем стандартное напоминание
+      const subject = language === "en"
+        ? "Payment will be charged in 2 days"
+        : "Списание средств произойдет через 2 дня";
+
+      const html = language === "en"
+        ? `
+          <html>
+            <body>
+              <h2>Payment Reminder</h2>
+              <p>Hello!</p>
+              <p>We would like to inform you that your subscription payment will be automatically charged in 2 days.</p>
+              <p>Thank you for using our service!</p>
+            </body>
+          </html>
+        `
+        : `
+          <html>
+            <body>
+              <h2>Напоминание об оплате</h2>
+              <p>Здравствуйте!</p>
+              <p>Уведомляем вас, что через 2 дня произойдет автоматическое списание средств по вашей подписке.</p>
+              <p>Спасибо за использование нашего сервиса!</p>
+            </body>
+          </html>
+        `;
+
+      await sendMail(subject, html, email);
+    }
+  }
+
+  /**
+   * Отправка уведомления об окончании платного плана и переходе на FREE
+   * @param email - Email адрес получателя
+   * @param currentPlanName - Название текущего платного плана (BASE, PRO_PLUS)
+   * @param expirationDate - Дата окончания платного плана
+   * @param language - Язык пользователя ("en" или "ru"), по умолчанию "ru"
+   */
+  static async sendPlanExpirationNotice(
+    email: string,
+    expirationDate: string | Date,
+    language: string = "ru",
+    currentPlanName?: string,
+  ): Promise<void> {
+    // Функция для получения отображаемого имени плана
+    const getDisplayPlanName = (planName?: string): string => {
+      if (!planName) return "платный";
+      if (planName === "BASE") return "Pro";
+      if (planName === "PRO_PLUS") return "Pro+";
+      return planName;
+    };
+
+    const displayPlanName = getDisplayPlanName(currentPlanName);
+    
+    // Форматируем дату окончания
+    const dateObj = typeof expirationDate === "string" 
+      ? new Date(expirationDate) 
+      : expirationDate;
+    
+    const formattedDate = dateObj.toLocaleDateString(
+      language === "en" ? "en-US" : "ru-RU",
+      { year: "numeric", month: "long", day: "numeric" }
+    );
+
     const subject = language === "en"
-      ? "Payment will be charged in 2 days"
-      : "Списание средств произойдет через 2 дня";
+      ? `Your ${displayPlanName} plan will expire soon`
+      : `Ваш тарифный план ${displayPlanName} скоро закончится`;
 
     const html = language === "en"
       ? `
         <html>
           <body>
-            <h2>Payment Reminder</h2>
+            <h2>Plan Expiration Notice</h2>
             <p>Hello!</p>
-            <p>We would like to inform you that your subscription payment will be automatically charged in 2 days.</p>
+            <p>We would like to inform you that your <strong>${displayPlanName}</strong> plan will expire on <strong>${formattedDate}</strong>.</p>
+            <p>After this date, your account will automatically switch to the <strong>Free</strong> plan with limited features.</p>
+            <p>If you wish to continue using the premium features, please renew your subscription before the expiration date.</p>
             <p>Thank you for using our service!</p>
           </body>
         </html>
@@ -327,9 +442,11 @@ export abstract class MailService {
       : `
         <html>
           <body>
-            <h2>Напоминание об оплате</h2>
+            <h2>Уведомление об окончании тарифного плана</h2>
             <p>Здравствуйте!</p>
-            <p>Уведомляем вас, что через 2 дня произойдет автоматическое списание средств по вашей подписке.</p>
+            <p>Уведомляем вас, что ваш тарифный план <strong>${displayPlanName}</strong> закончится <strong>${formattedDate}</strong>.</p>
+            <p>После этой даты ваш аккаунт автоматически перейдёт на тарифный план <strong>Free</strong> с ограниченными возможностями.</p>
+            <p>Если вы хотите продолжить использовать премиум функции, пожалуйста, продлите подписку до даты окончания.</p>
             <p>Спасибо за использование нашего сервиса!</p>
           </body>
         </html>

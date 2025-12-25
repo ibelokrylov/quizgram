@@ -3,7 +3,7 @@
 import { integer, pgEnum, pgTable, serial, smallint } from "drizzle-orm/pg-core";
 
 // Перечисление допустимых имён тарифов
-export const planNameEnum = pgEnum("plan_name", ["FREE", "BASE"]);
+export const planNameEnum = pgEnum("plan_name", ["FREE", "BASE", "PRO_PLUS"]);
 
 export const planTable = pgTable("plan", {
   id: serial("id").primaryKey(),

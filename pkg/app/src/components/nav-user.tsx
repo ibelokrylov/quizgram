@@ -1,10 +1,11 @@
 import {
 	IconCreditCard,
 	IconDotsVertical,
+	IconGift,
 	IconLogout,
 	IconNotification,
 } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -54,6 +55,7 @@ export function NavUser({
 		if (!name) return undefined;
 		if (name === "FREE") return t("plans.price.free");
 		if (name === "BASE") return "Pro";
+		if (name === "PRO_PLUS") return "Pro+";
 		return name;
 	};
 
@@ -95,6 +97,14 @@ export function NavUser({
 
 	return (
 		<SidebarMenu>
+			<SidebarMenuItem>
+				<Link to="/app/referral">
+					<SidebarMenuButton tooltip={t("nav.user.referral")}>
+						<IconGift className="size-4" />
+						<span>{t("nav.user.referral")}</span>
+					</SidebarMenuButton>
+				</Link>
+			</SidebarMenuItem>
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>

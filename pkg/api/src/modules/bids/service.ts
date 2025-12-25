@@ -1,7 +1,54 @@
-import { sql, SQL } from 'drizzle-orm';
-import { db } from '../../db';
+import { and, eq, sql, SQL } from 'drizzle-orm';
+import { db, userPaymentTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { BidsListFilters, UpdateBidStatus } from './model';
+
+// Типы для результатов SQL запросов
+type CountsResult = Array<{
+  total: number | string;
+  total_full: number | string;
+  total_not_full: number | string;
+}>;
+
+type CountResult = Array<{ count: number | string }>;
+
+type BidListItem = {
+  uid: string;
+  key: string;
+  status: string;
+  isFull: boolean;
+  isRead: boolean;
+  first: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  adminUpdatedAt: Date | string | null;
+  contacts: Record<string, string> | null;
+  ipLocation: { country: string | null; city: string | null; ip: string | null } | null;
+  info: unknown | null;
+  quizName: string;
+};
+
+type BidDetail = {
+  bidId: number;
+  uid: string;
+  key: string;
+  status: string;
+  isFull: boolean;
+  first: boolean;
+  data: unknown;
+  info: unknown;
+  questions: unknown;
+  contacts: unknown;
+  contactsForm: unknown;
+  userInfo: unknown;
+  initData: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  adminUpdatedAt: Date | string | null;
+  quizName: string;
+};
+
+type UpdateResult = Array<{ id: number }>;
 
 export abstract class BidsService {
   /**
@@ -100,29 +147,54 @@ export abstract class BidsService {
       const baseWhereConditions = this.buildWhereConditions(userId, baseFilters, false, false);
       const combinedBaseWhere = this.combineWhereConditions(baseWhereConditions);
 
+      // Получаем лимит из активной записи user_payment
+      let userPaymentLimit = bidMonthLimit; // По умолчанию используем лимит из плана
+      try {
+        const activeUserPayment = await db
+          .select({ limit: userPaymentTable.limit })
+          .from(userPaymentTable)
+          .where(
+            and(
+              eq(userPaymentTable.userId, userId),
+              eq(userPaymentTable.isActive, true)
+            )
+          )
+          .limit(1);
+
+        if (activeUserPayment.length > 0 && activeUserPayment[0]) {
+          userPaymentLimit = activeUserPayment[0].limit;
+          logger.debug("Получен лимит из активной записи user_payment", {
+            userId,
+            limit: userPaymentLimit,
+          });
+        }
+      } catch (paymentError) {
+        logger.warn("Не удалось получить лимит из user_payment, используется лимит из плана", {
+          userId,
+          planLimit: bidMonthLimit,
+          error: paymentError instanceof Error ? paymentError.message : String(paymentError),
+        });
+      }
+
       // ОПТИМИЗАЦИЯ: Объединяем все COUNT запросы в один с использованием FILTER
       const countsResult = await db.execute(sql`
         SELECT 
           COUNT(*)::int as total,
           COUNT(*) FILTER (WHERE b.is_full = true)::int as total_full,
-          COUNT(*) FILTER (WHERE b.is_full = false)::int as total_not_full,
-          COUNT(*) FILTER (WHERE b.is_full = true AND b.is_equal_payment_limit = true)::int as max_available_full
+          COUNT(*) FILTER (WHERE b.is_full = false)::int as total_not_full
         FROM quiz_bid b
         INNER JOIN quiz q ON b.quiz_id = q.id
         WHERE ${combinedBaseWhere}
       `);
 
-      const counts = (countsResult as unknown as Array<{
-        total: number | string;
-        total_full: number | string;
-        total_not_full: number | string;
-        max_available_full: number | string;
-      }>) || [];
+      const counts = (countsResult as unknown as CountsResult) || [];
 
       const total = Number(counts[0]?.total || 0);
       const totalFull = Number(counts[0]?.total_full || 0);
       const totalNotFull = Number(counts[0]?.total_not_full || 0);
-      const maxAvailableFull = Number(counts[0]?.max_available_full || 0);
+
+      // Подсчитываем maxAvailableFull на основе лимита из user_payment
+      const maxAvailableFull = Math.min(totalFull, userPaymentLimit);
 
       // Подсчитываем общее количество доступных заявок (с учетом всех фильтров включая isFull)
       const availableCountResult = await db.execute(sql`
@@ -132,7 +204,7 @@ export abstract class BidsService {
         WHERE ${combinedWhere}
       `);
 
-      const countResult = (availableCountResult as unknown as Array<{ count: number | string }>) || [];
+      const countResult = (availableCountResult as unknown as CountResult) || [];
       const maxAvailable = Number(countResult[0]?.count || 0);
 
       // ОПТИМИЗАЦИЯ: Используем LIMIT + 1 для определения hasMore
@@ -165,21 +237,7 @@ export abstract class BidsService {
       `);
 
       // В Drizzle ORM с postgres.js результат db.execute - это массив объектов напрямую
-      const bids = (bidsResult as unknown as Array<{
-        uid: string;
-        key: string;
-        status: string;
-        isFull: boolean;
-        isRead: boolean;
-        first: boolean;
-        createdAt: Date | string;
-        updatedAt: Date | string;
-        adminUpdatedAt: Date | string | null;
-        contacts: Record<string, string> | null;
-        ipLocation: { country: string | null; city: string | null; ip: string | null } | null;
-        info: any | null;
-        quizName: string;
-      }>) || [];
+      const bids = (bidsResult as unknown as BidListItem[]) || [];
 
       // Определяем hasMore по количеству полученных записей
       const hasMore = bids.length > requestedLimit;
@@ -192,36 +250,50 @@ export abstract class BidsService {
       const deletedInLimitFull = 0;
 
       // Трансформируем данные для ответа
-      const transformedBids = bids.map(bid => ({
-        uid: bid.uid,
-        key: bid.key,
-        status: bid.status,
-        isFull: bid.isFull,
-        isRead: bid.isRead,
-        first: bid.first,
-        createdAt: bid.createdAt instanceof Date
+      const transformedBids = bids.map(bid => {
+        const createdAt = bid.createdAt instanceof Date
           ? bid.createdAt.toISOString()
-          : new Date(bid.createdAt).toISOString(),
-        updatedAt: bid.updatedAt instanceof Date
+          : typeof bid.createdAt === 'string'
+            ? new Date(bid.createdAt).toISOString()
+            : new Date(String(bid.createdAt)).toISOString();
+        
+        const updatedAt = bid.updatedAt instanceof Date
           ? bid.updatedAt.toISOString()
-          : new Date(bid.updatedAt).toISOString(),
-        adminUpdatedAt: bid.adminUpdatedAt
+          : typeof bid.updatedAt === 'string'
+            ? new Date(bid.updatedAt).toISOString()
+            : new Date(String(bid.updatedAt)).toISOString();
+        
+        const adminUpdatedAt = bid.adminUpdatedAt
           ? (bid.adminUpdatedAt instanceof Date
             ? bid.adminUpdatedAt.toISOString()
-            : new Date(bid.adminUpdatedAt).toISOString())
-          : null,
-        quizName: bid.quizName,
-        contacts: bid.contacts || null,
-        ipLocation: bid.ipLocation,
-        // info уже обработан через CASE в SQL, поэтому просто возвращаем как есть
-        ...(planId !== 1 && { info: bid.info ?? null }),
-      }));
+            : typeof bid.adminUpdatedAt === 'string'
+              ? new Date(bid.adminUpdatedAt).toISOString()
+              : new Date(String(bid.adminUpdatedAt)).toISOString())
+          : null;
 
-      // Проверяем, есть ли заявки сверх лимита (общее количество больше доступного по месяцам)
-      const hasMoreBeyondLimit = total > maxAvailable;
+        return {
+          uid: String(bid.uid),
+          key: String(bid.key),
+          status: String(bid.status),
+          isFull: Boolean(bid.isFull),
+          isRead: Boolean(bid.isRead),
+          first: Boolean(bid.first),
+          createdAt,
+          updatedAt,
+          adminUpdatedAt,
+          quizName: String(bid.quizName),
+          contacts: bid.contacts || null,
+          ipLocation: bid.ipLocation,
+          // info уже обработан через CASE в SQL, поэтому просто возвращаем как есть
+          ...(planId !== 1 && { info: bid.info ?? null }),
+        };
+      });
 
       // Вычисляем количество заявок с isFull = true, которые не влезли из-за лимита тарифного плана
       const beyondLimitCount = Math.max(0, totalFull - maxAvailableFull);
+
+      // Проверяем, есть ли заявки сверх лимита тарифного плана
+      const hasMoreBeyondLimit = beyondLimitCount > 0;
 
       logger.debug("Bids list retrieved", {
         userId,
@@ -299,7 +371,7 @@ export abstract class BidsService {
         RETURNING b.id
       `);
 
-      const result = (updateResult as unknown as Array<{ id: number }>) || [];
+      const result = (updateResult as unknown as UpdateResult) || [];
 
       if (!result.length) {
         throw new Error("Bid not found or access denied");
@@ -353,25 +425,7 @@ export abstract class BidsService {
         LIMIT 1
       `);
 
-      const bids = (bidResult as unknown as Array<{
-        bidId: number;
-        uid: string;
-        key: string;
-        status: string;
-        isFull: boolean;
-        first: boolean;
-        data: any;
-        info: any;
-        questions: any;
-        contacts: any;
-        contactsForm: any;
-        userInfo: any;
-        initData: string | null;
-        createdAt: Date | string;
-        updatedAt: Date | string;
-        adminUpdatedAt: Date | string | null;
-        quizName: string;
-      }>) || [];
+      const bids = (bidResult as unknown as BidDetail[]) || [];
 
       if (!bids.length) {
         throw new Error("Bid not found or access denied");
@@ -404,31 +458,43 @@ export abstract class BidsService {
         status: bidData.status,
       });
 
+      const createdAt = bidData.createdAt instanceof Date
+        ? bidData.createdAt.toISOString()
+        : typeof bidData.createdAt === 'string'
+          ? new Date(bidData.createdAt).toISOString()
+          : new Date(String(bidData.createdAt)).toISOString();
+      
+      const updatedAt = bidData.updatedAt instanceof Date
+        ? bidData.updatedAt.toISOString()
+        : typeof bidData.updatedAt === 'string'
+          ? new Date(bidData.updatedAt).toISOString()
+          : new Date(String(bidData.updatedAt)).toISOString();
+      
+      const adminUpdatedAt = bidData.adminUpdatedAt
+        ? (bidData.adminUpdatedAt instanceof Date
+          ? bidData.adminUpdatedAt.toISOString()
+          : typeof bidData.adminUpdatedAt === 'string'
+            ? new Date(bidData.adminUpdatedAt).toISOString()
+            : new Date(String(bidData.adminUpdatedAt)).toISOString())
+        : null;
+
       return {
-        uid: bidData.uid,
-        key: bidData.key,
-        status: bidData.status,
-        isFull: bidData.isFull,
-        first: bidData.first,
-        createdAt: bidData.createdAt instanceof Date
-          ? bidData.createdAt.toISOString()
-          : new Date(bidData.createdAt).toISOString(),
-        updatedAt: bidData.updatedAt instanceof Date
-          ? bidData.updatedAt.toISOString()
-          : new Date(bidData.updatedAt).toISOString(),
-        adminUpdatedAt: bidData.adminUpdatedAt
-          ? (bidData.adminUpdatedAt instanceof Date
-            ? bidData.adminUpdatedAt.toISOString()
-            : new Date(bidData.adminUpdatedAt).toISOString())
-          : null,
-        quizName: bidData.quizName,
+        uid: String(bidData.uid),
+        key: String(bidData.key),
+        status: String(bidData.status),
+        isFull: Boolean(bidData.isFull),
+        first: Boolean(bidData.first),
+        createdAt,
+        updatedAt,
+        adminUpdatedAt,
+        quizName: String(bidData.quizName),
         data: bidData.data,
         info: bidData.info,
         questions: bidData.questions,
         contacts: bidData.contacts,
         contactsForm: bidData.contactsForm,
         userInfo: bidData.userInfo,
-        initData: bidData.initData,
+        initData: bidData.initData ? String(bidData.initData) : null,
       };
     } catch (error) {
       logger.error("Failed to get bid details", error as Error, { userId, key });
@@ -458,7 +524,7 @@ export abstract class BidsService {
         RETURNING b.id
       `);
 
-      const result = (deleteResult as unknown as Array<{ id: number }>) || [];
+      const result = (deleteResult as unknown as UpdateResult) || [];
 
       if (!result.length) {
         throw new Error("Bid not found or access denied");
@@ -471,6 +537,124 @@ export abstract class BidsService {
       });
     } catch (error) {
       logger.error("Failed to delete bid", error as Error, { userId, key });
+      throw error;
+    }
+  }
+
+  /**
+   * Получает все заявки для экспорта (без лимитов пагинации)
+   * @param userId - ID пользователя
+   * @param filters - фильтры для поиска (без limit и offset)
+   * @param planId - ID плана пользователя
+   */
+  static async getBidsForExport(
+    userId: number,
+    filters: Omit<BidsListFilters, 'limit' | 'offset'>,
+    planId: number = 1
+  ) {
+    try {
+      // Если план FREE, всегда показываем только isFull=true AND isEqualPaymentLimit=true
+      // Для платных пользователей используем фильтры как есть
+      const effectiveFilters = { ...filters };
+      if (planId === 1) {
+        effectiveFilters.isFull = true;
+      }
+
+      logger.debug("Bids export filters", {
+        userId,
+        planId,
+        originalFilters: filters,
+        effectiveFilters,
+      });
+
+      // Формируем условия для запроса
+      // Для экспорта НЕ включаем ограничение по лимиту тарифа (includePaymentLimit = false)
+      // чтобы экспортировать все заявки по фильтрам, независимо от лимита
+      const mainWhereConditions = this.buildWhereConditions(
+        userId,
+        effectiveFilters,
+        true,
+        false // includePaymentLimit = false - убираем ограничение по лимиту тарифа
+      );
+      const combinedWhere = this.combineWhereConditions(mainWhereConditions);
+
+      // Получаем все заявки без лимитов
+      const bidsResult = await db.execute(sql`
+        SELECT 
+          q.uid,
+          b.key,
+          b.status,
+          b.is_full as "isFull",
+          b.is_read as "isRead",
+          b.first,
+          b.created_at as "createdAt",
+          b.updated_at as "updatedAt",
+          b.admin_updated_at as "adminUpdatedAt",
+          b.contacts,
+          b.ip_location as "ipLocation",
+          CASE WHEN ${planId} != 1 THEN b.info ELSE NULL END as info,
+          q.name as "quizName"
+        FROM quiz_bid b
+        INNER JOIN quiz q ON b.quiz_id = q.id
+        WHERE ${combinedWhere}
+        ORDER BY b.created_at DESC
+      `);
+
+      const bids = (bidsResult as unknown as BidListItem[]) || [];
+
+      // Трансформируем данные для экспорта
+      const transformedBids = bids.map(bid => {
+        const createdAt = bid.createdAt instanceof Date
+          ? bid.createdAt.toISOString()
+          : typeof bid.createdAt === 'string'
+            ? new Date(bid.createdAt).toISOString()
+            : new Date(String(bid.createdAt)).toISOString();
+        
+        const updatedAt = bid.updatedAt instanceof Date
+          ? bid.updatedAt.toISOString()
+          : typeof bid.updatedAt === 'string'
+            ? new Date(bid.updatedAt).toISOString()
+            : new Date(String(bid.updatedAt)).toISOString();
+        
+        const adminUpdatedAt = bid.adminUpdatedAt
+          ? (bid.adminUpdatedAt instanceof Date
+            ? bid.adminUpdatedAt.toISOString()
+            : typeof bid.adminUpdatedAt === 'string'
+              ? new Date(bid.adminUpdatedAt).toISOString()
+              : new Date(String(bid.adminUpdatedAt)).toISOString())
+          : null;
+
+        return {
+          uid: String(bid.uid),
+          key: String(bid.key),
+          status: String(bid.status),
+          isFull: Boolean(bid.isFull),
+          isRead: Boolean(bid.isRead),
+          first: Boolean(bid.first),
+          createdAt,
+          updatedAt,
+          adminUpdatedAt,
+          quizName: String(bid.quizName),
+          contacts: bid.contacts || null,
+          ipLocation: bid.ipLocation,
+          ...(planId !== 1 && { info: bid.info ?? null }),
+        };
+      });
+
+      logger.debug("Bids for export retrieved", {
+        userId,
+        filters: effectiveFilters,
+        count: transformedBids.length,
+      });
+
+      return transformedBids;
+    } catch (error) {
+      logger.error("Failed to get bids for export", error as Error, {
+        userId,
+        filters,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     }
   }

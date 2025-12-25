@@ -334,31 +334,41 @@ export abstract class QuizService {
       }
     }
 
-    if (data.question !== undefined && data.question.length > 0) {
+    if (data.question !== undefined) {
       try {
-        const questions = data.question as QuizQuestion[];
-        const questionUid = new Set<string>(questions.map((question) => question.uid));
-        const questionQuiz = await db.select().from(quizQuestionTable).where(eq(quizQuestionTable.quizId, quiz[0].id));
-
-        if (questionQuiz.length > 0) {
-          const deleteQuestionUid = questionQuiz.filter((question) => !questionUid.has(question.uid)).map((question) => question.uid);
+        // Если массив question пустой - удаляем все вопросы квиза
+        if (data.question.length === 0) {
           await db.delete(quizQuestionTable)
-            .where(and(eq(quizQuestionTable.quizId, quiz[0].id), inArray(quizQuestionTable.uid, deleteQuestionUid)));
-        }
+            .where(eq(quizQuestionTable.quizId, quiz[0].id));
+          ok.add("question");
+        } else {
+          // Если массив question не пустой - обновляем вопросы
+          const questions = data.question as QuizQuestion[];
+          const questionUid = new Set<string>(questions.map((question) => question.uid));
+          const questionQuiz = await db.select().from(quizQuestionTable).where(eq(quizQuestionTable.quizId, quiz[0].id));
 
-        await db.insert(quizQuestionTable)
-          .values(questions.map((question, idx) => ({
-            quizId: quiz[0].id,
-            type: question.type,
-            uid: question.uid,
-            order: idx,
-            content: question.content,
-          })))
-          .onConflictDoUpdate({
-            target: [quizQuestionTable.uid],
-            set: buildConflictUpdateColumns(quizQuestionTable, ['type', 'order', 'content'])
-          });
-        ok.add("question");
+          if (questionQuiz.length > 0) {
+            const deleteQuestionUid = questionQuiz.filter((question) => !questionUid.has(question.uid)).map((question) => question.uid);
+            if (deleteQuestionUid.length > 0) {
+              await db.delete(quizQuestionTable)
+                .where(and(eq(quizQuestionTable.quizId, quiz[0].id), inArray(quizQuestionTable.uid, deleteQuestionUid)));
+            }
+          }
+
+          await db.insert(quizQuestionTable)
+            .values(questions.map((question, idx) => ({
+              quizId: quiz[0].id,
+              type: question.type,
+              uid: question.uid,
+              order: idx,
+              content: question.content,
+            })))
+            .onConflictDoUpdate({
+              target: [quizQuestionTable.uid],
+              set: buildConflictUpdateColumns(quizQuestionTable, ['type', 'order', 'content'])
+            });
+          ok.add("question");
+        }
       }
       catch (err) {
         console.log(err)

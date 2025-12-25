@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm";
-import { db, planTable, quizBidTable, quizTable, userPaymentTable, userTable } from "../../db";
+import { db, paymentTable, planTable, quizBidTable, quizTable, upLimitTable, userPaymentProTable, userPaymentTable, userTable } from "../../db";
+import * as DateUtils from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
 import { MailService } from "../../services/mail.service";
 
@@ -21,10 +22,10 @@ export abstract class SchedulerService {
         : 5;
 
       // Вычисляем время N минут назад
-      const minutesAgo = new Date(Date.now() - minutes * 60 * 1000);
+      const minutesAgo = DateUtils.now().minus({ minutes });
       logger.debug("Время отсечки для обработки заявок", {
         minutes,
-        minutesAgo: minutesAgo.toISOString(),
+        minutesAgo: DateUtils.toISO(minutesAgo),
       });
 
       // Находим всех платных пользователей (planId !== 1)
@@ -78,7 +79,7 @@ export abstract class SchedulerService {
           isFull: false,
           infoIsNull: true,
           minutes,
-          updatedAtBefore: minutesAgo.toISOString(),
+          updatedAtBefore: DateUtils.toISO(minutesAgo),
           quizIdsCount: quizIds.length,
         },
       });
@@ -96,7 +97,7 @@ export abstract class SchedulerService {
             inArray(quizBidTable.quizId, quizIds),
             eq(quizBidTable.isFull, false),
             sql`${quizBidTable.info} IS NULL`,
-            lt(quizBidTable.updatedAt, minutesAgo),
+            lt(quizBidTable.updatedAt, DateUtils.toJSDate(minutesAgo)),
             isNull(quizBidTable.deletedAt),
           ),
         );
@@ -210,11 +211,13 @@ export abstract class SchedulerService {
 
     if (!answer || typeof answer !== "object") {
       // Если нет answer, отвал произошел на первом вопросе (индекс 0, номер вопроса 1)
+      const firstQuestion = questions[0];
       logger.debug("Отвал на первом вопросе: нет ответов");
       return {
         dropoutAt: "question",
         dropoutIndex: 0,
         dropoutQuestionNumber: 1,
+        dropoutQuestionUid: firstQuestion?.uid || null,
         dropoutReason: "no_answer",
         questionsCount,
         answersCount: 0,
@@ -276,10 +279,12 @@ export abstract class SchedulerService {
     // dropoutQuestionNumber = answersCount + 1 (номер вопроса, начиная с 1)
     const dropoutIndex = answersCount;
     const dropoutQuestionNumber = answersCount + 1;
+    const dropoutQuestion = questions[dropoutIndex];
 
     logger.debug("Отвал на конкретном вопросе", {
       dropoutIndex,
       dropoutQuestionNumber,
+      dropoutQuestionUid: dropoutQuestion?.uid,
       questionsCount,
       answersCount,
     });
@@ -288,6 +293,7 @@ export abstract class SchedulerService {
       dropoutAt: "question",
       dropoutIndex,
       dropoutQuestionNumber,
+      dropoutQuestionUid: dropoutQuestion?.uid || null,
       dropoutReason: "question_not_answered",
       questionsCount,
       answersCount,
@@ -298,28 +304,24 @@ export abstract class SchedulerService {
    * Обрабатывает платежи пользователей:
    * - Отправляет письмо за 2 дня до окончания подписки (если extended=true)
    * - Продлевает подписку автоматически, если она закончилась
+   * @param skipTimeCheck - Пропустить проверку временных рамок (для тестов)
    */
-  static async processPayments() {
+  static async processPayments(skipTimeCheck: boolean = false) {
     const startTime = Date.now();
     logger.info("Начало обработки платежей");
 
     try {
-      const now = new Date();
-      // Устанавливаем время на 00:00:00 для текущей даты
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-      // Дата через 2 дня (для проверки окончания подписки)
-      const twoDaysLater = new Date(today);
-      twoDaysLater.setDate(twoDaysLater.getDate() + 2);
-      twoDaysLater.setHours(23, 59, 59, 999);
+      const now = DateUtils.now();
+      const today = DateUtils.startOfToday();
+      const twoDaysLater = DateUtils.calculateDatePlusDaysEndOfDay(2);
 
       logger.debug("Проверка платежей", {
-        now: now.toISOString(),
-        today: today.toISOString(),
-        twoDaysLater: twoDaysLater.toISOString(),
+        now: DateUtils.toISO(now),
+        today: DateUtils.toISO(today),
+        twoDaysLater: DateUtils.toISO(twoDaysLater),
       });
 
-      // Находим всех не удаленных пользователей с платными планами и user_payment
+      // Находим всех не удаленных пользователей с платными планами и активными user_payment
       const usersWithPayments = await db
         .select({
           userId: userTable.id,
@@ -333,14 +335,23 @@ export abstract class SchedulerService {
           currentLimit: userPaymentTable.currentLimit,
           planName: planTable.name,
           planBidMonthLimit: planTable.bidMonthLimit,
+          planPrice: planTable.price,
+          paymentId: userPaymentTable.paymentId,
+          paymentMethod: paymentTable.method,
+          paymentInvoiceUrl: paymentTable.invoiceUrl,
+          paymentAttempts: userPaymentTable.paymentAttempts,
+          lastPaymentAttemptAt: userPaymentTable.lastPaymentAttemptAt,
+          maxPaymentAttempts: userPaymentTable.maxPaymentAttempts,
         })
         .from(userPaymentTable)
         .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
         .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
+        .leftJoin(paymentTable, eq(userPaymentTable.paymentId, paymentTable.id))
         .where(
           and(
             isNull(userTable.deletedAt), // Только не удаленные пользователи
             sql`${userPaymentTable.planId} != 1`, // Только платные планы
+            eq(userPaymentTable.isActive, true), // Только активные записи user_payment
           ),
         );
 
@@ -353,44 +364,130 @@ export abstract class SchedulerService {
         count: usersWithPayments.length,
       });
 
+      // Находим отсроченные планы, которые должны начаться сегодня
+      const scheduledPayments = await db
+        .select({
+          userPaymentId: userPaymentTable.id,
+          userId: userPaymentTable.userId,
+          planId: userPaymentTable.planId,
+          scheduledPlanId: userPaymentTable.scheduledPlanId,
+          startsAt: userPaymentTable.startsAt,
+          isPaid: userPaymentTable.isPaid,
+          paymentId: userPaymentTable.paymentId,
+        })
+        .from(userPaymentTable)
+        .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
+        .where(
+          and(
+            isNull(userTable.deletedAt),
+            eq(userPaymentTable.isActive, false), // Неактивные записи (отсроченные)
+            sql`DATE(${userPaymentTable.startsAt}) = DATE(${sql.raw("CURRENT_DATE")})`, // Начинаются сегодня
+          ),
+        );
+
+      logger.info("Найдено отсроченных планов для активации", {
+        count: scheduledPayments.length,
+      });
+
       let emailsSent = 0;
       let subscriptionsExtended = 0;
+      let scheduledPlansActivated = 0;
       let errors = 0;
+
+      // Обрабатываем отсроченные планы
+      for (const scheduledPayment of scheduledPayments) {
+        try {
+          const { PaymentService } = await import("../payment/service");
+
+          // Если план не оплачен, создаем платеж
+          if (!scheduledPayment.isPaid && scheduledPayment.paymentId) {
+            // Платеж уже создан, просто активируем план
+            await PaymentService.activateScheduledPlan(
+              scheduledPayment.userPaymentId,
+            );
+          } else if (!scheduledPayment.isPaid) {
+            // Платеж не создан, нужно создать его сейчас
+            // Это не должно происходить, но на всякий случай обрабатываем
+            logger.warn("Отсроченный план без платежа", {
+              userPaymentId: scheduledPayment.userPaymentId,
+              userId: scheduledPayment.userId,
+            });
+          } else {
+            // План уже оплачен, просто активируем
+            await PaymentService.activateScheduledPlan(
+              scheduledPayment.userPaymentId,
+            );
+          }
+
+          logger.info("Отсроченный план активирован", {
+            userId: scheduledPayment.userId,
+            planId: scheduledPayment.planId,
+            userPaymentId: scheduledPayment.userPaymentId,
+          });
+
+          scheduledPlansActivated++;
+        } catch (error) {
+          logger.error(
+            "Ошибка при активации отсроченного плана",
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              userId: scheduledPayment.userId,
+              userPaymentId: scheduledPayment.userPaymentId,
+            },
+          );
+          errors++;
+        }
+      }
 
       for (const userPayment of usersWithPayments) {
         try {
-          const finalDayAt = new Date(userPayment.finalDayAt);
+          const finalDayAt = DateUtils.fromJSDate(userPayment.finalDayAt);
 
-          // Проверяем, заканчивается ли подписка через 2 дня и extended=true
-          if (
-            userPayment.extended &&
-            finalDayAt >= today &&
-            finalDayAt <= twoDaysLater
-          ) {
-            // Отправляем письмо о предстоящем списании
+          // Проверяем, заканчивается ли подписка через 2 дня
+          if (DateUtils.isBetweenInclusive(finalDayAt, today, twoDaysLater)) {
             try {
               const userLanguage = userPayment.userLanguage || "ru";
-              await MailService.sendPaymentReminder(
-                userPayment.userLogin,
-                userLanguage,
-              );
 
-              logger.info("Отправлено письмо о предстоящем списании", {
-                userId: userPayment.userId,
-                email: userPayment.userLogin,
-                finalDayAt: finalDayAt.toISOString(),
-              });
+              if (userPayment.extended) {
+                // Если extended=true, отправляем письмо о предстоящем списании
+                await MailService.sendPaymentReminder(
+                  userPayment.userLogin,
+                  userLanguage,
+                );
+
+                logger.info("Отправлено письмо о предстоящем списании", {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                  finalDayAt: DateUtils.toISO(finalDayAt),
+                });
+              } else {
+                // Если extended=false, отправляем письмо о переходе на FREE план
+                await MailService.sendPlanExpirationNotice(
+                  userPayment.userLogin,
+                  DateUtils.formatDate(finalDayAt),
+                  userLanguage,
+                  userPayment.planName,
+                );
+
+                logger.info("Отправлено письмо о переходе на FREE план", {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                  currentPlan: userPayment.planName,
+                  finalDayAt: DateUtils.toISO(finalDayAt),
+                });
+              }
 
               emailsSent++;
             } catch (emailError) {
               logger.error(
-                "Ошибка при отправке письма о предстоящем списании",
+                "Ошибка при отправке письма",
                 emailError instanceof Error
                   ? emailError
                   : new Error(String(emailError)),
                 {
                   userId: userPayment.userId,
                   email: userPayment.userLogin,
+                  extended: userPayment.extended,
                 },
               );
               errors++;
@@ -398,42 +495,367 @@ export abstract class SchedulerService {
           }
 
           // Проверяем, закончилась ли подписка
-          if (finalDayAt < today) {
-            // Продлеваем подписку на 30 дней и обновляем лимиты
-            const newFinalDayAt = new Date(today);
-            newFinalDayAt.setDate(newFinalDayAt.getDate() + 30);
-            newFinalDayAt.setHours(23, 59, 0, 0);
-
-            // Обновляем user_payment
-            await db
-              .update(userPaymentTable)
-              .set({
-                finalDayAt: newFinalDayAt,
-                limit: userPayment.planBidMonthLimit, // Обновляем лимит из плана
-                currentLimit: 0, // Сбрасываем текущий лимит
-                extended: true,
-                month: 1,
-              })
-              .where(eq(userPaymentTable.id, userPayment.userPaymentId));
-
-            // Обновляем план пользователя
-            await db
-              .update(userTable)
-              .set({
+          if (DateUtils.isBefore(finalDayAt, today)) {
+            // Если extended=false, просто деактивируем подписку и переводим на FREE план
+            if (!userPayment.extended) {
+              logger.info("Подписка истекла (extended=false), перевод на FREE план", {
+                userId: userPayment.userId,
                 planId: userPayment.planId,
-                updatedAt: new Date(),
-              })
-              .where(eq(userTable.id, userPayment.userId));
+              });
 
-            logger.info("Подписка продлена автоматически", {
-              userId: userPayment.userId,
-              planId: userPayment.planId,
-              oldFinalDayAt: finalDayAt.toISOString(),
-              newFinalDayAt: newFinalDayAt.toISOString(),
-              newLimit: userPayment.planBidMonthLimit,
-            });
+              // Получаем FREE план (id=1)
+              const freePlans = await db
+                .select()
+                .from(planTable)
+                .where(eq(planTable.id, 1))
+                .limit(1);
 
-            subscriptionsExtended++;
+              if (freePlans.length === 0) {
+                logger.error(
+                  "FREE план не найден",
+                  new Error("FREE plan not found"),
+                  { userId: userPayment.userId }
+                );
+                errors++;
+                continue;
+              }
+
+              // Деактивируем текущую подписку
+              await db
+                .update(userPaymentTable)
+                .set({
+                  isActive: false,
+                })
+                .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+              // Обновляем план пользователя на FREE
+              await db
+                .update(userTable)
+                .set({
+                  planId: freePlans[0].id,
+                  updatedAt: DateUtils.toJSDate(DateUtils.now()),
+                })
+                .where(eq(userTable.id, userPayment.userId));
+
+              subscriptionsExtended++;
+              continue;
+            }
+
+            // Если нет paymentId, используем старую логику автоматического продления
+            if (!userPayment.paymentId) {
+              // Автоматически продлеваем подписку (старая логика)
+              const newFinalDayAt = DateUtils.calculateSubscriptionEndDate(today);
+
+              // Для Pro+ проверяем наличие дополнительного лимита
+              let totalLimit = userPayment.planBidMonthLimit;
+
+              if (userPayment.planName === "PRO_PLUS") {
+                const userPaymentPro = await db
+                  .select({
+                    upLimitId: userPaymentProTable.upLimitId,
+                    additionalLimit: upLimitTable.bid,
+                  })
+                  .from(userPaymentProTable)
+                  .innerJoin(upLimitTable, eq(userPaymentProTable.upLimitId, upLimitTable.id))
+                  .where(eq(userPaymentProTable.userId, userPayment.userId))
+                  .limit(1);
+
+                if (userPaymentPro.length > 0) {
+                  totalLimit = userPayment.planBidMonthLimit + userPaymentPro[0].additionalLimit;
+
+                  logger.debug("Найден дополнительный лимит для Pro+", {
+                    userId: userPayment.userId,
+                    baseLimit: userPayment.planBidMonthLimit,
+                    additionalLimit: userPaymentPro[0].additionalLimit,
+                    totalLimit,
+                  });
+                }
+              }
+
+              // Обновляем user_payment
+              await db
+                .update(userPaymentTable)
+                .set({
+                  finalDayAt: DateUtils.toJSDate(newFinalDayAt),
+                  limit: totalLimit,
+                  currentLimit: 0,
+                  extended: true,
+                  month: 1,
+                })
+                .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+              // Обновляем план пользователя
+              await db
+                .update(userTable)
+                .set({
+                  planId: userPayment.planId,
+                  updatedAt: DateUtils.toJSDate(DateUtils.now()),
+                })
+                .where(eq(userTable.id, userPayment.userId));
+
+              logger.info("Подписка продлена автоматически (без paymentId)", {
+                userId: userPayment.userId,
+                planId: userPayment.planId,
+                oldFinalDayAt: DateUtils.toISO(finalDayAt),
+                newFinalDayAt: DateUtils.toISO(newFinalDayAt),
+                totalLimit,
+              });
+
+              subscriptionsExtended++;
+              continue;
+            }
+
+            // Проверяем, превышено ли максимальное количество попыток оплаты
+            if (userPayment.paymentAttempts >= userPayment.maxPaymentAttempts) {
+              // Переводим пользователя на бесплатный план
+              logger.info("Превышено максимальное количество попыток оплаты, перевод на FREE план", {
+                userId: userPayment.userId,
+                paymentAttempts: userPayment.paymentAttempts,
+                maxPaymentAttempts: userPayment.maxPaymentAttempts,
+              });
+
+              // Получаем FREE план (id=1)
+              const freePlans = await db
+                .select()
+                .from(planTable)
+                .where(eq(planTable.id, 1))
+                .limit(1);
+
+              if (freePlans.length === 0) {
+                logger.error(
+                  "FREE план не найден",
+                  new Error("FREE plan not found"),
+                  { userId: userPayment.userId }
+                );
+                errors++;
+                continue;
+              }
+
+              const freePlan = freePlans[0];
+
+              // Деактивируем текущую подписку
+              await db
+                .update(userPaymentTable)
+                .set({
+                  isActive: false,
+                })
+                .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+              // Обновляем план пользователя на FREE
+              await db
+                .update(userTable)
+                .set({
+                  planId: freePlan.id,
+                  updatedAt: DateUtils.toJSDate(DateUtils.now()),
+                })
+                .where(eq(userTable.id, userPayment.userId));
+
+              // Отправляем уведомление о переводе на FREE план
+              try {
+                const userLanguage = userPayment.userLanguage || "ru";
+                const expirationDate = DateUtils.formatDate(DateUtils.now());
+                await MailService.sendPlanExpirationNotice(
+                  userPayment.userLogin,
+                  expirationDate,
+                  userLanguage,
+                );
+
+                logger.info("Отправлено письмо о переводе на FREE план после неудачных попыток оплаты", {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                });
+              } catch (emailError) {
+                logger.error(
+                  "Ошибка при отправке письма о переводе на FREE план",
+                  emailError instanceof Error
+                    ? emailError
+                    : new Error(String(emailError)),
+                  {
+                    userId: userPayment.userId,
+                    email: userPayment.userLogin,
+                  },
+                );
+              }
+
+              subscriptionsExtended++;
+              continue;
+            }
+
+            // Определяем способ оплаты
+            const paymentMethod = userPayment.paymentMethod || "crypto_pay";
+
+            if (paymentMethod === "crypto_pay") {
+              // Для crypto_pay отправляем письмо со ссылкой на оплату
+              try {
+                const userLanguage = userPayment.userLanguage || "ru";
+
+                // Если платёж не создан, создаём его
+                let invoiceUrl = userPayment.paymentInvoiceUrl;
+                if (!userPayment.paymentId || !invoiceUrl) {
+                  const { PaymentService } = await import("../payment/service");
+                  const { payment, invoiceUrl: newInvoiceUrl } = await PaymentService.createPayment(
+                    userPayment.userId,
+                    userPayment.planId,
+                    undefined,
+                    false, // payNow = false, оплата отложена
+                  );
+
+                  // Обновляем user_payment с новым paymentId
+                  await db
+                    .update(userPaymentTable)
+                    .set({
+                      paymentId: payment.id,
+                    })
+                    .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+                  invoiceUrl = newInvoiceUrl;
+
+                  logger.info("Создан платёж для crypto_pay", {
+                    userId: userPayment.userId,
+                    paymentId: payment.id,
+                    invoiceUrl,
+                  });
+                }
+
+                // Отправляем письмо со ссылкой на оплату
+                await MailService.sendPaymentReminder(
+                  userPayment.userLogin,
+                  userLanguage,
+                  invoiceUrl,
+                );
+
+                // Увеличиваем счётчик попыток
+                await db
+                  .update(userPaymentTable)
+                  .set({
+                    paymentAttempts: userPayment.paymentAttempts + 1,
+                    lastPaymentAttemptAt: new Date(),
+                  })
+                  .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+                logger.info("Отправлено письмо для crypto_pay с ссылкой на оплату", {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                  paymentAttempts: userPayment.paymentAttempts + 1,
+                  invoiceUrl,
+                });
+
+                emailsSent++;
+              } catch (error) {
+                logger.error(
+                  "Ошибка при обработке crypto_pay платежа",
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    userId: userPayment.userId,
+                    email: userPayment.userLogin,
+                  },
+                );
+                errors++;
+              }
+            } else {
+              // Для других способов оплаты (card, bank_transfer) пытаемся списать средства
+              // Проверяем, находимся ли мы в временных рамках 00:00-02:00
+              if (!skipTimeCheck) {
+                const isWithinPaymentWindow = DateUtils.isWithinHourRange(0, 2);
+
+                if (!isWithinPaymentWindow) {
+                  // Вне временных рамок - пропускаем попытку списания
+                  logger.debug("Пропуск попытки списания: вне временных рамок 00:00-02:00", {
+                    userId: userPayment.userId,
+                    paymentMethod,
+                    currentTime: DateUtils.toISO(DateUtils.now()),
+                  });
+                  continue;
+                }
+              }
+
+              try {
+                // TODO: Реализовать списание с карты/банковского счета
+                // Пока просто логируем и увеличиваем счётчик попыток
+                logger.info("Попытка списания средств для способа оплаты", {
+                  userId: userPayment.userId,
+                  paymentMethod,
+                  paymentAttempts: userPayment.paymentAttempts + 1,
+                  timeWindow: "00:00-02:00",
+                });
+
+                // Здесь должна быть логика списания средств через платёжный шлюз
+                // const paymentSuccessful = await processCardPayment(userPayment);
+
+                // Для примера считаем, что оплата не прошла
+                const paymentSuccessful = false;
+
+                if (paymentSuccessful) {
+                  // Если оплата прошла успешно, продлеваем подписку
+                  const newFinalDayAt = DateUtils.calculateSubscriptionEndDate(today);
+
+                  // Для Pro+ проверяем наличие дополнительного лимита
+                  let totalLimit = userPayment.planBidMonthLimit;
+
+                  if (userPayment.planName === "PRO_PLUS") {
+                    const userPaymentPro = await db
+                      .select({
+                        upLimitId: userPaymentProTable.upLimitId,
+                        additionalLimit: upLimitTable.bid,
+                      })
+                      .from(userPaymentProTable)
+                      .innerJoin(upLimitTable, eq(userPaymentProTable.upLimitId, upLimitTable.id))
+                      .where(eq(userPaymentProTable.userId, userPayment.userId))
+                      .limit(1);
+
+                    if (userPaymentPro.length > 0) {
+                      totalLimit = userPayment.planBidMonthLimit + userPaymentPro[0].additionalLimit;
+                    }
+                  }
+
+                  await db
+                    .update(userPaymentTable)
+                    .set({
+                      finalDayAt: DateUtils.toJSDate(newFinalDayAt),
+                      limit: totalLimit,
+                      currentLimit: 0,
+                      extended: true,
+                      month: 1,
+                      paymentAttempts: 0, // Сбрасываем счётчик попыток
+                      lastPaymentAttemptAt: DateUtils.toJSDate(DateUtils.now()),
+                    })
+                    .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+                  logger.info("Подписка продлена после успешной оплаты", {
+                    userId: userPayment.userId,
+                    planId: userPayment.planId,
+                    paymentMethod,
+                  });
+
+                  subscriptionsExtended++;
+                } else {
+                  // Если оплата не прошла, увеличиваем счётчик попыток
+                  await db
+                    .update(userPaymentTable)
+                    .set({
+                      paymentAttempts: userPayment.paymentAttempts + 1,
+                      lastPaymentAttemptAt: DateUtils.toJSDate(DateUtils.now()),
+                    })
+                    .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+
+                  logger.warn("Неудачная попытка списания средств", {
+                    userId: userPayment.userId,
+                    paymentMethod,
+                    paymentAttempts: userPayment.paymentAttempts + 1,
+                  });
+                }
+              } catch (error) {
+                logger.error(
+                  "Ошибка при попытке списания средств",
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    userId: userPayment.userId,
+                    paymentMethod,
+                  },
+                );
+                errors++;
+              }
+            }
           }
         } catch (error) {
           logger.error(
@@ -451,8 +873,10 @@ export abstract class SchedulerService {
       const duration = Date.now() - startTime;
       logger.info("Обработка платежей завершена", {
         total: usersWithPayments.length,
+        scheduledPlans: scheduledPayments.length,
         emailsSent,
         subscriptionsExtended,
+        scheduledPlansActivated,
         errors,
         durationMs: duration,
       });

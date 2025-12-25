@@ -1,11 +1,14 @@
 import Elysia, { t } from "elysia";
 import { logger } from "../../lib/logger";
 import { AuthService, type UserWithPlan } from "../auth/service";
+import { ExportService } from "../../services/export.service";
 import {
   BidsModel,
   bidsListFilters,
   bidsListResponse,
-  updateBidStatus
+  bidsExportFilters,
+  updateBidStatus,
+  type BidsExportFilters
 } from "./model";
 import { BidsService } from "./service";
 
@@ -18,10 +21,11 @@ export const bids = new Elysia({ prefix: "/bids" })
           ctx.set.status = 401;
           return { message: "Unauthorized" };
         } else {
-          ctx.store.user = await AuthService.getUserFromToken(
+          const user = await AuthService.getUserFromToken(
             ctx.cookie.token.value.toString(),
             true, // Подгружаем план пользователя
-          ) as UserWithPlan | null;
+          );
+          ctx.store.user = (user && 'plan' in user ? user : null) as UserWithPlan | null;
         }
       },
     },
@@ -29,7 +33,7 @@ export const bids = new Elysia({ prefix: "/bids" })
       app
         // GET /bids - получение списка заявок
         .get("/", async (ctx) => {
-          const user = ctx.store.user;
+          const user: UserWithPlan | null = ctx.store.user;
 
           if (!user) {
             ctx.set.status = 401;
@@ -102,7 +106,7 @@ export const bids = new Elysia({ prefix: "/bids" })
 
         // PUT /bids/status - обновление статуса заявки
         .put("/status", async (ctx) => {
-          const user = ctx.store.user;
+          const user: UserWithPlan | null = ctx.store.user;
 
           if (!user) {
             ctx.set.status = 401;
@@ -151,7 +155,7 @@ export const bids = new Elysia({ prefix: "/bids" })
 
         // GET /bids/:key - получение информации по заявке по key (key из таблицы quiz_bid)
         .get("/:key", async (ctx) => {
-          const user = ctx.store.user;
+          const user: UserWithPlan | null = ctx.store.user;
 
           if (!user) {
             ctx.set.status = 401;
@@ -202,7 +206,7 @@ export const bids = new Elysia({ prefix: "/bids" })
 
         // DELETE /bids/:key - удаление заявки (soft delete)
         .delete("/:key", async (ctx) => {
-          const user = ctx.store.user;
+          const user: UserWithPlan | null = ctx.store.user;
 
           if (!user) {
             ctx.set.status = 401;
@@ -249,5 +253,99 @@ export const bids = new Elysia({ prefix: "/bids" })
             404: BidsModel.deleteBidErrorResponse,
             500: BidsModel.deleteBidErrorResponse,
           },
+        })
+
+        // GET /bids/export - экспорт заявок в CSV или Excel
+        .get("/export", async (ctx) => {
+          const user: UserWithPlan | null = ctx.store.user;
+
+          if (!user) {
+            ctx.set.status = 401;
+            return { message: "Unauthorized" };
+          }
+
+          // Проверяем, что пользователь не на FREE плане
+          const planName = user.plan?.name ?? "FREE";
+          if (planName === "FREE") {
+            ctx.set.status = 403;
+            return { message: "failed", error: "Export is not available for FREE plan" };
+          }
+
+          try {
+            const { query } = ctx;
+            const format = query.format as 'csv' | 'excel';
+
+            if (!format || (format !== 'csv' && format !== 'excel')) {
+              ctx.set.status = 400;
+              return { message: "failed", error: "Invalid format. Use 'csv' or 'excel'" };
+            }
+
+            // Получаем фильтры без limit и offset
+            // Преобразуем строковые значения в boolean (для isFull и isRead)
+            const exportFilters: BidsExportFilters = {
+              quiz_uid: query.quiz_uid,
+              status: query.status,
+              isFull: query.isFull === "true" 
+                ? true 
+                : query.isFull === "false" 
+                  ? false 
+                  : query.isFull === "all" || query.isFull === undefined
+                    ? undefined
+                    : query.isFull as boolean,
+              isRead: query.isRead === "true"
+                ? true
+                : query.isRead === "false"
+                  ? false
+                  : query.isRead === undefined
+                    ? undefined
+                    : query.isRead as boolean,
+            };
+
+            // Получаем все заявки для экспорта
+            const bids = await BidsService.getBidsForExport(
+              user.id,
+              exportFilters,
+              user.planId
+            );
+
+            // Генерируем файл в зависимости от формата
+            if (format === 'csv') {
+              const csvContent = ExportService.generateCSV(bids);
+              const fileName = `bids_report_${new Date().toISOString().split('T')[0]}.csv`;
+
+              return new Response(csvContent, {
+                headers: {
+                  'Content-Type': 'text/csv; charset=utf-8',
+                  'Content-Disposition': `attachment; filename="${fileName}"`,
+                },
+              });
+            } else {
+              const excelBuffer = await ExportService.generateExcel(bids);
+              const fileName = `bids_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+              return new Response(excelBuffer as BodyInit, {
+                headers: {
+                  'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                  'Content-Disposition': `attachment; filename="${fileName}"`,
+                },
+              });
+            }
+          } catch (error) {
+            logger.error("Failed to export bids", error as Error, {
+              userId: user.id,
+              query: ctx.query,
+            });
+
+            ctx.set.status = 500;
+            return { message: "failed", error: "Internal server error" };
+          }
+        }, {
+          query: t.Object({
+            format: t.Union([t.Literal('csv'), t.Literal('excel')]),
+            quiz_uid: t.Optional(t.String()),
+            status: t.Optional(t.String()),
+            isFull: t.Optional(t.Union([t.Boolean(), t.String()])), // Принимаем boolean или string ("true"/"false"/"all")
+            isRead: t.Optional(t.Union([t.Boolean(), t.String()])), // Принимаем boolean или string ("true"/"false")
+          }),
         })
   );

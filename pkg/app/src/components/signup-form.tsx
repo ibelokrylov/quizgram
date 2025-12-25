@@ -22,6 +22,7 @@ import { toast } from "sonner";
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 	const [error, setError] = useState<Record<string, boolean> | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [invalidReferralCode, setInvalidReferralCode] = useState<string | null>(null);
 	const [data, setData] = useState<
 		UserRegistration & { passwordConfirm: string }
 	>({
@@ -30,17 +31,35 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 		name: "",
 		remember: true,
 		passwordConfirm: "",
+		referralCode: "",
 	});
 
 	const ctx = useContext(AuthContext);
 	const { i18n, t } = useTranslation("common");
 
 	function change(v: string | boolean, type: keyof typeof data) {
-		setError({ ...error, [type]: false });
+		// Если изменяется реферальный код, сбрасываем ошибку и сохраненное значение
+		if (type === "referralCode") {
+			setInvalidReferralCode(null);
+			setError({ ...error, referralCode: false });
+		} else {
+			setError({ ...error, [type]: false });
+		}
 		setData({ ...data, [type]: v });
 	}
 
 	async function registration() {
+		// Проверяем, был ли ранее неверный реферальный код и не изменился ли он
+		if (
+			invalidReferralCode !== null &&
+			data.referralCode === invalidReferralCode &&
+			data.referralCode !== ""
+		) {
+			toast.error(t("registration.referralCode.changeRequired"));
+			setError({ referralCode: true });
+			return;
+		}
+
 		setLoading(true);
 		setError(null);
 		try {
@@ -73,6 +92,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 							name: data.name,
 							remember: data.remember,
 							language,
+							referralCode: data.referralCode || undefined,
 						},
 					});
 					if (res.data) {
@@ -92,8 +112,22 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 					}
 				}
 			}
-		} catch (err) {
+		} catch (err: any) {
 			console.log(err);
+			// Проверяем, является ли ошибка ошибкой реферального кода
+			const errorMessage = err?.message || err?.error || "";
+			if (errorMessage.includes("Invalid referral code")) {
+				// Сохраняем значение реферального кода, при котором была ошибка
+				if (data.referralCode) {
+					setInvalidReferralCode(data.referralCode);
+				}
+				setError({ referralCode: true });
+				toast.error(t("registration.referralCode.invalid"));
+			} else if (errorMessage) {
+				toast.error(errorMessage);
+			} else {
+				toast.error(t("registration.error"));
+			}
 			setLoading(false);
 		}
 		setLoading(false);
@@ -158,6 +192,22 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 							type="password"
 							required
 						/>
+					</Field>
+					<Field>
+						<FieldLabel htmlFor="referral-code">
+							{t("registration.referralCode.label")}
+						</FieldLabel>
+						<Input
+							value={data.referralCode}
+							onChange={(e) => change(e.target.value, "referralCode")}
+							aria-invalid={error?.referralCode ?? false}
+							id="referral-code"
+							type="text"
+							placeholder={t("registration.referralCode.placeholder")}
+						/>
+						<FieldDescription>
+							{t("registration.referralCode.description")}
+						</FieldDescription>
 					</Field>
 					<FieldGroup>
 						<Field>

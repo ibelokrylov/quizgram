@@ -7,11 +7,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PaymentMethodDrawer } from "@/components/payment-method-drawer";
 import { usePlans } from "@/entities/User/usePlans";
+import { useUpLimits } from "@/entities/User/useUpLimits";
 import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -19,37 +22,111 @@ export const PaymentPage = () => {
 	const { t } = useTranslation();
 	const { query } = usePlans();
 	const { query: userPlanQuery } = useUserPlan();
+	const { query: upLimitsQuery } = useUpLimits();
 	const queryClient = useQueryClient();
 	const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
+	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [selectedPlan, setSelectedPlan] = useState<{
+		id: number;
+		name: string;
+		price: number;
+	} | null>(null);
+	const [selectedUpLimitId, setSelectedUpLimitId] = useState<number | null>(null);
+	const [initialUpLimitSet, setInitialUpLimitSet] = useState(false);
+
+	// Форматируем название плана для отображения
+	const getDisplayPlanName = (planName: string) => {
+		if (planName === "FREE") {
+			return t("plans.price.free");
+		}
+		if (planName === "BASE") {
+			return "Pro";
+		}
+		if (planName === "PRO_PLUS") {
+			return "Pro+";
+		}
+		return planName;
+	};
+
+	// Устанавливаем текущий вариант Pro+ по умолчанию на основе плана пользователя
+	useEffect(() => {
+		if (
+			!initialUpLimitSet &&
+			userPlanQuery.data &&
+			userPlanQuery.data.name === "PRO_PLUS" &&
+			upLimitsQuery.data &&
+			upLimitsQuery.data.length > 0
+		) {
+			// Определяем, какой upLimit соответствует текущему bidMonthLimit пользователя
+			const currentLimit = userPlanQuery.data.bidMonthLimit; // 5000
+			const baseLimit = 200; // Базовый лимит Pro+
+			const additionalBids = currentLimit - baseLimit; // 4800
+
+			if (additionalBids > 0) {
+				// Ищем upLimit с соответствующим количеством дополнительных заявок
+				const matchingUpLimit = upLimitsQuery.data.find((ul) => ul.bid === additionalBids);
+				if (matchingUpLimit) {
+					setSelectedUpLimitId(matchingUpLimit.id);
+				} else {
+					// Если не нашли точное совпадение, оставляем базовый вариант (null)
+					setSelectedUpLimitId(null);
+				}
+			} else {
+				// Базовый вариант (null) для 200 заявок
+				setSelectedUpLimitId(null);
+			}
+			setInitialUpLimitSet(true);
+		}
+	}, [userPlanQuery.data, upLimitsQuery.data, initialUpLimitSet]);
 
 	const handlePlanSelect = async (planId: number) => {
-		// Не обновляем, если это уже текущий план
-		if (userPlanQuery.data?.id === planId) {
+		if (!query.data) {
 			return;
 		}
 
-		setLoadingPlanId(planId);
-		try {
-			const response = await http<{ planId: number; planName: string }>({
-				url: `/v1/payment/${planId}`,
-				method: "POST",
-			});
+		const plan = query.data.find((p) => p.id === planId);
+		if (!plan) {
+			return;
+		}
 
-			if (response.data) {
-				const displayPlanName = getDisplayPlanName(response.data.planName);
-				toast.success(t("payment.success", { plan: displayPlanName }));
-				// Инвалидируем кэш плана пользователя, чтобы обновить данные
-				queryClient.invalidateQueries({ queryKey: ["user-plan"] });
-				queryClient.invalidateQueries({ queryKey: ["user"] });
+		// Проверяем, является ли выбранный вариант текущим
+		if (isCurrentVariant(plan)) {
+			return;
+		}
+
+		// Если план бесплатный и текущий план тоже бесплатный, сразу обновляем
+		if (plan.price === 0 && userPlanQuery.data?.price === 0) {
+			setLoadingPlanId(planId);
+			try {
+				const response = await http<{ planId: number; planName: string }>({
+					url: `/v1/payment/${planId}`,
+					method: "POST",
+				});
+
+				if (response.data) {
+					const displayPlanName = getDisplayPlanName(response.data.planName);
+					toast.success(t("payment.success", { plan: displayPlanName }));
+					// Инвалидируем кэш плана пользователя, чтобы обновить данные
+					queryClient.invalidateQueries({ queryKey: ["user-plan"] });
+					queryClient.invalidateQueries({ queryKey: ["user"] });
+				}
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: t("payment.error")
+				);
+			} finally {
+				setLoadingPlanId(null);
 			}
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: t("payment.error")
-			);
-		} finally {
-			setLoadingPlanId(null);
+		} else {
+			// Для всех планов (включая бесплатный при переходе с платного) открываем Drawer
+			setSelectedPlan({
+				id: plan.id,
+				name: plan.name,
+				price: plan.price,
+			});
+			setDrawerOpen(true);
 		}
 	};
 
@@ -76,17 +153,6 @@ export const PaymentPage = () => {
 
 	const plans = query.data;
 
-	// Форматируем название плана для отображения
-	const getDisplayPlanName = (planName: string) => {
-		if (planName === "FREE") {
-			return t("plans.price.free");
-		}
-		if (planName === "BASE") {
-			return "Pro";
-		}
-		return planName;
-	};
-
 	// Определяем, является ли план платным
 	const isPaidPlan = (planName: string) => planName !== "FREE";
 
@@ -111,15 +177,67 @@ export const PaymentPage = () => {
 		} else {
 			// Для платных планов
 			features.push(t("plans.features.quiz_unlimited"));
-			features.push(
-				`${t("plans.features.lead_limit")}: ${plan.bidMonthLimit} ${t("plans.perMonth")}`
-			);
+			// Для Pro+ не добавляем "Лимит заявок" в список, т.к. он отображается над Tabs
+			if (plan.name !== "PRO_PLUS") {
+				features.push(
+					`${t("plans.features.lead_limit")}: ${plan.bidMonthLimit} ${t("plans.perMonth")}`
+				);
+			}
 			features.push(t("plans.features.lead_delivery.paid"));
 			features.push(t("plans.features.exports_reports.paid"));
 			features.push(t("plans.features.analytics.paid"));
 		}
 
 		return features;
+	};
+
+	// Рассчитываем итоговую цену для Pro+ с учётом выбранного upLimit
+	const getTotalPrice = (plan: typeof plans[0]) => {
+		if (plan.name === "PRO_PLUS") {
+			// Если выбран базовый вариант (selectedUpLimitId === null), возвращаем базовую цену
+			if (selectedUpLimitId === null) {
+				return plan.price;
+			}
+			// Если выбран дополнительный лимит, добавляем его цену
+			if (selectedUpLimitId && upLimitsQuery.data) {
+				const selectedUpLimit = upLimitsQuery.data.find((ul) => ul.id === selectedUpLimitId);
+				if (selectedUpLimit) {
+					return plan.price + selectedUpLimit.price;
+				}
+			}
+		}
+		return plan.price;
+	};
+
+	// Рассчитываем лимит для конкретного плана с учётом выбранного upLimit
+	const getPlanLimit = (plan: typeof plans[0], upLimitId: number | null) => {
+		if (plan.name === "PRO_PLUS") {
+			if (upLimitId === null) {
+				return plan.bidMonthLimit; // 200
+			}
+			if (upLimitId && upLimitsQuery.data) {
+				const upLimit = upLimitsQuery.data.find((ul) => ul.id === upLimitId);
+				if (upLimit) {
+					return plan.bidMonthLimit + upLimit.bid;
+				}
+			}
+		}
+		return plan.bidMonthLimit;
+	};
+
+	// Проверяем, является ли выбранный вариант текущим
+	const isCurrentVariant = (plan: typeof plans[0]) => {
+		if (!userPlanQuery.data) return false;
+		
+		// Для Pro+ проверяем и план, и лимит
+		if (plan.name === "PRO_PLUS" && userPlanQuery.data.name === "PRO_PLUS") {
+			const currentLimit = userPlanQuery.data.bidMonthLimit;
+			const selectedLimit = getPlanLimit(plan, selectedUpLimitId);
+			return userPlanQuery.data.id === plan.id && currentLimit === selectedLimit;
+		}
+		
+		// Для других планов проверяем только ID
+		return userPlanQuery.data.id === plan.id;
 	};
 
 	return (
@@ -137,19 +255,18 @@ export const PaymentPage = () => {
 				{plans.map((plan) => {
 					const features = getPlanFeatures(plan);
 					const paid = isPaidPlan(plan.name);
-					const isCurrentPlan =
-						userPlanQuery.data?.id === plan.id;
-
+					const isCurrentVariantPlan = isCurrentVariant(plan);
+					const isProPlus = plan.name === "PRO_PLUS";
 					const isLoading = loadingPlanId === plan.id;
+					const totalPrice = getTotalPrice(plan);
 
 					return (
 						<Card
 							key={plan.id}
-							onClick={() => !isLoading && handlePlanSelect(plan.id)}
-							className={`flex flex-col border-border/70 transition-all hover:border-primary hover:shadow-md relative cursor-pointer ${paid ? "border-primary/50" : ""
+							className={`flex flex-col border-border/70 transition-all hover:border-primary hover:shadow-md relative ${paid ? "border-primary/50" : ""
 								} ${isLoading ? "opacity-50 cursor-wait" : ""}`}
 						>
-							{isCurrentPlan && (
+							{isCurrentVariantPlan && (
 								<div className="absolute -top-4 left-3 z-10">
 									<Badge variant="secondary">
 										{t("plans.current_plan")}
@@ -162,12 +279,61 @@ export const PaymentPage = () => {
 										{getDisplayPlanName(plan.name)}
 									</CardTitle>
 									<CardDescription className="text-base text-foreground mt-1">
-										{formatPrice(plan.price, plan.name)}
+										{isProPlus
+											? `${totalPrice} ₽ / ${t("plans.price.perMonth")}`
+											: formatPrice(plan.price, plan.name)}
 									</CardDescription>
 								</div>
 							</CardHeader>
-							<CardContent className="flex-1 space-y-3">
-								{paid && (
+							<CardContent className="flex-1 flex flex-col space-y-3">
+								{isProPlus && upLimitsQuery.data && upLimitsQuery.data.length > 0 && (
+									<div className="space-y-2">
+										<p className="text-sm font-medium">
+											{t("plans.features.lead_limit")}
+										</p>
+										<Tabs
+											value={selectedUpLimitId === null ? "base" : selectedUpLimitId.toString()}
+											onValueChange={(value) => {
+												if (value === "base") {
+													setSelectedUpLimitId(null);
+												} else {
+													setSelectedUpLimitId(Number(value));
+												}
+											}}
+											className="w-fit"
+											onClick={(e) => {
+												e.stopPropagation();
+											}}
+										>
+											<TabsList className="inline-flex h-auto">
+												{/* Базовый вариант: 200 заявок */}
+												<TabsTrigger
+													value="base"
+													className="text-xs py-2"
+													onClick={(e) => {
+														e.stopPropagation();
+													}}
+												>
+													{plan.bidMonthLimit}
+												</TabsTrigger>
+												{/* Дополнительные лимиты */}
+												{upLimitsQuery.data.map((upLimit) => (
+													<TabsTrigger
+														key={upLimit.id}
+														value={upLimit.id.toString()}
+														className="text-xs py-2"
+														onClick={(e) => {
+															e.stopPropagation();
+														}}
+													>
+														{plan.bidMonthLimit + upLimit.bid}
+													</TabsTrigger>
+												))}
+											</TabsList>
+										</Tabs>
+									</div>
+								)}
+								{paid && !isProPlus && (
 									<p className="text-sm text-muted-foreground">
 										{plan.name === "BASE"
 											? t("plans.features.target_audience.paid")
@@ -187,11 +353,39 @@ export const PaymentPage = () => {
 										</li>
 									))}
 								</ul>
+								<button
+									onClick={() => !isLoading && handlePlanSelect(plan.id)}
+									disabled={isLoading || isCurrentVariantPlan}
+									className="w-full mt-auto py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{isLoading ? (
+										<div className="flex items-center justify-center">
+											<Loader className="h-4 w-4 mr-2" />
+											{t("payment.processing")}
+										</div>
+									) : isCurrentVariantPlan ? (
+										t("plans.current_plan")
+									) : (
+										t("payment.select_plan")
+									)}
+								</button>
 							</CardContent>
 						</Card>
 					);
 				})}
 			</div>
+
+			{selectedPlan && (
+				<PaymentMethodDrawer
+					open={drawerOpen}
+					onOpenChange={setDrawerOpen}
+					planId={selectedPlan.id}
+					planName={getDisplayPlanName(selectedPlan.name)}
+					planPrice={selectedPlan.price}
+					planNameRaw={selectedPlan.name}
+					selectedUpLimitId={selectedUpLimitId}
+				/>
+			)}
 		</div>
 	);
 };
