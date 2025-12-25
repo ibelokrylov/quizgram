@@ -29,7 +29,7 @@ export const quizBidTable = pgTable("quiz_bid", {
   isRead: boolean("is_read").notNull().default(false),
   isEqualPaymentLimit: boolean("is_equal_payment_limit").notNull().default(false),
   info: jsonb("info").default(null), // Данные пользователя из Telegram после верификации
-  initData: varchar("init_data", { length: 2048 }).default(""), // Telegram WebApp initData как строка
+  initData: varchar("init_data", { length: 2048 }), // Telegram WebApp initData как строка (nullable, без дефолта)
   userInfo: jsonb("user_info").default(null), // Данные пользователя из Telegram после верификации
   createdAt: timestamp("created_at", { withTimezone: false })
     .defaultNow()

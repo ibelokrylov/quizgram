@@ -153,9 +153,46 @@ const PageAnswer = ({ text, url, contentType, t }: { text: string | null; url: s
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const JsonAnswer = ({ answer }: { answer: any }) => <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(answer, null, 2)}</pre>;
 
+// Компонент для простого текстового ответа
+const TextAnswer = ({ text }: { text: string }) => (
+  <div className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>
+    <p className='text-xs lg:text-sm font-medium'>{text}</p>
+  </div>
+);
+
 // Главный компонент рендеринга ответа
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AnswerRenderer = ({ answer, type, t }: { answer: any; type: string; t: (key: string) => string }) => {
+const AnswerRenderer = ({ answer, type, question, t }: { answer: any; type: string; question?: any; t: (key: string) => string }) => {
+  // Если ответ - простая строка, обрабатываем в зависимости от типа вопроса
+  if (typeof answer === 'string') {
+    // Для variant_image_text ищем соответствующий вариант в вопросах
+    if (type === 'variant_image_text' && question?.content?.variants) {
+      const variant = question.content.variants.find((v: any) => v.value === answer || v.text === answer);
+      if (variant) {
+        return (
+          <VariantImageTextAnswer
+            imageUrl={variant.url || null}
+            text={variant.value || variant.text || answer}
+            t={t}
+          />
+        );
+      }
+      // Если вариант не найден, показываем просто текст
+      return <TextAnswer text={answer} />;
+    }
+    
+    // Для variant_image ищем соответствующий вариант
+    if (type === 'variant_image' && question?.content?.variants) {
+      const variant = question.content.variants.find((v: any) => v.value === answer || v.text === answer);
+      if (variant?.url) {
+        return <VariantImageAnswer imageUrl={variant.url} t={t} />;
+      }
+    }
+    
+    // Для остальных типов показываем просто текст
+    return <TextAnswer text={answer} />;
+  }
+
   switch (type) {
     case 'variant_image': {
       const imageUrl = extractImageUrl(answer);
@@ -172,6 +209,16 @@ const AnswerRenderer = ({ answer, type, t }: { answer: any; type: string; t: (ke
           t={t}
         />
       );
+    }
+
+    case 'answer_option': {
+      // Если ответ - строка, показываем её
+      if (typeof answer === 'string') {
+        return <TextAnswer text={answer} />;
+      }
+      // Если ответ - объект, извлекаем текст
+      const text = extractText(answer) || answer;
+      return text ? <TextAnswer text={typeof text === 'string' ? text : String(text)} /> : null;
     }
 
     case 'date': {
@@ -256,6 +303,7 @@ const SubQuestionAnswer = ({ subAnswer, subQuestion, questionTypeLabelByType, t 
         <AnswerRenderer
           answer={subAnswer?.answer ?? subAnswer}
           type={subTypeRaw}
+          question={subQuestion}
           t={t}
         />
       </div>
@@ -330,9 +378,11 @@ interface RegularQuestionCardProps {
   title: string | null;
   typeRaw: string;
   typeLabel: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  question?: any;
 }
 
-const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel, t }: RegularQuestionCardProps & { t: (key: string) => string }) => {
+const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel, question, t }: RegularQuestionCardProps & { t: (key: string) => string }) => {
   const questionUid = item?.question_uid ?? item?.question?.uid ?? null;
 
   return (
@@ -359,6 +409,7 @@ const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel, t }: Regula
         <AnswerRenderer
           answer={item?.answer ?? item}
           type={typeRaw}
+          question={question}
           t={t}
         />
       </div>
@@ -451,16 +502,17 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: Answers
           const questionUid = item?.question_uid ?? item?.question?.uid ?? null;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const questionFromQuiz = Array.isArray(questions) ? questions.find((q: any) => q?.uid === questionUid) : undefined;
+          
+          // Используем вопрос из данных, если не найден в questions
+          const question = questionFromQuiz || item?.question || null;
 
           const title =
-            questionFromQuiz?.content?.title ||
-            questionFromQuiz?.title ||
-            item?.question?.content?.title ||
-            item?.question?.title ||
+            question?.content?.title ||
+            question?.title ||
             item?.question_title ||
             null;
 
-          const typeRaw = questionFromQuiz?.type || item?.question?.type || 'unknown';
+          const typeRaw = question?.type || 'unknown';
           const typeLabel = questionTypeLabelByType.get(typeRaw) || typeRaw;
 
           const isQuestionGroup = typeRaw === 'question_group';
@@ -472,7 +524,7 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: Answers
                 key={questionUid ?? idx}
                 item={item}
                 idx={idx}
-                questionFromQuiz={questionFromQuiz}
+                questionFromQuiz={question}
                 questionTypeLabelByType={questionTypeLabelByType}
                 title={title}
                 typeLabel={typeLabel}
@@ -489,6 +541,7 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: Answers
               title={title}
               typeRaw={typeRaw}
               typeLabel={typeLabel}
+              question={question}
               t={t}
             />
           );
@@ -633,7 +686,22 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                     />
                     <div>
                       <p className='text-xs lg:text-sm text-muted-foreground'>{t('bids.details.created.label')}</p>
-                      <p className='text-sm lg:text-base font-medium'>{new Date(bidDetails.createdAt).toLocaleString('ru-RU')}</p>
+                      <p className='text-sm lg:text-base font-medium'>
+                        {bidDetails.createdAt
+                          ? (() => {
+                              const date = new Date(bidDetails.createdAt);
+                              return isNaN(date.getTime())
+                                ? bidDetails.createdAt
+                                : date.toLocaleString('ru-RU', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  });
+                            })()
+                          : '-'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -651,14 +719,14 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                 {bidDetails.userInfo && <TelegramUserSection userInfo={bidDetails.userInfo} t={t} />}
 
                 {/* Ответы на вопросы квиза */}
-                {bidDetails.data != null && (
+                {(bidDetails.data != null && (Array.isArray(bidDetails.data) ? bidDetails.data.length > 0 : true)) ? (
                   <AnswersSection
                     data={bidDetails.data}
                     questions={bidDetails.questions}
                     questionTypeLabelByType={questionTypeLabelByType}
                     t={t}
                   />
-                )}
+                ) : null}
 
                 {/* Telegram initData */}
                 {bidDetails.initData && <TelegramInitDataSection initData={bidDetails.initData} t={t} />}

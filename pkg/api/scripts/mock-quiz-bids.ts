@@ -259,6 +259,10 @@ async function createFullBid(
     isFull: true,
     isRead: false,
     isEqualPaymentLimit,
+    info: null, // Явно указываем null вместо строки "null"
+    initData: null, // Явно указываем null вместо пустой строки
+    userInfo: null, // Явно указываем null вместо строки "null"
+    ipLocation: null, // Явно указываем null вместо строки "null"
     createdAt,
     updatedAt,
   });
@@ -295,6 +299,10 @@ async function createEmptyBidNoContacts(
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
+    info: null, // Явно указываем null вместо строки "null"
+    initData: null, // Явно указываем null вместо пустой строки
+    userInfo: null, // Явно указываем null вместо строки "null"
+    ipLocation: null, // Явно указываем null вместо строки "null"
     createdAt,
     updatedAt,
   });
@@ -338,6 +346,10 @@ async function createEmptyBidOneQuestion(
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
+    info: null, // Явно указываем null вместо строки "null"
+    initData: null, // Явно указываем null вместо пустой строки
+    userInfo: null, // Явно указываем null вместо строки "null"
+    ipLocation: null, // Явно указываем null вместо строки "null"
     createdAt,
     updatedAt,
   });
@@ -363,6 +375,10 @@ async function createEmptyBidMinimal(quizId: number, questions: any[], contactsF
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
+    info: null, // Явно указываем null вместо строки "null"
+    initData: null, // Явно указываем null вместо пустой строки
+    userInfo: null, // Явно указываем null вместо строки "null"
+    ipLocation: null, // Явно указываем null вместо строки "null"
     createdAt,
     updatedAt,
   });

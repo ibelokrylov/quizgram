@@ -84,10 +84,10 @@ export const useDeleteBid = () => {
 };
 
 async function fetchBidDetails(key: string): Promise<BidDetails> {
-	const response = await http<{ message: string; data: BidDetails }>({
+	const response = await http<BidDetails>({
 		url: `/v1/bids/${key}`,
 	});
-	return response.data.data;
+	return response.data;
 }
 
 export const useBidDetails = (key: string | undefined) => {
@@ -96,10 +96,11 @@ export const useBidDetails = (key: string | undefined) => {
 		queryFn: () => fetchBidDetails(key!),
 		enabled: !!key,
 		retry: false,
-		retryOnMount: false,
+		retryOnMount: true, // Всегда загружаем данные при монтировании, даже если они в кеше
 		refetchOnWindowFocus: false,
-		staleTime: 60000, // Данные считаются актуальными 60 секунд
+		staleTime: 30000, // Данные считаются актуальными 30 секунд (было 60)
 		gcTime: 300000, // Кеш хранится 5 минут после того, как никто не использует данные
+		refetchOnMount: true, // Всегда обновляем данные при монтировании компонента
 	});
 };
 

@@ -74,8 +74,8 @@ export abstract class TelegramService {
       const botToken = this.getBotToken();
 
       // Создаем secret key согласно документации Telegram:
-      // secret_key = SHA256(bot_token)
-      const secretKey = createHash('sha256')
+      // secret_key = HMAC_SHA256("WebAppData", bot_token)
+      const secretKey = createHmac('sha256', 'WebAppData')
         .update(botToken)
         .digest();
 
@@ -86,14 +86,19 @@ export abstract class TelegramService {
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
 
-      // Вычисляем secret_key_hash согласно документации Telegram:
-      // secret_key_hash = HMAC_SHA256(secret_key, data-check-string)
-      const secretKeyHash = createHmac('sha256', secretKey)
+      // Вычисляем hash согласно документации Telegram:
+      // hash = HMAC_SHA256(data_check_string, secret_key)
+      const calculatedHash = createHmac('sha256', secretKey)
         .update(dataCheckString)
         .digest('hex');
 
       // Проверяем хеш (сравниваем в hex)
-      if (secretKeyHash !== hash) {
+      if (calculatedHash !== hash) {
+        logger.warn('Ошибка валидации initData: hash не совпадает', {
+          expected: hash,
+          calculated: calculatedHash,
+          dataCheckString: dataCheckString.substring(0, 100) + '...',
+        });
         throw new Error('Неверная подпись initData');
       }
 
