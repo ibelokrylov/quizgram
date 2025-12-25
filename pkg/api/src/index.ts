@@ -3,6 +3,7 @@ import { cron } from '@elysiajs/cron';
 import { serverTiming } from '@elysiajs/server-timing';
 import { Elysia } from "elysia";
 import { checkDatabaseConnection } from "./lib/db-check";
+import { checkRequiredEnvVars } from "./lib/env-check";
 import { logger } from "./lib/logger";
 import { auth } from "./modules/auth";
 import { bids } from "./modules/bids";
@@ -26,8 +27,17 @@ let schedulerIntervals: {
 } | null = null;
 
 // Главная функция запуска приложения
-// Проверяет подключение к БД перед запуском сервера
+// Проверяет переменные окружения и подключение к БД перед запуском сервера
 async function startApp() {
+  // Проверка обязательных переменных окружения перед запуском приложения
+  // Если переменные отсутствуют, приложение завершится с ошибкой
+  try {
+    checkRequiredEnvVars();
+  } catch (error) {
+    logger.error("Критическая ошибка: не удалось проверить переменные окружения", error instanceof Error ? error : new Error(String(error)));
+    process.exit(1);
+  }
+
   // Проверка подключения к базе данных перед запуском приложения
   // Если подключение не удалось, приложение завершится с ошибкой
   try {
@@ -245,7 +255,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
           logger.info("Scheduler interval 'processPayments' остановлен");
         }
       }
-      
+
       // В production режиме останавливаем cron jobs
       if (appInstance) {
         const store = appInstance.store;

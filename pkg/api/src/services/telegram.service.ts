@@ -36,14 +36,15 @@ export interface TelegramUserInfo {
  */
 export abstract class TelegramService {
   /**
-   * Получает токен бота в зависимости от окружения
+   * Получает токен бота для валидации initData
+   * Использует BOT_QUIZ_TOKEN из переменных окружения
    */
   private static getBotToken(): string {
-    const isDev = process.env.IS_DEV === 'true';
-    const token = isDev ? process.env.BOT_TOKEN_DEV : process.env.BOT_TOKEN;
+    const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+    const token = env.BOT_QUIZ_TOKEN;
 
     if (!token || token === 'ДОБАВИТЬ_ТОКЕН') {
-      throw new Error('Bot token не найден в переменных окружения');
+      throw new Error('BOT_QUIZ_TOKEN не найден в переменных окружения');
     }
 
     return token;
