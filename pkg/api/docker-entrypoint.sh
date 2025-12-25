@@ -11,5 +11,10 @@ bun run db:push || {
   exit 1
 }
 
+bun run db:push:all || {
+  echo "Ошибка при выполнении миграции. Проверьте подключение к базе данных."
+  exit 1
+}
+
 echo "Миграция завершена успешно. Запускаю API..."
 exec bun run src/index.ts

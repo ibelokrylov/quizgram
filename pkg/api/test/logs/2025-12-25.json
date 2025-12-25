@@ -1888,5 +1888,383 @@
         "timestamp": "2025-12-25T10:08:17.313Z"
       }
     ]
+  },
+  {
+    "suiteName": "payment-plan-update",
+    "startTime": "2025-12-25T10:17:11.076Z",
+    "endTime": "2025-12-25T10:17:11.277Z",
+    "duration": 201,
+    "totalTests": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "results": [
+      {
+        "testName": "1. Обновление с FREE на BASE",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 137,
+          "fromPlan": "FREE",
+          "toPlan": "BASE",
+          "planId": 2,
+          "userPaymentId": 194
+        },
+        "timestamp": "2025-12-25T10:17:11.121Z"
+      },
+      {
+        "testName": "1. Обновление с FREE на BASE",
+        "status": "passed",
+        "duration": 33,
+        "timestamp": "2025-12-25T10:17:11.132Z"
+      },
+      {
+        "testName": "2. Обновление с BASE на PRO_PLUS",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 138,
+          "fromPlan": "BASE",
+          "toPlan": "PRO_PLUS",
+          "planId": 3,
+          "oldPaymentId": 195,
+          "newPaymentId": 196
+        },
+        "timestamp": "2025-12-25T10:17:11.151Z"
+      },
+      {
+        "testName": "2. Обновление с BASE на PRO_PLUS",
+        "status": "passed",
+        "duration": 28,
+        "timestamp": "2025-12-25T10:17:11.160Z"
+      },
+      {
+        "testName": "3. Обновление с PRO_PLUS на BASE (отсроченное)",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 139,
+          "fromPlan": "PRO_PLUS",
+          "toPlan": "BASE",
+          "currentPlanId": 3,
+          "scheduledPlanId": 2,
+          "scheduledPaymentId": 198,
+          "startsAt": "2026-01-25T23:59:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.172Z"
+      },
+      {
+        "testName": "3. Обновление с PRO_PLUS на BASE (отсроченное)",
+        "status": "passed",
+        "duration": 21,
+        "timestamp": "2025-12-25T10:17:11.181Z"
+      },
+      {
+        "testName": "4. Обновление с оплатой сейчас",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 140,
+          "planId": 3,
+          "isPaid": true,
+          "payNow": true
+        },
+        "timestamp": "2025-12-25T10:17:11.195Z"
+      },
+      {
+        "testName": "4. Обновление с оплатой сейчас",
+        "status": "passed",
+        "duration": 18,
+        "timestamp": "2025-12-25T10:17:11.200Z"
+      },
+      {
+        "testName": "5. Обновление с оплатой в день начала",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 141,
+          "planId": 3,
+          "isPaid": false,
+          "payNow": false
+        },
+        "timestamp": "2025-12-25T10:17:11.214Z"
+      },
+      {
+        "testName": "5. Обновление с оплатой в день начала",
+        "status": "passed",
+        "duration": 19,
+        "timestamp": "2025-12-25T10:17:11.219Z"
+      },
+      {
+        "testName": "6. Обновление Pro+ с upLimit",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 142,
+          "planId": 3,
+          "upLimitId": 3,
+          "baseLimit": 200,
+          "additionalLimit": 300,
+          "totalLimit": 500
+        },
+        "timestamp": "2025-12-25T10:17:11.233Z"
+      },
+      {
+        "testName": "6. Обновление Pro+ с upLimit",
+        "status": "passed",
+        "duration": 19,
+        "timestamp": "2025-12-25T10:17:11.238Z"
+      },
+      {
+        "testName": "7. Отсроченный план с isPaid=false",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 143,
+          "scheduledPlanId": 2,
+          "isPaid": false,
+          "paymentId": null,
+          "startsAt": "2026-01-25T23:59:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.246Z"
+      },
+      {
+        "testName": "7. Отсроченный план с isPaid=false",
+        "status": "passed",
+        "duration": 12,
+        "timestamp": "2025-12-25T10:17:11.250Z"
+      },
+      {
+        "testName": "8. Множественные обновления плана",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 144,
+          "totalPayments": 4,
+          "activePayments": 1,
+          "scheduledPayments": 1,
+          "currentPlanId": 3
+        },
+        "timestamp": "2025-12-25T10:17:11.272Z"
+      },
+      {
+        "testName": "8. Множественные обновления плана",
+        "status": "passed",
+        "duration": 26,
+        "timestamp": "2025-12-25T10:17:11.276Z"
+      }
+    ]
+  },
+  {
+    "suiteName": "scheduler-payments",
+    "startTime": "2025-12-25T10:17:11.311Z",
+    "endTime": "2025-12-25T10:17:11.899Z",
+    "duration": 588,
+    "totalTests": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "results": [
+      {
+        "testName": "1. Отправка письма за 2 дня",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 145,
+          "planId": 2,
+          "finalDayAt": "2025-12-27T12:00:00.000Z",
+          "emailSent": true
+        },
+        "timestamp": "2025-12-25T10:17:11.350Z"
+      },
+      {
+        "testName": "1. Отправка письма за 2 дня",
+        "status": "passed",
+        "duration": 28,
+        "timestamp": "2025-12-25T10:17:11.354Z"
+      },
+      {
+        "testName": "2. Отправка письма о переходе на FREE (extended=false)",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 146,
+          "planId": 2,
+          "extended": false,
+          "emailSent": true,
+          "finalDayAt": "2025-12-27T12:00:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.364Z"
+      },
+      {
+        "testName": "2. Отправка письма о переходе на FREE (extended=false)",
+        "status": "passed",
+        "duration": 14,
+        "timestamp": "2025-12-25T10:17:11.368Z"
+      },
+      {
+        "testName": "3. Автоматическое продление подписки",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 147,
+          "planId": 2,
+          "oldFinalDayAt": "2025-12-24T23:59:00.000Z",
+          "newFinalDayAt": "2026-01-25T23:59:00.000Z",
+          "limitReset": true
+        },
+        "timestamp": "2025-12-25T10:17:11.715Z"
+      },
+      {
+        "testName": "3. Автоматическое продление подписки",
+        "status": "passed",
+        "duration": 352,
+        "timestamp": "2025-12-25T10:17:11.720Z"
+      },
+      {
+        "testName": "4. Активация отсроченного плана (повышение)",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 148,
+          "oldPlanId": 2,
+          "newPlanId": 3,
+          "startsAt": "2025-12-25T00:00:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.746Z"
+      },
+      {
+        "testName": "4. Активация отсроченного плана (повышение)",
+        "status": "passed",
+        "duration": 30,
+        "timestamp": "2025-12-25T10:17:11.750Z"
+      },
+      {
+        "testName": "4.1. Активация отсроченного плана (понижение PRO_PLUS -> BASE)",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 149,
+          "oldPlanId": 3,
+          "newPlanId": 2,
+          "startsAt": "2025-12-25T00:00:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.775Z"
+      },
+      {
+        "testName": "4.1. Активация отсроченного плана (понижение PRO_PLUS -> BASE)",
+        "status": "passed",
+        "duration": 31,
+        "timestamp": "2025-12-25T10:17:11.781Z"
+      },
+      {
+        "testName": "4.2. Активация отсроченного плана (понижение BASE -> FREE)",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 150,
+          "oldPlanId": 2,
+          "newPlanId": 1,
+          "startsAt": "2025-12-25T00:00:00.000Z"
+        },
+        "timestamp": "2025-12-25T10:17:11.800Z"
+      },
+      {
+        "testName": "4.2. Активация отсроченного плана (понижение BASE -> FREE)",
+        "status": "passed",
+        "duration": 25,
+        "timestamp": "2025-12-25T10:17:11.806Z"
+      },
+      {
+        "testName": "5. НЕ продление активной подписки",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 151,
+          "planId": 2,
+          "finalDayAt": "2026-01-04T23:59:00.000Z",
+          "currentLimit": 50
+        },
+        "timestamp": "2025-12-25T10:17:11.814Z"
+      },
+      {
+        "testName": "5. НЕ продление активной подписки",
+        "status": "passed",
+        "duration": 12,
+        "timestamp": "2025-12-25T10:17:11.818Z"
+      },
+      {
+        "testName": "6. Обработка нескольких пользователей",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "user1Extended": true,
+          "user2EmailSent": true,
+          "user3Unchanged": true
+        },
+        "timestamp": "2025-12-25T10:17:11.837Z"
+      },
+      {
+        "testName": "6. Обработка нескольких пользователей",
+        "status": "passed",
+        "duration": 37,
+        "timestamp": "2025-12-25T10:17:11.855Z"
+      },
+      {
+        "testName": "7. НЕ отправка письма удаленному пользователю",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 155,
+          "deleted": true,
+          "emailSent": false
+        },
+        "timestamp": "2025-12-25T10:17:11.865Z"
+      },
+      {
+        "testName": "7. НЕ отправка письма удаленному пользователю",
+        "status": "passed",
+        "duration": 15,
+        "timestamp": "2025-12-25T10:17:11.870Z"
+      },
+      {
+        "testName": "8. НЕ обработка бесплатного плана",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 156,
+          "planId": 1,
+          "processed": false
+        },
+        "timestamp": "2025-12-25T10:17:11.874Z"
+      },
+      {
+        "testName": "8. НЕ обработка бесплатного плана",
+        "status": "passed",
+        "duration": 8,
+        "timestamp": "2025-12-25T10:17:11.878Z"
+      },
+      {
+        "testName": "9. Установка правильного лимита для Pro+ с дополнительным лимитом",
+        "status": "passed",
+        "duration": 0,
+        "data": {
+          "userId": 157,
+          "planId": 3,
+          "baseLimit": 200,
+          "additionalLimit": 500,
+          "totalLimit": 700,
+          "currentLimit": 0,
+          "subscriptionExtended": true
+        },
+        "timestamp": "2025-12-25T10:17:11.894Z"
+      },
+      {
+        "testName": "9. Установка правильного лимита для Pro+ с дополнительным лимитом",
+        "status": "passed",
+        "duration": 21,
+        "timestamp": "2025-12-25T10:17:11.899Z"
+      }
+    ]
   }
 ]

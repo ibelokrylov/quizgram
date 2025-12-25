@@ -427,21 +427,17 @@ interface AnswersSectionProps {
 }
 
 const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: AnswersSectionProps & { t: (key: string) => string }) => {
+  // Если данных нет (null, undefined) или пустой массив - не показываем секцию
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return null;
+  }
+
+  // Если данные не массив - показываем как JSON
   if (!Array.isArray(data)) {
     return (
       <div className='space-y-3 pt-4 border-t'>
         <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.answers')}</h3>
         <JsonAnswer answer={data} />
-      </div>
-    );
-  }
-
-  // Проверяем, есть ли ответы
-  if (data.length === 0) {
-    return (
-      <div className='space-y-3 pt-4 border-t'>
-        <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.answers')}</h3>
-        <p className='text-xs lg:text-sm text-muted-foreground'>{t('bids.details.noAnswers')}</p>
       </div>
     );
   }
@@ -655,7 +651,7 @@ export function BidDetailsDrawer({ open, onOpenChange, bidDetails, isLoading, is
                 {bidDetails.userInfo && <TelegramUserSection userInfo={bidDetails.userInfo} t={t} />}
 
                 {/* Ответы на вопросы квиза */}
-                {bidDetails.data && (
+                {bidDetails.data != null && (
                   <AnswersSection
                     data={bidDetails.data}
                     questions={bidDetails.questions}
