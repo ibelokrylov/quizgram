@@ -61,6 +61,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
+        setCurrentStage("404");
         setLoading(false);
         return;
       }
@@ -79,6 +80,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
 
       if (!response.ok) {
         setError(true);
+        setCurrentStage("404");
         setLoading(false);
         return;
       }
@@ -88,6 +90,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Проверяем, что данные есть и не пустые
       if (!result || !result.data) {
         setError(true);
+        setCurrentStage("404");
         setLoading(false);
         return;
       }
@@ -130,8 +133,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     } catch (err) {
       console.error("Failed to fetch quiz:", err);
       setError(true);
-      setLoading(false);
-    } finally {
+      setCurrentStage("404");
       setLoading(false);
     }
   }
@@ -284,7 +286,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   }
 
   // Если ошибка - показываем 404 через children (Content компонент обработает это)
-  if (error || currentStage === undefined) {
+  // Но только если загрузка завершена (loading === false)
+  if (!loading && (error || (currentStage === undefined && !quiz))) {
     return (
       <AppContext.Provider
         value={{

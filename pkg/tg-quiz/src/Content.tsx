@@ -23,6 +23,7 @@ const render = {
 export const Content = () => {
   const { loading, quiz, currentStage } = useContext(AppContext);
 
+  // Показываем спиннер во время загрузки
   if (loading) {
     return (
       <ContentLayout>
@@ -31,8 +32,8 @@ export const Content = () => {
     );
   }
 
-  // Если нет quiz и не загрузка - показываем 404
-  if (!quiz && currentStage !== '404') {
+  // Если загрузка завершена и нет quiz или currentStage = '404' - показываем 404
+  if (!loading && (!quiz || currentStage === '404')) {
     return (
       <ContentLayout>
         <Placeholder
@@ -43,5 +44,15 @@ export const Content = () => {
     );
   }
 
-  return <ContentLayout>{render[currentStage as keyof typeof render]}</ContentLayout>;
+  // Если есть currentStage, показываем соответствующий компонент
+  if (currentStage) {
+    return <ContentLayout>{render[currentStage as keyof typeof render]}</ContentLayout>;
+  }
+
+  // Fallback: если нет currentStage, но есть quiz - показываем спиннер (не должно происходить)
+  return (
+    <ContentLayout>
+      <Spinner size='l' />
+    </ContentLayout>
+  );
 };
