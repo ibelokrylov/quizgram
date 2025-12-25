@@ -87,7 +87,7 @@ async function fetchBidDetails(key: string): Promise<BidDetails> {
 	const response = await http<{ message: string; data: BidDetails }>({
 		url: `/v1/bids/${key}`,
 	});
-	return response.data;
+	return response.data.data;
 }
 
 export const useBidDetails = (key: string | undefined) => {

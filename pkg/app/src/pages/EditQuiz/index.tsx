@@ -133,14 +133,16 @@ export const EditQuiz = () => {
 			await http({ url: `/v1/quiz/active/${quiz?.uid}`, method: "POST" });
 			toast.success(t("edit-quiz.active.success"));
 			setActive(!active);
-			setQuiz({ ...quiz, isActive: !active } satisfies Quiz);
+			if (quiz) {
+				setQuiz({ ...quiz, isActive: !active } as Quiz);
+			}
 		} catch (err) {
 			console.log(err);
 		}
 	}
 
 	async function updateName() {
-		if (!quiz?.uid) {
+		if (!quiz?.uid || !name) {
 			return;
 		}
 		if (quiz?.name === name) {
@@ -152,7 +154,9 @@ export const EditQuiz = () => {
 				method: "PUT",
 				body: { name },
 			});
-			setQuiz({ ...quiz, name } satisfies Quiz);
+			if (quiz) {
+				setQuiz({ ...quiz, name } as Quiz);
+			}
 		} catch (err) {
 			console.log(err);
 		}
@@ -181,9 +185,9 @@ export const EditQuiz = () => {
 			console.log(response);
 
 			// Сервер возвращает { ok: string[], errors: string[] } напрямую
-			// Функция http делает type assertion, но реально возвращает данные напрямую
+			// Функция http возвращает HttpResponse<T>, где T - это тип данных
 			// TODO: Добавить Zod валидацию для response
-			const result = response satisfies QuizUpdateResponse;
+			const result = (response.data || response) as unknown as QuizUpdateResponse;
 			if (!result.errors || result.errors.length === 0) {
 				await set(quiz.uid, { data: quiz, isLoadToServer: true });
 				setIsLoadToServer(true);

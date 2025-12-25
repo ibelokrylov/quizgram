@@ -3,10 +3,10 @@ import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
 
-function getStartAppParam(): string | undefined {
-  const uid = window.location.search.split("startapp=")[1];
-  return uid;
-}
+// function getStartAppParam(): string | undefined {
+//   const uid = window.location.search.split("startapp=")[1];
+//   return uid;
+// }
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
@@ -225,11 +225,19 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       console.log('Sending FormData:', {
         isFile,
         isArrayWithFiles,
-        formDataEntries: Array.from(formData.entries()).map(([key, value]) => ({
-          key,
-          valueType: value instanceof File ? 'File' : value instanceof Blob ? 'Blob' : typeof value,
-          fileName: value instanceof File ? value.name : undefined,
-        })),
+        formDataEntries: Array.from(formData.entries()).map(([key, value]) => {
+          // FormDataEntryValue может быть string или File
+          // File наследуется от Blob, поэтому проверяем сначала File
+          const isFile = value instanceof File;
+          // Для проверки Blob используем type assertion, так как TypeScript не может определить тип из FormData.entries()
+          const valueAsAny = value as unknown;
+          const isBlob = !isFile && valueAsAny instanceof Blob;
+          return {
+            key,
+            valueType: isFile ? 'File' : isBlob ? 'Blob' : typeof value,
+            fileName: isFile ? (value as File).name : undefined,
+          };
+        }),
       });
 
       const response = await fetch(

@@ -63,4 +63,11 @@ export interface BidDetails {
 	contactsForm?: any[] | null; // Форма контактов из квиза
 	userInfo?: any | null; // Информация о пользователе из Telegram
 	initData?: string | null; // Telegram WebApp initData как строка
+	ipLocation?: {
+		country: string | null;
+		city: string | null;
+		region?: string | null;
+		timezone?: string | null;
+		ip: string | null;
+	} | null;
 }

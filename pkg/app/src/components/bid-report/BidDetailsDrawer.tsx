@@ -109,7 +109,7 @@ const DateAnswer = ({ dateValue }: { dateValue: string }) => {
   );
 };
 
-const FileAnswer = ({ fileUrl, fileName, t }: { fileUrl: string; fileName: string; t: (key: string) => string }) => (
+const FileAnswer = ({ fileUrl, fileName }: { fileUrl: string; fileName: string }) => (
   <div className='text-xs lg:text-sm bg-muted p-3 rounded-md'>
     <a
       href={fileUrl}
@@ -187,7 +187,6 @@ const AnswerRenderer = ({ answer, type, t }: { answer: any; type: string; t: (ke
           <FileAnswer
             fileUrl={fileUrl}
             fileName={fileName}
-            t={t}
           />
         ) : null;
       }
@@ -219,7 +218,6 @@ const AnswerRenderer = ({ answer, type, t }: { answer: any; type: string; t: (ke
           <FileAnswer
             fileUrl={fileUrl}
             fileName={fileName}
-            t={t}
           />
         ) : null;
       }
@@ -371,7 +369,7 @@ const RegularQuestionCard = ({ item, idx, title, typeRaw, typeLabel, t }: Regula
 // Компонент для отображения контакта
 interface ContactFieldProps {
   contactKey: string;
-  // value: string;
+  value: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contactsForm?: any[] | null;
 }
@@ -504,16 +502,6 @@ const AnswersSection = ({ data, questions, questionTypeLabelByType, t }: Answers
   );
 };
 
-// Компонент для дополнительной информации
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AdditionalInfoSection = ({ info, t }: { info: any; t: (key: string) => string }) => (
-  <div className='space-y-3 pt-4 border-t'>
-    <h3 className='font-semibold text-base lg:text-lg'>{t('bids.details.additionalInfo')}</h3>
-    <div className='space-y-2'>
-      <pre className='text-xs lg:text-sm bg-muted p-3 rounded-md overflow-auto'>{JSON.stringify(info, null, 2)}</pre>
-    </div>
-  </div>
-);
 
 // Компонент для Telegram initData
 const TelegramInitDataSection = ({ initData, t }: { initData: string; t: (key: string) => string }) => (

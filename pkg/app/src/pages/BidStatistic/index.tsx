@@ -26,7 +26,7 @@ export function BidStatisticPage() {
 	const endDate = search.end || "";
 
 	// Получаем список квизов для фильтра
-	const { data: quizFilters, isLoading: isLoadingQuizzes } = useQuizFilters();
+	const { data: quizFilters } = useQuizFilters();
 
 	// Формируем параметры для запроса статистики
 	const statsParams =
@@ -58,7 +58,7 @@ export function BidStatisticPage() {
 		})) || [];
 
 	// Обработчики изменений
-	const handleQuizChange = (value: string) => {
+	const handleQuizChange = (value: string | undefined) => {
 		// Навигируем на страницу с новым quiz_uid в URL
 		navigate({
 			to: "/app/bid/statistic",
@@ -104,8 +104,6 @@ export function BidStatisticPage() {
 		});
 	};
 
-	const isLoading = isLoadingDaily || isLoadingAbandonment;
-
 	return (
 		<div className="flex flex-col gap-6 p-4">
 			{/* Заголовок */}
@@ -140,15 +138,14 @@ export function BidStatisticPage() {
 						{/* Выбор квиза */}
 						<Field>
 							<FieldLabel>{t("bids.quiz")}</FieldLabel>
-							<Combobox
-								options={quizOptions}
-								value={selectedQuizUid}
-								onValueChange={handleQuizChange}
-								placeholder={t("bids.quiz.select")}
-								searchPlaceholder={t("bids.quiz.search")}
-								emptyText={t("bids.quiz.notFound")}
-								disabled={isLoadingQuizzes}
-							/>
+						<Combobox
+							options={quizOptions}
+							value={selectedQuizUid}
+							onValueChange={handleQuizChange}
+							placeholder={t("bids.quiz.select")}
+							searchPlaceholder={t("bids.quiz.search")}
+							emptyText={t("bids.quiz.notFound")}
+						/>
 						</Field>
 
 						{/* Дата начала */}

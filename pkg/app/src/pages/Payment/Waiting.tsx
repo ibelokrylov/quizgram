@@ -4,19 +4,15 @@ import { Loader } from "@/components/loader";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import http from "@/lib/http";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const PaymentWaitingPage = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
 	const search = useSearch({ from: "/app/payment/waiting" }) as {
 		paymentId?: number;
 	};
 
-	const [status, setStatus] = useState<"waiting" | "success" | "failed">("waiting");
+	const [status] = useState<"waiting" | "success" | "failed">("waiting");
 	const [checking, setChecking] = useState(false);
 
 	// Проверяем статус оплаты периодически

@@ -75,16 +75,13 @@ export function BidsReportPage() {
     search.quiz_uid || search.status || search.isFull || search.isRead;
   useEffect(() => {
     if (!isFreePlan && !hasAnyFilters) {
-      navigate(
-        {
-          search: (prev) => ({
-            ...prev,
-            isFull: "true",
-          }),
-          replace: true,
-        },
-        { replace: true },
-      );
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          isFull: "true",
+        }),
+        replace: true,
+      });
     }
   }, []); // Пустой массив зависимостей - срабатывает только при монтировании
 
