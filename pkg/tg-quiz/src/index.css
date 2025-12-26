@@ -222,10 +222,17 @@ article {
   justify-content: center;
   align-items: center;
   width: 100%;
+  max-width: 800px;
   position: relative;
   min-height: 0;
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+
+.content__question {
+  max-width: 800px;
+  width: 100%;
+  padding: 0 0.5rem;
 }
 
 .footer__logo {

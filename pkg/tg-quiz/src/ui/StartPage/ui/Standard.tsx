@@ -61,9 +61,7 @@ export const Standard = () => {
             </Card>
           </div>
         </div>
-      ) : (
-        <div>CONTENT</div>
-      )}
+      ) : null}
     </>
   );
 };
