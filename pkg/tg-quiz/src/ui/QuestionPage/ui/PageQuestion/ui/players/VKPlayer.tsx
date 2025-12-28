@@ -10,8 +10,7 @@ export const VKPlayer = ({ url }: VKPlayerProps) => {
   console.log(src);
 
   // VK Player требует нестандартные атрибуты iframe для работы плеера
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const vkPlayerAttrs: any = {
+  const vkPlayerAttrs: Record<string, string> = {
     adplaying: 'false',
     link: link,
     nativeplayer: '',
@@ -19,7 +18,6 @@ export const VKPlayer = ({ url }: VKPlayerProps) => {
 
   return (
     <div className='player'>
-      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
       {/* @ts-ignore - VK Player требует нестандартные атрибуты iframe (adplaying, link, nativeplayer) для работы плеера */}
       <iframe
         src={src}

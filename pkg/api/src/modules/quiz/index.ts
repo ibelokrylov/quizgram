@@ -15,7 +15,7 @@ export const quiz = new Elysia({ prefix: "/quiz" })
       async beforeHandle(ctx) {
         if (!ctx.cookie.token.value) {
           ctx.set.status = 401;
-          return { message: "Unauthorized" };
+          return { message: "failed", error: "Unauthorized" };
         } else {
           const user = await AuthService.getUserFromToken(
             ctx.cookie.token.value.toString(),
@@ -457,6 +457,7 @@ export const quiz = new Elysia({ prefix: "/quiz" })
                   updatedAt: quizData.quiz.updatedAt ?? new Date(),
                   isActive: quizData.quiz.isActive ?? false,
                   name: quizData.quiz.name ?? "Новый квиз",
+                  isShowLogo: quizData.quiz.isShowLogo ?? true,
                   startPage: quizData.quiz.startPage ?? undefined,
                   questionTitle: quizData.quiz.questionTitle ?? undefined,
                   question: quizData?.quiz_question ?? undefined,
@@ -497,6 +498,90 @@ export const quiz = new Elysia({ prefix: "/quiz" })
                 message: t.String(),
                 error: t.String(),
               }),
+            },
+          },
+        )
+        .put(
+          "/is-show-logo/:uid",
+          async (ctx) => {
+            const user = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
+                message: "failed",
+                error: "Unauthorized",
+              };
+              return response;
+            }
+
+            // Проверяем, что у пользователя платная подписка (planId !== 1)
+            if (user.planId === 1) {
+              ctx.set.status = 403;
+              const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
+                message: "failed",
+                error: "Forbidden: требуется платная подписка",
+              };
+              return response;
+            }
+
+            const { params, body, set } = ctx;
+            const { uid } = params;
+
+            // Проверка длины UID (должен быть UUID, т.е. 36 символов)
+            if (uid.length !== 36) {
+              set.status = 400;
+              const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
+                message: "failed",
+                error: "Invalid UID",
+              };
+              return response;
+            }
+
+            try {
+              const newIsShowLogo = await QuizService.updateQuizIsShowLogo(
+                uid,
+                user.id,
+                body.isShowLogo,
+              );
+
+              const response: QuizModel.updateQuizIsShowLogoSuccessResponse = {
+                message: "ok",
+                data: newIsShowLogo,
+              };
+
+              return response;
+            } catch (error) {
+              logger.error(
+                "Ошибка при изменении is_show_logo квиза",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id, quizUid: uid },
+              );
+              set.status = 400;
+
+              const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
+                message: "failed",
+                error: "Not updated",
+              };
+
+              return response;
+            }
+          },
+          {
+            params: t.Object({
+              uid: t.String({
+                minLength: 36,
+                maxLength: 36,
+              }),
+            }),
+            body: QuizModel.updateQuizIsShowLogoBody,
+            response: {
+              200: QuizModel.updateQuizIsShowLogoSuccessResponse,
+              400: QuizModel.updateQuizIsShowLogoErrorResponse,
+              401: t.Object({
+                message: t.String(),
+                error: t.String(),
+              }),
+              403: QuizModel.updateQuizIsShowLogoErrorResponse,
             },
           },
         )

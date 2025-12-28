@@ -1,26 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import {
-	Field,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-} from "@/components/ui/field";
-import {
-	InputOTP,
-	InputOTPGroup,
-	InputOTPSeparator,
-	InputOTPSlot,
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
 } from "@/components/ui/input-otp";
-import {
-	userPasswordForgotZod,
-} from "@/entities/User/user-password-forgot.type";
+import { userPasswordForgotZod } from "@/entities/User/user-password-forgot.type";
 import { verificationEmailZod } from "@/entities/User/Verification.email.type";
 import http from "@/lib/http";
 import { getTranslatedError } from "@/lib/error-mapper";
@@ -33,174 +20,170 @@ import { queryClinet } from "@/app/query-client";
 type FormType = "email" | "password";
 
 export function OTPForm({
-	formType = "email",
-	payload = undefined,
-	...props
+  formType = "email",
+  payload = undefined,
+  ...props
 }: React.ComponentProps<typeof Card> & {
-	formType: FormType;
-	payload?: Record<string, never>;
+  formType: FormType;
+  payload?: Record<string, never>;
 }) {
-	const [code, setCode] = useState("");
-	const [error, setError] = useState<boolean>(false);
-	const [loading, setLoading] = useState(false);
-	const autoSubmitRef = useRef(false);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const autoSubmitRef = useRef(false);
 
-	const { t } = useTranslation();
+  const { t } = useTranslation();
 
-	async function email() {
-		if (code.length !== 6 || loading) return;
-		
-		setError(false);
-		setLoading(true);
-		autoSubmitRef.current = false;
-		try {
-			verificationEmailZod.parse({ code });
-			await http({
-				url: "/v1/user/verification-email",
-				method: "POST",
-				body: { code },
-			});
-			queryClinet.invalidateQueries({ queryKey: ["user"] });
-			toast.success(t("verification.email.success") || "Email verified successfully");
-		} catch (err: any) {
-			setError(true);
-			setLoading(false);
-		}
-	}
+  async function email() {
+    if (code.length !== 6 || loading) return;
 
-	async function password() {
-		if (code.length !== 6 || loading) return;
-		
-		setError(false);
-		setLoading(true);
-		autoSubmitRef.current = false;
-		try {
-			if (!payload?.email) throw new Error("Email required");
-			userPasswordForgotZod.parse({ code });
-			await http({
-				url: "/v1/auth/forgot-password/start",
-				body: { code, email: payload?.email },
-				method: "POST",
-			});
-			toast.success(t("forgot-password.code.success") || "Code verified successfully");
-		} catch (err: any) {
-			setError(true);
-			setLoading(false);
-		}
-	}
+    setError(false);
+    setLoading(true);
+    autoSubmitRef.current = false;
+    try {
+      verificationEmailZod.parse({ code });
+      await http({
+        url: "/v1/user/verification-email",
+        method: "POST",
+        body: { code },
+      });
+      queryClinet.invalidateQueries({ queryKey: ["user"] });
+      toast.success(t("verification.email.success") || "Email verified successfully");
+    } catch (err: any) {
+      setError(true);
+      setLoading(false);
+    }
+  }
 
-	async function emailResend() {
-		setError(false);
-		setCode("");
-		try {
-			await http({ url: "/v1/user/resend-verification" });
-			toast.success(t("verification.email.resendSuccess") || "Verification code sent");
-		} catch (err: any) {
-			const errorMessage = err?.error || err?.message || "error.unknown";
-			const translatedError = getTranslatedError(errorMessage, t);
-			toast.error(translatedError);
-		}
-	}
+  async function password() {
+    if (code.length !== 6 || loading) return;
 
-	async function passwordResend() {
-		if (!payload?.email) throw new Error("Email required");
-		setError(false);
-		setCode("");
-		try {
-			await http({
-				url: "/v1/auth/forgot-password",
-				method: "POST",
-				body: { login: payload.email },
-			});
-			toast.success(t("forgot-password.code.resendSuccess") || "Code sent");
-		} catch (err: any) {
-			const errorMessage = err?.error || err?.message || "error.unknown";
-			const translatedError = getTranslatedError(errorMessage, t);
-			toast.error(translatedError);
-		}
-	}
+    setError(false);
+    setLoading(true);
+    autoSubmitRef.current = false;
+    try {
+      if (!payload?.email) throw new Error("Email required");
+      userPasswordForgotZod.parse({ code });
+      await http({
+        url: "/v1/auth/forgot-password/start",
+        body: { code, email: payload?.email },
+        method: "POST",
+      });
+      toast.success(t("forgot-password.code.success") || "Code verified successfully");
+    } catch (err: any) {
+      setError(true);
+      setLoading(false);
+    }
+  }
 
-	const resend: Record<FormType, () => void> = {
-		email: emailResend,
-		password: passwordResend,
-	};
+  async function emailResend() {
+    setError(false);
+    setCode("");
+    try {
+      await http({ url: "/v1/user/resend-verification" });
+      toast.success(t("verification.email.resendSuccess") || "Verification code sent");
+    } catch (err: any) {
+      const errorMessage = err?.error || err?.message || "error.unknown";
+      const translatedError = getTranslatedError(errorMessage, t);
+      toast.error(translatedError);
+    }
+  }
 
-	const sendCode: Record<FormType, () => void> = {
-		email: email,
-		password: password,
-	};
+  async function passwordResend() {
+    if (!payload?.email) throw new Error("Email required");
+    setError(false);
+    setCode("");
+    try {
+      await http({
+        url: "/v1/auth/forgot-password",
+        method: "POST",
+        body: { login: payload.email },
+      });
+      toast.success(t("forgot-password.code.resendSuccess") || "Code sent");
+    } catch (err: any) {
+      const errorMessage = err?.error || err?.message || "error.unknown";
+      const translatedError = getTranslatedError(errorMessage, t);
+      toast.error(translatedError);
+    }
+  }
 
-	function handleCodeChange(value: string) {
-		setError(false);
-		setCode(value);
-		// Сбрасываем флаг автоматической отправки при изменении кода
-		if (value.length < 6) {
-			autoSubmitRef.current = false;
-		}
-	}
+  const resend: Record<FormType, () => void> = {
+    email: emailResend,
+    password: passwordResend,
+  };
 
-	// Автоматическая отправка при вводе всех 6 цифр
-	useEffect(() => {
-		if (code.length === 6 && !loading && !error && !autoSubmitRef.current) {
-			autoSubmitRef.current = true;
-			sendCode[formType]();
-		}
-	}, [code.length, loading, error, formType]);
+  const sendCode: Record<FormType, () => void> = {
+    email: email,
+    password: password,
+  };
 
-	return (
-		<div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-			<div className="w-full max-w-xs">
-				<Card {...props}>
-					<CardHeader>
-						<CardTitle>{t(`verification.${formType}.title`)}</CardTitle>
-						<CardDescription>
-							{t(`verification.${formType}.description`)}
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<FieldGroup>
-							<Field>
-								<FieldLabel>
-									{t(`verification.${formType}.code`)}
-								</FieldLabel>
-								<InputOTP
-									maxLength={6}
-									value={code}
-									onChange={handleCodeChange}
-									pattern={REGEXP_ONLY_DIGITS}
-									aria-invalid={error}
-								>
-									<InputOTPGroup>
-										<InputOTPSlot index={0} />
-										<InputOTPSlot index={1} />
-										<InputOTPSlot index={2} />
-									</InputOTPGroup>
-									<InputOTPSeparator />
-									<InputOTPGroup>
-										<InputOTPSlot index={3} />
-										<InputOTPSlot index={4} />
-										<InputOTPSlot index={5} />
-									</InputOTPGroup>
-								</InputOTP>
-							</Field>
-							<FieldGroup>
-								<Button
-									onClick={sendCode[formType]}
-									disabled={code.length !== 6 || loading || error}
-									loading={loading}
-								>
-									{t(`verification.${formType}.button`)}
-								</Button>
-								<FieldDescription className="text-center">
-									<Button variant={"link"} onClick={resend[formType]}>
-										{t(`verification.${formType}.resend`)}
-									</Button>
-								</FieldDescription>
-							</FieldGroup>
-						</FieldGroup>
-					</CardContent>
-				</Card>
-			</div>
-		</div>
-	);
+  function handleCodeChange(value: string) {
+    setError(false);
+    setCode(value);
+    // Сбрасываем флаг автоматической отправки при изменении кода
+    if (value.length < 6) {
+      autoSubmitRef.current = false;
+    }
+  }
+
+  // Автоматическая отправка при вводе всех 6 цифр
+  useEffect(() => {
+    if (code.length === 6 && !loading && !error && !autoSubmitRef.current) {
+      autoSubmitRef.current = true;
+      sendCode[formType]();
+    }
+  }, [code.length, loading, error, formType]);
+
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-xs">
+        <Card {...props}>
+          <CardHeader>
+            <CardTitle>{t(`verification.${formType}.title`)}</CardTitle>
+            <CardDescription>{t(`verification.${formType}.description`)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel>{t(`verification.${formType}.code`)}</FieldLabel>
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={handleCodeChange}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  aria-invalid={error}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </Field>
+              <FieldGroup>
+                <Button
+                  onClick={sendCode[formType]}
+                  disabled={code.length !== 6 || loading || error}
+                  loading={loading}
+                >
+                  {t(`verification.${formType}.button`)}
+                </Button>
+                <FieldDescription className="text-center">
+                  <Button variant={"link"} onClick={resend[formType]}>
+                    {t(`verification.${formType}.resend`)}
+                  </Button>
+                </FieldDescription>
+              </FieldGroup>
+            </FieldGroup>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }

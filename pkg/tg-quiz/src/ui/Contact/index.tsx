@@ -1,8 +1,8 @@
-import { Button, Card, Input, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
+import { Button, Input, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext, type QuizContact } from '../../App.context';
-import { InputMask } from './input-mask';
 import { API_BASE_URL } from '../../config';
+import { InputMask } from './input-mask';
 
 export const Contact = () => {
   const { quiz, nextStage } = useContext(AppContext);
@@ -15,29 +15,29 @@ export const Contact = () => {
   const contactForm = contact?.form?.length
     ? contact.form
     : [
-        {
-          'step': 0,
-          'type': 'name',
-          'label': 'Имя',
-          'required': true,
-          'placeholder': 'Иван',
-        },
-        {
-          'step': 0,
-          'type': 'email',
-          'label': 'Email',
-          'required': true,
-          'placeholder': 'mail@example.com',
-        },
-        {
-          'mask': '+990 (###) ###-##-##',
-          'step': 0,
-          'type': 'phone',
-          'label': 'Телефон',
-          'required': true,
-          'placeholder': '+7 (999) 999-99-99',
-        },
-      ];
+      {
+        'step': 0,
+        'type': 'name',
+        'label': 'Имя',
+        'required': true,
+        'placeholder': 'Иван',
+      },
+      {
+        'step': 0,
+        'type': 'email',
+        'label': 'Email',
+        'required': true,
+        'placeholder': 'mail@example.com',
+      },
+      {
+        'mask': '+990 (###) ###-##-##',
+        'step': 0,
+        'type': 'phone',
+        'label': 'Телефон',
+        'required': true,
+        'placeholder': '+7 (999) 999-99-99',
+      },
+    ];
 
   const [formData, setFormData] = useState<Record<string, string>>({});
 
@@ -46,64 +46,6 @@ export const Contact = () => {
     const storageKey = `quiz_contact_${quiz?.uid}`;
     sessionStorage.removeItem(storageKey);
   }, [quiz?.uid]);
-
-  // Устанавливаем background, как в Standard.tsx
-  useEffect(() => {
-    const element = window.document.querySelector('#root');
-    const url = contact?.background;
-    const footer = document.querySelector('.footer__logo') as HTMLElement;
-
-    if (!element) return;
-
-    if (!url) {
-      //clear background
-      element.setAttribute('style', '');
-      // Сбрасываем стили футера
-      if (footer) {
-        footer.style.position = '';
-        footer.style.bottom = '';
-        footer.style.left = '';
-        footer.style.transform = '';
-      }
-      return;
-    }
-
-    element.setAttribute(
-      'style',
-      `
-        background-image: url(${url});
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-color: transparent;
-        opacity: 1;
-        transition: background-image 0.3s ease-in-out;
-        height: 100vh;
-        width: 100vw;
-      `
-    );
-
-    // Прибиваем футер к низу страницы по центру
-    if (footer) {
-      footer.style.position = 'absolute';
-      footer.style.bottom = '6px';
-      footer.style.left = '50%';
-      footer.style.transform = 'translateX(-50%)';
-    }
-
-    // Cleanup при размонтировании
-    return () => {
-      if (footer) {
-        footer.style.position = '';
-        footer.style.bottom = '';
-        footer.style.left = '';
-        footer.style.transform = '';
-      }
-
-      element.setAttribute('style', '');
-    };
-  }, [contact?.background]);
 
   // Валидация email
   const isValidEmail = (email: string): boolean => {
@@ -243,12 +185,12 @@ export const Contact = () => {
       // Отправляем только answers, form уже сохранен в contactsForm при получении квиза
       const contactsData = quizKey
         ? {
-            answers: formData,
-            key: quizKey,
-          }
+          answers: formData,
+          key: quizKey,
+        }
         : {
-            answers: formData,
-          };
+          answers: formData,
+        };
 
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${quiz.uid}/contacts`, {
         method: 'POST',
@@ -277,12 +219,12 @@ export const Contact = () => {
 
   return (
     <div className='contact'>
-      <Card className='cards full'>
+      <List>
         <Placeholder
           header={contact?.title ?? 'Заполните форму, чтобы получить результаты теста'}
           description={contact?.description}
         />
-        <div className='contact__form'>
+        <List>
           {contactForm.map((field) => {
             if (field.type === 'phone') {
               return (
@@ -332,7 +274,7 @@ export const Contact = () => {
               />
             );
           })}
-        </div>
+        </List>
         <div
           className='contact__button'
           style={{ marginTop: '2rem' }}
@@ -346,7 +288,7 @@ export const Contact = () => {
             {isSubmitting ? 'Отправка...' : 'Отправить'}
           </Button>
         </div>
-      </Card>
+      </List>
       {errorMessage && (
         <Snackbar
           onClose={() => {

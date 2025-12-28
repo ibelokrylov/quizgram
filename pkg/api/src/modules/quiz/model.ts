@@ -10,6 +10,7 @@ export namespace QuizModel {
     updatedAt: t.Date(),
     isActive: t.Boolean(),
     name: t.String(),
+    isShowLogo: t.Optional(t.Boolean()),
     startPage: t.Optional(t.Any()),
     questionTitle: t.Optional(t.String()),
     question: t.Optional(t.Array(t.Any())),
@@ -182,4 +183,29 @@ export namespace QuizModel {
     error: t.String(), // "Unauthorized" или другая ошибка
   });
   export type quizFiltersErrorResponse = typeof quizFiltersErrorResponse.static;
+
+  // Тело запроса для обновления is_show_logo
+  export const updateQuizIsShowLogoBody = t.Object({
+    isShowLogo: t.Boolean(),
+  });
+
+  export type updateQuizIsShowLogoBody = typeof updateQuizIsShowLogoBody.static;
+
+  // Успешный ответ при обновлении is_show_logo
+  export const updateQuizIsShowLogoSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: t.Boolean(), // Новое значение isShowLogo
+  });
+
+  export type updateQuizIsShowLogoSuccessResponse =
+    typeof updateQuizIsShowLogoSuccessResponse.static;
+
+  // Ответ при ошибке обновления is_show_logo
+  export const updateQuizIsShowLogoErrorResponse = t.Object({
+    message: t.String(), // "failed"
+    error: t.String(), // "Unauthorized", "Forbidden" или "Not updated"
+  });
+
+  export type updateQuizIsShowLogoErrorResponse =
+    typeof updateQuizIsShowLogoErrorResponse.static;
 }

@@ -44,6 +44,7 @@ export const quizTable = pgTable("quiz", {
   name: varchar("name", { length: 255 })
     .notNull()
     .default("Новый квиз"),
+  isShowLogo: boolean("is_show_logo").notNull().default(true),
 
   startPage: jsonb("start_page"),
   questionTitle: varchar("question_title", { length: 255 }).default(

@@ -41,7 +41,6 @@ type BidDetail = {
   contacts: unknown;
   contactsForm: unknown;
   userInfo: unknown;
-  initData: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
   adminUpdatedAt: Date | string | null;
@@ -412,7 +411,6 @@ export abstract class BidsService {
           b.contacts,
           b.contacts_form as "contactsForm",
           b.user_info as "userInfo",
-          b.init_data as "initData",
           b.created_at as "createdAt",
           b.updated_at as "updatedAt",
           b.admin_updated_at as "adminUpdatedAt",
@@ -494,7 +492,6 @@ export abstract class BidsService {
         contacts: bidData.contacts,
         contactsForm: bidData.contactsForm,
         userInfo: bidData.userInfo,
-        initData: bidData.initData ? String(bidData.initData) : null,
       };
     } catch (error) {
       logger.error("Failed to get bid details", error as Error, { userId, key });

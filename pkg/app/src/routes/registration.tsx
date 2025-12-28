@@ -4,17 +4,17 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useContext, useEffect } from "react";
 
 export const Route = createFileRoute("/registration")({
-	component: RouteComponent,
+  component: RouteComponent,
 });
 
 function RouteComponent() {
-	const ctx = useContext(AuthContext);
-	const navigate = useNavigate();
+  const ctx = useContext(AuthContext);
+  const navigate = useNavigate();
 
-	useEffect(() => {
-		if (ctx.isAuth) {
-			navigate({ to: "/app" });
-		}
-	}, [ctx.isAuth]);
-	return <RegistrationPage />;
+  useEffect(() => {
+    if (ctx.isAuth) {
+      navigate({ to: "/app" });
+    }
+  }, [ctx.isAuth]);
+  return <RegistrationPage />;
 }

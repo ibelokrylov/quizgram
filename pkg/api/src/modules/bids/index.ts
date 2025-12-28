@@ -19,7 +19,7 @@ export const bids = new Elysia({ prefix: "/bids" })
       async beforeHandle(ctx) {
         if (!ctx.cookie.token.value) {
           ctx.set.status = 401;
-          return { message: "Unauthorized" };
+          return { message: "failed", error: "Unauthorized" };
         } else {
           const user = await AuthService.getUserFromToken(
             ctx.cookie.token.value.toString(),
@@ -261,7 +261,7 @@ export const bids = new Elysia({ prefix: "/bids" })
 
           if (!user) {
             ctx.set.status = 401;
-            return { message: "Unauthorized" };
+            return { message: "failed", error: "Unauthorized" };
           }
 
           // Проверяем, что пользователь не на FREE плане

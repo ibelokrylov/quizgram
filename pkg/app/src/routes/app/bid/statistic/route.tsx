@@ -7,31 +7,31 @@ import { z } from "zod";
 
 // Схема валидации для search params
 const statisticSearchSchema = z.object({
-	quiz_uid: z.string().optional(),
-	start: z.string().optional(),
-	end: z.string().optional(),
+  quiz_uid: z.string().optional(),
+  start: z.string().optional(),
+  end: z.string().optional(),
 });
 
 export const Route = createFileRoute("/app/bid/statistic")({
-	component: RouteComponent,
-	validateSearch: (search) => statisticSearchSchema.parse(search),
+  component: RouteComponent,
+  validateSearch: (search) => statisticSearchSchema.parse(search),
 });
 
 function RouteComponent() {
-	const { user } = useContext(AuthContext);
-	const isFreePlan = user?.planId === 1;
+  const { user } = useContext(AuthContext);
+  const isFreePlan = user?.planId === 1;
 
-	return (
-		<div>
-			{isFreePlan ? (
-				<div className="p-4">
-					<div className="max-w-md">
-						<PlanInfo />
-					</div>
-				</div>
-			) : (
-				<BidStatisticPage />
-			)}
-		</div>
-	);
+  return (
+    <div>
+      {isFreePlan ? (
+        <div className="p-4">
+          <div className="max-w-md">
+            <PlanInfo />
+          </div>
+        </div>
+      ) : (
+        <BidStatisticPage />
+      )}
+    </div>
+  );
 }

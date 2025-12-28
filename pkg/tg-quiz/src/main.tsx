@@ -1,10 +1,9 @@
+import '@telegram-apps/telegram-ui/dist/styles.css';
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initTelegramSdk } from "./init-telegram-sdk.tsx";
 
 
-if (!import.meta.env.DEV) {
-  initTelegramSdk()
-}
+initTelegramSdk()
 createRoot(document.getElementById("root")!).render(<App />);

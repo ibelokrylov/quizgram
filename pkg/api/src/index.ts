@@ -59,6 +59,28 @@ async function startApp() {
   const env = typeof Bun !== "undefined" ? Bun.env : process.env;
   const isDevelopment = env.NODE_ENV !== "production";
 
+  // Настраиваем HTTPS если указаны сертификаты
+  const httpsCertPath = env.HTTPS_CERT;
+  const httpsKeyPath = env.HTTPS_KEY;
+  const httpsPort = env.HTTPS_PORT ? parseInt(env.HTTPS_PORT, 10) : 5001;
+  const httpPort = env.PORT ? parseInt(env.PORT, 10) : 5001;
+
+  let tlsConfig: { cert: string; key: string } | undefined;
+  if (httpsCertPath && httpsKeyPath) {
+    try {
+      const cert = await Bun.file(httpsCertPath).text();
+      const key = await Bun.file(httpsKeyPath).text();
+      tlsConfig = { cert, key };
+      logger.info("HTTPS сертификаты загружены", {
+        certPath: httpsCertPath,
+        keyPath: httpsKeyPath,
+      });
+    } catch (error) {
+      logger.error("Ошибка при загрузке HTTPS сертификатов", error instanceof Error ? error : new Error(String(error)));
+      logger.warn("Сервер будет запущен без HTTPS");
+    }
+  }
+
   // Настраиваем CORS в зависимости от окружения
   // Читаем разрешённые URL из переменной окружения APP_URLS
   const appUrls = env.APP_URLS
@@ -222,8 +244,25 @@ async function startApp() {
       .use(publicModule)
     )
     // Webhook'и для Telegram ботов (без префикса /v1, так как Telegram отправляет на указанный URL)
-    .use(telegram)
-    .listen(5001);
+    .use(telegram);
+
+  // Запускаем сервер с HTTPS или HTTP
+  if (tlsConfig) {
+    app.listen({
+      port: httpsPort,
+      tls: tlsConfig,
+    });
+    logger.info("Сервер запущен с HTTPS", {
+      port: httpsPort,
+      protocol: "https",
+    });
+  } else {
+    app.listen(httpPort);
+    logger.info("Сервер запущен с HTTP", {
+      port: httpPort,
+      protocol: "http",
+    });
+  }
 
   // Сохраняем сервер и приложение для graceful shutdown
   server = app.server;
@@ -232,6 +271,7 @@ async function startApp() {
   logger.info("Сервер запущен", {
     hostname: app.server?.hostname,
     port: app.server?.port,
+    protocol: tlsConfig ? "https" : "http",
   });
 }
 

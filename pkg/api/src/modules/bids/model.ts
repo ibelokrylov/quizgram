@@ -92,7 +92,6 @@ export const bidDetails = t.Object({
   contacts: t.Optional(t.Nullable(t.Any())), // Ответы пользователя на форму контактов
   contactsForm: t.Optional(t.Nullable(t.Any())), // Форма контактов из квиза
   userInfo: t.Optional(t.Nullable(t.Any())), // Информация о пользователе из Telegram
-  initData: t.Optional(t.Nullable(t.String())), // Telegram WebApp initData как строка
 });
 
 

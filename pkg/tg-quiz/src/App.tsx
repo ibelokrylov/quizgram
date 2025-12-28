@@ -4,7 +4,6 @@ import { AppRoot } from "@telegram-apps/telegram-ui";
 import { useEffect, useState } from "react";
 import { AppContextProvider } from "./App.context.provider";
 import { Content } from "./Content";
-import { AppContextDevProvider } from "./App.context.provider.dev";
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark' | undefined>('light')
@@ -32,16 +31,8 @@ function App() {
     return () => {
       mediaQuery.removeEventListener("change", updateTheme);
     };
-    // }, [isTelegramMiniApp]);
   }, []);
 
-  if (import.meta.env.DEV === true) {
-    return <AppContextDevProvider>
-      <AppRoot className="app" appearance={theme}>
-        <Content />
-      </AppRoot>
-    </AppContextDevProvider>
-  }
 
   return (
     <AppContextProvider>

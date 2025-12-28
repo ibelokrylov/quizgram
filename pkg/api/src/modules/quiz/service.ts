@@ -441,6 +441,45 @@ export abstract class QuizService {
     }
   }
 
+  /**
+   * Обновление поля is_show_logo квиза
+   * @param uid - UID квиза
+   * @param userId - ID пользователя
+   * @param isShowLogo - Новое значение is_show_logo
+   * @returns Обновленное значение is_show_logo
+   */
+  static async updateQuizIsShowLogo(
+    uid: string,
+    userId: number,
+    isShowLogo: boolean,
+  ): Promise<boolean> {
+    // Находим квиз по UID и проверяем принадлежность пользователю
+    const quizzes = await db
+      .select()
+      .from(quizTable)
+      .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, userId)))
+      .limit(1);
+
+    const quiz = quizzes[0];
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    // Обновляем is_show_logo
+    const updatedQuizzes = await db
+      .update(quizTable)
+      .set({ isShowLogo })
+      .where(eq(quizTable.id, quiz.id))
+      .returning();
+
+    const updatedQuiz = updatedQuizzes[0];
+    if (!updatedQuiz) {
+      throw new Error("Failed to update quiz is_show_logo");
+    }
+
+    return updatedQuiz.isShowLogo;
+  }
+
   static async createQuiz(userId: number): Promise<Quiz> {
     const quiz: NewQuiz = {
       userId,

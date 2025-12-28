@@ -4,11 +4,11 @@ import type { PropsWithChildren } from "react";
 import { AppContextProvider } from "./app.context.provider";
 
 export const ContextHole = (props: PropsWithChildren) => {
-	return (
-		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-			<AppContextProvider>
-				<AuthContextProvider>{props.children}</AuthContextProvider>
-			</AppContextProvider>
-		</ThemeProvider>
-	);
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AppContextProvider>
+        <AuthContextProvider>{props.children}</AuthContextProvider>
+      </AppContextProvider>
+    </ThemeProvider>
+  );
 };

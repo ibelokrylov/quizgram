@@ -38,6 +38,10 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
 	{ name: 'IS_DEV', required: false, description: 'Режим разработки (true/false)' },
 	{ name: 'TZ', required: false, description: 'Часовой пояс (по умолчанию UTC)' },
 	{ name: 'APP_NAME', required: false, description: 'Название приложения (по умолчанию TGMApp)' },
+	{ name: 'HTTPS_CERT', required: false, description: 'Путь к SSL сертификату (для HTTPS)' },
+	{ name: 'HTTPS_KEY', required: false, description: 'Путь к приватному ключу SSL (для HTTPS)' },
+	{ name: 'HTTPS_PORT', required: false, description: 'Порт для HTTPS сервера (по умолчанию 5001)' },
+	{ name: 'PORT', required: false, description: 'Порт для HTTP сервера (по умолчанию 5001, используется если HTTPS не настроен)' },
 ];
 
 /**

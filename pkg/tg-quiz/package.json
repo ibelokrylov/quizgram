@@ -6,31 +6,27 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "ngrok": "ngrok http http://localhost:5173"
+    "lint": "oxlint . && oxfmt --write .",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@telegram-apps/sdk-react": "^3.3.9",
     "@telegram-apps/telegram-ui": "^2.1.13",
     "react": "catalog:frontend",
     "react-calendar": "^6.0.0",
     "react-dom": "catalog:frontend"
   },
   "devDependencies": {
-    "@eslint/js": "catalog:frontend",
     "@types/node": "catalog:frontend",
     "@types/react": "catalog:frontend",
     "@types/react-dom": "catalog:frontend",
     "@vitejs/plugin-react": "catalog:frontend",
     "babel-plugin-react-compiler": "catalog:frontend",
-    "eslint": "catalog:frontend",
-    "eslint-plugin-react-hooks": "catalog:frontend",
-    "eslint-plugin-react-refresh": "catalog:frontend",
-    "react-icons": "catalog:frontend",
     "globals": "catalog:frontend",
+    "oxlint": "catalog:frontend",
+    "oxfmt": "catalog:frontend",
+    "react-icons": "catalog:frontend",
     "typescript": "catalog:all",
-    "typescript-eslint": "catalog:frontend",
-    "vite": "catalog:frontend"
+    "vite": "catalog:frontend",
+    "vite-plugin-mkcert": "^1.17.9"
   }
 }

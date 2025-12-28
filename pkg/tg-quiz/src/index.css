@@ -109,7 +109,7 @@
     --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #151515);
 
     /* Расширенные цвета темы (Bot API 7.0+) */
-    --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #212121);
+    --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #212121)Reislin;
     --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #8774e1);
     --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #212121);
     --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #8774e1);
@@ -195,10 +195,6 @@ a {
   text-decoration: none;
 }
 
-article {
-  max-width: 800px;
-  margin: 0 auto;
-}
 
 .app {
   max-width: 800px !important;
@@ -236,11 +232,12 @@ article {
 }
 
 .footer__logo {
+  width: 100%;
   flex-shrink: 0;
   align-self: center;
   display: inline-flex;
   justify-content: center;
-  padding: 2px 8px;
+  padding: 10px 12px;
   margin-bottom: 6px;
 }
 
@@ -401,10 +398,19 @@ article {
   gap: 2rem;
 }
 
+.variant__image_text-preview {
+  display: flex;
+  justify-content: center;
+}
+
 .variant__image_text-preview img {
   border-radius: .25rem;
   max-width: 23.75rem;
   max-height: 19.1875rem;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  display: block;
 }
 
 .variant__image_text-preview-skeleton {
@@ -583,6 +589,8 @@ article {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  width: 100%;
+  padding: 0 .5rem;
 }
 
 .contact__button-submit {

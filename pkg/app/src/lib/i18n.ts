@@ -6,33 +6,33 @@ import enCommon from "../locales/en/common.json";
 import ruCommon from "../locales/ru/common.json";
 
 const resources = {
-	en: {
-		common: enCommon,
-	},
-	ru: {
-		common: ruCommon,
-	},
+  en: {
+    common: enCommon,
+  },
+  ru: {
+    common: ruCommon,
+  },
 };
 
 i18n
-	.use(LanguageDetector)
-	.use(initReactI18next)
-	.init({
-		resources,
-		fallbackLng: "en",
-		debug: import.meta.env.NODE_ENV === "development",
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: "en",
+    debug: import.meta.env.NODE_ENV === "development",
 
-		interpolation: {
-			escapeValue: false,
-		},
+    interpolation: {
+      escapeValue: false,
+    },
 
-		detection: {
-			order: ["localStorage", "navigator", "htmlTag"],
-			caches: ["localStorage"],
-		},
+    detection: {
+      order: ["localStorage", "navigator", "htmlTag"],
+      caches: ["localStorage"],
+    },
 
-		ns: ["common"],
-		defaultNS: "common",
-	});
+    ns: ["common"],
+    defaultNS: "common",
+  });
 
 export default i18n;

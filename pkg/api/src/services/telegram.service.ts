@@ -67,8 +67,10 @@ export abstract class TelegramService {
         throw new Error('Hash не найден в initData');
       }
 
-      // Удаляем hash из параметров для проверки
+      // Удаляем hash и signature из параметров для проверки
+      // signature используется для Ed25519 валидации, но не должен участвовать в HMAC-SHA256
       urlParams.delete('hash');
+      urlParams.delete('signature');
 
       // Получаем токен бота
       const botToken = this.getBotToken();

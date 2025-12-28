@@ -1,4 +1,4 @@
-import { Card, Text } from '@telegram-apps/telegram-ui';
+import { Text } from '@telegram-apps/telegram-ui';
 import { useContext, type PropsWithChildren } from 'react';
 import { AppContext } from './App.context';
 
@@ -7,8 +7,8 @@ export const ContentLayout = (props: PropsWithChildren) => {
   return (
     <div className='content'>
       <div className='content__body'>{props.children}</div>
-      {quiz?.hideLogo ? null : (
-        <Card className='footer__logo'>
+      {quiz?.isShowLogo !== false ? (
+        <div className='footer__logo'>
           <Text caps weight={'3'}>
             Сделано в{' '}
             <a
@@ -16,11 +16,11 @@ export const ContentLayout = (props: PropsWithChildren) => {
               href={`https://quizgram.site?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
               target='_blank'
             >
-              Quizgram
+              Quizgram123
             </a>
           </Text>
-        </Card>
-      )}
+        </div>
+      ) : null}
     </div>
   );
 };

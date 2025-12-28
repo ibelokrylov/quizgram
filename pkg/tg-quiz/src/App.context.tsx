@@ -3,6 +3,7 @@ import { createContext } from 'react';
 export type Quiz = {
   uid: string;
   name: string;
+  isShowLogo?: boolean;
   startPage: unknown;
   questionTitle: string;
   question: (
@@ -20,7 +21,6 @@ export type Quiz = {
   )[];
   contact: QuizContact[];
   thxPage: QuizThxPage | null;
-  hideLogo: boolean;
 };
 
 export type QuizThxPage = {
@@ -224,12 +224,12 @@ export const AppContext = createContext<AppContextType>({
   quiz: {
     uid: '',
     name: '',
+    isShowLogo: true,
     startPage: null,
     questionTitle: '',
     question: [],
     contact: [],
     thxPage: null,
-    hideLogo: false,
   },
   setQuiz: () => {},
   currentStage: 'start',

@@ -1,12 +1,8 @@
-// import { useLaunchParams, useRawInitData } from "@telegram-apps/sdk-react";
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
+import { getLaunchParams, getRawInitData } from "./lib/telegram-webapp";
 
-function getStartAppParam(): string | undefined {
-  const uid = window.location.search.split("startapp=")[1];
-  return uid;
-}
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
@@ -17,9 +13,9 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   const [allStages, setAllStages] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
-  // Получаем данные от Telegram SDK
-  // const initData = useRawInitData();
-  // const launchParams = useLaunchParams();
+  // Получаем данные от Telegram WebApp API
+  const initData = getRawInitData();
+  const launchParams = getLaunchParams();
 
   function generateStages(quiz: Quiz) {
     const stages = [];
@@ -51,13 +47,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   async function fetchQuiz() {
     setLoading(true);
     try {
-      // Получаем uid из startapp параметра
-      // Сначала пытаемся получить из launchParams (Telegram SDK)
-      // Если не получилось - используем getStartAppParam() как fallback
-      // const launchParamsTyped = launchParams as Record<string, unknown>;
-      // const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam || launchParamsTyped.startParam) as string | undefined;
-      const uid = getStartAppParam();
-      // const uid = uidFromLaunchParams;
+      const launchParamsTyped = launchParams as Record<string, unknown>;
+      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam ||
+        launchParamsTyped.startParam) as string | undefined;
+      const uid = uidFromLaunchParams;
 
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
         setError(true);
@@ -67,15 +60,23 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       }
 
       // Делаем запрос к API с initData
+      // В dev режиме (когда Telegram WebApp недоступен) не отправляем initData,
+      // чтобы сервер не пытался проверить подпись несуществующих данных
+      const requestBody: { initData?: string } = {};
+      // Отправляем initData только если он есть и не пустой
+      if (initData && initData.trim().length > 0) {
+        requestBody.initData = initData;
+      }
+      console.log(initData)
+      console.log(window.Telegram?.WebApp.initData)
+
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${uid}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include", // Для отправки cookies (bidToken)
-        body: JSON.stringify({
-          // initData: initData || undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -139,7 +140,6 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   }
   useEffect(() => {
     fetchQuiz();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function sendAnswer(answer: Record<string, unknown>) {
@@ -147,8 +147,11 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     const isFile = answerValue instanceof File || answerValue instanceof Blob;
 
     // Проверяем, является ли answer массивом (question_group) и содержит ли он файлы
-    const isArrayWithFiles = Array.isArray(answerValue) &&
-      answerValue.some((item: any) => item instanceof File || item instanceof Blob);
+    const isArrayWithFiles =
+      Array.isArray(answerValue) &&
+      answerValue.some(
+        (item: any) => item instanceof File || item instanceof Blob,
+      );
 
     // Извлекаем final_question для добавления в URL
     const finalQuestion = answer.final_question === true ? "true" : "false";
@@ -178,7 +181,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         const answerArray = answerValue as any[];
         const processedArray = answerArray.map((item, index) => {
           // item должен быть объектом {question_uid, answer}
-          if (item && typeof item === 'object' && 'answer' in item) {
+          if (item && typeof item === "object" && "answer" in item) {
             const itemAnswer = item.answer;
             if (itemAnswer instanceof File || itemAnswer instanceof Blob) {
               // Файлы отправляем отдельно с индексом
@@ -187,7 +190,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
               return {
                 __isFile: true,
                 __fileIndex: index,
-                question_uid: item.question_uid
+                question_uid: item.question_uid,
               };
             }
           }
@@ -196,7 +199,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
             formData.append(`file_${index}`, item);
             return {
               __isFile: true,
-              __fileIndex: index
+              __fileIndex: index,
             };
           }
           return item;
@@ -213,9 +216,13 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Добавляем остальные поля из answerWithKey, если они есть
       Object.keys(answerWithKey).forEach((key) => {
         const value = answerWithKey[key];
-        if (value !== undefined && value !== null && key !== 'answer') {
+        if (value !== undefined && value !== null && key !== "answer") {
           // answer уже обработан выше, пропускаем его
-          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          if (
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean"
+          ) {
             formData.append(key, String(value));
           } else {
             formData.append(key, JSON.stringify(value));
@@ -224,7 +231,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       });
 
       // Логируем FormData для отладки
-      console.log('Sending FormData:', {
+      console.log("Sending FormData:", {
         isFile,
         isArrayWithFiles,
         formDataEntries: Array.from(formData.entries()).map(([key, value]) => {
@@ -236,7 +243,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           const isBlob = !isFile && valueAsAny instanceof Blob;
           return {
             key,
-            valueType: isFile ? 'File' : isBlob ? 'Blob' : typeof value,
+            valueType: isFile ? "File" : isBlob ? "Blob" : typeof value,
             fileName: isFile ? (value as File).name : undefined,
           };
         }),
@@ -252,13 +259,17 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Unknown error" }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.message || 'Failed to save answer');
+        throw new Error(result.message || "Failed to save answer");
       }
     } else {
       // Отправляем ответ без quiz_all_question (он уже сохранен при получении квиза)
@@ -274,13 +285,17 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Unknown error" }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.message || 'Failed to save answer');
+        throw new Error(result.message || "Failed to save answer");
       }
     }
   }

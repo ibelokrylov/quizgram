@@ -1,5 +1,5 @@
-import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
-import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable, userTable } from '../../db';
+import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
+import { db, planTable, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable, userTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { MailService } from '../../services/mail.service';
 import { QuizBotService } from '../../services/quiz-bot.service';
@@ -9,7 +9,7 @@ import { UserService } from '../user/service';
 import { PublicQuiz } from './models';
 
 // Типы для ответов квиза
-type AnswerValue = string | number | boolean | File | Blob | { type: string; [key: string]: unknown } | null;
+type AnswerValue = string | number | boolean | File | Blob | { type: string;[key: string]: unknown } | null;
 type StoredAnswer = {
   question_uid: string;
   answer: AnswerValue;
@@ -84,9 +84,39 @@ export abstract class PublicService {
       .where(eq(quizThxPageTable.quizId, quiz[0].id))
       .limit(1);
 
+    // Проверяем, есть ли у владельца квиза активная платная подписка
+    let hasPaidSubscription = false;
+    const isShowLogoFromDb = quiz[0].isShowLogo ?? true;
+    
+    // Если is_show_logo=false, проверяем платную подписку
+    if (isShowLogoFromDb === false) {
+      const userPayment = await db
+        .select({
+          planPrice: planTable.price,
+        })
+        .from(userPaymentTable)
+        .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
+        .where(
+          and(
+            eq(userPaymentTable.userId, quiz[0].userId),
+            eq(userPaymentTable.isActive, true),
+          ),
+        )
+        .limit(1);
+
+      // Платная подписка = план с ценой > 0
+      hasPaidSubscription = userPayment.length > 0 && userPayment[0].planPrice > 0;
+    }
+
+    // Если is_show_logo=false, но нет платной подписки - возвращаем true
+    const isShowLogo = isShowLogoFromDb === false && !hasPaidSubscription 
+      ? true 
+      : isShowLogoFromDb;
+
     return {
       uid: quiz[0].uid,
       name: quiz[0].name,
+      isShowLogo,
       startPage: quiz[0].startPage,
       questionTitle: quiz[0].questionTitle ?? undefined,
       question: questions.length > 0 ? questions : undefined,
@@ -154,8 +184,8 @@ export abstract class PublicService {
     // Создаем начальный массив ответов
     const initialAnswer: any[] = [];
 
-    // Если передан initData, верифицируем и сохраняем данные Telegram
-    if (initData) {
+    // Если передан initData (не пустая строка), верифицируем и сохраняем данные Telegram
+    if (initData && initData.trim().length > 0) {
       try {
         // Верифицируем initData и получаем userInfo
         const userInfo = await TelegramService.validateInitData(initData);
@@ -184,7 +214,7 @@ export abstract class PublicService {
         });
       } catch (error) {
         logger.error('Failed to verify Telegram initData', error instanceof Error ? error : new Error(String(error)));
-        // Если верификация не удалась, создаем запись без данных Telegram
+        // Если верификация не удалась, всё равно сохраняем initData (но без userInfo)
         await db.insert(quizBidTable).values({
           quizId: quizRecord[0].id,
           key: userKey,
@@ -194,13 +224,13 @@ export abstract class PublicService {
           first: isFirst,
           status: 'create',
           info: null,
-          initData: null,
-          userInfo: null,
+          initData: initData, // Всегда сохраняем initData, даже если верификация не удалась
+          userInfo: null, // userInfo не сохраняем, так как верификация не удалась
           ipLocation: ipLocation || null,
           updatedAt: new Date(),
         });
 
-        logger.warn('Created quiz session without Telegram data due to verification error', { quizUid, userKey });
+        logger.warn('Created quiz session with initData but without verified userInfo due to verification error', { quizUid, userKey });
       }
     } else {
       // Если initData нет, создаем запись без данных Telegram
@@ -367,7 +397,7 @@ export abstract class PublicService {
                 const fileToUpload = subAnswer.answer instanceof File || subAnswer.answer instanceof Blob
                   ? subAnswer.answer
                   : isFileLike(subAnswer.answer) ? subAnswer.answer as File | Blob : null;
-                
+
                 if (!fileToUpload) {
                   throw new Error('Invalid file format');
                 }
@@ -451,7 +481,7 @@ export abstract class PublicService {
             const fileToUpload = answerData.answer instanceof File || answerData.answer instanceof Blob
               ? answerData.answer
               : isFileLike(answerData.answer) ? answerData.answer as File | Blob : null;
-            
+
             if (!fileToUpload) {
               throw new Error('Invalid file format');
             }
