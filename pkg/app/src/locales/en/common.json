@@ -18,6 +18,8 @@
   "registration.error": "Registration error. Please try again.",
   "registration.button": "Create account",
   "registration.link": "Sign in",
+  "registration.privacyAgreement": "By registering on the resource, you agree to the",
+  "registration.privacyPolicy": "privacy policy",
   "verification.email.title": "Enter confirmation code",
   "verification.email.description": "We have sent a confirmation code to your email.",
   "verification.email.code": "Confirmation code",

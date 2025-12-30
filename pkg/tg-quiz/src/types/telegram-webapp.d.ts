@@ -53,6 +53,12 @@ export interface TelegramWebApp {
   headerColor: string;
   backgroundColor: string;
   
+  // Safe Area (Bot API 8.0+)
+  safeAreaInset?: SafeAreaInset;
+  contentSafeAreaInset?: SafeAreaInset;
+  isActive?: boolean;
+  isFullscreen?: boolean;
+  
   // User
   initData: string;
   initDataUnsafe: InitDataUnsafe;
@@ -249,5 +255,12 @@ export interface HomeScreenStatus {
   canAdd: boolean;
 }
 
-export {};
+export interface SafeAreaInset {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+export { };
 

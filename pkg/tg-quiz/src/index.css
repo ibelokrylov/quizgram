@@ -1,185 +1,191 @@
 /* Базовые стили для Telegram Mini App */
 :root {
-  /* Основные цвета темы Telegram (Base ThemeParams) - Light Theme */
-  --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
-  --tg-theme-text-color: var(--tg-theme-text-color, #000000);
-  --tg-theme-hint-color: var(--tg-theme-hint-color, #707579);
-  --tg-theme-link-color: var(--tg-theme-link-color, #007aff);
-  --tg-theme-button-color: var(--tg-theme-button-color, #007aff);
-  --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
-  --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #efeff4);
+    /* Основные цвета темы Telegram (Base ThemeParams) - Light Theme */
+    --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
+    --tg-theme-text-color: var(--tg-theme-text-color, #000000);
+    --tg-theme-hint-color: var(--tg-theme-hint-color, #707579);
+    --tg-theme-link-color: var(--tg-theme-link-color, #007aff);
+    --tg-theme-button-color: var(--tg-theme-button-color, #007aff);
+    --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #efeff4);
 
-  /* Расширенные цвета темы (Bot API 7.0+) */
-  --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #ffffff);
-  --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #007aff);
-  --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #ffffff);
-  --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #707579);
-  --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #707579);
-  --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #e53935);
+    /* Расширенные цвета темы (Bot API 7.0+) */
+    --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #ffffff);
+    --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #007aff);
+    --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #ffffff);
+    --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #707579);
+    --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #707579);
+    --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #e53935);
 
-  /* Дополнительные цвета (Bot API 7.6+) */
-  --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #e0e0e0);
+    /* Дополнительные цвета (Bot API 7.6+) */
+    --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #e0e0e0);
 
-  /* Цвета нижней панели (Bot API 7.10+) */
-  --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #ffffff);
+    /* Цвета нижней панели (Bot API 7.10+) */
+    --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #ffffff);
 
-  /* Telegram UI Typography */
-  --tgui--font-family: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Apple Color Emoji", "Helvetica Neue", sans-serif;
-  --tgui--font_weight--accent1: 700;
-  --tgui--font_weight--accent2: 600;
-  --tgui--font_weight--accent3: 400;
-  --tgui--large_title--font_size: 34px;
-  --tgui--large_title--line_height: 42px;
-  --tgui--title1--font_size: 28px;
-  --tgui--title1--line_height: 36px;
-  --tgui--title2--font_size: 24px;
-  --tgui--title2--line_height: 32px;
-  --tgui--title3--font_size: 20px;
-  --tgui--title3--line_height: 24px;
-  --tgui--headline--font_size: 19px;
-  --tgui--headline--line_height: 28px;
-  --tgui--text--font_size: 17px;
-  --tgui--text--line_height: 26px;
-  --tgui--subheadline1--font_size: 16px;
-  --tgui--subheadline1--line_height: 24px;
-  --tgui--subheadline2--font_size: 15px;
-  --tgui--subheadline2--line_height: 22px;
-  --tgui--caption1--font_size: 13px;
-  --tgui--caption1--line_height: 20px;
-  --tgui--caption2--font_size: 11px;
-  --tgui--caption2--line_height: 16px;
-  --tgui--border--width: 1px;
+    /* Telegram UI Typography */
+    --tgui--font-family: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Apple Color Emoji", "Helvetica Neue", sans-serif;
+    --tgui--font_weight--accent1: 700;
+    --tgui--font_weight--accent2: 600;
+    --tgui--font_weight--accent3: 400;
+    --tgui--large_title--font_size: 34px;
+    --tgui--large_title--line_height: 42px;
+    --tgui--title1--font_size: 28px;
+    --tgui--title1--line_height: 36px;
+    --tgui--title2--font_size: 24px;
+    --tgui--title2--line_height: 32px;
+    --tgui--title3--font_size: 20px;
+    --tgui--title3--line_height: 24px;
+    --tgui--headline--font_size: 19px;
+    --tgui--headline--line_height: 28px;
+    --tgui--text--font_size: 17px;
+    --tgui--text--line_height: 26px;
+    --tgui--subheadline1--font_size: 16px;
+    --tgui--subheadline1--line_height: 24px;
+    --tgui--subheadline2--font_size: 15px;
+    --tgui--subheadline2--line_height: 22px;
+    --tgui--caption1--font_size: 13px;
+    --tgui--caption1--line_height: 20px;
+    --tgui--caption2--font_size: 11px;
+    --tgui--caption2--line_height: 16px;
+    --tgui--border--width: 1px;
 
-  /* Telegram UI Colors - Light Theme */
-  --tgui--base--section--box_shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
-  --tgui--bg_color: var(--tg-theme-bg-color, #fff);
-  --tgui--text_color: var(--tg-theme-text-color, #000);
-  --tgui--hint_color: var(--tg-theme-hint-color, #707579);
-  --tgui--link_color: var(--tg-theme-link-color, #007aff);
-  --tgui--button_color: var(--tg-theme-button-color, #007aff);
-  --tgui--button_text_color: var(--tg-theme-button-text-color, #fff);
-  --tgui--secondary_bg_color: var(--tg-theme-secondary-bg-color, #efeff4);
-  --tgui--header_bg_color: var(--tg-theme-header-bg-color, #fff);
-  --tgui--accent_text_color: var(--tg-theme-accent-text-color, #007aff);
-  --tgui--section_bg_color: var(--tg-theme-section-bg-color, #fff);
-  --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #707579);
-  --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #707579);
-  --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #e53935);
-  --tgui--skeleton: rgba(0, 0, 0, .08);
-  --tgui--divider: rgba(0, 0, 0, .15);
-  --tgui--outline: rgba(0, 0, 0, .05);
-  --tgui--surface_primary: hsla(0, 0%, 100%, .95);
-  --tgui--tertiary_bg_color: #f4f4f7;
-  --tgui--quartenary_bg_color: #f6f6fa;
-  --tgui--segmented_control_active_bg: #fff;
-  --tgui--card_bg_color: #fff;
-  --tgui--secondary_hint_color: #a2acb0;
-  --tgui--secondary_fill: rgba(67, 120, 255, .1);
-  --tgui--green: #31d158;
-  --tgui--destructive_background: #e53935;
-  --tgui--primary_code_highlight: #4378ff;
-  --tgui--secondary_code_highlight: #b00fb4;
-  --tgui--tertiary_code_highlight: #3a9f20;
-  --tgui--plain_background: rgba(0, 0, 0, .04);
-  --tgui--plain_foreground: rgba(0, 0, 0, .8);
-  --tgui--toast_accent_color: #55a6ff;
-  --tgui--surface_dark: rgba(56, 56, 56, .85);
-  --tooltip_background_dark: rgba(0, 0, 0, .85);
-  --tgui--white: #fff;
-  --tgui--black: #000;
-  --tgui--z-index--simple: 1;
-  --tgui--z-index--skeleton: 2;
-  --tgui--z-index--overlay: 3;
+    /* Telegram UI Colors - Light Theme */
+    --tgui--base--section--box_shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+    --tgui--bg_color: var(--tg-theme-bg-color, #fff);
+    --tgui--text_color: var(--tg-theme-text-color, #000);
+    --tgui--hint_color: var(--tg-theme-hint-color, #707579);
+    --tgui--link_color: var(--tg-theme-link-color, #007aff);
+    --tgui--button_color: var(--tg-theme-button-color, #007aff);
+    --tgui--button_text_color: var(--tg-theme-button-text-color, #fff);
+    --tgui--secondary_bg_color: var(--tg-theme-secondary-bg-color, #efeff4);
+    --tgui--header_bg_color: var(--tg-theme-header-bg-color, #fff);
+    --tgui--accent_text_color: var(--tg-theme-accent-text-color, #007aff);
+    --tgui--section_bg_color: var(--tg-theme-section-bg-color, #fff);
+    --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #707579);
+    --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #707579);
+    --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #e53935);
+    --tgui--skeleton: rgba(0, 0, 0, .08);
+    --tgui--divider: rgba(0, 0, 0, .15);
+    --tgui--outline: rgba(0, 0, 0, .05);
+    --tgui--surface_primary: hsla(0, 0%, 100%, .95);
+    --tgui--tertiary_bg_color: #f4f4f7;
+    --tgui--quartenary_bg_color: #f6f6fa;
+    --tgui--segmented_control_active_bg: #fff;
+    --tgui--card_bg_color: #fff;
+    --tgui--secondary_hint_color: #a2acb0;
+    --tgui--secondary_fill: rgba(67, 120, 255, .1);
+    --tgui--green: #31d158;
+    --tgui--destructive_background: #e53935;
+    --tgui--primary_code_highlight: #4378ff;
+    --tgui--secondary_code_highlight: #b00fb4;
+    --tgui--tertiary_code_highlight: #3a9f20;
+    --tgui--plain_background: rgba(0, 0, 0, .04);
+    --tgui--plain_foreground: rgba(0, 0, 0, .8);
+    --tgui--toast_accent_color: #55a6ff;
+    --tgui--surface_dark: rgba(56, 56, 56, .85);
+    --tooltip_background_dark: rgba(0, 0, 0, .85);
+    --tgui--white: #fff;
+    --tgui--black: #000;
+    --tgui--z-index--simple: 1;
+    --tgui--z-index--skeleton: 2;
+    --tgui--z-index--overlay: 3;
 
-  -webkit-tap-highlight-color: transparent;
-  -webkit-text-size-adjust: 100%;
-  color: var(--tgui--text_color);
+    /* Безопасная зона контента (Bot API 8.0+) */
+    --tg-content-safe-area-top: 0px;
+    --tg-content-safe-area-bottom: 0px;
+    --tg-content-safe-area-left: 0px;
+    --tg-content-safe-area-right: 0px;
+
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    color: var(--tgui--text_color);
 }
 
 /* Dark Theme */
 @media (prefers-color-scheme: dark) {
-  :root {
-    /* Основные цвета темы Telegram (Base ThemeParams) - Dark Theme */
-    --tg-theme-bg-color: var(--tg-theme-bg-color, #212121);
-    --tg-theme-text-color: var(--tg-theme-text-color, #ffffff);
-    --tg-theme-hint-color: var(--tg-theme-hint-color, #aaaaaa);
-    --tg-theme-link-color: var(--tg-theme-link-color, #8774e1);
-    --tg-theme-button-color: var(--tg-theme-button-color, #8774e1);
-    --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
-    --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #151515);
+    :root {
+        /* Основные цвета темы Telegram (Base ThemeParams) - Dark Theme */
+        --tg-theme-bg-color: var(--tg-theme-bg-color, #212121);
+        --tg-theme-text-color: var(--tg-theme-text-color, #ffffff);
+        --tg-theme-hint-color: var(--tg-theme-hint-color, #aaaaaa);
+        --tg-theme-link-color: var(--tg-theme-link-color, #8774e1);
+        --tg-theme-button-color: var(--tg-theme-button-color, #8774e1);
+        --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+        --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #151515);
 
-    /* Расширенные цвета темы (Bot API 7.0+) */
-    --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #212121)Reislin;
-    --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #8774e1);
-    --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #212121);
-    --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #8774e1);
-    --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #aaaaaa);
-    --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #ff595a);
+        /* Расширенные цвета темы (Bot API 7.0+) */
+        --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #212121) Reislin;
+        --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #8774e1);
+        --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #212121);
+        --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #8774e1);
+        --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #aaaaaa);
+        --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #ff595a);
 
-    /* Дополнительные цвета (Bot API 7.6+) */
-    --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #2f2f2f);
+        /* Дополнительные цвета (Bot API 7.6+) */
+        --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #2f2f2f);
 
-    /* Цвета нижней панели (Bot API 7.10+) */
-    --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #212121);
+        /* Цвета нижней панели (Bot API 7.10+) */
+        --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #212121);
 
-    /* Telegram UI Colors - Dark Theme */
-    --tgui--base--section--box_shadow: 0 1px 2px 0 rgba(0, 0, 0, .3);
-    --tgui--bg_color: var(--tg-theme-bg-color, #212121);
-    --tgui--text_color: var(--tg-theme-text-color, #fff);
-    --tgui--hint_color: var(--tg-theme-hint-color, #aaa);
-    --tgui--link_color: var(--tg-theme-link-color, #8774e1);
-    --tgui--button_color: var(--tg-theme-button-color, #8774e1);
-    --tgui--button_text_color: var(--tg-theme-button-text-color, #fff);
-    --tgui--secondary_bg_color: var(--tg-theme-secondary-bg-color, #151515);
-    --tgui--header_bg_color: var(--tg-theme-header-bg-color, #212121);
-    --tgui--accent_text_color: var(--tg-theme-accent-text-color, #8774e1);
-    --tgui--section_bg_color: var(--tg-theme-section-bg-color, #212121);
-    --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #aaa);
-    --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #aaa);
-    --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #ff595a);
-    --tgui--skeleton: hsla(0, 0%, 100%, .03);
-    --tgui--divider: rgba(255, 255, 255, .12);
-    --tgui--outline: rgba(255, 255, 255, .08);
-    --tgui--surface_primary: rgba(36, 36, 36, .95);
-    --tgui--tertiary_bg_color: #1a1a1a;
-    --tgui--quartenary_bg_color: #141414;
-    --tgui--segmented_control_active_bg: #2d2d2d;
-    --tgui--card_bg_color: #2d2d2d;
-    --tgui--secondary_hint_color: #707579;
-    --tgui--secondary_fill: rgba(135, 116, 225, .15);
-    --tgui--green: #32d851;
-    --tgui--destructive_background: #ff595a;
-    --tgui--primary_code_highlight: #8774e1;
-    --tgui--secondary_code_highlight: #d665d8;
-    --tgui--tertiary_code_highlight: #55c74f;
-    --tgui--plain_background: rgba(255, 255, 255, .08);
-    --tgui--plain_foreground: rgba(255, 255, 255, .8);
-    --tgui--toast_accent_color: #8774e1;
-    --tgui--surface_dark: rgba(255, 255, 255, .9);
-    --tooltip_background_dark: rgba(255, 255, 255, .9);
-  }
+        /* Telegram UI Colors - Dark Theme */
+        --tgui--base--section--box_shadow: 0 1px 2px 0 rgba(0, 0, 0, .3);
+        --tgui--bg_color: var(--tg-theme-bg-color, #212121);
+        --tgui--text_color: var(--tg-theme-text-color, #fff);
+        --tgui--hint_color: var(--tg-theme-hint-color, #aaa);
+        --tgui--link_color: var(--tg-theme-link-color, #8774e1);
+        --tgui--button_color: var(--tg-theme-button-color, #8774e1);
+        --tgui--button_text_color: var(--tg-theme-button-text-color, #fff);
+        --tgui--secondary_bg_color: var(--tg-theme-secondary-bg-color, #151515);
+        --tgui--header_bg_color: var(--tg-theme-header-bg-color, #212121);
+        --tgui--accent_text_color: var(--tg-theme-accent-text-color, #8774e1);
+        --tgui--section_bg_color: var(--tg-theme-section-bg-color, #212121);
+        --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #aaa);
+        --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #aaa);
+        --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #ff595a);
+        --tgui--skeleton: hsla(0, 0%, 100%, .03);
+        --tgui--divider: rgba(255, 255, 255, .12);
+        --tgui--outline: rgba(255, 255, 255, .08);
+        --tgui--surface_primary: rgba(36, 36, 36, .95);
+        --tgui--tertiary_bg_color: #1a1a1a;
+        --tgui--quartenary_bg_color: #141414;
+        --tgui--segmented_control_active_bg: #2d2d2d;
+        --tgui--card_bg_color: #2d2d2d;
+        --tgui--secondary_hint_color: #707579;
+        --tgui--secondary_fill: rgba(135, 116, 225, .15);
+        --tgui--green: #32d851;
+        --tgui--destructive_background: #ff595a;
+        --tgui--primary_code_highlight: #8774e1;
+        --tgui--secondary_code_highlight: #d665d8;
+        --tgui--tertiary_code_highlight: #55c74f;
+        --tgui--plain_background: rgba(255, 255, 255, .08);
+        --tgui--plain_foreground: rgba(255, 255, 255, .8);
+        --tgui--toast_accent_color: #8774e1;
+        --tgui--surface_dark: rgba(255, 255, 255, .9);
+        --tooltip_background_dark: rgba(255, 255, 255, .9);
+    }
 }
 
 /* Использование CSS переменных Telegram для адаптации к теме */
 html,
 body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--tgui--bg_color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--tgui--bg_color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  width: 100%;
-  height: 100%;
-  background-color: var(--tgui--bg_color, #ffffff);
+    width: 100%;
+    height: 100%;
+    background-color: var(--tgui--bg_color, #ffffff);
 }
 
 /* Дополнительные переменные для совместимости */
@@ -187,457 +193,575 @@ body {
 
 /* Обеспечиваем правильное отображение на всех устройствах */
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 a {
-  color: var(--tg-theme-link-color, #2481cc);
-  text-decoration: none;
+    color: var(--tg-theme-link-color, #2481cc);
+    text-decoration: none;
 }
 
 
 .app {
-  max-width: 800px !important;
-  margin: 0 auto;
+    max-width: 800px !important;
+    margin: 0 auto;
 }
 
 .content {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-  justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    min-height: var(--tg-viewport-stable-height, 100vh);
+    width: 100%;
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: calc(var(--tg-content-safe-area-top, 0px) + 0.5rem);
+    padding-bottom: calc(var(--tg-content-safe-area-bottom, 0px) + 1rem);
+    padding-left: calc(var(--tg-content-safe-area-left, 0px) + 0.5rem);
+    padding-right: calc(var(--tg-content-safe-area-right, 0px) + 0.5rem);
 }
 
 .content__body {
-  flex: 1 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  max-width: 800px;
-  position: relative;
-  min-height: 0;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .content__question {
-  max-width: 800px;
-  width: 100%;
-  padding: 0 0.5rem;
+    max-width: 800px;
+    width: 100%;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
 }
 
 .footer__logo {
-  width: 100%;
-  flex-shrink: 0;
-  align-self: center;
-  display: inline-flex;
-  justify-content: center;
-  padding: 10px 12px;
-  margin-bottom: 6px;
+    width: 100%;
+    flex-shrink: 0;
+    align-self: center;
+    justify-content: center;
+    padding: 0 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background-color: var(--tgui--secondary_bg_color);
+    border-radius: 12px;
+    border: 1px solid var(--tgui--outline);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer__logo {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        border-color: var(--tgui--divider);
+    }
+}
+
+.footer__logo-text {
+    color: var(--tgui--hint_color);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.footer__logo-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+}
+
+.footer__logo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.4);
+    transition: transform 0.2s ease;
 }
 
 .footer__logo-link {
-  text-decoration: none;
-  font-style: italic;
+    text-decoration: none;
+    font-style: italic;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--tgui--text_color);
+    transition: opacity 0.2s ease;
+}
+
+.footer__logo-link:hover {
+    opacity: 0.8;
+}
+
+.footer__logo-link:hover .footer__logo-item img {
+    transform: scale(1.45);
+}
+
+.footer__logo-brand {
+    font-weight: 600;
+    color: var(--tgui--accent_text_color);
+    letter-spacing: 0.5px;
 }
 
 .center__content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-  position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex: 1;
+    width: 100%;
+    position: relative;
+    min-height: 0;
 }
 
 .cards {
-  padding: 12px;
+    padding: 12px;
 }
 
 .cards.full {
-  max-width: 800px;
-  width: 100%;
+    max-width: 800px;
+    width: 100%;
 }
 
 .cards.standard {
-  min-height: 400px;
+    min-height: 400px;
 }
 
 .cards_content_padding {
-  padding-top: 70px;
+    padding-top: 70px;
 }
 
 .card__chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .progress__container {
-  max-width: calc(100vw - 30px);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .chip_question {
-  left: 16px;
-  right: auto;
-  max-width: calc(100% - 24px);
+    left: 16px;
+    right: auto;
+    max-width: calc(100% - 24px);
 }
 
 .question__padding {
-  padding-top: 30px;
+    padding-top: 30px;
 }
 
 .answer__option {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .answer__option-item {
-  border: 1px solid var(--tg-theme-border-color, #e0e0e0);
-  border-radius: 8px;
+    border: 1px solid var(--tg-theme-border-color, #e0e0e0);
+    border-radius: 8px;
 }
 
 .question__counter {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding-right: 6px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 6px;
+    align-self: flex-end;
+    margin-left: auto;
 }
 
 .variant__image-item-image {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
-
 
 
 .start-page__cards-container {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 0.5rem;
+    flex: 1;
+    min-height: 0;
+    align-self: stretch;
+}
+
+.start-page__header {
+    flex-shrink: 0;
+}
+
+.start-page__main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.start-page__footer {
+    flex-shrink: 0;
+    margin-top: auto;
 }
 
 .start-page__card-chip {
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .start-page__card-logo {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 0.375rem;
-  display: block;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    display: block;
 }
 
 .start-page__button-container {
-  display: flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 .variant__image {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
 .variant__image-item {
-  border: 2px solid transparent;
-  flex: 1 1 calc(50% - 4px);
+    border: 2px solid transparent;
+    flex: 1 1 calc(50% - 4px);
 }
 
 .variant__image-item.selected {
-  border: 2px solid var(--tg-theme-button-color, #2481cc);
+    border: 2px solid var(--tg-theme-button-color, #2481cc);
 }
 
 .variant__image-item-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .variant__image-item-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .variant__image-item-value-text {
-  padding: 4px 10px 4px 8px;
-  text-align: center;
-  min-height: 40px;
+    padding: 4px 10px 4px 8px;
+    text-align: center;
+    min-height: 40px;
 
-  word-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .progress__buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 }
 
 .variant__image_text {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .variant__image_text-preview {
-  display: flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 .variant__image_text-preview img {
-  border-radius: .25rem;
-  max-width: 23.75rem;
-  max-height: 19.1875rem;
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  display: block;
+    border-radius: .25rem;
+    max-width: 23.75rem;
+    max-height: 19.1875rem;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    display: block;
 }
 
 .variant__image_text-preview-skeleton {
-  width: 100%;
-  border-radius: .25rem;
-  background-color: var(--tgui--secondary_bg_color, #f1f1f1);
+    width: 100%;
+    border-radius: .25rem;
+    background-color: var(--tgui--secondary_bg_color, #f1f1f1);
 }
 
 .variant__image_text-preview-skeleton p {
-  text-align: center;
+    text-align: center;
 }
 
 .variant__image_text-variants {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .date_container {
-  display: block;
-  margin: 0 auto;
-  padding-bottom: 12px;
+    display: block;
+    margin: 0 auto;
+    padding-bottom: 12px;
 }
 
 .date_calendar {
-  margin: 0 auto;
+    margin: 0 auto;
 }
 
 .react-calendar.date_calendar {
-  background-color: var(--tgui--bg_color);
-  border: 1px solid var(--tgui--bg_color);
-  color: var(--tgui--text_color);
-  border-radius: .25rem;
+    background-color: var(--tgui--bg_color);
+    border: 1px solid var(--tgui--bg_color);
+    color: var(--tgui--text_color);
+    border-radius: .25rem;
 }
 
 .date_calendar .react-calendar__navigation button {
-  color: var(--tgui--text_color);
+    color: var(--tgui--text_color);
 }
 
 .date_calendar .react-calendar__month-view__days button {
-  color: var(--tgui--text_color);
+    color: var(--tgui--text_color);
 }
 
 .date_calendar .react-calendar__tile--active {
-  border-radius: .25rem;
-  opacity: var(--tgui--button--hovered-opacity);
-  background: var(--tgui--button_color);
+    border-radius: .25rem;
+    opacity: var(--tgui--button--hovered-opacity);
+    background: var(--tgui--button_color);
 }
 
 .date_calendar .react-calendar__navigation button:enabled:hover,
 .react-calendar__navigation button:enabled:focus {
-  background-color: var(--tgui--header_bg_color);
+    background-color: var(--tgui--header_bg_color);
 }
 
 .date_calendar .react-calendar__tile--hasActive {
-  background: var(--tgui--button_color);
-  color: var(--tgui--text_color);
+    background: var(--tgui--button_color);
+    color: var(--tgui--text_color);
 }
 
 .date_calendar .react-calendar__tile--now {
-  background: var(--tgui--hint_color);
-  border-radius: .25rem;
+    background: var(--tgui--hint_color);
+    border-radius: .25rem;
 }
 
 .date_calendar .react-calendar__year-view__months button {
-  color: var(--tgui--text_color);
+    color: var(--tgui--text_color);
 }
 
 .slider__question-container {
-  width: 100%;
+    width: 100%;
 }
 
 .slider__question-input {
-  width: 100px;
+    width: 100px;
 }
 
 .slider__question {
-  width: 100%;
+    width: 100%;
 }
 
 .slider__question-values {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 12px;
-  color: var(--tgui--hint_color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    color: var(--tgui--hint_color);
 }
 
 .files__container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .files__size {
-  margin-left: 24px;
-  color: var(--tgui--hint_color);
+    margin-left: 24px;
+    color: var(--tgui--hint_color);
 }
 
 .flex-col {
-  flex-direction: column;
-  gap: 12px;
-  display: flex;
+    flex-direction: column;
+    gap: 12px;
+    display: flex;
 }
 
 .page__question-image {
-  max-width: 820px;
-  max-height: 820px;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: .25rem;
+    max-width: 820px;
+    max-height: 820px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: .25rem;
 }
 
 .player {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-  position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    position: relative;
 }
 
 .player iframe {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
 }
 
 .player__unknown {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  border-radius: .25rem;
-  background: var(--tg-theme-hint-color, #999999);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: .25rem;
+    background: var(--tg-theme-hint-color, #999999);
 }
 
 .player__tiktok {
-  min-height: 78vh;
+    min-height: 78vh;
 }
 
 .player__tiktok iframe {
-  min-height: 78vh;
+    min-height: 78vh;
 }
 
 .rating__question {
-  width: fit-content;
-  position: relative;
-  margin: 0 auto;
-  padding-bottom: 2rem;
+    width: fit-content;
+    position: relative;
+    margin: 0 auto;
+    padding-bottom: 2rem;
 }
 
 .rating__question-placeholder {
-  position: absolute;
+    position: absolute;
 }
 
 .rating__question-placeholder.left {
-  left: 0;
-  bottom: 1rem;
-  text-align: left;
+    left: 0;
+    bottom: 1rem;
+    text-align: left;
 }
 
 .rating__question-placeholder.right {
-  right: 0;
-  bottom: 1rem;
-  text-align: right;
+    right: 0;
+    bottom: 1rem;
+    text-align: right;
 }
 
 .question-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contact-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
 }
 
 .contact {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  width: 100%;
-  padding: 0 .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    padding: 0 .5rem;
 }
 
 .contact__button-submit {
-  width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-  display: block;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    display: block;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.thxpage-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
 }
 
 .thxpage-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .thxpage-button-item {
-  width: 100%;
-  display: block;
+    width: 100%;
+    display: block;
 }
 
 .thxpage-button-item__button {
-  width: 100%;
+    width: 100%;
 }
 
 .thxpage-button span {
-  display: block;
+    display: block;
 }
 
 .social-icon {
-  margin-top: 8px;
+    margin-top: 8px;
 }
 
 
 .thxpage-social-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    justify-content: center;
+    align-items: center;
 }
 
 @media screen and (max-width: 480px) {
-  .variant__image-item {
-    width: calc(50% - 4px);
-  }
+    .variant__image-item {
+        width: calc(50% - 4px);
+    }
 
-  .cards.full {
-    max-width: 800px;
-  }
+    .cards.full {
+        max-width: 800px;
+    }
 }

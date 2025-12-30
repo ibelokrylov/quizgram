@@ -18,6 +18,8 @@
   "registration.error": "Ошибка при регистрации. Попробуйте еще раз.",
   "registration.button": "Создать аккаунт",
   "registration.link": "Войти",
+  "registration.privacyAgreement": "Регистрируясь на ресурсе, вы соглашаетесь с",
+  "registration.privacyPolicy": "политикой конфиденциальности",
   "verification.email.title": "Введите код подтверждения",
   "verification.email.description": "Мы отправили на вашу почту код подтверждения.",
   "verification.email.code": "Код подтверждения",

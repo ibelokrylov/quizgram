@@ -113,8 +113,9 @@ export const ThxPage = () => {
   const processedDescription = content.description ? renderTitle(content.description, quiz.uid) : undefined;
 
   return (
-    <Card className='cards full'>
-      <List>
+    <div className='thxpage-container'>
+      <Card className='cards full'>
+        <List>
         <Placeholder
           header={processedTitle}
           description={processedDescription}
@@ -157,7 +158,8 @@ export const ThxPage = () => {
             ))}
           </div>
         ) : null}
-      </List>
-    </Card>
+        </List>
+      </Card>
+    </div>
   );
 };

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegistrationRouteImport } from './routes/registration'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -28,6 +29,11 @@ import { Route as AppBidReportStatisticRouteRouteImport } from './routes/app/bid
 const RegistrationRoute = RegistrationRouteImport.update({
   id: '/registration',
   path: '/registration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlansRoute = PlansRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/payment'
     | '/plans'
+    | '/privacy'
     | '/registration'
     | '/app/dashboard'
     | '/app/notification'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/payment'
     | '/plans'
+    | '/privacy'
     | '/registration'
     | '/app/dashboard'
     | '/app/notification'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/payment'
     | '/plans'
+    | '/privacy'
     | '/registration'
     | '/app/dashboard'
     | '/app/notification'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PaymentRoute: typeof PaymentRoute
   PlansRoute: typeof PlansRoute
+  PrivacyRoute: typeof PrivacyRoute
   RegistrationRoute: typeof RegistrationRoute
 }
 
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/registration'
       fullPath: '/registration'
       preLoaderRoute: typeof RegistrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/plans': {
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   PaymentRoute: PaymentRoute,
   PlansRoute: PlansRoute,
+  PrivacyRoute: PrivacyRoute,
   RegistrationRoute: RegistrationRoute,
 }
 export const routeTree = rootRouteImport

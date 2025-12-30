@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthContext } from "@/entities/User/auth.context";
@@ -14,6 +15,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const [error, setError] = useState<Record<string, boolean> | null>(null);
   const [loading, setLoading] = useState(false);
   const [invalidReferralCode, setInvalidReferralCode] = useState<string | null>(null);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [data, setData] = useState<UserRegistration & { passwordConfirm: string }>({
     login: "",
     password: "",
@@ -183,9 +185,37 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             />
             <FieldDescription>{t("registration.referralCode.description")}</FieldDescription>
           </Field>
+          <Field>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="privacy-agreement"
+                checked={privacyAgreed}
+                onCheckedChange={(checked) => setPrivacyAgreed(checked === true)}
+                className="mt-0.5"
+              />
+              <label
+                htmlFor="privacy-agreement"
+                className="text-sm text-foreground leading-relaxed cursor-pointer"
+              >
+                {t("registration.privacyAgreement")}{" "}
+                <Link
+                  to="/privacy"
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("registration.privacyPolicy")}
+                </Link>
+              </label>
+            </div>
+          </Field>
           <FieldGroup>
             <Field>
-              <Button disabled={loading} onClick={registration} type="submit">
+              <Button
+                disabled={loading || !privacyAgreed}
+                onClick={registration}
+                type="submit"
+              >
                 {t("registration.button")}
               </Button>
               <FieldDescription className="px-6 text-center">

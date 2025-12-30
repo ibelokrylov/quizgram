@@ -27,7 +27,9 @@ export const Content = () => {
   if (loading) {
     return (
       <ContentLayout>
-        <Spinner size='l' />
+        <div className='loading-container'>
+          <Spinner size='l' />
+        </div>
       </ContentLayout>
     );
   }
@@ -36,10 +38,12 @@ export const Content = () => {
   if (!loading && (!quiz || currentStage === '404')) {
     return (
       <ContentLayout>
-        <Placeholder
-          header='404'
-          description='Квиз не найден'
-        />
+        <div className='loading-container'>
+          <Placeholder
+            header='404'
+            description='Квиз не найден'
+          />
+        </div>
       </ContentLayout>
     );
   }
@@ -52,7 +56,9 @@ export const Content = () => {
   // Fallback: если нет currentStage, но есть quiz - показываем спиннер (не должно происходить)
   return (
     <ContentLayout>
-      <Spinner size='l' />
+      <div className='loading-container'>
+        <Spinner size='l' />
+      </div>
     </ContentLayout>
   );
 };

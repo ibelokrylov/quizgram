@@ -33,6 +33,5 @@ export async function initTelegramSdk() {
     tg.requestFullscreen();
   }
 
-
-  console.log(tg)
+  console.log(tg);
 }

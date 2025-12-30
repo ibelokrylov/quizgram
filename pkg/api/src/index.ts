@@ -1,6 +1,6 @@
-import { cors } from '@elysiajs/cors';
-import { cron } from '@elysiajs/cron';
-import { serverTiming } from '@elysiajs/server-timing';
+import { cors } from "@elysiajs/cors";
+import { cron } from "@elysiajs/cron";
+import { serverTiming } from "@elysiajs/server-timing";
 import { Elysia } from "elysia";
 import { checkDatabaseConnection } from "./lib/db-check";
 import { checkRequiredEnvVars } from "./lib/env-check";
@@ -8,7 +8,7 @@ import { logger } from "./lib/logger";
 import { auth } from "./modules/auth";
 import { bids } from "./modules/bids";
 import { payment } from "./modules/payment";
-import { publicModule } from './modules/public';
+import { publicModule } from "./modules/public";
 import { quiz } from "./modules/quiz";
 import { SchedulerService } from "./modules/scheduler/service";
 import { statistics } from "./modules/statistics";
@@ -18,7 +18,7 @@ import { PlanService } from "./services/plan.service";
 import { initTelegramBotsOnStartup, stopTelegramBots } from "./services/quiz-bot.service";
 
 // Храним сервер и приложение для возможности graceful shutdown
-let server: ReturnType<typeof Elysia.prototype.listen>['server'] | null = null;
+let server: ReturnType<typeof Elysia.prototype.listen>["server"] | null = null;
 let appInstance: any = null;
 // Храним интервалы scheduler для development режима
 let schedulerIntervals: {
@@ -34,7 +34,10 @@ async function startApp() {
   try {
     checkRequiredEnvVars();
   } catch (error) {
-    logger.error("Критическая ошибка: не удалось проверить переменные окружения", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Критическая ошибка: не удалось проверить переменные окружения",
+      error instanceof Error ? error : new Error(String(error))
+    );
     process.exit(1);
   }
 
@@ -43,13 +46,19 @@ async function startApp() {
   try {
     await checkDatabaseConnection();
   } catch (error) {
-    logger.error("Критическая ошибка: не удалось подключиться к базе данных", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Критическая ошибка: не удалось подключиться к базе данных",
+      error instanceof Error ? error : new Error(String(error))
+    );
     process.exit(1);
   }
 
   // Инициализация планов при запуске приложения
   PlanService.scanPlanAndCreate().catch((error) => {
-    logger.error("Ошибка при инициализации планов", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Ошибка при инициализации планов",
+      error instanceof Error ? error : new Error(String(error))
+    );
   });
 
   // Явная инициализация Telegram‑ботов при старте API
@@ -76,7 +85,10 @@ async function startApp() {
         keyPath: httpsKeyPath,
       });
     } catch (error) {
-      logger.error("Ошибка при загрузке HTTPS сертификатов", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Ошибка при загрузке HTTPS сертификатов",
+        error instanceof Error ? error : new Error(String(error))
+      );
       logger.warn("Сервер будет запущен без HTTPS");
     }
   }
@@ -84,15 +96,14 @@ async function startApp() {
   // Настраиваем CORS в зависимости от окружения
   // Читаем разрешённые URL из переменной окружения APP_URLS
   const appUrls = env.APP_URLS
-    ? env.APP_URLS.split(",").map((url) => url.trim()).filter(Boolean)
+    ? env.APP_URLS.split(",")
+        .map((url) => url.trim())
+        .filter(Boolean)
     : [];
+  logger.debug("appUrls", appUrls);
 
   const corsConfig = {
-    origin: appUrls.length > 0
-      ? appUrls
-      : isDevelopment
-        ? ["http://localhost:5173", "http://localhost:5174"]
-        : "https://example.com",
+    origin: appUrls,
     credentials: true,
   };
 
@@ -129,28 +140,34 @@ async function startApp() {
     }, 60 * 1000); // 1 минута
 
     // Обработка платежей каждые 20 минут
-    const processPaymentsInterval = setInterval(() => {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
+    const processPaymentsInterval = setInterval(
+      () => {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
 
-      // Запускаем только в период 00:00-02:00
-      if ((hours >= 0 && hours < 2) || (hours === 2 && minutes === 0)) {
-        logger.info("Запуск обработки платежей через setTimeout", {
-          time: now.toISOString(),
-          interval: "каждые 20 минут в период 00:00-02:00",
-        });
+        // Запускаем только в период 00:00-02:00
+        if ((hours >= 0 && hours < 2) || (hours === 2 && minutes === 0)) {
+          logger.info("Запуск обработки платежей через setTimeout", {
+            time: now.toISOString(),
+            interval: "каждые 20 минут в период 00:00-02:00",
+          });
 
-        SchedulerService.processPayments().catch((error) => {
-          logger.error("Ошибка при выполнении scheduler (платежи через setTimeout)", error as Error);
-        });
-      } else {
-        logger.debug("Пропуск обработки платежей: вне временных рамок 00:00-02:00", {
-          currentHour: hours,
-          currentMinutes: minutes,
-        });
-      }
-    }, 20 * 60 * 1000); // 20 минут
+          SchedulerService.processPayments().catch((error) => {
+            logger.error(
+              "Ошибка при выполнении scheduler (платежи через setTimeout)",
+              error as Error
+            );
+          });
+        } else {
+          logger.debug("Пропуск обработки платежей: вне временных рамок 00:00-02:00", {
+            currentHour: hours,
+            currentMinutes: minutes,
+          });
+        }
+      },
+      20 * 60 * 1000
+    ); // 20 минут
 
     // Сохраняем интервалы для очистки при shutdown
     schedulerIntervals = {
@@ -198,7 +215,10 @@ async function startApp() {
               });
 
               SchedulerService.processPayments().catch((error) => {
-                logger.error("Ошибка при выполнении scheduler (платежи через cron)", error as Error);
+                logger.error(
+                  "Ошибка при выполнении scheduler (платежи через cron)",
+                  error as Error
+                );
               });
             } else {
               logger.debug("Пропуск обработки платежей: вне временных рамок 00:00-02:00", {
@@ -220,7 +240,10 @@ async function startApp() {
             });
 
             SchedulerService.processPayments().catch((error) => {
-              logger.error("Ошибка при выполнении scheduler (платежи через cron в 02:00)", error as Error);
+              logger.error(
+                "Ошибка при выполнении scheduler (платежи через cron в 02:00)",
+                error as Error
+              );
             });
           },
         })
@@ -234,14 +257,8 @@ async function startApp() {
       version: "1.0.50",
     }))
     // Подключаем модули с префиксом /v1
-    .group("/v1", (app) => app
-      .use(auth)
-      .use(user)
-      .use(quiz)
-      .use(bids)
-      .use(payment)
-      .use(statistics)
-      .use(publicModule)
+    .group("/v1", (app) =>
+      app.use(auth).use(user).use(quiz).use(bids).use(payment).use(statistics).use(publicModule)
     )
     // Webhook'и для Telegram ботов (без префикса /v1, так как Telegram отправляет на указанный URL)
     .use(telegram);
@@ -316,7 +333,10 @@ async function gracefulShutdown(signal: string): Promise<void> {
         }
       }
     } catch (error) {
-      logger.error("Ошибка при остановке scheduler", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Ошибка при остановке scheduler",
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
 
     // Останавливаем Telegram ботов
@@ -333,7 +353,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
   } catch (error) {
     logger.error(
       "Ошибка при graceful shutdown",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     process.exit(1);
   }
@@ -345,7 +365,9 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 // Запускаем приложение
 startApp().catch((error) => {
-  logger.error("Критическая ошибка при запуске приложения", error instanceof Error ? error : new Error(String(error)));
+  logger.error(
+    "Критическая ошибка при запуске приложения",
+    error instanceof Error ? error : new Error(String(error))
+  );
   process.exit(1);
 });
-

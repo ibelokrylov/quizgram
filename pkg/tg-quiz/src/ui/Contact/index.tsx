@@ -218,8 +218,9 @@ export const Contact = () => {
   };
 
   return (
-    <div className='contact'>
-      <List>
+    <div className='contact-container'>
+      <div className='contact'>
+        <List>
         <Placeholder
           header={contact?.title ?? 'Заполните форму, чтобы получить результаты теста'}
           description={contact?.description}
@@ -298,6 +299,7 @@ export const Contact = () => {
           {errorMessage}
         </Snackbar>
       )}
+      </div>
     </div>
   );
 };

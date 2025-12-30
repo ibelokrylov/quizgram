@@ -6,17 +6,17 @@ import { AppContextProvider } from "./App.context.provider";
 import { Content } from "./Content";
 
 function App() {
-  const [theme, setTheme] = useState<'light' | 'dark' | undefined>('light')
+  const [theme, setTheme] = useState<"light" | "dark" | undefined>("light");
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const updateTheme = (e: MediaQueryList | MediaQueryListEvent) => {
       if (e.matches) {
-        setTheme('dark')
+        setTheme("dark");
         document.body.classList.add("dark");
         document.body.classList.remove("light");
       } else {
-        setTheme('light')
+        setTheme("light");
         document.body.classList.add("light");
         document.body.classList.remove("dark");
       }
@@ -32,7 +32,6 @@ function App() {
       mediaQuery.removeEventListener("change", updateTheme);
     };
   }, []);
-
 
   return (
     <AppContextProvider>
