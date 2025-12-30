@@ -65,7 +65,7 @@ export function getLaunchParams(): Record<string, unknown> {
     // Добавляем другие поля из initData
     Object.keys(initData).forEach((key) => {
       if (!params[key]) {
-        params[key] = (initData as Record<string, unknown>)[key];
+        params[key] = (initData as unknown as Record<string, unknown>)[key];
       }
     });
   }
