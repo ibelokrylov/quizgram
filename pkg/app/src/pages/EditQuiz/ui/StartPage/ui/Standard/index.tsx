@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
 import type { Quiz, QuizStartPageStandard } from "@/entities/Quiz/quiz.type";
-import { AuthContext } from "@/entities/User/auth.context";
 import http from "@/lib/http";
 import { ArrowDownFromLine, Trash } from "lucide-react";
 import { useContext, useState } from "react";
@@ -48,7 +47,6 @@ const defaultPage: QuizStartPageStandard = {
 
 export const Standard = () => {
   const { quiz, setQuiz } = useContext(CreateQuizContext);
-  const { user } = useContext(AuthContext);
   const { t } = useTranslation();
 
   const startPage = quiz?.startPage?.content as QuizStartPageStandard;

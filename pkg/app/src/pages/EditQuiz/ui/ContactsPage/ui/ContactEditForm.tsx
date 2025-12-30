@@ -37,20 +37,6 @@ export const ContactEditForm = ({
     setContact({ ...contact, background: url });
   }
 
-  async function onDeleteBackground() {
-    try {
-      await http({
-        url: "/v1/user/delete-file",
-        method: "DELETE",
-        body: { file_url: contact.background },
-      });
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setContact({ ...contact, background: undefined });
-    }
-  }
-
   function addToForm(form: QuizContactForm) {
     const oldForm = contact.form ?? [];
     oldForm.push(form);
