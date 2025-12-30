@@ -23,10 +23,7 @@ import { ResultPage } from "./ui/ResultPage";
 import { StartPage } from "./ui/StartPage";
 import { ThxPage } from "./ui/ThxPage";
 
-const planStages = {
-  1: new Set(["start", "question", "contacts", "thx"]),
-  2: new Set(["start", "question", "contacts", "thx"]),
-};
+const currentStages = new Set(["start", "question", "contacts", "thx"]);
 
 const icons = {
   start: <PanelTop />,
@@ -50,10 +47,6 @@ type QuizUpdateResponse = {
 };
 
 // Type guards для безопасного доступа к объектам по ключам
-function isValidPlanStageKey(key: number | undefined): key is keyof typeof planStages {
-  return key !== undefined && key in planStages;
-}
-
 function isValidIconKey(key: string): key is keyof typeof icons {
   return key in icons;
 }
@@ -66,8 +59,6 @@ export const EditQuiz = () => {
   const { user } = useContext(AuthContext);
   const { quiz, isLoadToServer, setQuiz, setIsLoadToServer } = useContext(CreateQuizContext);
   const { t } = useTranslation();
-  const currentStages =
-    planStages[isValidPlanStageKey(user?.planId) ? user.planId : 1] ?? planStages[1];
   const location = useLocation();
   const navigate = useNavigate();
   const [name, setName] = useState(quiz?.name);
