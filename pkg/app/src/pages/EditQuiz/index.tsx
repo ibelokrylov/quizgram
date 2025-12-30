@@ -25,7 +25,7 @@ import { ThxPage } from "./ui/ThxPage";
 
 const planStages = {
   1: new Set(["start", "question", "contacts", "thx"]),
-  2: new Set(["start", "question", "result", "contacts", "thx"]),
+  2: new Set(["start", "question", "contacts", "thx"]),
 };
 
 const icons = {
