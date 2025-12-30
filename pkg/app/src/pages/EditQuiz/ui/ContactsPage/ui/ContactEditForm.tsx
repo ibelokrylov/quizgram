@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { TextAreaNoBorder } from "@/components/ui/textarea-no-border";
 import type { QuizContact, QuizContactForm, QuizContactFormType } from "@/entities/Quiz/quiz.type";
-import http from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
