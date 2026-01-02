@@ -1,10 +1,11 @@
 import { set } from "@/app/db/index-db";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { InputNoBorder } from "@/components/ui/input-no-border";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
 import type { Quiz } from "@/entities/Quiz/quiz.type";
 import { AuthContext } from "@/entities/User/auth.context";
@@ -13,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { GalleryVerticalEnd, LaptopMinimalCheck, List, PanelTop, UserSearch } from "lucide-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CiSaveUp1 } from "react-icons/ci";
 import { toast } from "sonner";
@@ -65,8 +66,6 @@ export const EditQuiz = () => {
   const [active, setActive] = useState(quiz?.isActive);
   const [isShowLogo, setIsShowLogo] = useState(quiz?.isShowLogo ?? true);
   const [isMobile, setIsMobile] = useState(false);
-  const nameContainerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
 
   const [stage, setStage] = useState<string>(
     currentStages?.has(location.hash) ? location.hash : "start"
@@ -87,29 +86,6 @@ export const EditQuiz = () => {
     }
   }, [quiz?.isShowLogo]);
 
-  useEffect(() => {
-    if (!nameContainerRef.current || !isMobile) {
-      setContainerWidth(undefined);
-      return;
-    }
-    const updateWidth = () => {
-      if (nameContainerRef.current) {
-        setContainerWidth(nameContainerRef.current.offsetWidth);
-      }
-    };
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateWidth();
-    });
-    resizeObserver.observe(nameContainerRef.current);
-
-    window.addEventListener("resize", updateWidth);
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateWidth);
-    };
-  }, [isMobile]);
   function handleStageChange(stage: string) {
     if (currentStages?.has(stage)) {
       setStage(stage);
@@ -209,18 +185,23 @@ export const EditQuiz = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col lg:flex-row gap-3 lg:gap-5 pt-3 px-4 lg:px-0 lg:items-center">
-        <div
-          ref={nameContainerRef}
-          className="w-full lg:w-auto [&>div]:block lg:[&>div]:inline-block [&>div]:w-full lg:[&>div]:w-auto [&>div>input]:!w-full lg:[&>div>input]:!w-auto [&>div>input]:!max-w-full lg:[&>div>input]:!max-w-none"
-        >
-          <InputNoBorder
+    <div className="flex flex-col gap-4 max-w-[1000px] w-full">
+      <div className="px-4 lg:px-0 pt-3">
+        {isMobile ? (
+          <Textarea
             key={quiz?.name}
             value={name}
             maxLength={60}
-            maxWidth={isMobile && containerWidth ? containerWidth : undefined}
-            initialWidth={isMobile && containerWidth ? containerWidth : 200}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={updateName}
+            className="min-h-[60px]"
+            placeholder={t("edit-quiz.name.placeholder")}
+          />
+        ) : (
+          <Input
+            key={quiz?.name}
+            value={name}
+            maxLength={60}
             onChange={(e) => setName(e.target.value)}
             onBlur={updateName}
             onKeyDown={(e) => {
@@ -228,11 +209,11 @@ export const EditQuiz = () => {
                 updateName();
               }
             }}
+            placeholder={t("edit-quiz.name.placeholder")}
           />
-        </div>
-        <div className="hidden lg:block">
-          <Separator orientation="vertical" />
-        </div>
+        )}
+      </div>
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-5 px-4 lg:px-0 lg:items-center">
         <div className="flex flex-col lg:flex-row gap-3 lg:gap-5 items-start lg:items-center justify-between lg:justify-start pt-2 pb-2 lg:pt-0 lg:pb-0">
           <div className="flex flex-row gap-3 lg:gap-5 items-center">
             <div

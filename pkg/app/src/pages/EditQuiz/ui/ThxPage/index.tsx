@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { TextAreaNoBorder } from "@/components/ui/textarea-no-border";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
 import type { Quiz, QuizThxPage } from "@/entities/Quiz/quiz.type";
@@ -51,45 +52,53 @@ export const ThxPage = () => {
   const content: QuizThxPage | undefined = quiz?.thxPage;
 
   return (
-    <div className={"px-2 sm:px-4"}>
-      <Card className="flex flex-col items-center justify-center p-2 max-w-none px-2 sm:max-w-[414px] min-h-[800px] w-full">
-        <Card className="max-w-none w-full mr-2 ml-2 flex flex-col gap-5 px-3 py-2">
-          <div className={"relative"}>
-            <div className={"absolute top-[10px] left-[-20px]"}>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t("edit-quiz.thx-page.title_info")}</p>
-                </TooltipContent>
-              </Tooltip>
+    <div className={"max-w-[1000px] w-full"}>
+      <Card className="w-full p-4">
+        <div className="flex flex-col gap-5 w-full">
+          <div className={"flex flex-col gap-2"}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Input
+                  value={content?.title ?? ""}
+                  maxLength={60}
+                  onChange={(e) =>
+                    setQuiz({
+                      ...quiz,
+                      thxPage: { ...content, title: e.target.value },
+                    } as Quiz)
+                  }
+                  placeholder={t("edit-quiz.thx-page.title")}
+                  className="text-lg"
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("edit-quiz.thx-page.tooltip.title")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Info size={14} />
+              <span>{t("edit-quiz.thx-page.title_info")}</span>
             </div>
-            <TextAreaNoBorder
-              value={content?.title}
-              fontSize={20}
-              maxLength={60}
-              onChange={(e) =>
-                setQuiz({
-                  ...quiz,
-                  thxPage: { ...content, title: e.target.value },
-                } as Quiz)
-              }
-              fixedWidth={386}
-            />
           </div>
-          <TextAreaNoBorder
-            value={content?.description}
-            fontSize={16}
-            maxLength={250}
-            onChange={(e) =>
-              setQuiz({
-                ...quiz,
-                thxPage: { ...content, description: e.target.value },
-              } as Quiz)
-            }
-            fixedWidth={386}
-          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Textarea
+                value={content?.description ?? ""}
+                maxLength={250}
+                onChange={(e) =>
+                  setQuiz({
+                    ...quiz,
+                    thxPage: { ...content, description: e.target.value },
+                  } as Quiz)
+                }
+                placeholder={t("edit-quiz.thx-page.description")}
+                className="min-h-[100px]"
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("edit-quiz.thx-page.tooltip.description")}</p>
+            </TooltipContent>
+          </Tooltip>
           <div className="flex justify-center w-full">
             {content?.buttons?.length ? (
               <div className="flex flex-col gap-2 items-center w-full">
@@ -156,7 +165,7 @@ export const ThxPage = () => {
               </div>
             )}
           </div>
-        </Card>
+        </div>
       </Card>
       <ButtonsEditor
         key={openK}

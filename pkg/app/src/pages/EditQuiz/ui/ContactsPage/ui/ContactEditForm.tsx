@@ -5,7 +5,8 @@ import { CopyToClick } from "@/components/ui/copy-to-click";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { TextAreaNoBorder } from "@/components/ui/textarea-no-border";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { QuizContact, QuizContactForm, QuizContactFormType } from "@/entities/Quiz/quiz.type";
 import { cn } from "@/lib/utils";
 import { Plus, Trash } from "lucide-react";
@@ -53,74 +54,80 @@ export const ContactEditForm = ({
           <Trash />
         </Button>
       </div> */}
-      <Card className={"max-w-none sm:max-w-[414px] w-full min-h-[800px] relative p-0"}>
+      <Card className={"w-full relative p-4"}>
         <div className={"absolute top-[-16px] right-2 w-fit"}>
           <CopyToClick text={contact.uid}>
             <div className={"text-xs text-gray-200 dark:text-gray-600"}>id: {contact.uid}</div>
           </CopyToClick>
         </div>
-        <div className={"flex flex-col items-center justify-center min-h-[800px] px-3 py-2"}>
-          <Card className={"px-2 py-3 w-full h-fit relative"}>
-            <div className={"flex flex-col gap-2 w-full"}>
-              <TextAreaNoBorder
-                fontSize={20}
-                maxWidth={330}
+        <div className={"flex flex-col gap-2 w-full"}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Textarea
                 maxLength={50}
-                fixedWidth={330}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => setContact({ ...contact, title })}
                 placeholder={t("edit-quiz.contacts-page.contact.placeholder.title")}
+                className={"text-lg min-h-[60px] text-center"}
               />
-              <TextAreaNoBorder
+            </TooltipTrigger>
+            <TooltipContent>{t("edit-quiz.contacts-page.contact.tooltip.title")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Textarea
                 value={description}
-                fixedWidth={330}
                 maxLength={150}
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={() => setContact({ ...contact, description })}
                 placeholder={t("edit-quiz.contacts-page.contact.placeholder.description")}
+                className={"min-h-[100px] text-center"}
               />
-            </div>
-            <Separator />
-            <div className={"flex flex-col gap-4"}>
-              {contact.form?.map((form) => (
-                <div key={form.type} className={"flex flex-col gap-1 relative group"}>
-                  <Label htmlFor={form.label}>
-                    {form.label}
-                    {form.required ? <span className={"text-red-500"}>*</span> : null}
-                  </Label>
-                  <Input id={form.label} placeholder={form.placeholder} />
-                  <div>
-                    <Button
-                      variant={"outline"}
-                      size={"icon-sm"}
-                      className={cn(
-                        "absolute top-5 right-0 hidden group-hover:inline-flex hover:text-destructive"
-                      )}
-                      onClick={() =>
-                        setContact({
-                          ...contact,
-                          form: contact.form?.filter((f) => f.label !== form.label),
-                        })
-                      }
-                    >
-                      <Trash />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+            </TooltipTrigger>
+            <TooltipContent>
+              {t("edit-quiz.contacts-page.contact.tooltip.description")}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Separator className={"my-4"} />
+        <div className={"flex flex-col gap-4"}>
+          {contact.form?.map((form) => (
+            <div key={form.type} className={"flex flex-col gap-1 relative group"}>
+              <Label htmlFor={form.label}>
+                {form.label}
+                {form.required ? <span className={"text-red-500"}>*</span> : null}
+              </Label>
+              <Input id={form.label} placeholder={form.placeholder} />
               <div>
                 <Button
-                  variant={"link"}
-                  className={"text-sm text-gray-500 dark:text-gray-400"}
-                  onClick={() => setAddDrawerOpen(true)}
+                  variant={"outline"}
+                  size={"icon-sm"}
+                  className={cn(
+                    "absolute top-5 right-0 hidden group-hover:inline-flex hover:text-destructive"
+                  )}
+                  onClick={() =>
+                    setContact({
+                      ...contact,
+                      form: contact.form?.filter((f) => f.label !== form.label),
+                    })
+                  }
                 >
-                  <Plus />
-                  {t("edit-quiz.contacts-page.contact.button.add-field")}
+                  <Trash />
                 </Button>
               </div>
             </div>
-          </Card>
+          ))}
+          <div>
+            <Button
+              variant={"link"}
+              className={"text-sm text-gray-500 dark:text-gray-400"}
+              onClick={() => setAddDrawerOpen(true)}
+            >
+              <Plus />
+              {t("edit-quiz.contacts-page.contact.button.add-field")}
+            </Button>
+          </div>
         </div>
       </Card>
       <ContactDrawer

@@ -7,13 +7,15 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { AuthContext } from "@/entities/User/auth.context";
 import { userPasswordForgotZod } from "@/entities/User/user-password-forgot.type";
 import { verificationEmailZod } from "@/entities/User/Verification.email.type";
 import http from "@/lib/http";
 import { getTranslatedError } from "@/lib/error-mapper";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { queryClinet } from "@/app/query-client";
 
@@ -33,6 +35,8 @@ export function OTPForm({
   const autoSubmitRef = useRef(false);
 
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { setIsAuth, setUser } = useContext(AuthContext);
 
   async function email() {
     if (code.length !== 6 || loading) return;
@@ -134,6 +138,32 @@ export function OTPForm({
     }
   }, [code.length, loading, error, formType]);
 
+  const handleLogout = async () => {
+    try {
+      await http({
+        url: "/v1/auth/logout",
+        method: "POST",
+      });
+
+      // Очищаем состояние аутентификации
+      setIsAuth(false);
+      setUser(undefined);
+
+      // Очищаем sessionStorage
+      sessionStorage.removeItem("userPlan");
+
+      // Редирект на страницу входа
+      navigate({ to: "/" });
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      // Даже при ошибке очищаем состояние и делаем редирект
+      setIsAuth(false);
+      setUser(undefined);
+      sessionStorage.removeItem("userPlan");
+      navigate({ to: "/" });
+    }
+  };
+
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-xs">
@@ -181,6 +211,15 @@ export function OTPForm({
                 </FieldDescription>
               </FieldGroup>
             </FieldGroup>
+            <div className="mt-4 pt-4 border-t">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleLogout}
+              >
+                {t("nav.user.logout")}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

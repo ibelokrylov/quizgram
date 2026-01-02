@@ -8,27 +8,47 @@ import { Content } from "./Content";
 function App() {
   const [theme, setTheme] = useState<"light" | "dark" | undefined>("light");
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    // Функция для получения темы из --tg-color-scheme
+    const getThemeFromTelegram = (): "light" | "dark" => {
+      const computedStyle = window.getComputedStyle(document.body);
+      const colorScheme = computedStyle.getPropertyValue("--tg-color-scheme").trim();
 
-    const updateTheme = (e: MediaQueryList | MediaQueryListEvent) => {
-      if (e.matches) {
-        setTheme("dark");
-        document.body.classList.add("dark");
-        document.body.classList.remove("light");
-      } else {
-        setTheme("light");
-        document.body.classList.add("light");
-        document.body.classList.remove("dark");
+      // Если Telegram установил переменную, используем её
+      if (colorScheme === "dark" || colorScheme === "light") {
+        return colorScheme;
       }
+
+      // Fallback на prefers-color-scheme, если переменная не установлена
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    };
+
+    const updateTheme = () => {
+      const newTheme = getThemeFromTelegram();
+      setTheme(newTheme);
+      document.body.classList.remove("light", "dark");
+      document.body.classList.add(newTheme);
     };
 
     // Установить тему при монтировании
-    updateTheme(mediaQuery);
+    updateTheme();
 
-    // Слушать изменения темы
+    // Используем MutationObserver для отслеживания изменений стилей body
+    const observer = new MutationObserver(() => {
+      updateTheme();
+    });
+
+    // Наблюдаем за изменениями атрибутов style и class у body
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    // Также слушаем изменения prefers-color-scheme как fallback
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     mediaQuery.addEventListener("change", updateTheme);
 
     return () => {
+      observer.disconnect();
       mediaQuery.removeEventListener("change", updateTheme);
     };
   }, []);

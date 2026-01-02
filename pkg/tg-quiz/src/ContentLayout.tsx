@@ -44,17 +44,47 @@ export const ContentLayout = (props: PropsWithChildren) => {
   const safeAreaInset = useContentSafeAreaInset();
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  // Определяем текущую тему
+  // Определяем текущую тему (используем тот же подход, что и в App.tsx)
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const updateTheme = (e: MediaQueryList | MediaQueryListEvent) => {
-      setTheme(e.matches ? "dark" : "light");
+    // Функция для получения темы из --tg-color-scheme
+    const getThemeFromTelegram = (): "light" | "dark" => {
+      const computedStyle = window.getComputedStyle(document.body);
+      const colorScheme = computedStyle.getPropertyValue("--tg-color-scheme").trim();
+
+      // Если Telegram установил переменную, используем её
+      if (colorScheme === "dark" || colorScheme === "light") {
+        return colorScheme;
+      }
+
+      // Fallback на prefers-color-scheme, если переменная не установлена
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     };
 
-    updateTheme(mediaQuery);
+    const updateTheme = () => {
+      const newTheme = getThemeFromTelegram();
+      setTheme(newTheme);
+    };
+
+    // Установить тему при монтировании
+    updateTheme();
+
+    // Используем MutationObserver для отслеживания изменений стилей body
+    const observer = new MutationObserver(() => {
+      updateTheme();
+    });
+
+    // Наблюдаем за изменениями атрибутов style и class у body
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+
+    // Также слушаем изменения prefers-color-scheme как fallback
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     mediaQuery.addEventListener("change", updateTheme);
 
     return () => {
+      observer.disconnect();
       mediaQuery.removeEventListener("change", updateTheme);
     };
   }, []);
@@ -86,19 +116,17 @@ export const ContentLayout = (props: PropsWithChildren) => {
           <Text caps weight={"3"} className="footer__logo-text">
             Сделано в
           </Text>
-          <Text caps weight={"3"}>
-            <a
-              className="footer__logo-link"
-              href={`https://quizgram.site?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="footer__logo-item">
-                <img src={theme === "dark" ? "/logo_white.png" : "/logo_dark.png"} alt="Quizgram" />
-              </span>
-              <span className="footer__logo-brand">Quizgram</span>
-            </a>
-          </Text>
+          <a
+            className="footer__logo-button"
+            href={`https://quizgram.site?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="footer__logo-item">
+              <img src={theme === "dark" ? "/logo_white.png" : "/logo_dark.png"} alt="Quizgram" />
+            </span>
+            <span className="footer__logo-brand">Quizgram</span>
+          </a>
         </div>
       ) : null}
     </div>

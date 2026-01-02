@@ -32,12 +32,14 @@ export const Standard = () => {
 
             {/* Основной контент - в центре */}
             <div className="start-page__main">
-              {data?.title || data?.description ? (
-                <Placeholder header={data?.title} description={data?.description} />
-              ) : null}
-              <div className="start-page__button-container">
-                <Button onClick={nextStage}>{data?.button ?? "Пройти опрос"}</Button>
-              </div>
+              <Card className={"cards full"} style={{ paddingBottom: "1.5rem" }}>
+                {data?.title || data?.description ? (
+                  <Placeholder header={data?.title} description={data?.description} />
+                ) : null}
+                <div className="start-page__button-container">
+                  <Button onClick={nextStage}>{data?.button ?? "Пройти опрос"}</Button>
+                </div>
+              </Card>
             </div>
 
             {/* Информация - снизу */}
