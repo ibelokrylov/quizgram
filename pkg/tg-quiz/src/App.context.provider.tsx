@@ -1,15 +1,13 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
+import { preloadQuizMedia } from "./lib/media-preloader";
 import { getLaunchParams, getRawInitData } from "./lib/telegram-webapp";
-
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState<AppContextType["quiz"]>(undefined);
-  const [currentStage, setCurrentStage] = useState<string | undefined>(
-    undefined,
-  );
+  const [currentStage, setCurrentStage] = useState<string | undefined>(undefined);
   const [allStages, setAllStages] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
@@ -67,8 +65,8 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       if (initData && initData.trim().length > 0) {
         requestBody.initData = initData;
       }
-      console.log(initData)
-      console.log(window.Telegram?.WebApp.initData)
+      console.log(initData);
+      console.log(window.Telegram?.WebApp.initData);
 
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${uid}`, {
         method: "POST",
@@ -121,16 +119,18 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         try {
           sessionStorage.setItem("quizKey", result.key);
         } catch (storageError) {
-          console.error(
-            "Failed to save quiz key to session storage:",
-            storageError,
-          );
+          console.error("Failed to save quiz key to session storage:", storageError);
         }
       }
 
       setQuiz(result.data);
       generateStages(result.data);
       setLoading(false);
+
+      // Предзагружаем медиа асинхронно (не блокируем UI)
+      preloadQuizMedia(result.data).catch((error: unknown) => {
+        console.error("Ошибка при предзагрузке медиа:", error);
+      });
     } catch (err) {
       console.error("Failed to fetch quiz:", err);
       setError(true);
@@ -149,9 +149,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     // Проверяем, является ли answer массивом (question_group) и содержит ли он файлы
     const isArrayWithFiles =
       Array.isArray(answerValue) &&
-      answerValue.some(
-        (item: any) => item instanceof File || item instanceof Blob,
-      );
+      answerValue.some((item: any) => item instanceof File || item instanceof Blob);
 
     // Извлекаем final_question для добавления в URL
     const finalQuestion = answer.final_question === true ? "true" : "false";
@@ -169,9 +167,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     }
 
     // Добавляем key в тело запроса, если он есть
-    const answerWithKey = quizKey
-      ? { ...answerBody, key: quizKey }
-      : answerBody;
+    const answerWithKey = quizKey ? { ...answerBody, key: quizKey } : answerBody;
 
     if (isFile || isArrayWithFiles) {
       const formData = new FormData();
@@ -255,16 +251,12 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           method: "POST",
           body: formData,
           // НЕ устанавливаем Content-Type - браузер установит его автоматически с boundary
-        },
+        }
       );
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
-        );
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -281,16 +273,12 @@ export const AppContextProvider = (props: PropsWithChildren) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(answerWithKey),
-        },
+        }
       );
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
-        );
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
