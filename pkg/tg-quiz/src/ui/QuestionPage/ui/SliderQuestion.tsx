@@ -1,6 +1,7 @@
-import { Card, Input, Slider, Text } from '@telegram-apps/telegram-ui';
+import { Card, Slider, Text } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect, useState } from 'react';
 import type { QuizQuestionSlide } from '../../../App.context';
+import { Input } from '../../../ui/Input';
 import { QuestionContext } from '../Question.context';
 
 export const SliderQuestion = () => {

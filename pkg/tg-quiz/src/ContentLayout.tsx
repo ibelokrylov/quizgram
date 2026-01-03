@@ -39,7 +39,11 @@ function useContentSafeAreaInset(): SafeAreaInset | null {
   return safeAreaInset;
 }
 
-export const ContentLayout = (props: PropsWithChildren) => {
+export interface ContentLayoutProps extends PropsWithChildren {
+  className?: string;
+}
+
+export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) => {
   const { quiz } = useContext(AppContext);
   const safeAreaInset = useContentSafeAreaInset();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -109,8 +113,8 @@ export const ContentLayout = (props: PropsWithChildren) => {
   }, [safeAreaInset]);
 
   return (
-    <div className="content">
-      <div className="content__body">{props.children}</div>
+    <div className={`content ${className}`.trim()}>
+      <div className="content__body">{children}</div>
       {quiz?.isShowLogo !== false ? (
         <div className="footer__logo">
           <Text caps weight={"3"} className="footer__logo-text">

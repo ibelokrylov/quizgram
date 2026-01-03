@@ -1,5 +1,5 @@
-import { Input } from '@telegram-apps/telegram-ui';
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type InputHTMLAttributes } from 'react';
+import { Input } from '../Input';
 
 interface InputMaskProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
   mask?: string;

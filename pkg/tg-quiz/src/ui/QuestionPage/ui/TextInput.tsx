@@ -1,6 +1,6 @@
-import { Input } from '@telegram-apps/telegram-ui';
 import { useContext, useState } from 'react';
 import type { QuizQuestionInput } from '../../../App.context';
+import { Input } from '../../../ui/Input';
 import { QuestionContext } from '../Question.context';
 
 export const TextInput = () => {

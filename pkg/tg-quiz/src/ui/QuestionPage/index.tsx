@@ -36,10 +36,7 @@ export const QuestionPage = () => {
   const question = questions[currentQuestion];
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
 
-  const [currentAnswer, setCurrentAnswer] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (questions.length === 0) {
@@ -59,15 +56,19 @@ export const QuestionPage = () => {
   function sendQuestion(answer: Record<string, unknown>) {
     if (
       question.type === "question_group" &&
-      question?.content?.questions?.length !==
-      (answer.answer as Record<string, unknown>[])?.length
+      question?.content?.questions?.length !== (answer.answer as Record<string, unknown>[])?.length
     ) {
       setShowSnackbar(true);
       return;
     }
     // Проверяем, что answer существует и answer.answer не является null или undefined
     // Для числовых значений (например, slide) 0 является валидным ответом
-    if (answer === null || answer === undefined || answer.answer === null || answer.answer === undefined) {
+    if (
+      answer === null ||
+      answer === undefined ||
+      answer.answer === null ||
+      answer.answer === undefined
+    ) {
       setShowSnackbar(true);
       return;
     }
@@ -94,7 +95,7 @@ export const QuestionPage = () => {
   }
 
   return (
-    <div className='content__question'>
+    <div className="content__question">
       {questions.length > 1 ? (
         <div className="question__counter">
           <Text>
@@ -102,7 +103,7 @@ export const QuestionPage = () => {
           </Text>
         </div>
       ) : null}
-      <Card className="cards full">
+      <Card className="cards full question">
         {question?.content?.title ? (
           <Headline plain weight={"1"} className="chip_question">
             {question.content.title}
@@ -130,19 +131,14 @@ export const QuestionPage = () => {
         <div className="progress__buttons">
           <div>
             {currentQuestion > 0 ? (
-              <Button
-                mode={"plain"}
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-              >
+              <Button mode={"bezeled"} onClick={() => setCurrentQuestion(currentQuestion - 1)}>
                 Назад
               </Button>
             ) : null}
           </div>
           <div>
             {showNextButton.has(question.type) ? (
-              <Button onClick={() => sendQuestion(currentAnswer ?? {})}>
-                Далее
-              </Button>
+              <Button onClick={() => sendQuestion(currentAnswer ?? {})}>Далее</Button>
             ) : null}
           </div>
         </div>
@@ -150,8 +146,7 @@ export const QuestionPage = () => {
       {showSnackbar ? (
         <Snackbar onClose={() => setShowSnackbar(false)}>
           <Text>
-            {errorMessage[question.type as keyof typeof errorMessage] ??
-              errorMessage.default}
+            {errorMessage[question.type as keyof typeof errorMessage] ?? errorMessage.default}
           </Text>
         </Snackbar>
       ) : null}

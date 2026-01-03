@@ -147,3 +147,16 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
   }
 }
 
+/**
+ * Получает platform из Telegram WebApp и преобразует в формат для AppRoot
+ * @returns "ios" если платформа iOS, иначе "base"
+ */
+export function getPlatform(): "base" | "ios" {
+  const tg = getTelegramWebApp();
+  if (tg?.platform) {
+    // Telegram возвращает "ios" для iOS устройств
+    return tg.platform.toLowerCase() === "ios" ? "ios" : "base";
+  }
+  return "base";
+}
+

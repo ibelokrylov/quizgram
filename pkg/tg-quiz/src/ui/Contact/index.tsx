@@ -1,7 +1,8 @@
-import { Button, Input, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
+import { Button, Card, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext, type QuizContact } from '../../App.context';
 import { API_BASE_URL } from '../../config';
+import { Input } from '../Input';
 import { InputMask } from './input-mask';
 
 export const Contact = () => {
@@ -220,85 +221,87 @@ export const Contact = () => {
   return (
     <div className='contact-container'>
       <div className='contact'>
-        <List>
-        <Placeholder
-          header={contact?.title ?? 'Заполните форму, чтобы получить результаты теста'}
-          description={contact?.description}
-        />
-        <List>
-          {contactForm.map((field) => {
-            if (field.type === 'phone') {
-              return (
-                <InputMask
-                  key={field.type}
-                  mask={field.mask}
-                  header={field.required ? `${field.label} *` : field.label}
-                  placeholder={field.placeholder}
-                  required={field.required}
-                  value={formData[field.type] || ''}
-                  status={errors.has(field.type) ? 'error' : undefined}
-                  onChange={(value) => {
-                    setFormData({ ...formData, [field.type]: value });
-                    // Убираем ошибку при вводе
-                    if (errors.has(field.type)) {
-                      const newErrors = new Set(errors);
-                      newErrors.delete(field.type);
-                      setErrors(newErrors);
-                      if (newErrors.size === 0) {
-                        setErrorMessage('');
+        <Card className='cards full contact'>
+          <List>
+            <Placeholder
+              header={contact?.title ?? 'Заполните форму, чтобы получить результаты теста'}
+              description={contact?.description}
+            />
+            <List>
+              {contactForm.map((field) => {
+                if (field.type === 'phone') {
+                  return (
+                    <InputMask
+                      key={field.type}
+                      mask={field.mask}
+                      header={field.required ? `${field.label} *` : field.label}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                      value={formData[field.type] || ''}
+                      status={errors.has(field.type) ? 'error' : undefined}
+                      onChange={(value) => {
+                        setFormData({ ...formData, [field.type]: value });
+                        // Убираем ошибку при вводе
+                        if (errors.has(field.type)) {
+                          const newErrors = new Set(errors);
+                          newErrors.delete(field.type);
+                          setErrors(newErrors);
+                          if (newErrors.size === 0) {
+                            setErrorMessage('');
+                          }
+                        }
+                      }}
+                    />
+                  );
+                }
+                return (
+                  <Input
+                    key={field.type}
+                    header={field.required ? `${field.label} *` : field.label}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    value={formData[field.type] || ''}
+                    status={errors.has(field.type) ? 'error' : undefined}
+                    onChange={(e) => {
+                      setFormData({ ...formData, [field.type]: e.target.value });
+                      // Убираем ошибку при вводе
+                      if (errors.has(field.type)) {
+                        const newErrors = new Set(errors);
+                        newErrors.delete(field.type);
+                        setErrors(newErrors);
+                        if (newErrors.size === 0) {
+                          setErrorMessage('');
+                        }
                       }
-                    }
-                  }}
-                />
-              );
-            }
-            return (
-              <Input
-                key={field.type}
-                header={field.required ? `${field.label} *` : field.label}
-                placeholder={field.placeholder}
-                required={field.required}
-                value={formData[field.type] || ''}
-                status={errors.has(field.type) ? 'error' : undefined}
-                onChange={(e) => {
-                  setFormData({ ...formData, [field.type]: e.target.value });
-                  // Убираем ошибку при вводе
-                  if (errors.has(field.type)) {
-                    const newErrors = new Set(errors);
-                    newErrors.delete(field.type);
-                    setErrors(newErrors);
-                    if (newErrors.size === 0) {
-                      setErrorMessage('');
-                    }
-                  }
-                }}
-              />
-            );
-          })}
-        </List>
-        <div
-          className='contact__button'
-          style={{ marginTop: '2rem' }}
-        >
-          <Button
-            className='contact__button-submit'
-            size={'l'}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
+                    }}
+                  />
+                );
+              })}
+            </List>
+            <div
+              className='contact__button'
+              style={{ marginTop: '2rem' }}
+            >
+              <Button
+                className='contact__button-submit'
+                size={'l'}
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Отправка...' : 'Отправить'}
+              </Button>
+            </div>
+          </List>
+        </Card>
+        {errorMessage && (
+          <Snackbar
+            onClose={() => {
+              setErrorMessage('');
+            }}
           >
-            {isSubmitting ? 'Отправка...' : 'Отправить'}
-          </Button>
-        </div>
-      </List>
-      {errorMessage && (
-        <Snackbar
-          onClose={() => {
-            setErrorMessage('');
-          }}
-        >
-          {errorMessage}
-        </Snackbar>
-      )}
+            {errorMessage}
+          </Snackbar>
+        )}
       </div>
     </div>
   );

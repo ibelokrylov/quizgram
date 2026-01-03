@@ -2,6 +2,7 @@ import { Placeholder, Spinner } from '@telegram-apps/telegram-ui';
 import { useContext } from 'react';
 import { AppContext } from './App.context';
 import { ContentLayout } from './ContentLayout';
+import { usePlatform } from './hooks/use-platform';
 import { Contact } from './ui/Contact';
 import { QuestionPage } from './ui/QuestionPage';
 import { StartPage } from './ui/StartPage';
@@ -22,12 +23,14 @@ const render = {
 
 export const Content = () => {
   const { loading, quiz, currentStage } = useContext(AppContext);
+  const platform = usePlatform();
+  const platformClass = platform === "ios" ? "platform-ios" : "platform-base";
 
   // Показываем спиннер во время загрузки
   if (loading) {
     return (
       <ContentLayout>
-        <div className='loading-container'>
+        <div className={`loading-container ${platformClass}`}>
           <Spinner size='l' />
         </div>
       </ContentLayout>
@@ -38,7 +41,7 @@ export const Content = () => {
   if (!loading && (!quiz || currentStage === '404')) {
     return (
       <ContentLayout>
-        <div className='loading-container'>
+        <div className={`loading-container ${platformClass}`}>
           <Placeholder
             header='404'
             description='Квиз не найден'
@@ -50,13 +53,17 @@ export const Content = () => {
 
   // Если есть currentStage, показываем соответствующий компонент
   if (currentStage) {
-    return <ContentLayout>{render[currentStage as keyof typeof render]}</ContentLayout>;
+    return (
+      <ContentLayout className={platformClass}>
+        {render[currentStage as keyof typeof render]}
+      </ContentLayout>
+    );
   }
 
   // Fallback: если нет currentStage, но есть quiz - показываем спиннер (не должно происходить)
   return (
     <ContentLayout>
-      <div className='loading-container'>
+      <div className={`loading-container ${platformClass}`}>
         <Spinner size='l' />
       </div>
     </ContentLayout>

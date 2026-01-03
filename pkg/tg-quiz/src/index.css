@@ -237,7 +237,6 @@ a {
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
-    min-height: 0;
 }
 
 .content__question {
@@ -257,7 +256,7 @@ a {
     flex-shrink: 0;
     align-self: center;
     justify-content: center;
-    padding: 0 1rem;
+    padding: .2rem 1rem;
     display: flex;
     gap: 1rem;
     align-items: center;
@@ -305,7 +304,7 @@ a {
     display: flex;
     gap: 0.75rem;
     align-items: center;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 1rem;
     border-radius: 12px;
     transition: all 0.2s ease;
     background-color: #007aff;
@@ -356,6 +355,38 @@ body.dark .footer__logo-brand {
     width: 100%;
 }
 
+.cards.question {
+    background-color: transparent;
+    border: 1px solid var(--tgui--divider);
+    border-radius: 12px;
+}
+
+.cards.contact {
+    background-color: transparent;
+    border: 1px solid var(--tgui--divider);
+    border-radius: 12px;
+}
+
+/* Более заметный border для iOS dark темы */
+.platform-ios .cards.question,
+.platform-ios .cards.contact {
+    border-width: 1.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .platform-ios .cards.question,
+    .platform-ios .cards.contact {
+        border-color: rgba(255, 255, 255, 0.25);
+        border-width: 2px;
+    }
+}
+
+body.dark .platform-ios .cards.question,
+body.dark .platform-ios .cards.contact {
+    border-color: rgba(255, 255, 255, 0.25);
+    border-width: 2px;
+}
+
 .cards.standard {
     min-height: 400px;
 }
@@ -373,6 +404,7 @@ body.dark .footer__logo-brand {
 .progress__container {
     width: 100%;
     margin: 0 auto;
+    margin-top: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -683,6 +715,33 @@ body.dark .footer__logo-brand {
     padding-bottom: 2rem;
 }
 
+/* Стили для кастомной иконки рейтинга с желтыми краями */
+.rating-star-icon {
+    transition: all 0.2s ease;
+}
+
+/* В невыбранном состоянии показываем желтые края (по умолчанию) */
+.rating-star-icon path {
+    fill: transparent;
+    stroke: #FFD700;
+    stroke-width: 1.5;
+}
+
+/* Когда иконка выбрана (opacity становится выше или fill меняется), скрываем stroke и показываем fill */
+.rating-star-icon[style*="opacity: 1"] path,
+.rating-star-icon[style*="opacity:1"] path,
+.rating-star-icon[style*="fill"] path {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* Если Rating использует классы для выбранного состояния */
+.rating-star-icon.selected path,
+.rating-star-icon.active path {
+    fill: currentColor;
+    stroke: none;
+}
+
 .rating__question-placeholder {
     position: absolute;
 }
@@ -721,6 +780,7 @@ body.dark .footer__logo-brand {
     gap: 2rem;
     width: 100%;
     padding: 0 .5rem;
+    padding-bottom: 2rem;
 }
 
 .contact__button-submit {
@@ -790,4 +850,124 @@ body.dark .footer__logo-brand {
     .cards.full {
         max-width: 800px;
     }
+}
+
+/* Стили для Input на iOS платформе */
+.input--ios {
+    width: 100%;
+    display: block;
+}
+
+.input--ios > * {
+    width: 100%;
+}
+
+.input--ios input,
+.input--ios input[type="text"],
+.input--ios input[type="email"],
+.input--ios input[type="tel"],
+.input--ios input[type="number"] {
+    width: 100%;
+    border: 1px solid var(--tgui--divider, rgba(0, 0, 0, 0.15));
+    border-radius: 8px;
+    background-color: var(--tgui--bg_color, #ffffff);
+    padding: 12px 16px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+    display: block;
+}
+
+/* Light theme для iOS input */
+.input--ios input,
+.input--ios input[type="text"],
+.input--ios input[type="email"],
+.input--ios input[type="tel"],
+.input--ios input[type="number"] {
+    border-color: rgba(0, 0, 0, 0.15);
+    background-color: #ffffff;
+}
+
+.input--ios input:focus,
+.input--ios input[type="text"]:focus,
+.input--ios input[type="email"]:focus,
+.input--ios input[type="tel"]:focus,
+.input--ios input[type="number"]:focus {
+    border-color: var(--tg-theme-link-color, #007aff);
+    outline: none;
+}
+
+.input--ios input::placeholder,
+.input--ios input[type="text"]::placeholder,
+.input--ios input[type="email"]::placeholder,
+.input--ios input[type="tel"]::placeholder,
+.input--ios input[type="number"]::placeholder {
+    color: var(--tgui--hint_color, #707579);
+}
+
+/* Dark theme для iOS input */
+@media (prefers-color-scheme: dark) {
+    .input--ios input,
+    .input--ios input[type="text"],
+    .input--ios input[type="email"],
+    .input--ios input[type="tel"],
+    .input--ios input[type="number"] {
+        border-color: rgba(255, 255, 255, 0.12);
+        background-color: var(--tgui--bg_color, #212121);
+    }
+
+    .input--ios input:focus,
+    .input--ios input[type="text"]:focus,
+    .input--ios input[type="email"]:focus,
+    .input--ios input[type="tel"]:focus,
+    .input--ios input[type="number"]:focus {
+        border-color: var(--tg-theme-link-color, #8774e1);
+    }
+}
+
+/* Если body имеет класс dark */
+body.dark .input--ios input,
+body.dark .input--ios input[type="text"],
+body.dark .input--ios input[type="email"],
+body.dark .input--ios input[type="tel"],
+body.dark .input--ios input[type="number"] {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--tgui--bg_color, #212121);
+}
+
+body.dark .input--ios input:focus,
+body.dark .input--ios input[type="text"]:focus,
+body.dark .input--ios input[type="email"]:focus,
+body.dark .input--ios input[type="tel"]:focus,
+body.dark .input--ios input[type="number"]:focus {
+    border-color: var(--tg-theme-link-color, #8774e1);
+}
+
+/* Стили для состояния error на iOS */
+.input--ios[data-status="error"] input,
+.input--ios[data-status="error"] input[type="text"],
+.input--ios[data-status="error"] input[type="email"],
+.input--ios[data-status="error"] input[type="tel"],
+.input--ios[data-status="error"] input[type="number"],
+.input--ios input[data-status="error"] {
+    border-color: var(--tgui--destructive_text_color, #e53935);
+}
+
+@media (prefers-color-scheme: dark) {
+    .input--ios[data-status="error"] input,
+    .input--ios[data-status="error"] input[type="text"],
+    .input--ios[data-status="error"] input[type="email"],
+    .input--ios[data-status="error"] input[type="tel"],
+    .input--ios[data-status="error"] input[type="number"],
+    .input--ios input[data-status="error"] {
+        border-color: var(--tgui--destructive_text_color, #ff595a);
+    }
+}
+
+body.dark .input--ios[data-status="error"] input,
+body.dark .input--ios[data-status="error"] input[type="text"],
+body.dark .input--ios[data-status="error"] input[type="email"],
+body.dark .input--ios[data-status="error"] input[type="tel"],
+body.dark .input--ios[data-status="error"] input[type="number"],
+body.dark .input--ios input[data-status="error"] {
+    border-color: var(--tgui--destructive_text_color, #ff595a);
 }

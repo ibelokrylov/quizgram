@@ -1,7 +1,7 @@
-import { Card, Text } from '@telegram-apps/telegram-ui';
-import { useContext, useState } from 'react';
-import { type QuizQuestionVariantImage } from '../../../App.context';
-import { QuestionContext } from '../Question.context';
+import { Card, Text } from "@telegram-apps/telegram-ui";
+import { useContext, useState } from "react";
+import { type QuizQuestionVariantImage } from "../../../App.context";
+import { QuestionContext } from "../Question.context";
 
 export const VariantImage = () => {
   const { current, questions, sendAnswer } = useContext(QuestionContext);
@@ -17,27 +17,23 @@ export const VariantImage = () => {
     setSelected(idx);
   }
   return (
-    <div className='variant__image'>
+    <div className="variant__image">
       {question?.content?.variants
         ?.filter((v) => v.url || v.value)
         .map((v, idx) => (
           <Card
-            type={'ambient'}
-            className={`variant__image-item ${selected === idx ? 'selected' : ''}`}
+            className={`variant__image-item ${selected === idx ? "selected" : ""}`}
             onClick={() => handleSelect({ value: v.value, url: v.url }, idx)}
             key={idx}
           >
-            <div className={`variant__image-item-content ${v?.value ? 'has-value' : ''}`}>
+            <div className={`variant__image-item-content ${v?.value ? "has-value" : ""}`}>
               {v?.url ? (
                 <div className={`variant__image-item-image`}>
-                  <img
-                    src={v.url}
-                    alt={v.value}
-                  />
+                  <img src={v.url} alt={v.value} />
                 </div>
               ) : null}
               {v?.value ? (
-                <div className='variant__image-item-value-text'>
+                <div className="variant__image-item-value-text">
                   <Text>{v.value}</Text>
                 </div>
               ) : null}
