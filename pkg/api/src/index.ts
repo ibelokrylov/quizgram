@@ -14,6 +14,8 @@ import { SchedulerService } from "./modules/scheduler/service";
 import { statistics } from "./modules/statistics";
 import { telegram } from "./modules/telegram";
 import { user } from "./modules/user";
+import { BackupDbService } from "./services/backup-db.service";
+import { BackupLogService } from "./services/backup-log.service";
 import { PlanService } from "./services/plan.service";
 import { initTelegramBotsOnStartup, stopTelegramBots } from "./services/quiz-bot.service";
 
@@ -247,6 +249,44 @@ async function startApp() {
             });
           },
         })
+      )
+      // Бэкап логов в конце каждого дня (в 23:59)
+      .use(
+        cron({
+          name: "backupLogs",
+          pattern: "59 23 * * *", // Каждый день в 23:59
+          run() {
+            logger.info("Запуск бэкапа логов через cron", {
+              time: new Date().toISOString(),
+            });
+
+            BackupLogService.backupYesterdayLog().catch((error) => {
+              logger.error(
+                "Ошибка при выполнении бэкапа логов",
+                error instanceof Error ? error : new Error(String(error))
+              );
+            });
+          },
+        })
+      )
+      // Бэкап PostgreSQL каждые 2 часа
+      .use(
+        cron({
+          name: "backupDatabase",
+          pattern: "0 */2 * * *", // Каждые 2 часа (00:00, 02:00, 04:00, ...)
+          run() {
+            logger.info("Запуск бэкапа базы данных через cron", {
+              time: new Date().toISOString(),
+            });
+
+            BackupDbService.backupDatabase().catch((error) => {
+              logger.error(
+                "Ошибка при выполнении бэкапа базы данных",
+                error instanceof Error ? error : new Error(String(error))
+              );
+            });
+          },
+        })
       );
   }
 
@@ -329,6 +369,14 @@ async function gracefulShutdown(signal: string): Promise<void> {
           if (store.cron.processPaymentsLastAttempt) {
             store.cron.processPaymentsLastAttempt.stop();
             logger.info("Cron job 'processPaymentsLastAttempt' остановлен");
+          }
+          if (store.cron.backupLogs) {
+            store.cron.backupLogs.stop();
+            logger.info("Cron job 'backupLogs' остановлен");
+          }
+          if (store.cron.backupDatabase) {
+            store.cron.backupDatabase.stop();
+            logger.info("Cron job 'backupDatabase' остановлен");
           }
         }
       }
