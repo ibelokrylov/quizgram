@@ -3,6 +3,7 @@ import {
   IconDotsVertical,
   IconGift,
   IconLogout,
+  IconMessage,
   IconNotification,
 } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -104,6 +105,14 @@ export function NavUser({
             <span>{t("nav.user.referral")}</span>
           </SidebarMenuButton>
         </Link>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <a href="https://t.me/quizgram_support_bot" target="_blank" rel="noopener noreferrer">
+          <SidebarMenuButton tooltip={t("nav.user.support")}>
+            <IconMessage className="size-4" />
+            <span>{t("nav.user.support")}</span>
+          </SidebarMenuButton>
+        </a>
       </SidebarMenuItem>
       <SidebarMenuItem>
         <DropdownMenu>
