@@ -374,16 +374,27 @@ body.dark .footer__logo-brand {
 }
 
 @media (prefers-color-scheme: dark) {
+
+    .cards.question,
+    .cards.contact {
+        border-color: var(--tgui--hint_color);
+    }
+
     .platform-ios .cards.question,
     .platform-ios .cards.contact {
-        border-color: rgba(255, 255, 255, 0.25);
+        border-color: var(--tgui--hint_color);
         border-width: 2px;
     }
 }
 
+body.dark .cards.question,
+body.dark .cards.contact {
+    border-color: var(--tgui--hint_color);
+}
+
 body.dark .platform-ios .cards.question,
 body.dark .platform-ios .cards.contact {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: var(--tgui--hint_color);
     border-width: 2px;
 }
 
@@ -852,122 +863,21 @@ body.dark .platform-ios .cards.contact {
     }
 }
 
-/* Стили для Input на iOS платформе */
+/* Стили для Input */
+.input--base {
+    border: 1px solid var(--tgui--divider);
+}
+
 .input--ios {
-    width: 100%;
-    display: block;
-}
-
-.input--ios > * {
-    width: 100%;
-}
-
-.input--ios input,
-.input--ios input[type="text"],
-.input--ios input[type="email"],
-.input--ios input[type="tel"],
-.input--ios input[type="number"] {
-    width: 100%;
-    border: 1px solid var(--tgui--divider, rgba(0, 0, 0, 0.15));
-    border-radius: 8px;
-    background-color: var(--tgui--bg_color, #ffffff);
-    padding: 12px 16px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-    box-sizing: border-box;
-    display: block;
-}
-
-/* Light theme для iOS input */
-.input--ios input,
-.input--ios input[type="text"],
-.input--ios input[type="email"],
-.input--ios input[type="tel"],
-.input--ios input[type="number"] {
-    border-color: rgba(0, 0, 0, 0.15);
-    background-color: #ffffff;
-}
-
-.input--ios input:focus,
-.input--ios input[type="text"]:focus,
-.input--ios input[type="email"]:focus,
-.input--ios input[type="tel"]:focus,
-.input--ios input[type="number"]:focus {
-    border-color: var(--tg-theme-link-color, #007aff);
-    outline: none;
-}
-
-.input--ios input::placeholder,
-.input--ios input[type="text"]::placeholder,
-.input--ios input[type="email"]::placeholder,
-.input--ios input[type="tel"]::placeholder,
-.input--ios input[type="number"]::placeholder {
-    color: var(--tgui--hint_color, #707579);
-}
-
-/* Dark theme для iOS input */
-@media (prefers-color-scheme: dark) {
-    .input--ios input,
-    .input--ios input[type="text"],
-    .input--ios input[type="email"],
-    .input--ios input[type="tel"],
-    .input--ios input[type="number"] {
-        border-color: rgba(255, 255, 255, 0.12);
-        background-color: var(--tgui--bg_color, #212121);
-    }
-
-    .input--ios input:focus,
-    .input--ios input[type="text"]:focus,
-    .input--ios input[type="email"]:focus,
-    .input--ios input[type="tel"]:focus,
-    .input--ios input[type="number"]:focus {
-        border-color: var(--tg-theme-link-color, #8774e1);
-    }
-}
-
-/* Если body имеет класс dark */
-body.dark .input--ios input,
-body.dark .input--ios input[type="text"],
-body.dark .input--ios input[type="email"],
-body.dark .input--ios input[type="tel"],
-body.dark .input--ios input[type="number"] {
-    border-color: rgba(255, 255, 255, 0.12);
-    background-color: var(--tgui--bg_color, #212121);
-}
-
-body.dark .input--ios input:focus,
-body.dark .input--ios input[type="text"]:focus,
-body.dark .input--ios input[type="email"]:focus,
-body.dark .input--ios input[type="tel"]:focus,
-body.dark .input--ios input[type="number"]:focus {
-    border-color: var(--tg-theme-link-color, #8774e1);
-}
-
-/* Стили для состояния error на iOS */
-.input--ios[data-status="error"] input,
-.input--ios[data-status="error"] input[type="text"],
-.input--ios[data-status="error"] input[type="email"],
-.input--ios[data-status="error"] input[type="tel"],
-.input--ios[data-status="error"] input[type="number"],
-.input--ios input[data-status="error"] {
-    border-color: var(--tgui--destructive_text_color, #e53935);
+    border: 1px solid var(--tgui--divider);
 }
 
 @media (prefers-color-scheme: dark) {
-    .input--ios[data-status="error"] input,
-    .input--ios[data-status="error"] input[type="text"],
-    .input--ios[data-status="error"] input[type="email"],
-    .input--ios[data-status="error"] input[type="tel"],
-    .input--ios[data-status="error"] input[type="number"],
-    .input--ios input[data-status="error"] {
-        border-color: var(--tgui--destructive_text_color, #ff595a);
+    .input--base {
+        border-color: var(--tgui--hint_color);
     }
 }
 
-body.dark .input--ios[data-status="error"] input,
-body.dark .input--ios[data-status="error"] input[type="text"],
-body.dark .input--ios[data-status="error"] input[type="email"],
-body.dark .input--ios[data-status="error"] input[type="tel"],
-body.dark .input--ios[data-status="error"] input[type="number"],
-body.dark .input--ios input[data-status="error"] {
-    border-color: var(--tgui--destructive_text_color, #ff595a);
+body.dark .input--base {
+    border-color: var(--tgui--hint_color);
 }

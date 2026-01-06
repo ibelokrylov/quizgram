@@ -20,6 +20,23 @@ export interface TelegramUpdate {
 }
 
 /**
+ * Тип для inline keyboard кнопки
+ */
+export interface InlineKeyboardButton {
+  text: string;
+  url?: string;
+  callback_data?: string;
+  web_app?: { url: string };
+}
+
+/**
+ * Тип для inline keyboard
+ */
+export interface InlineKeyboardMarkup {
+  inline_keyboard: InlineKeyboardButton[][];
+}
+
+/**
  * Базовый сервис для работы с Telegram ботами на основе node-telegram-bot-api.
  * Отвечает за создание и кэширование инстансов ботов и отправку сообщений.
  */
@@ -44,7 +61,7 @@ export abstract class BaseTelegramBotService {
 
     if (!token) {
       const error = new Error(
-        `Переменная окружения ${tokenEnvKey} не установлена для Telegram бота`,
+        `Переменная окружения ${tokenEnvKey} не установлена для Telegram бота`
       );
       logger.error("Ошибка конфигурации Telegram бота", error, { tokenEnvKey });
       throw error;
@@ -71,7 +88,7 @@ export abstract class BaseTelegramBotService {
         logger.error(
           "Не удалось получить информацию о Telegram боте (getMe)",
           error instanceof Error ? error : new Error(String(error)),
-          { tokenEnvKey },
+          { tokenEnvKey }
         );
       });
 
@@ -82,6 +99,7 @@ export abstract class BaseTelegramBotService {
    * Отправка сообщения через node-telegram-bot-api
    * @param parseMode - режим парсинга: "HTML", "Markdown" или "MarkdownV2" (по умолчанию "HTML")
    * @param disableWebPagePreview - отключить превью ссылок (по умолчанию false)
+   * @param replyMarkup - inline keyboard для сообщения (опционально)
    */
   static async sendMessage(
     tokenEnvKey: string,
@@ -89,6 +107,7 @@ export abstract class BaseTelegramBotService {
     text: string,
     parseMode: "HTML" | "Markdown" | "MarkdownV2" = "HTML",
     disableWebPagePreview: boolean = false,
+    replyMarkup?: InlineKeyboardMarkup
   ): Promise<void> {
     const bot = this.getBot(tokenEnvKey);
 
@@ -100,12 +119,19 @@ export abstract class BaseTelegramBotService {
         textLength: text.length,
         parseMode,
         disableWebPagePreview,
+        hasReplyMarkup: !!replyMarkup,
       });
 
-      const result = await bot.sendMessage(chatId, text, {
+      const options: TelegramBot.SendMessageOptions = {
         parse_mode: parseMode,
         disable_web_page_preview: disableWebPagePreview,
-      });
+      };
+
+      if (replyMarkup) {
+        options.reply_markup = replyMarkup as TelegramBot.InlineKeyboardMarkup;
+      }
+
+      const result = await bot.sendMessage(chatId, text, options);
 
       logger.info("Сообщение успешно отправлено в Telegram", {
         tokenEnvKey,
@@ -113,12 +139,13 @@ export abstract class BaseTelegramBotService {
         parseMode,
         messageId: result.message_id,
         resultText: result.text,
+        hasReplyMarkup: !!replyMarkup,
       });
     } catch (error) {
       logger.error(
         "Ошибка при отправке сообщения через node-telegram-bot-api",
         error instanceof Error ? error : new Error(String(error)),
-        { tokenEnvKey, chatId, parseMode },
+        { tokenEnvKey, chatId, parseMode }
       );
       throw error;
     }
@@ -136,7 +163,8 @@ export abstract class BaseTelegramBotService {
    * MarkdownV2 требует экранирования следующих символов: _ * [ ] ( ) ~ ` > # + - = | { } . !
    */
   static escapeMarkdownV2(text: string): string {
-    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+    // eslint-disable-next-line no-useless-escape
+    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, "\\$1");
   }
 
   /**
@@ -144,10 +172,7 @@ export abstract class BaseTelegramBotService {
    * @param tokenEnvKey - ключ переменной окружения с токеном бота
    * @param webhookUrl - URL для webhook (должен быть HTTPS в production)
    */
-  static async setWebhook(
-    tokenEnvKey: string,
-    webhookUrl: string,
-  ): Promise<void> {
+  static async setWebhook(tokenEnvKey: string, webhookUrl: string): Promise<void> {
     const bot = this.getBot(tokenEnvKey);
 
     try {
@@ -172,7 +197,7 @@ export abstract class BaseTelegramBotService {
       logger.error(
         "Ошибка при настройке webhook для Telegram бота",
         error instanceof Error ? error : new Error(String(error)),
-        { tokenEnvKey, webhookUrl },
+        { tokenEnvKey, webhookUrl }
       );
       throw error;
     }
@@ -195,7 +220,7 @@ export abstract class BaseTelegramBotService {
       logger.error(
         "Ошибка при удалении webhook для Telegram бота",
         error instanceof Error ? error : new Error(String(error)),
-        { tokenEnvKey },
+        { tokenEnvKey }
       );
       throw error;
     }
@@ -208,7 +233,7 @@ export abstract class BaseTelegramBotService {
    */
   static async startPolling(
     tokenEnvKey: string,
-    handler: (update: TelegramUpdate) => Promise<void>,
+    handler: (update: TelegramUpdate) => Promise<void>
   ): Promise<void> {
     const bot = this.getBot(tokenEnvKey, true);
 
@@ -244,7 +269,7 @@ export abstract class BaseTelegramBotService {
         logger.error(
           "Ошибка при обработке сообщения в polling режиме",
           error instanceof Error ? error : new Error(String(error)),
-          { tokenEnvKey, chatId: msg.chat.id },
+          { tokenEnvKey, chatId: msg.chat.id }
         );
       }
     });
@@ -259,4 +284,3 @@ export abstract class BaseTelegramBotService {
     return this.bots;
   }
 }
-

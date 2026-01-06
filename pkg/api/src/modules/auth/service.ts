@@ -133,7 +133,9 @@ export abstract class AuthService {
   static async login(
     payload: AuthModel.loginBody,
   ): Promise<{ user: User; token: string }> {
-    const user = await this.findByLogin(payload.login);
+    // Приводим email к нижнему регистру
+    const normalizedLogin = payload.login.toLowerCase();
+    const user = await this.findByLogin(normalizedLogin);
 
     if (!user) {
       const error = new Error(AUTH_ERROR_MESSAGE);
@@ -227,8 +229,10 @@ export abstract class AuthService {
   static async registration(
     payload: AuthModel.registrationBody,
   ): Promise<{ user: User; token: string }> {
+    // Приводим email к нижнему регистру
+    const normalizedLogin = payload.login.toLowerCase();
     // Проверяем, не существует ли уже пользователь с таким email
-    const existingUser = await this.findByLogin(payload.login);
+    const existingUser = await this.findByLogin(normalizedLogin);
     if (existingUser) {
       const error = new Error("User with this email already exists");
       error.name = "RegistrationError";
@@ -256,7 +260,7 @@ export abstract class AuthService {
     // Создаём нового пользователя
     const newUser: NewUser = {
       uid: crypto.randomUUID(),
-      login: payload.login,
+      login: normalizedLogin, // Сохраняем email в нижнем регистре
       password: hashedPassword,
       name: payload.name || null,
       planId: 1, // По умолчанию бесплатный план
@@ -397,7 +401,9 @@ export abstract class AuthService {
   static async forgotPassword(
     payload: AuthModel.forgotPasswordBody,
   ): Promise<void> {
-    const user = await this.findByLogin(payload.login);
+    // Приводим email к нижнему регистру
+    const normalizedLogin = payload.login.toLowerCase();
+    const user = await this.findByLogin(normalizedLogin);
     if (!user) {
       // В Go коде всегда возвращается успех, даже если пользователь не найден
       // Это сделано для безопасности (не раскрывать существование email)
@@ -453,7 +459,9 @@ export abstract class AuthService {
   static async startResetPassword(
     payload: AuthModel.verifyResetPasswordStartBody,
   ): Promise<void> {
-    const user = await this.findByLogin(payload.email);
+    // Приводим email к нижнему регистру
+    const normalizedEmail = payload.email.toLowerCase();
+    const user = await this.findByLogin(normalizedEmail);
     if (!user) {
       const error = new Error("User not found");
       error.name = "ResetPasswordError";
@@ -490,7 +498,9 @@ export abstract class AuthService {
   static async endResetPassword(
     payload: AuthModel.forgotPasswordEndBody,
   ): Promise<void> {
-    const user = await this.findByLogin(payload.email);
+    // Приводим email к нижнему регистру
+    const normalizedEmail = payload.email.toLowerCase();
+    const user = await this.findByLogin(normalizedEmail);
     if (!user) {
       const error = new Error("User not found");
       error.name = "ResetPasswordError";
@@ -529,7 +539,7 @@ export abstract class AuthService {
     // Отправляем уведомление об успешном изменении пароля
     try {
       const userLanguage = user.language || "en";
-      await MailService.sendInformationOfResetPassword(payload.email, userLanguage);
+      await MailService.sendInformationOfResetPassword(normalizedEmail, userLanguage);
     } catch (mailError) {
       logger.error(
         "Ошибка при отправке уведомления об изменении пароля",

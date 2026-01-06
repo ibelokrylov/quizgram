@@ -1,6 +1,11 @@
 import { logger } from "../lib/logger";
 import { UserService } from "../modules/user/service";
-import { BaseTelegramBotService, type TelegramMessage, type TelegramUpdate } from "./base-telegram-bot.service";
+import {
+  BaseTelegramBotService,
+  type InlineKeyboardMarkup,
+  type TelegramMessage,
+  type TelegramUpdate,
+} from "./base-telegram-bot.service";
 
 /**
  * Сервис CRM-бота Quizgram.
@@ -38,10 +43,9 @@ export abstract class CrmBotService extends BaseTelegramBotService {
     });
 
     if (!message || !message.text) {
-      logger.debug(
-        "Получен апдейт без текстового сообщения для CRM-бота",
-        { updateId: update.update_id },
-      );
+      logger.debug("Получен апдейт без текстового сообщения для CRM-бота", {
+        updateId: update.update_id,
+      });
       return;
     }
 
@@ -53,11 +57,39 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         chatId: message.chat.id,
       });
       const name = BaseTelegramBotService.getUserDisplayName(message);
+      // Экранируем специальные символы для MarkdownV2
+      const escapedName = BaseTelegramBotService.escapeMarkdownV2(name);
       const welcomeText =
-        `Привет, ${name}! 👋\n\n` +
-        "Я CRM-бот Quizgram.";
+        `Привет, ${escapedName}\\! 👋\n\n` +
+        "Я CRM\\-бот Quizgram\\.\n\n" +
+        "🎯 Управляй своими квизами:";
 
-      await BaseTelegramBotService.sendMessage("BOT_CRM_TOKEN", message.chat.id, welcomeText);
+      // Создаем inline keyboard с двумя кнопками
+      const keyboard: InlineKeyboardMarkup = {
+        inline_keyboard: [
+          [
+            {
+              text: "📱 Открыть Telegram App",
+              url: "https://t.me/Quiz_gramm_bot?startapp=openStudioInBot",
+            },
+          ],
+          [
+            {
+              text: "🌐 Открыть Web версию",
+              url: "https://app.quizgram.site",
+            },
+          ],
+        ],
+      };
+
+      await BaseTelegramBotService.sendMessage(
+        "BOT_CRM_TOKEN",
+        message.chat.id,
+        welcomeText,
+        "MarkdownV2",
+        false,
+        keyboard
+      );
       return;
     }
 
@@ -81,23 +113,26 @@ export abstract class CrmBotService extends BaseTelegramBotService {
           await BaseTelegramBotService.sendMessage(
             "BOT_CRM_TOKEN",
             message.chat.id,
-            "❌ Пользователь с указанным UID не найден.",
+            "❌ Пользователь с указанным UID не найден."
           );
           return;
         }
 
         // Проверяем, не привязан ли уже Telegram ID
         if (user.telegramId) {
-          logger.warn("Попытка привязать Telegram ID к пользователю, у которого уже есть привязка", {
-            userId: user.id,
-            uid: user.uid,
-            existingTelegramId: user.telegramId,
-            chatId: message.chat.id,
-          });
+          logger.warn(
+            "Попытка привязать Telegram ID к пользователю, у которого уже есть привязка",
+            {
+              userId: user.id,
+              uid: user.uid,
+              existingTelegramId: user.telegramId,
+              chatId: message.chat.id,
+            }
+          );
           await BaseTelegramBotService.sendMessage(
             "BOT_CRM_TOKEN",
             message.chat.id,
-            "⚠️ Этот пользователь уже привязан к боту. Обратитесь к администрации.",
+            "⚠️ Этот пользователь уже привязан к боту. Обратитесь к администрации."
           );
           return;
         }
@@ -116,7 +151,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         await BaseTelegramBotService.sendMessage(
           "BOT_CRM_TOKEN",
           message.chat.id,
-          "✅ Ваш Telegram успешно привязан к аккаунту!",
+          "✅ Ваш Telegram успешно привязан к аккаунту!"
         );
         return;
       } catch (error) {
@@ -126,12 +161,12 @@ export abstract class CrmBotService extends BaseTelegramBotService {
           {
             uid: text,
             chatId: message.chat.id,
-          },
+          }
         );
         await BaseTelegramBotService.sendMessage(
           "BOT_CRM_TOKEN",
           message.chat.id,
-          "❌ Произошла ошибка при привязке аккаунта. Попробуйте позже.",
+          "❌ Произошла ошибка при привязке аккаунта. Попробуйте позже."
         );
         return;
       }

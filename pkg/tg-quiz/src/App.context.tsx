@@ -27,8 +27,8 @@ export type QuizThxPage = {
   uid: string;
   title: string;
   description: string;
-  buttons: QuizThxPageButton[];
-  social: QuizThxPageSocial[];
+  buttons: QuizThxPageButton[] | null;
+  social: QuizThxPageSocial[] | null;
 };
 
 export type QuizThxPageButton = {

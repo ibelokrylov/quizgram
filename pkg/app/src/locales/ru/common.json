@@ -56,7 +56,7 @@
   "forgot-password.goto": "Войти в аккаунт",
   "forgot-password.description": "На почту указанную при регистрации придет код подтверждения смены пароля",
   "forgot-password.success": "Пароль успешно изменён",
-  "forgot-password.start-now": "Начать заного",
+  "forgot-password.start-now": "Начать заново",
   "forgot-password.code.success": "Код подтверждён",
   "forgot-password.code.resendSuccess": "Код восстановления отправлен",
   "edit-quiz.stages.start": "Стартовая",

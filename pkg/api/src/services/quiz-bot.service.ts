@@ -25,10 +25,9 @@ export abstract class QuizBotService extends BaseTelegramBotService {
     });
 
     if (!message || !message.text) {
-      logger.debug(
-        "Получен апдейт без текстового сообщения для квиз-бота",
-        { updateId: update.update_id },
-      );
+      logger.debug("Получен апдейт без текстового сообщения для квиз-бота", {
+        updateId: update.update_id,
+      });
       return;
     }
 
@@ -39,12 +38,12 @@ export abstract class QuizBotService extends BaseTelegramBotService {
         updateId: update.update_id,
         chatId: message.chat.id,
       });
-      const name = this.getUserDisplayName(message);
+      const name = BaseTelegramBotService.getUserDisplayName(message);
       const welcomeText =
         `Привет, ${name}! 🎉\n\n` +
         "Я квиз-бот Quizgram. Совсем скоро здесь появятся интерактивные квизы и опросы.";
 
-      await this.sendMessage("BOT_QUIZ_TOKEN", message.chat.id, welcomeText);
+      await BaseTelegramBotService.sendMessage("BOT_QUIZ_TOKEN", message.chat.id, welcomeText);
       return;
     }
 
@@ -69,29 +68,27 @@ export function initTelegramBotsOnStartup(): void {
     // Всегда запускаем polling для обоих ботов
     logger.info("Запуск polling для Telegram ботов");
 
-    BaseTelegramBotService.startPolling(
-      "BOT_QUIZ_TOKEN",
-      QuizBotService.handleUpdate,
-    ).catch((error) => {
-      logger.error(
-        "Ошибка при запуске polling для квиз-бота",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
+    BaseTelegramBotService.startPolling("BOT_QUIZ_TOKEN", QuizBotService.handleUpdate).catch(
+      (error) => {
+        logger.error(
+          "Ошибка при запуске polling для квиз-бота",
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+    );
 
-    BaseTelegramBotService.startPolling(
-      "BOT_CRM_TOKEN",
-      CrmBotService.handleUpdate,
-    ).catch((error) => {
-      logger.error(
-        "Ошибка при запуске polling для CRM-бота",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
+    BaseTelegramBotService.startPolling("BOT_CRM_TOKEN", CrmBotService.handleUpdate).catch(
+      (error) => {
+        logger.error(
+          "Ошибка при запуске polling для CRM-бота",
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+    );
   } catch (error) {
     logger.error(
       "Ошибка инициализации Telegram ботов при старте",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
   }
 }
@@ -115,7 +112,7 @@ export async function stopTelegramBots(): Promise<void> {
       logger.error(
         "Ошибка при остановке Telegram бота",
         error instanceof Error ? error : new Error(String(error)),
-        { tokenEnvKey },
+        { tokenEnvKey }
       );
     }
   }

@@ -3,6 +3,7 @@ import { db, planTable, quizBidTable, quizContactTable, quizOpenTable, quizQuest
 import { logger } from '../../lib/logger';
 import { MailService } from '../../services/mail.service';
 import { QuizBotService } from '../../services/quiz-bot.service';
+import { BaseTelegramBotService, type InlineKeyboardMarkup } from '../../services/base-telegram-bot.service';
 import { QuizFileService } from '../../services/quiz-file.service';
 import { TelegramService } from '../../services/telegram.service';
 import { UserService } from '../user/service';
@@ -875,17 +876,66 @@ export abstract class PublicService {
                   const chatId = parseInt(owner.telegramId, 10);
                   if (!isNaN(chatId)) {
                     const ownerLanguage = owner.language || 'ru';
-                    // Используем HTML формат для ссылки: <a href="URL">Текст</a>
+                    
+                    // Формируем текст сообщения без ссылки (будут кнопки)
                     const messageText = ownerLanguage === 'en'
-                      ? `🎉 <b>New quiz response received</b>\n\nYou have received a new response to your quiz.\n\n<a href="${reportUrl}">View Response</a>`
-                      : `🎉 <b>Получен новый ответ на квиз</b>\n\nВы получили новый ответ на ваш квиз.\n\n${reportUrl}`;
+                      ? `🎉 <b>New quiz response received</b>\n\nYou have received a new response to your quiz.`
+                      : `🎉 <b>Получен новый ответ на квиз</b>\n\nВы получили новый ответ на ваш квиз.`;
 
-                    await QuizBotService.sendMessage("BOT_CRM_TOKEN", chatId, messageText, "HTML", true);
+                    // Извлекаем путь и параметры из reportUrl (без хоста)
+                    const urlObj = new URL(reportUrl);
+                    const pathWithQuery = urlObj.pathname + urlObj.search; // Например: /app/bid/report?limit=10&isFull=true&key=...
+                    
+                    // Кодируем путь в base64url (Telegram разрешает только A-Z, a-z, 0-9, _, -)
+                    // base64url: заменяем + на -, / на _, убираем =
+                    const base64 = Buffer.from(pathWithQuery).toString('base64');
+                    const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    
+                    // Формируем URL для Telegram Mini App с base64url путем в startapp
+                    const tgAppUrl = `https://t.me/Quiz_gramm_bot?startapp=${base64url}`;
+                    
+                    // Проверяем, не localhost ли URL (Telegram не поддерживает localhost в кнопках)
+                    const isLocalhost = reportUrl.includes('localhost') || reportUrl.includes('127.0.0.1');
+                    
+                    // Создаем inline keyboard
+                    const inlineKeyboardButtons = [
+                      [
+                        {
+                          text: ownerLanguage === 'en' ? "📱 Open in Telegram App" : "📱 Открыть в Telegram App",
+                          url: tgAppUrl,
+                        },
+                      ],
+                    ];
+                    
+                    // Добавляем кнопку Web только если URL не localhost
+                    if (!isLocalhost) {
+                      inlineKeyboardButtons.push([
+                        {
+                          text: ownerLanguage === 'en' ? "🌐 Open in Web" : "🌐 Открыть в Web",
+                          url: reportUrl,
+                        },
+                      ]);
+                    }
+                    
+                    const keyboard: InlineKeyboardMarkup = {
+                      inline_keyboard: inlineKeyboardButtons,
+                    };
+
+                    await BaseTelegramBotService.sendMessage(
+                      "BOT_CRM_TOKEN", 
+                      chatId, 
+                      messageText, 
+                      "HTML", 
+                      true,
+                      keyboard
+                    );
+                    
                     logger.info("Telegram уведомление отправлено владельцу квиза", {
                       quizUid,
                       ownerId: owner.id,
                       chatId,
                       reportUrl,
+                      tgAppUrl,
                     });
                   } else {
                     logger.warn("Не удалось преобразовать telegramId в число", {

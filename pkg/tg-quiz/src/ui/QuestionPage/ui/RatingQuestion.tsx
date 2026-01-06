@@ -38,7 +38,7 @@ export const RatingQuestion = () => {
           })
         }
         precision={0.5}
-        IconContainer={StarIcon}
+        // IconContainer={StarIcon}
       />
       <div className="rating__question-placeholder left">
         <Text>{question?.content?.left_placeholder}</Text>

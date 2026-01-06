@@ -120,8 +120,8 @@ export const ThxPage = () => {
           header={processedTitle}
           description={processedDescription}
         />
-        {content.buttons.length > 0 ? <Divider /> : null}
-        {content.buttons.map((button) => (
+        {content.buttons && content.buttons.length > 0 ? <Divider /> : null}
+        {content.buttons && content.buttons.map((button) => (
           <a
             key={button.link}
             href={button.link}
@@ -143,8 +143,8 @@ export const ThxPage = () => {
             </Button>
           </a>
         ))}
-        {content.social.length > 0 ? <Divider /> : null}
-        {content.social.length > 0 ? (
+        {content.social && content.social.length > 0 ? <Divider /> : null}
+        {content.social && content.social.length > 0 ? (
           <div className='thxpage-social-container'>
             {content.social.map((soc) => (
               <a

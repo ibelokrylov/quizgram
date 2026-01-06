@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaPencil, FaTrash } from "react-icons/fa6";
 import { ImSwitch } from "react-icons/im";
-import { IoCopySharp } from "react-icons/io5";
+import { IoCopySharp, IoNotificationsOutline } from "react-icons/io5";
 import { toast } from "sonner";
 
 export const DashboardQuiz = ({
@@ -183,6 +183,20 @@ export const DashboardQuiz = ({
               >
                 <Button variant={"secondary"}>{t("quiz.dashboard.bid")}</Button>
               </Link>
+            </div>
+            <div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/app/notification">
+                    <Button variant={"secondary"} size={"icon"}>
+                      <IoNotificationsOutline />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("nav.user.notifications")}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <div>

@@ -467,33 +467,11 @@ export abstract class MailService {
     reportUrl: string,
     language: string = "ru",
   ): Promise<void> {
+    const template = loadTemplate("new_bid_notification", language);
+    const html = renderTemplate(template, { REPORT_URL: reportUrl });
     const subject = language === "en"
       ? "New quiz response received"
       : "Получен новый ответ на квиз";
-
-    const html = language === "en"
-      ? `
-        <html>
-          <body>
-            <h2>New Quiz Response</h2>
-            <p>Hello!</p>
-            <p>You have received a new response to your quiz.</p>
-            <p><a href="${reportUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">View Response</a></p>
-            <p>Thank you for using our service!</p>
-          </body>
-        </html>
-      `
-      : `
-        <html>
-          <body>
-            <h2>Новый ответ на квиз</h2>
-            <p>Здравствуйте!</p>
-            <p>Вы получили новый ответ на ваш квиз.</p>
-            <p><a href="${reportUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Посмотреть ответ</a></p>
-            <p>Спасибо за использование нашего сервиса!</p>
-          </body>
-        </html>
-      `;
 
     await sendMail(subject, html, email);
   }

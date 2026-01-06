@@ -46,52 +46,6 @@ export interface ContentLayoutProps extends PropsWithChildren {
 export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) => {
   const { quiz } = useContext(AppContext);
   const safeAreaInset = useContentSafeAreaInset();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  // Определяем текущую тему (используем тот же подход, что и в App.tsx)
-  useEffect(() => {
-    // Функция для получения темы из --tg-color-scheme
-    const getThemeFromTelegram = (): "light" | "dark" => {
-      const computedStyle = window.getComputedStyle(document.body);
-      const colorScheme = computedStyle.getPropertyValue("--tg-color-scheme").trim();
-
-      // Если Telegram установил переменную, используем её
-      if (colorScheme === "dark" || colorScheme === "light") {
-        return colorScheme;
-      }
-
-      // Fallback на prefers-color-scheme, если переменная не установлена
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    };
-
-    const updateTheme = () => {
-      const newTheme = getThemeFromTelegram();
-      setTheme(newTheme);
-    };
-
-    // Установить тему при монтировании
-    updateTheme();
-
-    // Используем MutationObserver для отслеживания изменений стилей body
-    const observer = new MutationObserver(() => {
-      updateTheme();
-    });
-
-    // Наблюдаем за изменениями атрибутов style и class у body
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["style", "class"],
-    });
-
-    // Также слушаем изменения prefers-color-scheme как fallback
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", updateTheme);
-
-    return () => {
-      observer.disconnect();
-      mediaQuery.removeEventListener("change", updateTheme);
-    };
-  }, []);
 
   // Устанавливаем CSS-переменные для безопасных зон
   useEffect(() => {
@@ -127,7 +81,7 @@ export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) 
             rel="noopener noreferrer"
           >
             <span className="footer__logo-item">
-              <img src={theme === "dark" ? "/logo_white.png" : "/logo_dark.png"} alt="Quizgram" />
+              <img src="/logo_dark.png" alt="Quizgram" />
             </span>
             <span className="footer__logo-brand">Quizgram</span>
           </a>
