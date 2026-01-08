@@ -60,7 +60,13 @@ export abstract class PaymentService {
 
     // Если план бесплатный, сразу обновляем план
     if (plan.price === 0) {
-      const updatedPlan = await this.updateUserPlan(userId, planId, null, undefined, payNow);
+      const updatedPlan = await this.updateUserPlan(
+        userId,
+        planId,
+        null,
+        undefined,
+        payNow,
+      );
       throw new Error("Free plan should be activated directly");
     }
 
@@ -100,22 +106,26 @@ export abstract class PaymentService {
     // Для Pro+: базовая цена + цена дополнительного лимита
     // Для других планов: только базовая цена
     // Все цены указаны в рублях (не в копейках)
-    const totalPrice = plan.name === "PRO_PLUS" && upLimit
-      ? plan.price + upLimit.price
-      : plan.price;
+    const totalPrice =
+      plan.name === "PRO_PLUS" && upLimit
+        ? plan.price + upLimit.price
+        : plan.price;
 
     // Проверяем, находимся ли мы в dev-режиме
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-    const isDevelopment = env.NODE_ENV !== "production";
+    const isDevelopment = env.ENV !== "production";
 
     // В dev-режиме пропускаем создание реального платежа и сразу обновляем план
     if (isDevelopment) {
-      logger.info("DEV-режим: обход оплаты, сразу обновляем план пользователя", {
-        userId,
-        planId: plan.id,
-        planName: plan.name,
-        upLimitId: upLimit?.id,
-      });
+      logger.info(
+        "DEV-режим: обход оплаты, сразу обновляем план пользователя",
+        {
+          userId,
+          planId: plan.id,
+          planName: plan.name,
+          upLimitId: upLimit?.id,
+        },
+      );
 
       // Создаём фиктивную запись о платеже для истории (со статусом "paid")
       const paymentData: NewPayment = {
@@ -141,7 +151,13 @@ export abstract class PaymentService {
         .returning();
 
       // Обновляем план пользователя напрямую (связываем с фиктивным платежом)
-      const updatedPlan = await this.updateUserPlan(userId, planId, payment.id, upLimit?.id, payNow);
+      const updatedPlan = await this.updateUserPlan(
+        userId,
+        planId,
+        payment.id,
+        upLimit?.id,
+        payNow,
+      );
 
       // Если это Pro+ и есть upLimitId, создаём запись в user_payment_pro
       if (updatedPlan.name === "PRO_PLUS" && upLimit?.id) {
@@ -252,9 +268,7 @@ export abstract class PaymentService {
    * @param paymentId - ID платежа
    * @returns Обновленный план пользователя
    */
-  static async processSuccessfulPayment(
-    paymentId: number,
-  ): Promise<Plan> {
+  static async processSuccessfulPayment(paymentId: number): Promise<Plan> {
     // Получаем платеж
     const payments = await db
       .select()
@@ -472,13 +486,17 @@ export abstract class PaymentService {
       )
       .limit(1);
 
-    const hasActivePaidPlan = currentUserPayment.length > 0 && currentUserPayment[0].currentPlan.price > 0;
+    const hasActivePaidPlan =
+      currentUserPayment.length > 0 &&
+      currentUserPayment[0].currentPlan.price > 0;
     const currentPlan = currentUserPayment[0]?.currentPlan;
     const currentUserPaymentRecord = currentUserPayment[0]?.userPayment;
-    const isDowngrade = hasActivePaidPlan && currentPlan && plan.price < currentPlan.price;
+    const isDowngrade =
+      hasActivePaidPlan && currentPlan && plan.price < currentPlan.price;
     const currentPlanEndsAt = currentUserPaymentRecord?.finalDayAt;
     const now = new Date();
-    const shouldSchedule = isDowngrade && currentPlanEndsAt && currentPlanEndsAt > now;
+    const shouldSchedule =
+      isDowngrade && currentPlanEndsAt && currentPlanEndsAt > now;
 
     // Если это отсроченный план (понижение и текущий план еще не закончился)
     if (shouldSchedule) {

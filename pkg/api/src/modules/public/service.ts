@@ -88,7 +88,7 @@ export abstract class PublicService {
     // Проверяем, есть ли у владельца квиза активная платная подписка
     let hasPaidSubscription = false;
     const isShowLogoFromDb = quiz[0].isShowLogo ?? true;
-    
+
     // Если is_show_logo=false, проверяем платную подписку
     if (isShowLogoFromDb === false) {
       const userPayment = await db
@@ -110,8 +110,8 @@ export abstract class PublicService {
     }
 
     // Если is_show_logo=false, но нет платной подписки - возвращаем true
-    const isShowLogo = isShowLogoFromDb === false && !hasPaidSubscription 
-      ? true 
+    const isShowLogo = isShowLogoFromDb === false && !hasPaidSubscription
+      ? true
       : isShowLogoFromDb;
 
     return {
@@ -189,7 +189,7 @@ export abstract class PublicService {
     if (initData && initData.trim().length > 0) {
       try {
         // Верифицируем initData и получаем userInfo
-        const userInfo = await TelegramService.validateInitData(initData);
+        const userInfo = await TelegramService.validateInitData(initData, 'quiz');
         logger.info('Telegram user data verified', { userId: userInfo.id, quizUid });
 
         await db.insert(quizBidTable).values({
@@ -876,7 +876,7 @@ export abstract class PublicService {
                   const chatId = parseInt(owner.telegramId, 10);
                   if (!isNaN(chatId)) {
                     const ownerLanguage = owner.language || 'ru';
-                    
+
                     // Формируем текст сообщения без ссылки (будут кнопки)
                     const messageText = ownerLanguage === 'en'
                       ? `🎉 <b>New quiz response received</b>\n\nYou have received a new response to your quiz.`
@@ -885,18 +885,18 @@ export abstract class PublicService {
                     // Извлекаем путь и параметры из reportUrl (без хоста)
                     const urlObj = new URL(reportUrl);
                     const pathWithQuery = urlObj.pathname + urlObj.search; // Например: /app/bid/report?limit=10&isFull=true&key=...
-                    
+
                     // Кодируем путь в base64url (Telegram разрешает только A-Z, a-z, 0-9, _, -)
                     // base64url: заменяем + на -, / на _, убираем =
                     const base64 = Buffer.from(pathWithQuery).toString('base64');
                     const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-                    
+
                     // Формируем URL для Telegram Mini App с base64url путем в startapp
-                    const tgAppUrl = `https://t.me/Quiz_gramm_bot?startapp=${base64url}`;
-                    
+                    const tgAppUrl = `https://t.me/${process.env.ENV === 'production' ? 'Quiz_gramm_bot' : 'tg_union_bot'}?startapp=${base64url}`;
+
                     // Проверяем, не localhost ли URL (Telegram не поддерживает localhost в кнопках)
                     const isLocalhost = reportUrl.includes('localhost') || reportUrl.includes('127.0.0.1');
-                    
+
                     // Создаем inline keyboard
                     const inlineKeyboardButtons = [
                       [
@@ -906,7 +906,7 @@ export abstract class PublicService {
                         },
                       ],
                     ];
-                    
+
                     // Добавляем кнопку Web только если URL не localhost
                     if (!isLocalhost) {
                       inlineKeyboardButtons.push([
@@ -916,20 +916,20 @@ export abstract class PublicService {
                         },
                       ]);
                     }
-                    
+
                     const keyboard: InlineKeyboardMarkup = {
                       inline_keyboard: inlineKeyboardButtons,
                     };
 
                     await BaseTelegramBotService.sendMessage(
-                      "BOT_CRM_TOKEN", 
-                      chatId, 
-                      messageText, 
-                      "HTML", 
+                      "BOT_CRM_TOKEN",
+                      chatId,
+                      messageText,
+                      "HTML",
                       true,
                       keyboard
                     );
-                    
+
                     logger.info("Telegram уведомление отправлено владельцу квиза", {
                       quizUid,
                       ownerId: owner.id,

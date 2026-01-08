@@ -65,12 +65,27 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         "🎯 Управляй своими квизами:";
 
       // Создаем inline keyboard с двумя кнопками
-      const keyboard: InlineKeyboardMarkup = {
+      const keyboard: InlineKeyboardMarkup = process.env.ENV === 'production' ? {
         inline_keyboard: [
           [
             {
               text: "📱 Открыть Telegram App",
               url: "https://t.me/Quiz_gramm_bot?startapp=openStudioInBot",
+            },
+          ],
+          [
+            {
+              text: "🌐 Открыть Web версию",
+              url: "https://app.quizgram.site",
+            },
+          ],
+        ],
+      } : {
+        inline_keyboard: [
+          [
+            {
+              text: "📱 Открыть Telegram App",
+              url: "https://t.me/tg_union_bot?startapp=openStudioInBot",
             },
           ],
           [

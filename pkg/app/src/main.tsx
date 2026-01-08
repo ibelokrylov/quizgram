@@ -2,6 +2,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import "./lib/i18n";
+import { initTelegramSdk } from "./lib/telegram-sdk";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
@@ -15,6 +16,9 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
+
+// Инициализация Telegram SDK (если доступен)
+initTelegramSdk();
 
 // Render the app
 const rootElement = document.getElementById("root")!;

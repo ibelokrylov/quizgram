@@ -17,7 +17,10 @@ import { user } from "./modules/user";
 import { BackupDbService } from "./services/backup-db.service";
 import { BackupLogService } from "./services/backup-log.service";
 import { PlanService } from "./services/plan.service";
-import { initTelegramBotsOnStartup, stopTelegramBots } from "./services/quiz-bot.service";
+import {
+  initTelegramBotsOnStartup,
+  stopTelegramBots,
+} from "./services/quiz-bot.service";
 
 // Храним сервер и приложение для возможности graceful shutdown
 let server: ReturnType<typeof Elysia.prototype.listen>["server"] | null = null;
@@ -38,7 +41,7 @@ async function startApp() {
   } catch (error) {
     logger.error(
       "Критическая ошибка: не удалось проверить переменные окружения",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     process.exit(1);
   }
@@ -50,7 +53,7 @@ async function startApp() {
   } catch (error) {
     logger.error(
       "Критическая ошибка: не удалось подключиться к базе данных",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     process.exit(1);
   }
@@ -59,7 +62,7 @@ async function startApp() {
   PlanService.scanPlanAndCreate().catch((error) => {
     logger.error(
       "Ошибка при инициализации планов",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
   });
 
@@ -68,7 +71,7 @@ async function startApp() {
 
   // Определяем окружение
   const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-  const isDevelopment = env.NODE_ENV !== "production";
+  const isDevelopment = env.ENV !== "production";
 
   // Настраиваем HTTPS если указаны сертификаты
   const httpsCertPath = env.HTTPS_CERT;
@@ -89,7 +92,7 @@ async function startApp() {
     } catch (error) {
       logger.error(
         "Ошибка при загрузке HTTPS сертификатов",
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
       logger.warn("Сервер будет запущен без HTTPS");
     }
@@ -117,7 +120,7 @@ async function startApp() {
     .use(
       serverTiming({
         enabled: isDevelopment,
-      })
+      }),
     );
 
   // Настраиваем scheduler в зависимости от окружения
@@ -125,7 +128,10 @@ async function startApp() {
     // В development используем setTimeout вместо cron
     logger.info("Scheduler настроен через setTimeout для development режима", {
       tasks: [
-        { name: "Обработка незавершенных заявок", interval: "каждую 1 минуту (60000ms)" },
+        {
+          name: "Обработка незавершенных заявок",
+          interval: "каждую 1 минуту (60000ms)",
+        },
         { name: "Обработка платежей", interval: "каждые 20 минут (1200000ms)" },
       ],
     });
@@ -137,7 +143,10 @@ async function startApp() {
       });
 
       SchedulerService.processIncompleteBids().catch((error) => {
-        logger.error("Ошибка при выполнении scheduler (заявки через setTimeout)", error as Error);
+        logger.error(
+          "Ошибка при выполнении scheduler (заявки через setTimeout)",
+          error as Error,
+        );
       });
     }, 60 * 1000); // 1 минута
 
@@ -158,17 +167,20 @@ async function startApp() {
           SchedulerService.processPayments().catch((error) => {
             logger.error(
               "Ошибка при выполнении scheduler (платежи через setTimeout)",
-              error as Error
+              error as Error,
             );
           });
         } else {
-          logger.debug("Пропуск обработки платежей: вне временных рамок 00:00-02:00", {
-            currentHour: hours,
-            currentMinutes: minutes,
-          });
+          logger.debug(
+            "Пропуск обработки платежей: вне временных рамок 00:00-02:00",
+            {
+              currentHour: hours,
+              currentMinutes: minutes,
+            },
+          );
         }
       },
-      20 * 60 * 1000
+      20 * 60 * 1000,
     ); // 20 минут
 
     // Сохраняем интервалы для очистки при shutdown
@@ -190,10 +202,13 @@ async function startApp() {
             });
 
             SchedulerService.processIncompleteBids().catch((error) => {
-              logger.error("Ошибка при выполнении scheduler (заявки через cron)", error as Error);
+              logger.error(
+                "Ошибка при выполнении scheduler (заявки через cron)",
+                error as Error,
+              );
             });
           },
-        })
+        }),
       )
       // Подключаем cron для обработки платежей каждые 20 минут в период 00:00-02:00
       // Паттерн: каждые 20 минут (0, 20, 40) в часы 0 и 1 (00:00-01:59)
@@ -219,17 +234,20 @@ async function startApp() {
               SchedulerService.processPayments().catch((error) => {
                 logger.error(
                   "Ошибка при выполнении scheduler (платежи через cron)",
-                  error as Error
+                  error as Error,
                 );
               });
             } else {
-              logger.debug("Пропуск обработки платежей: вне временных рамок 00:00-02:00", {
-                currentHour: hours,
-                currentMinutes: minutes,
-              });
+              logger.debug(
+                "Пропуск обработки платежей: вне временных рамок 00:00-02:00",
+                {
+                  currentHour: hours,
+                  currentMinutes: minutes,
+                },
+              );
             }
           },
-        })
+        }),
       )
       // Дополнительный cron для запуска в 02:00 (последняя попытка)
       .use(
@@ -237,18 +255,21 @@ async function startApp() {
           name: "processPaymentsLastAttempt",
           pattern: "0 2 * * *", // Ровно в 02:00
           run() {
-            logger.info("Запуск обработки платежей через cron (последняя попытка в 02:00)", {
-              time: new Date().toISOString(),
-            });
+            logger.info(
+              "Запуск обработки платежей через cron (последняя попытка в 02:00)",
+              {
+                time: new Date().toISOString(),
+              },
+            );
 
             SchedulerService.processPayments().catch((error) => {
               logger.error(
                 "Ошибка при выполнении scheduler (платежи через cron в 02:00)",
-                error as Error
+                error as Error,
               );
             });
           },
-        })
+        }),
       )
       // Бэкап логов в конце каждого дня (в 23:59)
       .use(
@@ -263,11 +284,11 @@ async function startApp() {
             BackupLogService.backupYesterdayLog().catch((error) => {
               logger.error(
                 "Ошибка при выполнении бэкапа логов",
-                error instanceof Error ? error : new Error(String(error))
+                error instanceof Error ? error : new Error(String(error)),
               );
             });
           },
-        })
+        }),
       )
       // Бэкап PostgreSQL каждые 2 часа
       .use(
@@ -282,11 +303,11 @@ async function startApp() {
             BackupDbService.backupDatabase().catch((error) => {
               logger.error(
                 "Ошибка при выполнении бэкапа базы данных",
-                error instanceof Error ? error : new Error(String(error))
+                error instanceof Error ? error : new Error(String(error)),
               );
             });
           },
-        })
+        }),
       );
   }
 
@@ -298,7 +319,14 @@ async function startApp() {
     }))
     // Подключаем модули с префиксом /v1
     .group("/v1", (app) =>
-      app.use(auth).use(user).use(quiz).use(bids).use(payment).use(statistics).use(publicModule)
+      app
+        .use(auth)
+        .use(user)
+        .use(quiz)
+        .use(bids)
+        .use(payment)
+        .use(statistics)
+        .use(publicModule),
     )
     // Webhook'и для Telegram ботов (без префикса /v1, так как Telegram отправляет на указанный URL)
     .use(telegram);
@@ -383,7 +411,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
     } catch (error) {
       logger.error(
         "Ошибка при остановке scheduler",
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
 
@@ -401,7 +429,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
   } catch (error) {
     logger.error(
       "Ошибка при graceful shutdown",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     process.exit(1);
   }
@@ -415,7 +443,7 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 startApp().catch((error) => {
   logger.error(
     "Критическая ошибка при запуске приложения",
-    error instanceof Error ? error : new Error(String(error))
+    error instanceof Error ? error : new Error(String(error)),
   );
   process.exit(1);
 });

@@ -18,6 +18,7 @@ import {
 import { logger } from "../../lib/logger";
 import { CodeService } from "../../services/code.service";
 import { MailService } from "../../services/mail.service";
+import { TelegramService } from "../../services/telegram.service";
 import type { AuthModel } from "./model";
 
 // Возможные коды ошибок аутентификации
@@ -548,6 +549,253 @@ export abstract class AuthService {
       );
       // Не прерываем процесс, если не удалось отправить email
     }
+  }
+
+  /**
+   * Поиск пользователя по Telegram ID
+   */
+  static async findByTelegramId(telegramId: string): Promise<User | null> {
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.telegramId, telegramId))
+      .limit(1);
+
+    return users[0] ?? null;
+  }
+
+  /**
+   * Авторизация через Telegram:
+   * - валидация initData
+   * - поиск пользователя по telegramId
+   * - генерация токена сессии
+   */
+  static async telegramLogin(
+    payload: AuthModel.telegramLoginBody,
+  ): Promise<{ user: User; token: string } | null> {
+    // Валидируем initData от Telegram
+    const telegramUserInfo = await TelegramService.validateInitData(
+      payload.initData,
+      'crm'
+    );
+
+    // Ищем пользователя по telegramId
+    const telegramId = String(telegramUserInfo.id);
+    const user = await this.findByTelegramId(telegramId);
+
+    if (!user) {
+      // Пользователь не найден - требуется регистрация
+      return null;
+    }
+
+    // Генерируем токен сессии
+    const token = await this.generateSessionToken(user.id);
+
+    logger.info("Пользователь авторизован через Telegram", {
+      userId: user.id,
+      telegramId,
+    });
+
+    return { user, token };
+  }
+
+  /**
+   * Регистрация через Telegram:
+   * - валидация initData
+   * - проверка существования email
+   * - создание пользователя с telegramId
+   * - отправка кода верификации на email
+   * - генерация токена сессии
+   */
+  static async telegramRegister(
+    payload: AuthModel.telegramRegisterBody,
+  ): Promise<{ user: User; token: string }> {
+    // Валидируем initData от Telegram
+    const telegramUserInfo = await TelegramService.validateInitData(
+      payload.initData,
+      'crm'
+    );
+
+    // Приводим email к нижнему регистру
+    const normalizedLogin = payload.email.toLowerCase();
+
+    // Проверяем, не существует ли уже пользователь с таким email
+    const existingUser = await this.findByLogin(normalizedLogin);
+    if (existingUser) {
+      const error = new Error("User with this email already exists");
+      error.name = "RegistrationError";
+      throw error;
+    }
+
+    // Проверяем, не существует ли уже пользователь с таким telegramId
+    const telegramId = String(telegramUserInfo.id);
+    const existingTelegramUser = await this.findByTelegramId(telegramId);
+    if (existingTelegramUser) {
+      const error = new Error("User with this Telegram ID already exists");
+      error.name = "RegistrationError";
+      throw error;
+    }
+
+    // Проверяем реферальный код, если он указан
+    let referralId: number | null = null;
+    if (payload.referralCode) {
+      const referrer = await this.findByReferralCode(payload.referralCode);
+      if (!referrer) {
+        const error = new Error("Invalid referral code");
+        error.name = "RegistrationError";
+        throw error;
+      }
+      referralId = referrer.id;
+    }
+
+    // Генерируем случайный пароль (пользователь не будет его использовать, но поле обязательное)
+    const randomPassword = crypto.randomUUID();
+    const hashedPassword = await this.hashPassword(randomPassword);
+
+    // Генерируем реферальный код для нового пользователя
+    const referralCode = await this.generateReferralCode();
+
+    // Определяем язык из Telegram или из payload
+    const language =
+      payload.language ||
+      telegramUserInfo.languageCode?.substring(0, 2) ||
+      "en";
+    const normalizedLanguage = language === "ru" ? "ru" : "en";
+
+    // Формируем имя из данных Telegram, если не указано
+    const name =
+      payload.name ||
+      [telegramUserInfo.firstName, telegramUserInfo.lastName]
+        .filter(Boolean)
+        .join(" ") ||
+      null;
+
+    // Создаём нового пользователя
+    const newUser: NewUser = {
+      uid: crypto.randomUUID(),
+      login: normalizedLogin,
+      password: hashedPassword,
+      name,
+      planId: 1, // По умолчанию бесплатный план
+      isVerification: false,
+      language: normalizedLanguage,
+      telegramId, // Сохраняем telegramId
+      referralId,
+      referralCode,
+    };
+
+    const [createdUser] = await db
+      .insert(userTable)
+      .values(newUser)
+      .returning();
+
+    // Создаём запись в user_payment с FREE планом
+    try {
+      const freePlan = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.id, 1))
+        .limit(1);
+
+      if (freePlan[0]) {
+        const createdAt = createdUser.createdAt;
+        const finalDayAt = new Date(createdAt);
+        finalDayAt.setMonth(finalDayAt.getMonth() + 1);
+        finalDayAt.setHours(23, 59, 0, 0);
+
+        const newUserPayment: NewUserPayment = {
+          userId: createdUser.id,
+          planId: 1,
+          limit: freePlan[0].bidMonthLimit,
+          finalDayAt,
+        };
+
+        await db.insert(userPaymentTable).values(newUserPayment);
+
+        logger.info("Создана запись user_payment для нового пользователя", {
+          userId: createdUser.id,
+          planId: 1,
+        });
+      }
+    } catch (paymentError) {
+      logger.error(
+        "Ошибка при создании user_payment при регистрации через Telegram",
+        paymentError instanceof Error
+          ? paymentError
+          : new Error(String(paymentError)),
+        { userId: createdUser.id },
+      );
+    }
+
+    // Создаём запись в user_notification с настройками по умолчанию
+    try {
+      const newUserNotification: NewUserNotification = {
+        userId: createdUser.id,
+        telegram: false,
+        email: true,
+      };
+
+      await db.insert(userNotificationTable).values(newUserNotification);
+
+      logger.info("Создана запись user_notification для нового пользователя", {
+        userId: createdUser.id,
+      });
+    } catch (notificationError) {
+      logger.error(
+        "Ошибка при создании user_notification при регистрации через Telegram",
+        notificationError instanceof Error
+          ? notificationError
+          : new Error(String(notificationError)),
+        { userId: createdUser.id },
+      );
+    }
+
+    // Генерируем код верификации
+    try {
+      const code = await CodeService.generateCodeByAuthUser(
+        "registration",
+        createdUser.id,
+      );
+
+      // Отправляем email с кодом верификации
+      try {
+        await MailService.sendVerificationEmailCode(
+          createdUser.login,
+          code.value,
+          normalizedLanguage,
+        );
+
+        await db
+          .update(codeTable)
+          .set({
+            nextMailSendAvailable: new Date(Date.now() + 2 * 60 * 1000),
+          })
+          .where(eq(codeTable.id, code.id));
+      } catch (mailError) {
+        logger.error(
+          "Ошибка при отправке email при регистрации через Telegram",
+          mailError instanceof Error ? mailError : new Error(String(mailError)),
+          { userId: createdUser.id },
+        );
+      }
+    } catch (codeError) {
+      logger.error(
+        "Ошибка при создании кода при регистрации через Telegram",
+        codeError instanceof Error ? codeError : new Error(String(codeError)),
+        { login: payload.email },
+      );
+    }
+
+    // Генерируем токен сессии
+    const token = await this.generateSessionToken(createdUser.id);
+
+    logger.info("Пользователь зарегистрирован через Telegram", {
+      userId: createdUser.id,
+      telegramId,
+      email: normalizedLogin,
+    });
+
+    return { user: createdUser, token };
   }
 }
 

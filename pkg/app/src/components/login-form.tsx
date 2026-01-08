@@ -1,10 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthContext } from "@/entities/User/auth.context";
 import { loginUser, type LoginUser } from "@/entities/User/LoginUser.type";
 import type { User } from "@/entities/User/User.type";
+import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
@@ -12,8 +18,12 @@ import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   const { t } = useTranslation();
+  const { query } = useUserPlan();
   const [data, setData] = useState<LoginUser>({
     login: "",
     password: "",
@@ -54,6 +64,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         ctx.setUser(res.data);
         ctx.setIsAuth(true);
         setLoading(false);
+        query.refetch();
       }
     } catch (e) {
       toast.error("Not auth");
@@ -85,7 +96,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             </Field>
             <Field>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">{t("login.password")}</FieldLabel>
+                <FieldLabel htmlFor="password">
+                  {t("login.password")}
+                </FieldLabel>
                 <Link
                   to="/forgot-password"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
@@ -104,7 +117,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               />
             </Field>
             <Field>
-              <Button disabled={loading || !data.login || !data.password} onClick={login}>
+              <Button
+                disabled={loading || !data.login || !data.password}
+                onClick={login}
+              >
                 {t("login.button")}
               </Button>
               <FieldDescription className="text-center">

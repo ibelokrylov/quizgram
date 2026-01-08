@@ -280,4 +280,143 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.logoutSuccessResponse,
       },
     },
+  )
+  .post(
+    "/telegram/login",
+    async ({ body, cookie, set }) => {
+      try {
+        const result = await AuthService.telegramLogin(body);
+
+        if (!result) {
+          // Пользователь не найден - требуется регистрация
+          set.status = 404;
+          const response: AuthModel.telegramLoginErrorResponse = {
+            message: "registration_required",
+            requiresRegistration: true,
+          };
+          return response;
+        }
+
+        const { user, token } = result;
+
+        // Устанавливаем cookie с токеном (длинная сессия для Telegram)
+        const maxAge = 30 * 24 * 60 * 60 * 12; // ~1 год
+        cookie.token.set({
+          value: token,
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge,
+          path: "/",
+        });
+
+        const response: AuthModel.telegramLoginSuccessResponse = {
+          message: "notification.user.authenticated",
+          data: {
+            uid: user.uid,
+            login: user.login,
+            name: user.name ?? undefined,
+            planId: user.planId,
+            referralId: user.referralId ?? undefined,
+            isVerification: user.isVerification,
+            language: user.language ?? undefined,
+            createdAt: user.createdAt ?? undefined,
+            updatedAt: user.updatedAt ?? undefined,
+          },
+        };
+
+        set.status = 200;
+        return response;
+      } catch (error) {
+        set.status = 400;
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+
+        const response: AuthModel.telegramLoginErrorResponse = {
+          message: "notification.user.no-authenticated",
+          error: errorMessage,
+          requiresRegistration: false,
+        };
+
+        return response;
+      }
+    },
+    {
+      body: AuthModel.telegramLoginBody,
+      response: {
+        200: AuthModel.telegramLoginSuccessResponse,
+        400: AuthModel.telegramLoginErrorResponse,
+        404: AuthModel.telegramLoginErrorResponse,
+      },
+    },
+  )
+  .post(
+    "/telegram/register",
+    async ({ body, cookie, set }) => {
+      try {
+        const { user, token } = await AuthService.telegramRegister(body);
+
+        // Устанавливаем cookie с токеном (длинная сессия для Telegram)
+        const maxAge = 30 * 24 * 60 * 60 * 12; // ~1 год
+        cookie.token.set({
+          value: token,
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge,
+          path: "/",
+        });
+
+        const response: AuthModel.telegramRegisterSuccessResponse = {
+          message: "notification.user.authenticated",
+          data: {
+            uid: user.uid,
+            login: user.login,
+            name: user.name ?? undefined,
+            planId: user.planId,
+            referralId: user.referralId ?? undefined,
+            isVerification: user.isVerification,
+            language: user.language ?? undefined,
+            createdAt: user.createdAt ?? undefined,
+            updatedAt: user.updatedAt ?? undefined,
+          },
+        };
+
+        set.status = 200;
+        return response;
+      } catch (error) {
+        set.status = 400;
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+
+        let message = "registration@error";
+        if (error instanceof Error && error.name === "RegistrationError") {
+          message = "registration@error";
+        } else if (
+          error instanceof Error &&
+          error.message.includes("body-parse")
+        ) {
+          message = "registration@error-body-parse";
+        } else if (
+          error instanceof Error &&
+          error.message.includes("validate")
+        ) {
+          message = "registration@error-validate";
+        }
+
+        const response: AuthModel.telegramRegisterErrorResponse = {
+          message,
+          error: errorMessage,
+        };
+
+        return response;
+      }
+    },
+    {
+      body: AuthModel.telegramRegisterBody,
+      response: {
+        200: AuthModel.telegramRegisterSuccessResponse,
+        400: AuthModel.telegramRegisterErrorResponse,
+      },
+    },
   );

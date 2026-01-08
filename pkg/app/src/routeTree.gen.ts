@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TelegramAuthRouteImport } from './routes/telegram-auth'
 import { Route as RegistrationRouteImport } from './routes/registration'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -26,6 +27,11 @@ import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/stati
 import { Route as AppBidReportRouteRouteImport } from './routes/app/bid/report/route'
 import { Route as AppBidReportStatisticRouteRouteImport } from './routes/app/bid/report/statistic/route'
 
+const TelegramAuthRoute = TelegramAuthRouteImport.update({
+  id: '/telegram-auth',
+  path: '/telegram-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegistrationRoute = RegistrationRouteImport.update({
   id: '/registration',
   path: '/registration',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRouteWithChildren
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRouteWithChildren
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRouteWithChildren
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
@@ -228,10 +240,18 @@ export interface RootRouteChildren {
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
   RegistrationRoute: typeof RegistrationRoute
+  TelegramAuthRoute: typeof TelegramAuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/telegram-auth': {
+      id: '/telegram-auth'
+      path: '/telegram-auth'
+      fullPath: '/telegram-auth'
+      preLoaderRoute: typeof TelegramAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/registration': {
       id: '/registration'
       path: '/registration'
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
   RegistrationRoute: RegistrationRoute,
+  TelegramAuthRoute: TelegramAuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

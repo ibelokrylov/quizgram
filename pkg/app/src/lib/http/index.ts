@@ -25,6 +25,13 @@ const http = async <T = undefined>(dto: {
   const data = await response.json();
 
   if (!response.ok) {
+    // Обработка специальных случаев для Telegram авторизации
+    if (response.status === 404 && data?.requiresRegistration) {
+      // Пользователь не найден - требуется регистрация через Telegram
+      const error = new Error(data?.error || "registration_required");
+      (error as any).requiresRegistration = true;
+      throw error;
+    }
     throw new Error(data?.error);
   }
 

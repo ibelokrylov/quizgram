@@ -70,13 +70,13 @@ export abstract class CryptoPayService {
    * Получает базовый URL в зависимости от окружения
    * Testnet: https://testnet-pay.crypt.bot/api (для dev)
    * Mainnet: https://pay.crypt.bot/api (для production)
-   * 
+   *
    * Согласно документации: URL должен быть в формате https://pay.crypt.bot/api/%method%
    * Версия API не указывается в URL
    */
   private static getBaseUrl(): string {
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-    const isDevelopment = env.NODE_ENV !== "production";
+    const isDevelopment = env.ENV !== "production";
 
     if (isDevelopment) {
       // Testnet для dev окружения
@@ -95,7 +95,10 @@ export abstract class CryptoPayService {
     const token = env.CRYPTO_PAY_TOKEN;
 
     if (!token) {
-      logger.error("CRYPTO_PAY_TOKEN не установлен в переменных окружения", new Error("Token missing"));
+      logger.error(
+        "CRYPTO_PAY_TOKEN не установлен в переменных окружения",
+        new Error("Token missing"),
+      );
       throw new Error("CRYPTO_PAY_TOKEN не установлен в переменных окружения");
     }
 
@@ -103,7 +106,10 @@ export abstract class CryptoPayService {
     const cleanToken = token.trim();
 
     if (cleanToken.length === 0) {
-      logger.error("CRYPTO_PAY_TOKEN пустой после очистки", new Error("Token empty"));
+      logger.error(
+        "CRYPTO_PAY_TOKEN пустой после очистки",
+        new Error("Token empty"),
+      );
       throw new Error("CRYPTO_PAY_TOKEN пустой");
     }
 
@@ -124,7 +130,7 @@ export abstract class CryptoPayService {
     const url = `${baseUrl}/${method}`;
 
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-    const isDevelopment = env.NODE_ENV !== "production";
+    const isDevelopment = env.ENV !== "production";
 
     // Логируем запрос (без токена для безопасности)
     logger.debug("Запрос к Crypto Pay API", {
@@ -166,37 +172,47 @@ export abstract class CryptoPayService {
           errorData = { raw: errorText };
         }
 
-        logger.error("Ошибка при запросе к Crypto Pay API", new Error(errorText), {
-          method,
-          url,
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          errorData,
-          tokenLength: token.length,
-          tokenPrefix: token.substring(0, 10) + "...",
-          requestParams: params,
-        });
+        logger.error(
+          "Ошибка при запросе к Crypto Pay API",
+          new Error(errorText),
+          {
+            method,
+            url,
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+            errorData,
+            tokenLength: token.length,
+            tokenPrefix: token.substring(0, 10) + "...",
+            requestParams: params,
+          },
+        );
 
         // Если это ошибка 401, добавляем более детальное сообщение
         if (response.status === 401) {
           throw new Error(
             `Crypto Pay API authentication failed (401). Проверьте правильность токена CRYPTO_PAY_TOKEN. ` +
-            `Токен должен быть в формате {bot_id}:{secret_key}. ` +
-            `Детали: ${errorData.error?.message || errorText}`
+              `Токен должен быть в формате {bot_id}:{secret_key}. ` +
+              `Детали: ${errorData.error?.message || errorText}`,
           );
         }
 
-        throw new Error(`Crypto Pay API error: ${response.status} ${response.statusText}. ${errorData.error?.message || errorText}`);
+        throw new Error(
+          `Crypto Pay API error: ${response.status} ${response.statusText}. ${errorData.error?.message || errorText}`,
+        );
       }
 
-      const data = await response.json() as T;
+      const data = (await response.json()) as T;
       return data;
     } catch (error) {
-      logger.error("Ошибка при выполнении запроса к Crypto Pay API", error instanceof Error ? error : new Error(String(error)), {
-        method,
-        params,
-      });
+      logger.error(
+        "Ошибка при выполнении запроса к Crypto Pay API",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          method,
+          params,
+        },
+      );
       throw error;
     }
   }
@@ -220,7 +236,7 @@ export abstract class CryptoPayService {
 
     // Форматируем сумму для фиатной валюты
     // amount приходит в рублях (например, 1600 = 1600 рублей)
-    const fiatAmount = (amount).toFixed(2); // Форматируем с 2 знаками после запятой
+    const fiatAmount = amount.toFixed(2); // Форматируем с 2 знаками после запятой
 
     const requestParams: Record<string, unknown> = {
       currency_type: currencyType,
@@ -244,10 +260,14 @@ export abstract class CryptoPayService {
 
     if (!response.ok || !response.result) {
       const errorMessage = response.error?.message || "Неизвестная ошибка";
-      logger.error("Ошибка при создании инвойса в Crypto Pay", new Error(errorMessage), {
-        params,
-        error: response.error,
-      });
+      logger.error(
+        "Ошибка при создании инвойса в Crypto Pay",
+        new Error(errorMessage),
+        {
+          params,
+          error: response.error,
+        },
+      );
       throw new Error(`Не удалось создать инвойс: ${errorMessage}`);
     }
 
@@ -284,10 +304,14 @@ export abstract class CryptoPayService {
 
     if (!response.ok || !response.result) {
       const errorMessage = response.error?.message || "Неизвестная ошибка";
-      logger.error("Ошибка при получении инвойсов из Crypto Pay", new Error(errorMessage), {
-        params,
-        error: response.error,
-      });
+      logger.error(
+        "Ошибка при получении инвойсов из Crypto Pay",
+        new Error(errorMessage),
+        {
+          params,
+          error: response.error,
+        },
+      );
       throw new Error(`Не удалось получить инвойсы: ${errorMessage}`);
     }
 
@@ -311,11 +335,14 @@ export abstract class CryptoPayService {
 
       return null;
     } catch (error) {
-      logger.error("Ошибка при проверке статуса инвойса", error instanceof Error ? error : new Error(String(error)), {
-        invoiceId,
-      });
+      logger.error(
+        "Ошибка при проверке статуса инвойса",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          invoiceId,
+        },
+      );
       return null;
     }
   }
 }
-

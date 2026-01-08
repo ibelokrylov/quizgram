@@ -185,6 +185,81 @@ export namespace AuthModel {
   });
 
   export type logoutSuccessResponse = typeof logoutSuccessResponse.static;
+
+  // Тело запроса для входа через Telegram
+  export const telegramLoginBody = t.Object({
+    initData: t.String({
+      minLength: 1,
+      description: "InitData от Telegram WebApp",
+    }),
+  });
+
+  export type telegramLoginBody = typeof telegramLoginBody.static;
+
+  // Успешный ответ при авторизации через Telegram
+  export const telegramLoginSuccessResponse = t.Object({
+    message: t.String(), // "notification.user.authenticated"
+    data: user,
+  });
+
+  export type telegramLoginSuccessResponse =
+    typeof telegramLoginSuccessResponse.static;
+
+  // Ответ при ошибке авторизации через Telegram или необходимости регистрации
+  export const telegramLoginErrorResponse = t.Object({
+    message: t.String(), // "notification.user.no-authenticated" или "registration_required"
+    error: t.Optional(t.String()),
+    requiresRegistration: t.Optional(t.Boolean()),
+  });
+
+  export type telegramLoginErrorResponse =
+    typeof telegramLoginErrorResponse.static;
+
+  // Тело запроса для регистрации через Telegram
+  export const telegramRegisterBody = t.Object({
+    initData: t.String({
+      minLength: 1,
+      description: "InitData от Telegram WebApp",
+    }),
+    email: t.String({
+      format: "email",
+      description: "Email пользователя",
+    }),
+    name: t.Optional(t.String()),
+    language: t.Optional(
+      t.String({
+        pattern: "^(en|ru)$",
+        description: "Язык интерфейса: 'en' или 'ru'",
+      }),
+    ),
+    referralCode: t.Optional(
+      t.String({
+        minLength: 1,
+        maxLength: 20,
+        description: "Реферальный код",
+      }),
+    ),
+  });
+
+  export type telegramRegisterBody = typeof telegramRegisterBody.static;
+
+  // Успешный ответ при регистрации через Telegram
+  export const telegramRegisterSuccessResponse = t.Object({
+    message: t.String(), // "notification.user.authenticated"
+    data: user,
+  });
+
+  export type telegramRegisterSuccessResponse =
+    typeof telegramRegisterSuccessResponse.static;
+
+  // Ответ при ошибке регистрации через Telegram
+  export const telegramRegisterErrorResponse = t.Object({
+    message: t.String(), // "registration@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type telegramRegisterErrorResponse =
+    typeof telegramRegisterErrorResponse.static;
 }
 
 

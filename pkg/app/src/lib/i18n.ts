@@ -20,7 +20,7 @@ i18n
   .init({
     resources,
     fallbackLng: "en",
-    debug: import.meta.env.NODE_ENV === "development",
+    debug: import.meta.env.ENV === "development",
 
     interpolation: {
       escapeValue: false,

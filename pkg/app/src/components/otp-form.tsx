@@ -212,11 +212,7 @@ export function OTPForm({
               </FieldGroup>
             </FieldGroup>
             <div className="mt-4 pt-4 border-t">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleLogout}
-              >
+              <Button variant="outline" className="w-full" onClick={handleLogout}>
                 {t("nav.user.logout")}
               </Button>
             </div>

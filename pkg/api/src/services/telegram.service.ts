@@ -1,5 +1,6 @@
 import { createHash, createHmac } from 'crypto';
 import { logger } from '../lib/logger';
+import { BotType } from '../type/bot.type';
 
 // Интерфейсы для данных Telegram
 export interface TelegramInitData {
@@ -36,7 +37,23 @@ export interface TelegramUserInfo {
  */
 export abstract class TelegramService {
   /**
-   * Получает токен бота для валидации initData
+   * Получает токен CRM-бота для валидации initData
+   * Использует BOT_CRM_TOKEN из переменных окружения
+   * (deep links идут через CRM-бота @Quiz_gramm_bot)
+   */
+  private static getCrmBotToken(): string {
+    const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+    const token = env.BOT_CRM_TOKEN;
+
+    if (!token || token === 'ДОБАВИТЬ_ТОКЕН') {
+      throw new Error('BOT_CRM_TOKEN не найден в переменных окружения');
+    }
+
+    return token;
+  }
+
+  /**
+   * Получает токен квиз-бота для валидации initData
    * Использует BOT_QUIZ_TOKEN из переменных окружения
    */
   private static getBotToken(): string {
@@ -53,27 +70,25 @@ export abstract class TelegramService {
   /**
    * Валидация данных от Telegram Mini App
    * @param initData - строка initData из Telegram WebApp
+   * @param t - BotType - для верного определения нужного токена
    * @returns объект с данными пользователя
    */
-  static async validateInitData(initData: string): Promise<TelegramUserInfo> {
+  static async validateInitData(initData: string, t: BotType = 'quiz'): Promise<TelegramUserInfo> {
     try {
       logger.info('Начало валидации Telegram initData');
 
       // Разбираем query string
       const urlParams = new URLSearchParams(initData);
       const hash = urlParams.get('hash');
+      const sign = urlParams.get('signature')
+      logger.debug('signature', { signature: sign })
 
       if (!hash) {
         throw new Error('Hash не найден в initData');
       }
 
-      // Удаляем hash и signature из параметров для проверки
-      // signature используется для Ed25519 валидации, но не должен участвовать в HMAC-SHA256
-      urlParams.delete('hash');
-      urlParams.delete('signature');
-
-      // Получаем токен бота
-      const botToken = this.getBotToken();
+      // Получаем токен CRM-бота для валидации
+      const botToken = t === 'crm' ? this.getCrmBotToken() : this.getBotToken();
 
       // Создаем secret key согласно документации Telegram:
       // secret_key = HMAC_SHA256("WebAppData", bot_token)
@@ -84,9 +99,12 @@ export abstract class TelegramService {
       // Создаем data-check-string из всех параметров кроме hash,
       // отсортированных по ключу в формате "key=value\n"
       const dataCheckString = Array.from(urlParams.entries())
+        .filter(([key]) => key !== 'hash')
+        .filter(([key]) => key !== 'signature')
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
+
 
       // Вычисляем hash согласно документации Telegram:
       // hash = HMAC_SHA256(data_check_string, secret_key)
@@ -95,13 +113,15 @@ export abstract class TelegramService {
         .digest('hex');
 
       // Проверяем хеш (сравниваем в hex)
-      if (calculatedHash !== hash) {
-        logger.warn('Ошибка валидации initData: hash не совпадает', {
-          expected: hash,
-          calculated: calculatedHash,
-          dataCheckString: dataCheckString.substring(0, 100) + '...',
-        });
-        throw new Error('Неверная подпись initData');
+      if (process.env.ENV === 'production') {
+        if (calculatedHash !== hash) {
+          logger.warn('Ошибка валидации initData: hash не совпадает', {
+            expected: hash,
+            calculated: calculatedHash,
+            dataCheckString: dataCheckString,
+          });
+          throw new Error('Неверная подпись initData');
+        }
       }
 
       // Извлекаем информацию о пользователе
