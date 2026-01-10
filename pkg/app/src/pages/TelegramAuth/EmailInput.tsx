@@ -37,7 +37,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     const validation = emailSchema.safeParse({ email });
     if (!validation.success) {
       const errorMessage =
-        validation.error.errors[0]?.message || t("telegram.auth.email.invalid");
+        validation.error.issues[0]?.message || t("telegram.auth.email.invalid");
       setError(errorMessage);
       return;
     }

@@ -3,26 +3,31 @@
 
 import { existsSync, readFileSync } from "fs";
 import { join, resolve } from "path";
-import { S3Service } from "./s3.service";
+import { S3Service, UploadResult } from "./s3.service";
 import { logger } from "../lib/logger";
 
-// Путь к директории логов (должен совпадать с logger.ts)
-const LOG_DIR_ENV = (typeof Bun !== "undefined" ? Bun.env : process.env).LOG_DIR || "logs";
-const LOG_DIR = resolve(LOG_DIR_ENV);
+/**
+ * Получает путь к директории логов
+ * Читается динамически для поддержки тестов
+ */
+function getLogDir(): string {
+  const logDirEnv = (typeof Bun !== "undefined" ? Bun.env : process.env).LOG_DIR || "logs";
+  return resolve(logDirEnv);
+}
 
 export abstract class BackupLogService {
   /**
    * Выполняет бэкап лог-файла за указанную дату в S3
    * @param date - Дата для бэкапа (по умолчанию вчерашний день)
-   * @returns Результат загрузки в S3
+   * @returns Результат загрузки в S3 или undefined если файл не найден
    */
-  static async backupLogFile(date?: Date): Promise<void> {
+  static async backupLogFile(date?: Date): Promise<UploadResult | undefined> {
     try {
       // Если дата не указана, используем вчерашний день (для бэкапа в конце дня)
       const targetDate = date || new Date(Date.now() - 24 * 60 * 60 * 1000);
       const dateStr = targetDate.toISOString().split("T")[0]; // YYYY-MM-DD
       const logFileName = `${dateStr}.log`;
-      const logFilePath = join(LOG_DIR, logFileName);
+      const logFilePath = join(getLogDir(), logFileName);
 
       logger.info("Начало бэкапа лог-файла", {
         date: dateStr,
@@ -41,17 +46,16 @@ export abstract class BackupLogService {
       // Читаем файл
       const logFileContent = readFileSync(logFilePath);
 
-      // Формируем путь в S3: backups/logs/YYYY-MM-DD.log
-      const s3Key = `backups/logs/${logFileName}`;
-
       // Загружаем в S3
-      await S3Service.uploadFile(logFileContent, logFileName, "backups/logs");
+      const uploadResult = await S3Service.uploadFile(logFileContent, logFileName, "backups/logs");
 
       logger.info("Лог-файл успешно загружен в S3", {
         date: dateStr,
-        s3Key,
+        s3Key: uploadResult.fileKey,
         fileSize: logFileContent.length,
       });
+
+      return uploadResult;
     } catch (error) {
       logger.error(
         "Ошибка при бэкапе лог-файла",
@@ -65,10 +69,11 @@ export abstract class BackupLogService {
   /**
    * Выполняет бэкап лог-файла за вчерашний день
    * Используется для ежедневного cron job в конце дня
+   * @returns Результат загрузки в S3 или undefined если файл не найден
    */
-  static async backupYesterdayLog(): Promise<void> {
+  static async backupYesterdayLog(): Promise<UploadResult | undefined> {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    await this.backupLogFile(yesterday);
+    return this.backupLogFile(yesterday);
   }
 }
 

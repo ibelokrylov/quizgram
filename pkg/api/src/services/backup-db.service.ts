@@ -4,7 +4,7 @@
 import { existsSync, readFileSync, unlinkSync } from "fs";
 import { join } from "path";
 import { logger } from "../lib/logger";
-import { S3Service } from "./s3.service";
+import { S3Service, UploadResult } from "./s3.service";
 
 // Временная директория для хранения бэкапов перед загрузкой в S3
 const TEMP_DIR =
@@ -14,8 +14,9 @@ export abstract class BackupDbService {
   /**
    * Выполняет бэкап PostgreSQL базы данных и загружает его в S3
    * Использует pg_dump для создания ленивого бэкапа
+   * @returns Результат загрузки в S3 (fileKey для последующего удаления)
    */
-  static async backupDatabase(): Promise<void> {
+  static async backupDatabase(): Promise<UploadResult> {
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
     const {
       POSTGRES_USER,
@@ -123,15 +124,12 @@ export abstract class BackupDbService {
         fileSize,
       });
 
-      // Формируем путь в S3: backups/db/backup-DBNAME-TIMESTAMP.sql.gz
-      const s3Key = `backups/db/${backupFileName}`;
-
       // Загружаем в S3
-      await S3Service.uploadFile(backupFileContent, backupFileName, "backups/db");
+      const uploadResult = await S3Service.uploadFile(backupFileContent, backupFileName, "backups/db");
 
       logger.info("Бэкап базы данных успешно загружен в S3", {
         database: POSTGRES_DB,
-        s3Key,
+        s3Key: uploadResult.fileKey,
         fileSize,
       });
 
@@ -145,6 +143,8 @@ export abstract class BackupDbService {
           error: error instanceof Error ? error.message : String(error),
         });
       }
+
+      return uploadResult;
     } catch (error) {
       logger.error(
         "Ошибка при бэкапе базы данных",
