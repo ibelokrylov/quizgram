@@ -76,7 +76,7 @@ export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) 
           </Text>
           <a
             className="footer__logo-button"
-            href={`https://quizgram.site?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
+            href={`https://quizgram.ru?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
             target="_blank"
             rel="noopener noreferrer"
           >

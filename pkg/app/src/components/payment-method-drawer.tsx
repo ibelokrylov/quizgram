@@ -99,42 +99,6 @@ export const PaymentMethodDrawer = ({
     }
   };
 
-  const handleCryptoPay = async () => {
-    setIsCreating(true);
-    try {
-      const response = await http<{ paymentId: number; invoiceUrl: string }>({
-        url: `/v1/payment/${planId}/create`,
-        method: "POST",
-        body:
-          isProPlus && selectedUpLimitId !== null && selectedUpLimitId !== undefined
-            ? { upLimitId: selectedUpLimitId }
-            : undefined,
-      });
-
-      if (response.data) {
-        // Закрываем Drawer
-        onOpenChange(false);
-
-        // Если invoiceUrl пустой (dev-режим), план уже обновлён
-        if (!response.data.invoiceUrl || response.data.invoiceUrl === "") {
-          // Обновляем кэш пользователя и плана
-          queryClient.invalidateQueries({ queryKey: ["user-plan"] });
-          queryClient.invalidateQueries({ queryKey: ["user"] });
-          queryClient.invalidateQueries({ queryKey: ["plans"] });
-
-          toast.success(t("payment.success", { plan: planName }));
-        } else {
-          // Production: редиректим на страницу оплаты
-          window.location.href = response.data.invoiceUrl;
-        }
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("payment.create.error"));
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -168,23 +132,30 @@ export const PaymentMethodDrawer = ({
               )}
             </Button>
           ) : (
-            <>
-              <Button onClick={handleCryptoPay} disabled={isCreating} className="w-full" size="lg">
-                {isCreating ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4" />
-                    {t("payment.waiting.checking")}
-                  </>
-                ) : (
-                  <>
-                    {t("payment.method.crypto_pay")} {isProPlus && `(${totalPrice} ₽)`}
-                  </>
-                )}
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                {t("payment.method.crypto_pay.description")}
-              </p>
-            </>
+            <div className="space-y-4 max-w-[800px] mx-auto">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg space-y-3">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Сервис работает в demo-режиме. Оплата принимается в рамках бета-тестов.
+                </p>
+                <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal list-inside space-y-2">
+                  <li>Оплатите по ссылке ниже через СБП (сумма указана на кнопке ниже)</li>
+                  <li>В комментарии к платежу укажите вашу почту, указанную при регистрации</li>
+                  <li>В течение 1-2 часов мы выдадим вам доступ</li>
+                  <li>Если доступ не будет выдан в указанное время, напишите в бота поддержки</li>
+                </ol>
+              </div>
+              <div className="flex justify-center">
+                <Button asChild>
+                  <a
+                    href="https://qr.nspk.ru/BS1A004P8NB28TR194G9SKU2G7N2DDJE?type=01&bank=100000000284&crc=2AA3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Оплатить {isProPlus ? `${totalPrice} ₽` : `${planPrice} ₽`}
+                  </a>
+                </Button>
+              </div>
+            </div>
           )}
         </div>
         <DrawerFooter>
