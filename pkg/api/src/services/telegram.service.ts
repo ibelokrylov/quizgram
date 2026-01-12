@@ -1,6 +1,6 @@
-import { createHash, createHmac } from 'crypto';
-import { logger } from '../lib/logger';
-import { BotType } from '../type/bot.type';
+import { createHash, createHmac } from "crypto";
+import { logger } from "../lib/logger";
+import { BotType } from "../type/bot.type";
 
 // Интерфейсы для данных Telegram
 export interface TelegramInitData {
@@ -45,8 +45,8 @@ export abstract class TelegramService {
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
     const token = env.BOT_CRM_TOKEN;
 
-    if (!token || token === 'ДОБАВИТЬ_ТОКЕН') {
-      throw new Error('BOT_CRM_TOKEN не найден в переменных окружения');
+    if (!token || token === "ДОБАВИТЬ_ТОКЕН") {
+      throw new Error("BOT_CRM_TOKEN не найден в переменных окружения");
     }
 
     return token;
@@ -60,8 +60,8 @@ export abstract class TelegramService {
     const env = typeof Bun !== "undefined" ? Bun.env : process.env;
     const token = env.BOT_QUIZ_TOKEN;
 
-    if (!token || token === 'ДОБАВИТЬ_ТОКЕН') {
-      throw new Error('BOT_QUIZ_TOKEN не найден в переменных окружения');
+    if (!token || token === "ДОБАВИТЬ_ТОКЕН") {
+      throw new Error("BOT_QUIZ_TOKEN не найден в переменных окружения");
     }
 
     return token;
@@ -73,66 +73,62 @@ export abstract class TelegramService {
    * @param t - BotType - для верного определения нужного токена
    * @returns объект с данными пользователя
    */
-  static async validateInitData(initData: string, t: BotType = 'quiz'): Promise<TelegramUserInfo> {
+  static async validateInitData(
+    initData: string,
+    t: BotType = "quiz",
+  ): Promise<TelegramUserInfo> {
     try {
-      logger.info('Начало валидации Telegram initData');
+      logger.info("Начало валидации Telegram initData");
 
       // Разбираем query string
       const urlParams = new URLSearchParams(initData);
-      const hash = urlParams.get('hash');
-      const sign = urlParams.get('signature')
-      logger.debug('signature', { signature: sign })
-
+      const hash = urlParams.get("hash");
+      urlParams.delete("hash");
       if (!hash) {
-        throw new Error('Hash не найден в initData');
+        throw new Error("Hash не найден в initData");
       }
 
       // Получаем токен CRM-бота для валидации
-      const botToken = t === 'crm' ? this.getCrmBotToken() : this.getBotToken();
+      const botToken = t === "crm" ? this.getCrmBotToken() : this.getBotToken();
 
       // Создаем secret key согласно документации Telegram:
       // secret_key = HMAC_SHA256(<bot_token>, "WebAppData")
       // где "WebAppData" - ключ HMAC, bot_token - данные
-      const secretKey = createHmac('sha256', 'WebAppData')
+      const secretKey = createHmac("sha256", "WebAppData")
         .update(botToken)
         .digest();
 
       // Создаем data-check-string из всех параметров кроме hash,
       // отсортированных по ключу в формате "key=value\n"
       const dataCheckString = Array.from(urlParams.entries())
-        .filter(([key]) => key !== 'hash')
-        .filter(([key]) => key !== 'signature')
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
-        .join('\n');
-
+        .join("\n");
 
       // Вычисляем hash согласно документации Telegram:
       // hash = HMAC_SHA256(data_check_string, secret_key)
-      const calculatedHash = createHmac('sha256', secretKey)
+      const calculatedHash = createHmac("sha256", secretKey)
         .update(dataCheckString)
-        .digest('hex');
+        .digest("hex");
 
       // Проверяем хеш (сравниваем в hex)
-      if (process.env.ENV === 'production') {
-        if (calculatedHash !== hash) {
-          logger.warn('Ошибка валидации initData: hash не совпадает', {
-            expected: hash,
-            calculated: calculatedHash,
-            dataCheckString: dataCheckString,
-          });
-          throw new Error('Неверная подпись initData');
-        }
+      if (calculatedHash !== hash) {
+        logger.warn("Ошибка валидации initData: hash не совпадает", {
+          expected: hash,
+          calculated: calculatedHash,
+          dataCheckString: dataCheckString,
+        });
+        throw new Error("Неверная подпись initData");
       }
 
       // Извлекаем информацию о пользователе
-      const userStr = urlParams.get('user');
+      const userStr = urlParams.get("user");
       if (!userStr) {
-        throw new Error('Данные пользователя не найдены');
+        throw new Error("Данные пользователя не найдены");
       }
 
       const user: TelegramUser = JSON.parse(decodeURIComponent(userStr));
-      const authDate = parseInt(urlParams.get('auth_date') || '0');
+      const authDate = parseInt(urlParams.get("auth_date") || "0");
 
       const userInfo: TelegramUserInfo = {
         id: user.id,
@@ -145,11 +141,15 @@ export abstract class TelegramService {
         authDate,
       };
 
-      logger.info('Данные пользователя успешно валидированы', { userId: userInfo.id });
+      logger.info("Данные пользователя успешно валидированы", {
+        userId: userInfo.id,
+      });
       return userInfo;
-
     } catch (error) {
-      logger.error('Ошибка валидации Telegram initData', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Ошибка валидации Telegram initData",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -162,7 +162,8 @@ export abstract class TelegramService {
    */
   static extractInitData(headers: Record<string, string>, body?: any): string {
     // Ищем в заголовках
-    const tgInitData = headers['x-telegram-init-data'] || headers['telegram-web-app-init-data'];
+    const tgInitData =
+      headers["x-telegram-init-data"] || headers["telegram-web-app-init-data"];
     if (tgInitData) {
       return tgInitData;
     }
@@ -176,6 +177,6 @@ export abstract class TelegramService {
       return body.telegramWebAppInitData;
     }
 
-    throw new Error('InitData не найден в запросе');
+    throw new Error("InitData не найден в запросе");
   }
 }
