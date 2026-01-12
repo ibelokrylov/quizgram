@@ -91,9 +91,10 @@ export abstract class TelegramService {
       const botToken = t === 'crm' ? this.getCrmBotToken() : this.getBotToken();
 
       // Создаем secret key согласно документации Telegram:
-      // secret_key = HMAC_SHA256(bot_token, "WebAppData")
-      const secretKey = createHmac('sha256', botToken)
-        .update('WebAppData')
+      // secret_key = HMAC_SHA256(<bot_token>, "WebAppData")
+      // где "WebAppData" - ключ HMAC, bot_token - данные
+      const secretKey = createHmac('sha256', 'WebAppData')
+        .update(botToken)
         .digest();
 
       // Создаем data-check-string из всех параметров кроме hash,
