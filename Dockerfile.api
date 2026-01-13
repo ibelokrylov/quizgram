@@ -33,6 +33,9 @@ RUN bun install --linker=isolated && \
 # ============================================
 FROM oven/bun:1-alpine AS runner
 
+# Устанавливаем postgresql-client для pg_dump и gzip для сжатия бэкапов
+RUN apk add --no-cache postgresql-client gzip
+
 WORKDIR /app
 
 # Копируем установленные зависимости из этапа deps
