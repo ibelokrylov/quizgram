@@ -1,4 +1,4 @@
-import { Button, Card, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
+import { Button, Card, Checkbox, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext, type QuizContact } from '../../App.context';
 import { API_BASE_URL } from '../../config';
@@ -12,6 +12,7 @@ export const Contact = () => {
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [privacyConsent, setPrivacyConsent] = useState<boolean>(false);
 
   const contactForm = contact?.form?.length
     ? contact.form
@@ -87,6 +88,12 @@ export const Contact = () => {
     setErrors(new Set());
     const newErrors = new Set<string>();
     let firstErrorField = '';
+
+    // Проверка согласия на обработку персональных данных
+    if (!privacyConsent) {
+      setErrorMessage('Необходимо дать согласие на обработку персональных данных');
+      return;
+    }
 
     // Проверка required полей
     contactForm.forEach((field) => {
@@ -278,6 +285,22 @@ export const Contact = () => {
                 );
               })}
             </List>
+            <div style={{ marginTop: '1rem', padding: '0 16px' }}>
+              <Checkbox
+                checked={privacyConsent}
+                onChange={(e) => setPrivacyConsent(e.target.checked)}
+              >
+                Я даю согласие на обработку{' '}
+                <a
+                  href="https://app.quizgram.site/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--tgui--link_color)' }}
+                >
+                  персональных данных
+                </a>
+              </Checkbox>
+            </div>
             <div
               className='contact__button'
               style={{ marginTop: '2rem' }}
