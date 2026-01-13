@@ -296,16 +296,39 @@ async function startApp() {
           name: "backupDatabase",
           pattern: "0 */2 * * *", // Каждые 2 часа (00:00, 02:00, 04:00, ...)
           run() {
+            const startTime = new Date();
             logger.info("Запуск бэкапа базы данных через cron", {
-              time: new Date().toISOString(),
+              time: startTime.toISOString(),
             });
 
-            BackupDbService.backupDatabase().catch((error) => {
-              logger.error(
-                "Ошибка при выполнении бэкапа базы данных",
-                error instanceof Error ? error : new Error(String(error)),
-              );
-            });
+            BackupDbService.backupDatabase()
+              .then((result) => {
+                const endTime = new Date();
+                const durationMs = endTime.getTime() - startTime.getTime();
+                logger.info("Бэкап базы данных завершен успешно через cron", {
+                  s3Key: result.fileKey,
+                  s3Url: result.fileURL,
+                  startTime: startTime.toISOString(),
+                  endTime: endTime.toISOString(),
+                  durationMs,
+                  success: true,
+                });
+              })
+              .catch((error) => {
+                const endTime = new Date();
+                const durationMs = endTime.getTime() - startTime.getTime();
+                logger.error(
+                  "Ошибка при выполнении бэкапа базы данных через cron",
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    startTime: startTime.toISOString(),
+                    endTime: endTime.toISOString(),
+                    durationMs,
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : String(error),
+                  }
+                );
+              });
           },
         }),
       );

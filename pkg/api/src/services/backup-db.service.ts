@@ -58,6 +58,13 @@ export abstract class BackupDbService {
         );
       }
 
+      logger.debug("Подготовка к запуску pg_dump", {
+        database: POSTGRES_DB,
+        host: POSTGRES_HOST,
+        port: POSTGRES_PORT,
+        useDatabaseUrl: !!DATABASE_URL,
+      });
+
       // Настраиваем переменные окружения для pg_dump
       const currentEnv = typeof Bun !== "undefined" ? Bun.env : process.env;
       const pgDumpEnv: Record<string, string> = {};
@@ -76,6 +83,7 @@ export abstract class BackupDbService {
 
       // Выполняем pg_dump с сжатием через gzip
       // Используем Bun.spawn для выполнения команды
+      logger.debug("Запуск процесса pg_dump");
       const pgDumpProcess = Bun.spawn(["pg_dump", ...pgDumpArgs], {
         stdout: "pipe",
         stderr: "pipe",
@@ -83,6 +91,7 @@ export abstract class BackupDbService {
       });
 
       // Сжимаем вывод через gzip
+      logger.debug("Запуск процесса gzip");
       const gzipProcess = Bun.spawn(["gzip", "-c"], {
         stdin: pgDumpProcess.stdout,
         stdout: "pipe",
@@ -90,12 +99,22 @@ export abstract class BackupDbService {
       });
 
       // Преобразуем поток в Buffer и записываем в файл
+      logger.debug("Чтение данных из gzip и запись в файл", { backupFilePath });
       const backupBuffer = Buffer.from(await new Response(gzipProcess.stdout).arrayBuffer());
       await Bun.write(backupFilePath, backupBuffer);
+      logger.debug("Файл записан на диск", {
+        backupFilePath,
+        bufferSize: backupBuffer.length
+      });
 
       // Ждем завершения процессов
+      logger.debug("Ожидание завершения процессов");
       await pgDumpProcess.exited;
       await gzipProcess.exited;
+      logger.debug("Процессы завершены", {
+        pgDumpExitCode: pgDumpProcess.exitCode,
+        gzipExitCode: gzipProcess.exitCode,
+      });
 
       // Проверяем код возврата pg_dump
       if (pgDumpProcess.exitCode !== 0) {
@@ -125,12 +144,18 @@ export abstract class BackupDbService {
       });
 
       // Загружаем в S3
+      logger.debug("Начало загрузки бэкапа в S3", {
+        fileName: backupFileName,
+        fileSize,
+        destination: "backups/db"
+      });
       const uploadResult = await S3Service.uploadFile(backupFileContent, backupFileName, "backups/db");
 
       logger.info("Бэкап базы данных успешно загружен в S3", {
         database: POSTGRES_DB,
         s3Key: uploadResult.fileKey,
         fileSize,
+        success: true,
       });
 
       // Удаляем временный файл после успешной загрузки
@@ -146,16 +171,26 @@ export abstract class BackupDbService {
 
       return uploadResult;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
       logger.error(
         "Ошибка при бэкапе базы данных",
         error instanceof Error ? error : new Error(String(error)),
-        { database: POSTGRES_DB, backupFilePath }
+        {
+          database: POSTGRES_DB,
+          backupFilePath,
+          errorMessage,
+          errorStack,
+          success: false,
+        }
       );
 
       // Пытаемся удалить временный файл в случае ошибки
       if (existsSync(backupFilePath)) {
         try {
           unlinkSync(backupFilePath);
+          logger.debug("Временный файл бэкапа удален после ошибки", { backupFilePath });
         } catch (cleanupError) {
           logger.warn("Не удалось удалить временный файл бэкапа после ошибки", {
             backupFilePath,
