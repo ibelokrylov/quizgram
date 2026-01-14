@@ -350,8 +350,8 @@ export const user = new Elysia({ prefix: "/user" })
                 return response;
               }
 
-              // Проверяем, что для видео planId не равен 1
-              if (validation.fileType === FileType.Video && user.planId === 1) {
+              // Проверяем, что для видео planId не равен 1 (админы имеют доступ)
+              if (validation.fileType === FileType.Video && user.planId === 1 && !user.isAdmin) {
                 set.status = 403;
                 const response: UserModel.uploadFileErrorResponse = {
                   message: "upload-file@plan-restriction",

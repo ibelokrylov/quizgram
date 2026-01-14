@@ -306,7 +306,7 @@ export const quiz = new Elysia({ prefix: "/quiz" })
             }
 
             try {
-              const [ok, errors] = await QuizService.updateQuiz(uid, user.id, body, user.planId);
+              const [ok, errors] = await QuizService.updateQuiz(uid, user.id, body, user.planId, user.isAdmin ?? false);
 
               const response: QuizModel.updateQuizSuccessResponse = {
                 ok: ok,
@@ -514,8 +514,8 @@ export const quiz = new Elysia({ prefix: "/quiz" })
               return response;
             }
 
-            // Проверяем, что у пользователя платная подписка (planId !== 1)
-            if (user.planId === 1) {
+            // Проверяем, что у пользователя платная подписка (planId !== 1) или админ
+            if (user.planId === 1 && !user.isAdmin) {
               ctx.set.status = 403;
               const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
                 message: "failed",

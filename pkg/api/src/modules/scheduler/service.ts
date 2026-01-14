@@ -33,7 +33,7 @@ export abstract class SchedulerService {
       const paidUsers = await db
         .select({ id: userTable.id })
         .from(userTable)
-        .where(sql`${userTable.planId} != 1`);
+        .where(sql`${userTable.planId} != 1 OR isAdmin = true`);
 
       if (paidUsers.length === 0) {
         logger.debug("Нет платных пользователей для обработки");

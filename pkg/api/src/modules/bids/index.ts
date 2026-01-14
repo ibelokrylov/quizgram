@@ -1,12 +1,11 @@
 import Elysia, { t } from "elysia";
 import { logger } from "../../lib/logger";
-import { AuthService, type UserWithPlan } from "../auth/service";
 import { ExportService } from "../../services/export.service";
+import { AuthService, type UserWithPlan } from "../auth/service";
 import {
   BidsModel,
   bidsListFilters,
   bidsListResponse,
-  bidsExportFilters,
   updateBidStatus,
   type BidsExportFilters
 } from "./model";
@@ -44,9 +43,10 @@ export const bids = new Elysia({ prefix: "/bids" })
             const { query } = ctx;
 
             // Используем план из пользователя (уже загружен через getUserFromToken)
-            // Если план не найден, используем значения по умолчанию для FREE плана
-            const bidMonthLimit = user.plan?.bidMonthLimit ?? 10;
-            const planName = user.plan?.name ?? "FREE";
+            // Для админов - безлимитный доступ, иначе используем лимит из плана
+            const isAdmin = user.isAdmin ?? false;
+            const bidMonthLimit = isAdmin ? Number.MAX_SAFE_INTEGER : (user.plan?.bidMonthLimit ?? 10);
+            const planName = isAdmin ? "PRO_PLUS" : (user.plan?.name ?? "FREE");
 
             // Для FREE тарифа запрещаем запрос незавершенных заявок (isFull=false)
             if (planName === "FREE" && query.isFull === false) {
@@ -64,7 +64,8 @@ export const bids = new Elysia({ prefix: "/bids" })
               user.createdAt,
               bidMonthLimit,
               planName,
-              user.planId
+              user.planId,
+              isAdmin
             );
 
             // Для FREE плана убираем totalNotFull из ответа
@@ -264,8 +265,9 @@ export const bids = new Elysia({ prefix: "/bids" })
             return { message: "failed", error: "Unauthorized" };
           }
 
-          // Проверяем, что пользователь не на FREE плане
-          const planName = user.plan?.name ?? "FREE";
+          // Проверяем, что пользователь не на FREE плане (админы имеют доступ)
+          const isAdmin = user.isAdmin ?? false;
+          const planName = isAdmin ? "PRO_PLUS" : (user.plan?.name ?? "FREE");
           if (planName === "FREE") {
             ctx.set.status = 403;
             return { message: "failed", error: "Export is not available for FREE plan" };
@@ -285,10 +287,10 @@ export const bids = new Elysia({ prefix: "/bids" })
             const exportFilters: BidsExportFilters = {
               quiz_uid: query.quiz_uid,
               status: query.status,
-              isFull: query.isFull === "true" 
-                ? true 
-                : query.isFull === "false" 
-                  ? false 
+              isFull: query.isFull === "true"
+                ? true
+                : query.isFull === "false"
+                  ? false
                   : query.isFull === "all" || query.isFull === undefined
                     ? undefined
                     : query.isFull as boolean,
@@ -305,7 +307,8 @@ export const bids = new Elysia({ prefix: "/bids" })
             const bids = await BidsService.getBidsForExport(
               user.id,
               exportFilters,
-              user.planId
+              user.planId,
+              isAdmin
             );
 
             // Генерируем файл в зависимости от формата

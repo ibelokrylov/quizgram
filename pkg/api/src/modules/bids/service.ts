@@ -122,12 +122,13 @@ export abstract class BidsService {
     userCreatedAt: Date,
     bidMonthLimit: number,
     planName: string = "FREE",
-    planId: number = 1
+    planId: number = 1,
+    isAdmin: boolean = false
   ) {
     try {
-      // Если план FREE, всегда показываем только isFull=true AND isEqualPaymentLimit=true
+      // Если план FREE и не админ, всегда показываем только isFull=true AND isEqualPaymentLimit=true
       const effectiveFilters = { ...filters };
-      if (planId === 1) {
+      if (planId === 1 && !isAdmin) {
         effectiveFilters.isFull = true;
       }
 
@@ -212,8 +213,10 @@ export abstract class BidsService {
       const limitPlusOne = requestedLimit + 1;
 
       // ОПТИМИЗАЦИЯ: Используем INNER JOIN вместо LEFT JOIN и CASE для условного возврата info
+      // Для админов или платных пользователей (planId != 1) показываем info
+      const showInfo = isAdmin || planId !== 1;
       const bidsResult = await db.execute(sql`
-        SELECT 
+        SELECT
           q.uid,
           b.key,
           b.status,
@@ -225,7 +228,7 @@ export abstract class BidsService {
           b.admin_updated_at as "adminUpdatedAt",
           b.contacts,
           b.ip_location as "ipLocation",
-          CASE WHEN ${planId} != 1 THEN b.info ELSE NULL END as info,
+          CASE WHEN ${showInfo} THEN b.info ELSE NULL END as info,
           q.name as "quizName"
         FROM quiz_bid b
         INNER JOIN quiz q ON b.quiz_id = q.id
@@ -284,7 +287,8 @@ export abstract class BidsService {
           contacts: bid.contacts || null,
           ipLocation: bid.ipLocation,
           // info уже обработан через CASE в SQL, поэтому просто возвращаем как есть
-          ...(planId !== 1 && { info: bid.info ?? null }),
+          // Для админов или платных пользователей показываем info
+          ...(showInfo && { info: bid.info ?? null }),
         };
       });
 
@@ -543,17 +547,19 @@ export abstract class BidsService {
    * @param userId - ID пользователя
    * @param filters - фильтры для поиска (без limit и offset)
    * @param planId - ID плана пользователя
+   * @param isAdmin - является ли пользователь администратором
    */
   static async getBidsForExport(
     userId: number,
     filters: Omit<BidsListFilters, 'limit' | 'offset'>,
-    planId: number = 1
+    planId: number = 1,
+    isAdmin: boolean = false
   ) {
     try {
-      // Если план FREE, всегда показываем только isFull=true AND isEqualPaymentLimit=true
-      // Для платных пользователей используем фильтры как есть
+      // Если план FREE и не админ, всегда показываем только isFull=true AND isEqualPaymentLimit=true
+      // Для платных пользователей и админов используем фильтры как есть
       const effectiveFilters = { ...filters };
-      if (planId === 1) {
+      if (planId === 1 && !isAdmin) {
         effectiveFilters.isFull = true;
       }
 
@@ -576,8 +582,10 @@ export abstract class BidsService {
       const combinedWhere = this.combineWhereConditions(mainWhereConditions);
 
       // Получаем все заявки без лимитов
+      // Для админов или платных пользователей (planId != 1) показываем info
+      const showInfo = isAdmin || planId !== 1;
       const bidsResult = await db.execute(sql`
-        SELECT 
+        SELECT
           q.uid,
           b.key,
           b.status,
@@ -589,7 +597,7 @@ export abstract class BidsService {
           b.admin_updated_at as "adminUpdatedAt",
           b.contacts,
           b.ip_location as "ipLocation",
-          CASE WHEN ${planId} != 1 THEN b.info ELSE NULL END as info,
+          CASE WHEN ${showInfo} THEN b.info ELSE NULL END as info,
           q.name as "quizName"
         FROM quiz_bid b
         INNER JOIN quiz q ON b.quiz_id = q.id
@@ -634,7 +642,8 @@ export abstract class BidsService {
           quizName: String(bid.quizName),
           contacts: bid.contacts || null,
           ipLocation: bid.ipLocation,
-          ...(planId !== 1 && { info: bid.info ?? null }),
+          // Для админов или платных пользователей показываем info
+          ...(showInfo && { info: bid.info ?? null }),
         };
       });
 

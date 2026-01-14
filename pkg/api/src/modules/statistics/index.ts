@@ -24,8 +24,8 @@ export const statistics = new Elysia({ prefix: "/statistics" })
         );
         ctx.store.user = (user || null) as User | null;
 
-        // Проверяем, что пользователь платный (planId > 1)
-        if (!user || user.planId <= 1) {
+        // Проверяем, что пользователь платный (planId > 1) или админ
+        if (!user || (user.planId <= 1 && !user.isAdmin)) {
           ctx.set.status = 403;
           return {
             message: "Forbidden",

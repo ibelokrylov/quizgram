@@ -18,8 +18,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 **/test/logs/*.json
 **/test/logs/*.log
 
-# test files
-pkg/api/test/
+# test logs (но не сами тесты)
+pkg/api/test/logs/
 test/logs/
 
 # dotenv environment variable files

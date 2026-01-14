@@ -274,6 +274,7 @@ export abstract class QuizService {
       thxPage?: any;
     },
     planId: number,
+    isAdmin: boolean = false,
   ): Promise<[string[], string[]]> {
     const ok = new Set<string>([]);
     const errors = new Set<string>([]);
@@ -287,7 +288,8 @@ export abstract class QuizService {
     const updateData: Partial<Quiz> = {};
 
     if (data.startPage !== undefined) {
-      if (planId === 1) {
+      // Для FREE плана (если не админ) принудительно показываем логотип
+      if (planId === 1 && !isAdmin) {
         data.startPage.content.show_logo = true;
       }
       updateData.startPage = data.startPage;

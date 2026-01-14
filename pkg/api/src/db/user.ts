@@ -30,6 +30,7 @@ export const userTable = pgTable("user", {
   paymentDateEnd: timestamp("payment_date_end", { withTimezone: false }),
   language: varchar("language", { length: 2 }).default("en"),
   telegramId: varchar("telegram_id", { length: 50 }),
+  isAdmin: boolean("is_admin").default(false)
 });
 
 // Тип строки пользователя (для выборок)

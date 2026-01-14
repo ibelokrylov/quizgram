@@ -45,6 +45,27 @@ export async function createTestUser(data?: Partial<NewUser>): Promise<number> {
 }
 
 /**
+ * Создает тестового пользователя-администратора
+ * Админ имеет расширенные права даже на FREE плане
+ */
+export async function createTestAdminUser(data?: Partial<NewUser>): Promise<number> {
+  return createTestUser({
+    isAdmin: true,
+    ...data,
+  });
+}
+
+/**
+ * Устанавливает или снимает флаг администратора для пользователя
+ */
+export async function setUserAdminStatus(userId: number, isAdmin: boolean): Promise<void> {
+  await db
+    .update(userTable)
+    .set({ isAdmin })
+    .where(eq(userTable.id, userId));
+}
+
+/**
  * Создает тестовый план (если не существует)
  */
 export async function ensureTestPlan(name: "FREE" | "BASE" | "PRO_PLUS", price: number, bidMonthLimit: number): Promise<number> {
@@ -186,15 +207,15 @@ export async function cleanupTestUser(userId: number): Promise<void> {
       const quizUids = userQuizzes.map((q) => q.uid);
 
       // Удаляем quiz_bid (связаны через quizId)
-      await db.delete(quizBidTable).where(sql`${quizBidTable.quizId} = ANY(${quizIds})`);
+      await db.delete(quizBidTable).where(inArray(quizBidTable.quizId, quizIds));
 
       // Удаляем связанные с quiz таблицы
       // quizOpenTable использует quizUid, а не quizId
-      await db.delete(quizOpenTable).where(sql`${quizOpenTable.quizUid} = ANY(${quizUids})`);
-      await db.delete(quizQuestionTable).where(sql`${quizQuestionTable.quizId} = ANY(${quizIds})`);
-      await db.delete(quizThxPageTable).where(sql`${quizThxPageTable.quizId} = ANY(${quizIds})`);
-      await db.delete(quizContactTable).where(sql`${quizContactTable.quizId} = ANY(${quizIds})`);
-      await db.delete(quizFileTable).where(sql`${quizFileTable.quizId} = ANY(${quizIds})`);
+      await db.delete(quizOpenTable).where(inArray(quizOpenTable.quizUid, quizUids));
+      await db.delete(quizQuestionTable).where(inArray(quizQuestionTable.quizId, quizIds));
+      await db.delete(quizThxPageTable).where(inArray(quizThxPageTable.quizId, quizIds));
+      await db.delete(quizContactTable).where(inArray(quizContactTable.quizId, quizIds));
+      await db.delete(quizFileTable).where(inArray(quizFileTable.quizId, quizIds));
 
       // Удаляем сами quiz
       await db.delete(quizTable).where(eq(quizTable.userId, userId));
@@ -354,5 +375,74 @@ export async function getPlanByName(name: "FREE" | "BASE" | "PRO_PLUS") {
     .limit(1);
 
   return plans[0] || null;
+}
+
+/**
+ * Создает тестовый квиз
+ */
+export async function createTestQuiz(userId: number, data?: Partial<{
+  name: string;
+  isActive: boolean;
+  isShowLogo: boolean;
+}>): Promise<{ id: number; uid: string }> {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  const uid = `tq-${timestamp}-${random}`.substring(0, 36);
+
+  const [quiz] = await db
+    .insert(quizTable)
+    .values({
+      uid,
+      userId,
+      name: data?.name ?? "Тестовый квиз",
+      isActive: data?.isActive ?? true,
+      isShowLogo: data?.isShowLogo ?? true,
+    })
+    .returning();
+
+  return { id: quiz.id, uid: quiz.uid };
+}
+
+/**
+ * Создает тестовую заявку (bid) для квиза
+ */
+export async function createTestBid(quizId: number, data?: Partial<{
+  isFull: boolean;
+  isRead: boolean;
+  status: string;
+  first: boolean;
+  isEqualPaymentLimit: boolean;
+  info: Record<string, unknown>;
+  contacts: Record<string, string>;
+}>): Promise<{ id: number; key: string }> {
+  const [bid] = await db
+    .insert(quizBidTable)
+    .values({
+      quizId,
+      answer: { test: true },
+      isFull: data?.isFull ?? true,
+      isRead: data?.isRead ?? false,
+      status: data?.status ?? "create",
+      first: data?.first ?? false,
+      isEqualPaymentLimit: data?.isEqualPaymentLimit ?? true,
+      info: data?.info ?? null,
+      contacts: data?.contacts ?? null,
+    })
+    .returning();
+
+  return { id: bid.id, key: bid.key };
+}
+
+/**
+ * Получает пользователя по ID
+ */
+export async function getTestUser(userId: number) {
+  const users = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, userId))
+    .limit(1);
+
+  return users[0] || null;
 }
 
