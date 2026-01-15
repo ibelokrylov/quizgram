@@ -149,11 +149,12 @@ test("4. Загрузка файла без папки", async () => {
     originalFileName,
   );
 
-  createdFiles.push(result.fileKey);
-
   expect(result).toBeDefined();
   expect(result.fileKey).toBe(result.fileName);
   expect(result.fileKey).not.toContain("/");
+
+  // Удаляем файл сразу после проверок
+  await S3Service.deleteFile(result.fileKey);
 });
 
 test("5. Получение файла из S3", async () => {

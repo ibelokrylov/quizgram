@@ -65,6 +65,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         "🎯 Управляй своими квизами:";
 
       // Создаем inline keyboard с двумя кнопками
+      const appWebUrl = process.env.APP_WEB_URL || "https://app.quizgram.site";
       const keyboard: InlineKeyboardMarkup = process.env.ENV === 'production' ? {
         inline_keyboard: [
           [
@@ -76,7 +77,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
           [
             {
               text: "🌐 Открыть Web версию",
-              url: "https://app.quizgram.site",
+              url: appWebUrl,
             },
           ],
         ],
@@ -91,7 +92,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
           [
             {
               text: "🌐 Открыть Web версию",
-              url: "https://app.quizgram.site",
+              url: appWebUrl,
             },
           ],
         ],

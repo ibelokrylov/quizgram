@@ -1,6 +1,7 @@
 import { Text } from "@telegram-apps/telegram-ui";
 import { type PropsWithChildren, useContext, useEffect, useState } from "react";
 import { AppContext } from "./App.context";
+import { MAIN_SITE_URL } from "./config";
 import type { SafeAreaInset } from "./types/telegram-webapp";
 
 /**
@@ -76,7 +77,7 @@ export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) 
           </Text>
           <a
             className="footer__logo-button"
-            href={`https://quizgram.ru?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
+            href={`${MAIN_SITE_URL}?utm_source=quizgram_miniapp&utm_medium=referral&uuid=${quiz?.uid}`}
             target="_blank"
             rel="noopener noreferrer"
           >

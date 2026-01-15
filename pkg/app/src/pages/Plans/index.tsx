@@ -63,7 +63,8 @@ export const PlansPage = () => {
 
   const handleContact = () => {
     // Простой способ связаться — открыть почтовый клиент
-    window.location.href = "mailto:hello@quizgram.site?subject=Quizgram%20Custom%20plan";
+    const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || "hello@quizgram.site";
+    window.location.href = `mailto:${contactEmail}?subject=Quizgram%20Custom%20plan`;
   };
 
   return (

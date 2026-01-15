@@ -1,7 +1,7 @@
 import { Button, Card, Checkbox, List, Placeholder, Snackbar } from '@telegram-apps/telegram-ui';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext, type QuizContact } from '../../App.context';
-import { API_BASE_URL } from '../../config';
+import { API_BASE_URL, APP_URL } from '../../config';
 import { Input } from '../Input';
 import { InputMask } from './input-mask';
 
@@ -292,7 +292,7 @@ export const Contact = () => {
               >
                 Я даю согласие на обработку{' '}
                 <a
-                  href="https://app.quizgram.site/privacy"
+                  href={`${APP_URL}/privacy`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: 'var(--tgui--link_color)' }}
