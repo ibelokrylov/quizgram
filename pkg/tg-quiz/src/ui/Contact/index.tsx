@@ -336,22 +336,33 @@ export const Contact = () => {
                 );
               })}
             </List>
-            <div style={{ marginTop: "1rem", padding: "0 16px" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                marginTop: "1rem",
+                padding: "0 16px",
+                cursor: "pointer",
+              }}
+            >
               <Checkbox
                 checked={privacyConsent}
                 onChange={(e) => setPrivacyConsent(e.target.checked)}
-              >
+              />
+              <span style={{ fontSize: "14px", lineHeight: "1.4" }}>
                 Я даю согласие на обработку{" "}
                 <a
                   href={`${APP_URL}/privacy`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "var(--tgui--link_color)" }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   персональных данных
                 </a>
-              </Checkbox>
-            </div>
+              </span>
+            </label>
             <div className="contact__button" style={{ marginTop: "2rem" }}>
               <Button
                 className="contact__button-submit"

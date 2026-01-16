@@ -46,11 +46,30 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     setLoading(true);
     try {
       const launchParamsTyped = launchParams as Record<string, unknown>;
+      // Поддержка двух режимов:
+      // 1. Telegram WebApp: tgWebAppStartParam или startParam из initData
+      // 2. Браузер: startApp из URL параметров (?startApp=quizuid)
+      // startapp - lowercase версия от Telegram URL, startApp - camelCase версия
       const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam ||
-        launchParamsTyped.startParam) as string | undefined;
+        launchParamsTyped.startParam ||
+        launchParamsTyped.startApp ||
+        launchParamsTyped.startapp) as string | undefined;
       const uid = uidFromLaunchParams;
 
+      // Логирование источника UID
+      const uidSource = launchParamsTyped.tgWebAppStartParam
+        ? "tgWebAppStartParam (Telegram)"
+        : launchParamsTyped.startParam
+          ? "startParam (Telegram)"
+          : launchParamsTyped.startApp
+            ? "startApp (Браузер)"
+            : launchParamsTyped.startapp
+              ? "startapp (URL lowercase)"
+              : "не найден";
+      console.log("[fetchQuiz] Quiz UID:", uid, "| Источник:", uidSource);
+
       if (!uid || typeof uid !== "string" || uid.trim() === "") {
+        console.log("[fetchQuiz] Ошибка: UID квиза не найден");
         setError(true);
         setCurrentStage("404");
         setLoading(false);

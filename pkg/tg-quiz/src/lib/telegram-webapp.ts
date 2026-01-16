@@ -26,13 +26,22 @@ export function getRawInitData(): string | null {
 
 /**
  * Получает параметры запуска из URL и initData
+ * Поддерживает два режима:
+ * 1. Telegram WebApp - параметры из initDataUnsafe.start_param
+ * 2. Браузер - параметр startApp из URL (например: ?startApp=quizuid)
  */
 export function getLaunchParams(): Record<string, unknown> {
   const params: Record<string, unknown> = {};
-  
+  const tg = getTelegramWebApp();
+  const isTelegramMode = !!tg;
+
+  console.log("[getLaunchParams] Режим запуска:", isTelegramMode ? "Telegram WebApp" : "Браузер");
+
   // Парсим параметры из URL
   if (typeof window !== "undefined") {
     const urlParams = new URLSearchParams(window.location.search);
+    console.log("[getLaunchParams] URL параметры:", window.location.search);
+
     urlParams.forEach((value, key) => {
       // Преобразуем tgWebApp* параметры
       if (key.startsWith("tgWebApp")) {
@@ -44,24 +53,33 @@ export function getLaunchParams(): Record<string, unknown> {
         params[key] = value;
       }
     });
+
+    // Поддержка браузерного режима: startApp или startapp (Telegram передаёт lowercase)
+    const startAppValue = urlParams.get("startApp") || urlParams.get("startapp");
+    if (startAppValue && !params.startParam) {
+      params.startApp = startAppValue;
+      params.startapp = startAppValue; // Сохраняем оба варианта для совместимости
+      console.log("[getLaunchParams] URL startApp/startapp =", startAppValue);
+    }
   }
 
-  // Добавляем данные из initDataUnsafe
-  const tg = getTelegramWebApp();
+  // Добавляем данные из initDataUnsafe (Telegram режим)
   if (tg?.initDataUnsafe) {
     const initData = tg.initDataUnsafe;
-    
+    console.log("[getLaunchParams] Telegram initDataUnsafe:", initData);
+
     // Добавляем start_param если есть
     if (initData.start_param) {
       params.tgWebAppStartParam = initData.start_param;
       params.startParam = initData.start_param;
+      console.log("[getLaunchParams] Telegram режим: start_param =", initData.start_param);
     }
-    
+
     // Добавляем user если есть
     if (initData.user) {
       params.tgWebAppUser = initData.user;
     }
-    
+
     // Добавляем другие поля из initData
     Object.keys(initData).forEach((key) => {
       if (!params[key]) {
@@ -70,6 +88,7 @@ export function getLaunchParams(): Record<string, unknown> {
     });
   }
 
+  console.log("[getLaunchParams] Итоговые параметры:", params);
   return params;
 }
 

@@ -29,8 +29,13 @@ export async function initTelegramSdk() {
   tg.expand();
 
   // Переводим приложение в полноэкранный режим (убирает верхнюю и нижнюю панели Telegram)
+  // Оборачиваем в try-catch, т.к. метод может выбросить ошибку в старых версиях Telegram
   if (typeof tg.requestFullscreen === "function") {
-    tg.requestFullscreen();
+    try {
+      tg.requestFullscreen();
+    } catch (e) {
+      console.log("[initTelegramSdk] requestFullscreen не поддерживается:", e);
+    }
   }
 
   console.log(tg);

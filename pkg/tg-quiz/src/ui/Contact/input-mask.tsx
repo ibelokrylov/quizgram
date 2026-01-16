@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type InputHTMLAttributes } from 'react';
 import { Input } from '../Input';
 
-interface InputMaskProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+interface InputMaskProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'children'> {
   mask?: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -10,7 +10,7 @@ interface InputMaskProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'on
   status?: 'default' | 'error' | 'focused';
 }
 
-export const InputMask = ({ mask = '+7 (###) ###-##-##', value = '', onChange, ...props }: InputMaskProps) => {
+export const InputMask = ({ mask = '+7 (###) ###-##-##', value = '', onChange, children: _children, ...props }: InputMaskProps & { children?: React.ReactNode }) => {
   // Извлекаем префикс маски (цифры, которые уже есть в маске, не являющиеся #)
   const maskPrefix = useMemo(() => {
     const prefixDigits: string[] = [];
