@@ -7,7 +7,7 @@ import { Content } from "./Content";
 function App() {
   return (
     <AppContextProvider>
-      <AppRoot className="app" platform={"ios"} appearance="light">
+      <AppRoot className="app" platform={"ios"}>
         <Content />
       </AppRoot>
     </AppContextProvider>
