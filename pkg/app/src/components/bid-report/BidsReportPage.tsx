@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useInfiniteBids, useBidDetails, useMarkBidAsRead } from "@/entities/Bid/useBids";
 import { useQuizFilters } from "@/entities/Quiz/useQuizFilters";
 import { AuthContext } from "@/entities/User/auth.context";
+import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader } from "@/components/loader";
@@ -37,8 +38,7 @@ export function BidsReportPage() {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(true);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
-  // Проверяем, является ли план FREE (planId === 1)
-  const isFreePlan = user?.planId === 1;
+  const hasAccess = hasAccessToPaidContent(user);
 
   // Используем search params как источник истины для фильтров
   const filters: Omit<BidsListFilters, "offset"> = {
@@ -60,7 +60,7 @@ export function BidsReportPage() {
   // Срабатывает только если в URL вообще нет параметров фильтрации
   const hasAnyFilters = search.quiz_uid || search.status || search.isFull || search.isRead;
   useEffect(() => {
-    if (!isFreePlan && !hasAnyFilters) {
+    if (hasAccess && !hasAnyFilters) {
       navigate({
         search: (prev) => ({
           ...prev,
@@ -69,7 +69,7 @@ export function BidsReportPage() {
         replace: true,
       });
     }
-  }, []); // Пустой массив зависимостей - срабатывает только при монтировании
+  }, []);
 
   // Получаем список квизов для фильтра
   const { data: quizFilters = [] } = useQuizFilters();
@@ -167,12 +167,10 @@ export function BidsReportPage() {
   };
 
   const handleResetFilters = () => {
-    // Очищаем все search params, оставляем только limit
-    // Для не-FREE планов устанавливаем дефолтное значение isFull=true
     navigate({
       search: {
         limit: 10,
-        ...(isFreePlan ? {} : { isFull: "true" }),
+        ...(hasAccess ? { isFull: "true" } : {}),
       },
       replace: true,
     });
@@ -242,11 +240,8 @@ export function BidsReportPage() {
   const hasMoreBeyondLimit = data?.pages[0]?.hasMoreBeyondLimit || false;
   const shownBidsCount = bids.length;
 
-  // Проверяем, превышен ли лимит для FREE плана
-  const isLimitExceeded = isFreePlan && beyondLimitCount > 0;
-
-  // Проверяем, нужно ли показывать плашку для платного плана
-  const shouldShowUpgradeBanner = !isFreePlan && (hasMoreBeyondLimit || beyondLimitCount > 0);
+  const isLimitExceeded = !hasAccess && beyondLimitCount > 0;
+  const shouldShowUpgradeBanner = hasAccess && (hasMoreBeyondLimit || beyondLimitCount > 0);
 
   return (
     <div className="p-4 flex flex-col md:flex-row gap-6 items-start">
@@ -337,8 +332,7 @@ export function BidsReportPage() {
               </Select>
             </div>
 
-            {/* Фильтр по isFull - только для планов отличных от FREE */}
-            {!isFreePlan && (
+            {hasAccess && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("bids.completed")}</label>
                 <Select
@@ -361,9 +355,8 @@ export function BidsReportPage() {
               </div>
             )}
 
-            {/* Кнопки управления фильтрами */}
             <div className="pt-2 space-y-2">
-              {!isFreePlan && (
+              {hasAccess && (
                 <Button
                   variant="default"
                   className="w-full"
@@ -399,7 +392,7 @@ export function BidsReportPage() {
                 {deletedInLimitFull > 0 && (
                   <p>{t("bids.deleted.inLimit", { count: deletedInLimitFull })}</p>
                 )}
-                {isFreePlan && (
+                {!hasAccess && (
                   <>
                     <p>{t("bids.available.inLimit", { count: maxAvailableFull })}</p>
                     {beyondLimitCount > 0 && (
@@ -412,7 +405,7 @@ export function BidsReportPage() {
               </div>
             </TooltipContent>
           </Tooltip>
-          {!isFreePlan && (
+          {hasAccess && (
             <p className="text-muted-foreground">
               {t("bids.notCompleted.count", { count: totalNotFull })}
             </p>
@@ -420,7 +413,7 @@ export function BidsReportPage() {
         </div>
 
         {/* Плашка для бесплатного плана - показываем при превышении лимита */}
-        {isFreePlan && isLimitExceeded && (
+        {!hasAccess && isLimitExceeded && (
           <Card className="p-4 border-primary/20 bg-primary/5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 space-y-1">
@@ -436,7 +429,6 @@ export function BidsReportPage() {
           </Card>
         )}
 
-        {/* Плашка для платного плана - показываем если есть не показанные лиды */}
         {shouldShowUpgradeBanner && (
           <Card className="p-4 border-primary/20 bg-primary/5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -453,7 +445,7 @@ export function BidsReportPage() {
           </Card>
         )}
 
-        {isFreePlan ? (
+        {!hasAccess ? (
           <BidsTableFree
             bids={bids}
             isFetchingNextPage={isFetchingNextPage}
@@ -490,14 +482,11 @@ export function BidsReportPage() {
         isError={isErrorBidInfoDetails}
       />
 
-      {/* Диалог экспорта */}
-      {!isFreePlan && (
-        <ExportDialog
-          open={isExportDialogOpen}
-          onOpenChange={setIsExportDialogOpen}
-          filters={filters}
-        />
-      )}
+      <ExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        filters={filters}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Quiz, QuizQuestionPage } from "@/entities/Quiz/quiz.type";
 import { AuthContext } from "@/entities/User/auth.context";
+import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import { CircleX, Image, Video } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,8 @@ export const PageQuestion = ({
       setQuestion({ ...question, content: { type: "img", url: "", text: "" } });
     }
   }, [content]);
+
+  const hasAccess = hasAccessToPaidContent(user);
 
   return (
     <div className={"flex flex-col gap-3"}>
@@ -104,7 +107,7 @@ export const PageQuestion = ({
           targetWidth={820}
           targetHeight={820}
           resize={true}
-          disableDownload={user?.planId === 1}
+          disableDownload={!hasAccess}
           type={type}
           open={open}
           setOpen={setOpen}

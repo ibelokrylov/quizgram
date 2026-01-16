@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import type { BidListItem } from "@/entities/Bid/bid.type";
 import { useDeleteBid } from "@/entities/Bid/useBids";
 import { AuthContext } from "@/entities/User/auth.context";
+import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ExternalLink, Eye, Trash2 } from "lucide-react";
 import { useContext, useState } from "react";
@@ -27,8 +28,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
   const deleteBidMutation = useDeleteBid();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Проверяем, не является ли план FREE (planId === 1)
-  const isNotFreePlan = user?.planId !== 1;
+  const hasAccess = hasAccessToPaidContent(user);
 
   const handleDelete = async () => {
     if (!confirm("Вы уверены, что хотите удалить эту заявку?")) {
@@ -133,7 +133,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
             >
               <Eye className="h-4 w-4" />
             </Button>
-            {isNotFreePlan && bid.info && (
+            {hasAccess && bid.info && (
               <Button
                 variant="ghost"
                 size="sm"

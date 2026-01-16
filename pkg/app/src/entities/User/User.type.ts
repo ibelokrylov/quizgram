@@ -10,7 +10,7 @@ export const userZod = z.object({
   planId: z.number(),
   language: z.string().optional(),
   telegramId: z.string().nullable().optional(),
-  // referral_id: z.number(),
+  isAdmin: z.boolean(),
 });
 
 export type User = z.infer<typeof userZod>;

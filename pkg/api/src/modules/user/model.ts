@@ -15,6 +15,7 @@ export namespace UserModel {
     createdAt: t.Optional(t.Date()),
     updatedAt: t.Optional(t.Date()),
     telegramId: t.Optional(t.Nullable(t.String())),
+    isAdmin: t.Optional(t.Boolean()),
   });
 
   // Успешный ответ при получении профиля пользователя

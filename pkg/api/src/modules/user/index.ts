@@ -52,6 +52,7 @@ export const user = new Elysia({ prefix: "/user" })
                   createdAt: user.createdAt,
                   updatedAt: user.updatedAt,
                   telegramId: user.telegramId ?? undefined,
+                  isAdmin: user.isAdmin ?? false,
                 },
               };
 

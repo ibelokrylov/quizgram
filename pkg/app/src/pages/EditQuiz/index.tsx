@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
 import type { Quiz } from "@/entities/Quiz/quiz.type";
 import { AuthContext } from "@/entities/User/auth.context";
+import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import http from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -107,7 +108,7 @@ export const EditQuiz = () => {
   }
 
   async function toggleIsShowLogo() {
-    if (user?.planId === 1) {
+    if (!hasAccessToPaidContent(user)) {
       toast.error(t("edit-quiz.is-show-logo.error"));
       return;
     }

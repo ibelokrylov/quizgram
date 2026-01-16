@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { BidListItem } from "@/entities/Bid/bid.type";
 import { useDeleteBid } from "@/entities/Bid/useBids";
 import { AuthContext } from "@/entities/User/auth.context";
+import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ExternalLink, Eye, Trash2 } from "lucide-react";
 import { useContext, useState } from "react";
@@ -28,8 +29,7 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
   const deleteBidMutation = useDeleteBid();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Проверяем, не является ли план FREE (planId === 1)
-  const isNotFreePlan = user?.planId !== 1;
+  const hasAccess = hasAccessToPaidContent(user);
 
   const handleDelete = async () => {
     if (!confirm("Вы уверены, что хотите удалить эту заявку?")) {
@@ -122,10 +122,9 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
           );
         })()}
       </TableCell>
-      {/* Действия */}
       <TableCell className="p-3">
         <div className="flex items-center justify-end gap-2">
-          {isNotFreePlan && bid.info && (
+          {hasAccess && bid.info && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
