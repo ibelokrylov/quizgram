@@ -41,9 +41,35 @@ export abstract class QuizBotService extends BaseTelegramBotService {
       const name = BaseTelegramBotService.getUserDisplayName(message);
       const welcomeText =
         `Привет, ${name}! 🎉\n\n` +
-        "Я квиз-бот Quizgram. Совсем скоро здесь появятся интерактивные квизы и опросы.";
+        "Это QuizGram — конструктор квизов в Telegram Mini App\n\n" +
+        "Создавайте квизы, которые открываются мгновенно, цепляют внимание и собирают заявки прямо внутри Telegram — без сайта и программиста.\n\n" +
+        "Сейчас берём первые проекты и бесплатно внедряем квиз в ваш Telegram-канал или продукт.";
 
-      await BaseTelegramBotService.sendMessage("BOT_QUIZ_TOKEN", message.chat.id, welcomeText);
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: "Внедрить квиз бесплатно",
+              url: "https://t.me/Quiz_gram_bot?startapp=2cd17041-1d5d-4b82-a7cf-12c0d583d1ad",
+            },
+          ],
+          [
+            {
+              text: "Подробнее о продукте",
+              url: "https://quizgram.site",
+            },
+          ],
+        ],
+      };
+
+      await BaseTelegramBotService.sendMessage(
+        "BOT_QUIZ_TOKEN",
+        message.chat.id,
+        welcomeText,
+        "HTML",
+        false,
+        keyboard
+      );
       return;
     }
 
