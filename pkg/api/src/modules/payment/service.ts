@@ -434,6 +434,20 @@ export abstract class PaymentService {
       throw error;
     }
 
+    // Получаем email пользователя для UnitPay
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .limit(1);
+
+    const user = users[0];
+    if (!user) {
+      const error = new Error("User not found");
+      error.name = "UserNotFoundError";
+      throw error;
+    }
+
     const plans = await db
       .select()
       .from(planTable)
@@ -546,6 +560,7 @@ export abstract class PaymentService {
         "params[desc]": description,
         "params[currency]": "RUB",
         "params[resultUrl]": resultUrl,
+        "params[customerEmail]": user.login,
       };
 
       logger.debug("UnitPay: Параметры запроса к API", { params });
