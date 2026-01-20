@@ -7,7 +7,7 @@ import { BackupDbService } from "../src/services/backup-db.service";
 import { S3Service } from "../src/services/s3.service";
 
 // Переменные окружения для тестов должны быть установлены
-const TEST_FOLDER = "test-backups-db";
+const _TEST_FOLDER = "test-backups-db";
 
 // Список файлов, созданных в тестах, для последующего удаления
 const createdFiles: string[] = [];
@@ -183,14 +183,14 @@ test("2. Бэкап создает сжатый файл с правильным
 
   // Проверяем, что временный файл был удален после загрузки
   const tempDir = env.TEMP_DIR || "/tmp";
-  const dbName = env.POSTGRES_DB || "test_db";
+  const _dbName = env.POSTGRES_DB || "test_db";
 
   // Ищем файлы бэкапов в временной директории
   try {
     const { readdirSync } = await import("fs");
     const files = readdirSync(tempDir);
-    const backupFiles = files.filter((file) =>
-      file.startsWith(`backup-${dbName}-`) && file.endsWith(".sql.gz")
+    const _backupFiles = files.filter((file) =>
+      file.startsWith(`backup-${_dbName}-`) && file.endsWith(".sql.gz")
     );
 
     // Файлы должны быть удалены после успешной загрузки
@@ -221,8 +221,6 @@ test("3. Бэкап загружает файл в S3 с правильным п
     console.log("⏭️  Пропущен: нет переменных окружения для подключения к БД");
     return;
   }
-
-  const dbName = env.POSTGRES_DB || "test_db";
 
   // Выполняем бэкап
   const result = await BackupDbService.backupDatabase();

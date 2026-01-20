@@ -133,15 +133,6 @@ async function sendMail(
       errorDetails.errorName = error.name;
       errorDetails.errorStack = error.stack;
 
-      // Дополнительные поля для SMTP ошибок
-      // Type guard для проверки SMTP ошибки
-      type SMTPError = Error & {
-        code?: string;
-        command?: string;
-        response?: string;
-        responseCode?: number;
-      };
-
       const smtpError = error as unknown;
       if (typeof smtpError === 'object' && smtpError !== null) {
         if ('code' in smtpError && typeof smtpError.code === 'string') {
@@ -236,7 +227,7 @@ function loadTemplate(templateName: string, language?: string): string {
         templateCache.set(templateKey, template);
         logger.warn("Английский шаблон не найден, используется базовый", { templateName });
         return template;
-      } catch (fallbackError) {
+      } catch {
         // Продолжаем с основной ошибкой
       }
     }

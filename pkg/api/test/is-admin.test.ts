@@ -2,10 +2,9 @@
 // Админы имеют расширенные права даже на FREE плане
 
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db, userTable } from "../src/db";
 import { BidsService } from "../src/modules/bids/service";
-import { SchedulerService } from "../src/modules/scheduler/service";
 import {
   cleanupTestUser,
   createTestAdminUser,

@@ -1,99 +1,75 @@
-// Контроллер payment — обрабатывает HTTP-запросы для обновления плана пользователя
-
 import { Elysia, t } from "elysia";
-import { and, eq, or } from "drizzle-orm";
 import type { User } from "../../db";
-import { db, paymentTable } from "../../db";
 import { logger } from "../../lib/logger";
 import { AuthService } from "../auth/service";
 import { PaymentModel } from "./model";
 import { PaymentService } from "./service";
 
 export const payment = new Elysia({ prefix: "/payment" })
-  // Webhook для Crypto Pay (публичный endpoint, без авторизации)
+  .state("user", null as User | null)
+  // Публичный webhook endpoint (без авторизации) — должен быть доступен для UnitPay
   .post(
-    "/webhook/crypto-pay",
+    "/unitpay-webhook",
     async (ctx) => {
       try {
-        const body = ctx.body as PaymentModel.cryptoPayWebhookBody;
+        const params = ctx.body;
+        const method = params.method;
 
-        // Проверяем тип обновления
-        if (body.update_type !== "invoice_paid") {
-          logger.debug("Получен webhook с типом, отличным от invoice_paid", {
-            update_type: body.update_type,
-          });
-          return { ok: true };
+        logger.info("UnitPay Webhook: Входящий запрос", {
+          method,
+          unitpayId: params.unitpayId,
+          account: params.account,
+          sum: params.sum,
+          orderSum: params.orderSum,
+        });
+
+        if (method === "check") {
+          return await PaymentService.handleUnitpayCheck(params);
+        } else if (method === "pay") {
+          return await PaymentService.handleUnitpayPay(params);
+        } else if (method === "error") {
+          return await PaymentService.handleUnitpayError(params);
+        } else if (method === "refund") {
+          return await PaymentService.handleUnitpayRefund(params);
+        } else {
+          logger.error("Unknown webhook method", { method });
+          return { error: { message: "Unknown method" } };
         }
-
-        const { invoice_id, hash, status } = body.payload;
-
-        // Ищем платеж по invoiceId (основной способ) или trackId (hash) как fallback
-        const payments = await db
-          .select()
-          .from(paymentTable)
-          .where(
-            or(
-              invoice_id
-                ? eq(paymentTable.invoiceId, invoice_id.toString())
-                : undefined,
-              hash ? eq(paymentTable.trackId, hash) : undefined,
-            )!,
-          )
-          .limit(1);
-
-        if (payments.length === 0) {
-          logger.warn("Платёж не найден по trackId", {
-            hash,
-            invoice_id,
-          });
-          return { ok: true };
-        }
-
-        const payment = payments[0];
-
-        // Проверяем статус
-        if (status === "paid" && payment.status !== "paid") {
-          // Обрабатываем успешный платёж
-          await PaymentService.processSuccessfulPayment(payment.id);
-
-          logger.info("Платёж успешно обработан через webhook", {
-            paymentId: payment.id,
-            invoiceId: invoice_id,
-            hash,
-          });
-        } else if (status === "expired" && payment.status === "pending") {
-          // Обновляем статус на expired
-          await db
-            .update(paymentTable)
-            .set({
-              status: "expired",
-              updatedAt: new Date(),
-            })
-            .where(eq(paymentTable.id, payment.id));
-
-          logger.info("Платёж истёк", {
-            paymentId: payment.id,
-            invoiceId: invoice_id,
-          });
-        }
-
-        return { ok: true };
       } catch (error) {
         logger.error(
-          "Ошибка при обработке webhook от Crypto Pay",
+          "Webhook processing error",
           error instanceof Error ? error : new Error(String(error)),
-          { body: ctx.body },
         );
-        // Возвращаем 200, чтобы Crypto Pay не повторял запрос
-        return { ok: true };
+        return { error: { message: "Internal error" } };
       }
     },
     {
-      body: PaymentModel.cryptoPayWebhookBody,
+      body: t.Object({
+        method: t.String(),
+        params: t.Optional(t.Record(t.String(), t.Any())),
+        signature: t.Optional(t.String()),
+        unitpayId: t.Optional(t.Union([t.String(), t.Number()])),
+        projectId: t.Optional(t.Union([t.String(), t.Number()])),
+        account: t.Optional(t.String()),
+        sum: t.Optional(t.Union([t.String(), t.Number()])),
+        orderSum: t.Optional(t.Union([t.String(), t.Number()])),
+        orderCurrency: t.Optional(t.String()),
+        date: t.Optional(t.String()),
+        payerSum: t.Optional(t.Union([t.String(), t.Number()])),
+        payerCurrency: t.Optional(t.String()),
+        profit: t.Optional(t.Union([t.String(), t.Number()])),
+        paymentType: t.Optional(t.String()),
+        errorMessage: t.Optional(t.String()),
+      }),
+      response: {
+        200: t.Union([
+          t.Object({ result: t.Object({ message: t.String() }) }),
+          t.Object({ error: t.Object({ message: t.String() }) }),
+        ]),
+      },
     },
   )
   // Защищённые endpoints (требуют авторизации)
-  .state("user", null as User | null)
   .guard(
     {
       async beforeHandle(ctx) {
@@ -110,7 +86,148 @@ export const payment = new Elysia({ prefix: "/payment" })
     },
     (app) =>
       app
-        // Получение списка up_limits для тарифа Pro+
+        .post(
+          "/create",
+          async (ctx) => {
+            const user: User | null = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+
+            try {
+              const body = ctx.body as {
+                planId: number;
+                upLimitId?: number;
+              };
+
+              const planId = Number(body.planId);
+              const upLimitId = body.upLimitId
+                ? Number(body.upLimitId)
+                : undefined;
+
+              logger.debug("Payment Controller: Запрос на создание платежа", {
+                userId: user.id,
+                planId,
+                upLimitId,
+              });
+
+              if (isNaN(planId)) {
+                logger.error("Payment Controller: Невалидный planId", {
+                  userId: user.id,
+                  planId: body.planId,
+                });
+                ctx.set.status = 400;
+                return {
+                  message: "create-payment@error",
+                  error: "Invalid plan ID",
+                };
+              }
+
+              const result = await PaymentService.createPayment(
+                user.id,
+                planId,
+                upLimitId,
+              );
+
+              logger.info("Payment Controller: Платёж создан успешно", {
+                userId: user.id,
+                paymentId: result.paymentId,
+                planId,
+              });
+
+              return {
+                message: "ok",
+                data: result,
+              };
+            } catch (error) {
+              logger.error(
+                "Error creating payment",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+
+              ctx.set.status = 400;
+              return {
+                message: "create-payment@error",
+                error:
+                  error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          },
+          {
+            body: t.Object({
+              planId: t.Number(),
+              upLimitId: t.Optional(t.Number()),
+            }),
+            response: {
+              200: PaymentModel.createPaymentSuccessResponse,
+              400: t.Object({
+                message: t.String(),
+                error: t.Optional(t.String()),
+              }),
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
+        )
+        .get("/status/:paymentId", async (ctx) => {
+          const user: User | null = ctx.store.user;
+          if (!user) {
+            ctx.set.status = 401;
+            return { message: "Unauthorized" };
+          }
+
+          try {
+            const paymentId = Number(ctx.params.paymentId);
+
+            logger.debug("Payment Controller: Запрос статуса платежа", {
+              userId: user.id,
+              paymentId: ctx.params.paymentId,
+            });
+
+            if (isNaN(paymentId)) {
+              logger.error("Payment Controller: Невалидный paymentId", {
+                userId: user.id,
+                paymentId: ctx.params.paymentId,
+              });
+              ctx.set.status = 400;
+              return {
+                message: "get-payment-status@error",
+                error: "Invalid payment ID",
+              };
+            }
+
+            const paymentStatus = await PaymentService.getPaymentStatus(
+              paymentId,
+              user.id,
+            );
+
+            logger.debug("Payment Controller: Статус платежа получен", {
+              userId: user.id,
+              paymentId,
+              status: paymentStatus.status,
+            });
+
+            return {
+              message: "ok",
+              data: paymentStatus,
+            };
+          } catch (error) {
+            logger.error(
+              "Error getting payment status",
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id },
+            );
+
+            ctx.set.status = 404;
+            return {
+              message: "get-payment-status@error",
+              error: error instanceof Error ? error.message : "Unknown error",
+            };
+          }
+        })
         .get("/up-limits", async (ctx) => {
           const user: User | null = ctx.store.user;
           if (!user) {
@@ -130,7 +247,7 @@ export const payment = new Elysia({ prefix: "/payment" })
             };
           } catch (error) {
             logger.error(
-              "Ошибка при получении up_limits",
+              "Error getting up_limits",
               error instanceof Error ? error : new Error(String(error)),
             );
             ctx.set.status = 500;
@@ -140,78 +257,6 @@ export const payment = new Elysia({ prefix: "/payment" })
             };
           }
         })
-        // Создание платежа для плана
-        .post(
-          "/:planId/create",
-          async (ctx) => {
-            const user: User | null = ctx.store.user;
-            if (!user) {
-              ctx.set.status = 401;
-              return { message: "Unauthorized" };
-            }
-
-            try {
-              const planId = Number(ctx.params.planId);
-
-              if (isNaN(planId)) {
-                ctx.set.status = 400;
-                return {
-                  message: "create-payment@error",
-                  error: "Invalid plan ID",
-                };
-              }
-
-              const body = ctx.body as PaymentModel.createPaymentProPlusBody | undefined;
-              const upLimitId = body?.upLimitId;
-              const payNow = body?.payNow ?? true; // По умолчанию оплата сейчас
-
-              const { payment, invoiceUrl } = await PaymentService.createPayment(
-                user.id,
-                planId,
-                upLimitId,
-                payNow,
-              );
-
-              const response: PaymentModel.createPaymentSuccessResponse = {
-                message: "ok",
-                data: {
-                  paymentId: payment.id,
-                  invoiceUrl,
-                },
-              };
-
-              return response;
-            } catch (error) {
-              logger.error(
-                "Ошибка при создании платежа",
-                error instanceof Error ? error : new Error(String(error)),
-                { userId: user.id, planId: ctx.params.planId },
-              );
-
-              ctx.set.status = 400;
-              const response: PaymentModel.createPaymentErrorResponse = {
-                message: "create-payment@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
-              };
-              return response;
-            }
-          },
-          {
-            params: t.Object({
-              planId: t.String(),
-            }),
-            body: t.Optional(PaymentModel.createPaymentProPlusBody),
-            response: {
-              200: PaymentModel.createPaymentSuccessResponse,
-              400: PaymentModel.createPaymentErrorResponse,
-              401: t.Object({
-                message: t.String(),
-              }),
-            },
-          },
-        )
-        // Старый endpoint для обновления плана (оставляем для обратной совместимости)
         .post(
           "/:planId",
           async (ctx) => {
@@ -224,7 +269,17 @@ export const payment = new Elysia({ prefix: "/payment" })
             try {
               const planId = Number(ctx.params.planId);
 
+              logger.debug("Payment Controller: Запрос на обновление плана", {
+                userId: user.id,
+                planId: ctx.params.planId,
+                currentPlanId: user.planId,
+              });
+
               if (isNaN(planId)) {
+                logger.error("Payment Controller: Невалидный planId для обновления", {
+                  userId: user.id,
+                  planId: ctx.params.planId,
+                });
                 ctx.set.status = 400;
                 return {
                   message: "update-plan@error",
@@ -233,6 +288,12 @@ export const payment = new Elysia({ prefix: "/payment" })
               }
 
               const plan = await PaymentService.updateUserPlan(user.id, planId);
+
+              logger.info("Payment Controller: План обновлён успешно", {
+                userId: user.id,
+                newPlanId: plan.id,
+                newPlanName: plan.name,
+              });
 
               const response: PaymentModel.updatePlanSuccessResponse = {
                 message: "ok",
@@ -245,7 +306,7 @@ export const payment = new Elysia({ prefix: "/payment" })
               return response;
             } catch (error) {
               logger.error(
-                "Ошибка при обновлении плана пользователя",
+                "Error updating user plan",
                 error instanceof Error ? error : new Error(String(error)),
                 { userId: user.id, planId: ctx.params.planId },
               );
@@ -272,4 +333,4 @@ export const payment = new Elysia({ prefix: "/payment" })
             },
           },
         ),
-  );
+);

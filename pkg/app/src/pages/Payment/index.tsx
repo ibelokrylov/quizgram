@@ -144,6 +144,9 @@ export const PaymentPage = () => {
   // Определяем, является ли план платным
   const isPaidPlan = (planName: string) => planName !== "FREE";
 
+  // Проверяем, есть ли платный план
+  const hasPaidPlan = userPlanQuery.data && userPlanQuery.data.price > 0;
+
   // Форматируем цену
   const formatPrice = (price: number, planName: string) => {
     if (planName === "FREE") {

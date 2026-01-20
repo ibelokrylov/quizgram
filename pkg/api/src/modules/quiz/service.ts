@@ -438,7 +438,7 @@ export abstract class QuizService {
         .set({ isActive: sql`NOT ${quizTable.isActive}` })
         .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, userId)));
       return true;
-    } catch (error) {
+    } catch {
       throw new Error("Failed to update quiz active status");
     }
   }

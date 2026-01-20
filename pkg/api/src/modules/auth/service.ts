@@ -119,7 +119,7 @@ export abstract class AuthService {
 
         return users[0] ?? null;
       }
-    } catch (error) {
+    } catch {
       // При ошибке парсинга токена возвращаем null
       return null;
     }

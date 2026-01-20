@@ -107,11 +107,7 @@ export function NavUser({
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <a
-          href="https://t.me/quizgram_support_bot"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href="https://t.me/quizgram_support_bot" target="_blank" rel="noopener noreferrer">
           <SidebarMenuButton tooltip={t("nav.user.support")}>
             <IconMessage className="size-4" />
             <span>{t("nav.user.support")}</span>
@@ -130,9 +126,7 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
+                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
                 {displayPlanName ? (
                   <span className="text-muted-foreground truncate text-[10px]">
                     {displayPlanName}
@@ -155,9 +149,7 @@ export function NavUser({
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
-                  </span>
+                  <span className="text-muted-foreground truncate text-xs">{user.email}</span>
                   {displayPlanName ? (
                     <span className="text-muted-foreground truncate text-[10px]">
                       {displayPlanName}

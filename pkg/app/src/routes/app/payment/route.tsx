@@ -1,10 +1,5 @@
-import { PaymentPage } from "@/pages/Payment";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/payment")({
-  component: RouteComponent,
+  component: Outlet,
 });
-
-function RouteComponent() {
-  return <PaymentPage />;
-}

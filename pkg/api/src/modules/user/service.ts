@@ -1,6 +1,6 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   codeTable,
   db,

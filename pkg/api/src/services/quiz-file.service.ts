@@ -3,7 +3,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { db, quizFileTable, type NewQuizFile } from "../db";
-import { FileType, validateFileTypeAndSize } from "../helpers/file.helper";
+import { validateFileTypeAndSize } from "../helpers/file.helper";
 import { logger } from "../lib/logger";
 import { S3Service, type UploadResult } from "./s3.service";
 

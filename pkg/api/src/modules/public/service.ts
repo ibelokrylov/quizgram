@@ -2,7 +2,6 @@ import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db, planTable, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, quizThxPageTable, userPaymentTable, userTable } from '../../db';
 import { logger } from '../../lib/logger';
 import { MailService } from '../../services/mail.service';
-import { QuizBotService } from '../../services/quiz-bot.service';
 import { BaseTelegramBotService, type InlineKeyboardMarkup } from '../../services/base-telegram-bot.service';
 import { QuizFileService } from '../../services/quiz-file.service';
 import { TelegramService } from '../../services/telegram.service';

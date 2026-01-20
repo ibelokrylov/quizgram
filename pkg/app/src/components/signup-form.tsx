@@ -1,19 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { AuthContext } from "@/entities/User/auth.context";
-import {
-  userRegistrationZod,
-  type UserRegistration,
-  type User,
-} from "@/entities/User/User.type";
+import { userRegistrationZod, type UserRegistration, type User } from "@/entities/User/User.type";
 import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
 import { Link } from "@tanstack/react-router";
@@ -24,13 +15,9 @@ import { toast } from "sonner";
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const [error, setError] = useState<Record<string, boolean> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [invalidReferralCode, setInvalidReferralCode] = useState<string | null>(
-    null,
-  );
+  const [invalidReferralCode, setInvalidReferralCode] = useState<string | null>(null);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
-  const [data, setData] = useState<
-    UserRegistration & { passwordConfirm: string }
-  >({
+  const [data, setData] = useState<UserRegistration & { passwordConfirm: string }>({
     login: "",
     password: "",
     name: "",
@@ -85,9 +72,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           // Получаем текущий язык из i18n
           const currentLanguage = i18n.language || "en";
           const language =
-            currentLanguage === "ru" || currentLanguage.startsWith("ru")
-              ? "ru"
-              : "en";
+            currentLanguage === "ru" || currentLanguage.startsWith("ru") ? "ru" : "en";
 
           const res = await http<User>({
             url: "/v1/auth/registration",
@@ -108,10 +93,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
             // Устанавливаем язык из ответа сервера, если он есть
             const userLanguage = res.data.language;
-            if (
-              userLanguage &&
-              (userLanguage === "en" || userLanguage === "ru")
-            ) {
+            if (userLanguage && (userLanguage === "en" || userLanguage === "ru")) {
               i18n.changeLanguage(userLanguage);
             }
           } else {
@@ -172,9 +154,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">
-              {t("registration.password")}
-            </FieldLabel>
+            <FieldLabel htmlFor="password">{t("registration.password")}</FieldLabel>
             <Input
               id="password"
               type="password"
@@ -183,14 +163,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
               value={data.password}
               onChange={(e) => change(e.target.value, "password")}
             />
-            <FieldDescription>
-              {t("registration.password-help")}
-            </FieldDescription>
+            <FieldDescription>{t("registration.password-help")}</FieldDescription>
           </Field>
           <Field>
-            <FieldLabel htmlFor="confirm-password">
-              {t("registration.password-confirm")}
-            </FieldLabel>
+            <FieldLabel htmlFor="confirm-password">{t("registration.password-confirm")}</FieldLabel>
             <Input
               value={data.passwordConfirm}
               aria-invalid={error?.passwordConfirm ?? false}
@@ -201,9 +177,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="referral-code">
-              {t("registration.referralCode.label")}
-            </FieldLabel>
+            <FieldLabel htmlFor="referral-code">{t("registration.referralCode.label")}</FieldLabel>
             <Input
               value={data.referralCode}
               onChange={(e) => change(e.target.value, "referralCode")}
@@ -212,18 +186,14 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
               type="text"
               placeholder={t("registration.referralCode.placeholder")}
             />
-            <FieldDescription>
-              {t("registration.referralCode.description")}
-            </FieldDescription>
+            <FieldDescription>{t("registration.referralCode.description")}</FieldDescription>
           </Field>
           <Field>
             <div className="flex items-start gap-2">
               <Checkbox
                 id="privacy-agreement"
                 checked={privacyAgreed}
-                onCheckedChange={(checked) =>
-                  setPrivacyAgreed(checked === true)
-                }
+                onCheckedChange={(checked) => setPrivacyAgreed(checked === true)}
                 className="mt-0.5"
               />
               <label
@@ -244,11 +214,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           </Field>
           <FieldGroup>
             <Field>
-              <Button
-                disabled={loading || !privacyAgreed}
-                onClick={registration}
-                type="submit"
-              >
+              <Button disabled={loading || !privacyAgreed} onClick={registration} type="submit">
                 {t("registration.button")}
               </Button>
               <FieldDescription className="px-6 text-center">

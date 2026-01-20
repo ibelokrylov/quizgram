@@ -178,7 +178,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
             }
 
             // Заменяем плейсхолдеры файлов на реальные файлы
-            const processedArray = answerArray.map((item, index) => {
+            const processedArray = answerArray.map((item) => {
               if (item && typeof item === 'object' && item.__isFile === true && item.__fileIndex !== undefined) {
                 const file = files.get(item.__fileIndex);
                 if (file) {

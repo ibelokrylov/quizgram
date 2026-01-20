@@ -3,6 +3,7 @@
   "version": "1.0.50",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
+    "lint": "oxlint",
     "test": "bun test && bun run test:cleanup",
     "test:cleanup": "bun run scripts/cleanup-test-data.ts",
     "db:create-schema": "bun run scripts/create-schema.ts",
@@ -34,7 +35,8 @@
     "@types/node-telegram-bot-api": "^0.64.13",
     "@types/nodemailer": "^7.0.4",
     "bun-types": "catalog:backend",
-    "drizzle-kit": "^1.0.0-beta.2-b782ae1"
+    "drizzle-kit": "^1.0.0-beta.2-b782ae1",
+    "oxlint": "^0.14.0"
   },
   "module": "src/index.js"
 }

@@ -30,7 +30,7 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
 ];
 
 // Список переменных для базы данных (хотя бы DATABASE_URL или все POSTGRES_*)
-const DATABASE_ENV_VARS: EnvVar[] = [
+const _DATABASE_ENV_VARS: EnvVar[] = [
   {
     name: "DATABASE_URL",
     required: false,
@@ -86,11 +86,6 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     description: "SMTP пароль (для отправки email)",
   },
   {
-    name: "CRYPTO_PAY_TOKEN",
-    required: false,
-    description: "Токен Crypto Pay API (для платежей)",
-  },
-  {
     name: "APP_URLS",
     required: false,
     description: "Разрешенные URL для CORS (через запятую)",
@@ -135,6 +130,21 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: false,
     description:
       "Порт для HTTP сервера (по умолчанию 5001, используется если HTTPS не настроен)",
+  },
+  {
+    name: "UNITPAY_PROJECT_ID",
+    required: false,
+    description: "ID проекта в UnitPay (для приёма платежей)",
+  },
+  {
+    name: "UNITPAY_SECRET_KEY",
+    required: false,
+    description: "Секретный ключ UnitPay (для проверки подписи webhook)",
+  },
+  {
+    name: "UNITPAY_PROJECT_PUBLIC_KEY",
+    required: false,
+    description: "Публичный ключ проекта UnitPay",
   },
 ];
 

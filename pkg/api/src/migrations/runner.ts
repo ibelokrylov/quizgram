@@ -1,7 +1,6 @@
 // Runner для выполнения миграций
 // Автоматически проверяет и выполняет новые миграции
 
-import { eq } from "drizzle-orm";
 import postgres from "postgres";
 import { db, migrationTable } from "../db";
 import { logger } from "../lib/logger";

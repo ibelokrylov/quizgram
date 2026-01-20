@@ -100,7 +100,7 @@ export const migration: MigrationFile = {
 - **node-telegram-bot-api** для работы с Telegram ботами
   - Все операции с Telegram Bot API должны использовать пакет `node-telegram-bot-api`
   - Используй `TelegramBot` из `node-telegram-bot-api` для создания инстансов ботов
-  - **В dev режиме (NODE_ENV !== "production")**: автоматически используется polling
+  - **В dev режиме (ENV !== "production")**: автоматически используется polling
   - **В production режиме**: используется webhook (настраивается отдельно)
   - Боты создаются с `polling: false` в production, `polling: true` в dev
   - Для обработки входящих сообщений используй webhook endpoints в production, polling в dev

@@ -195,7 +195,7 @@ export abstract class StatisticsService {
       const totalRepeatedOpens = totalOpened - totalOpenedUnique;
 
       // Вычисляем количество уникальных открытий в выбранном периоде
-      const totalUniqueInPeriod = statsResult.reduce((sum, row) => sum + Number(row.unique_opens), 0);
+      const _totalUniqueInPeriod = statsResult.reduce((sum, row) => sum + Number(row.unique_opens), 0);
 
       // Вычисляем коэффициент для распределения повторных открытий по дням
       // Распределяем повторные открытия пропорционально уникальным открытиям по дням

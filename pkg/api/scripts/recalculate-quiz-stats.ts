@@ -4,7 +4,7 @@
 //   bun run scripts/recalculate-quiz-stats.ts --all  (для всех квизов)
 
 import { eq, isNull, sql } from "drizzle-orm";
-import { db, quizBidTable, quizOpenTable, quizTable } from "../src/db";
+import { db, quizOpenTable, quizTable } from "../src/db";
 import { logger } from "../src/lib/logger";
 
 interface Args {
@@ -140,7 +140,7 @@ async function main() {
       for (let i = 0; i < quizzes.length; i++) {
         const quiz = quizzes[i];
         try {
-          const stats = await recalculateQuizStats(quiz.uid, quiz.id);
+          await recalculateQuizStats(quiz.uid, quiz.id);
           successCount++;
           if ((i + 1) % 10 === 0 || i === quizzes.length - 1) {
             console.log(`Обработано: ${i + 1}/${quizzes.length} (успешно: ${successCount}, ошибок: ${errorCount})`);

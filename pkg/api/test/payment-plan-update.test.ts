@@ -46,12 +46,11 @@ async function measureTest<T>(
   }
 }
 
-beforeAll(async () => {
-  // Убеждаемся, что планы существуют
-  await ensureTestPlan("FREE", 0, 50);
-  await ensureTestPlan("BASE", 1000, 200);
-  await ensureTestPlan("PRO_PLUS", 1600, 200);
-});
+  beforeAll(async () => {
+    await ensureTestPlan("FREE", 0, 10);
+    await ensureTestPlan("BASE", 899, 100);
+    await ensureTestPlan("PRO_PLUS", 1490, 200);
+  });
 
 afterAll(async () => {
   // Сохраняем результаты тестов
@@ -62,7 +61,7 @@ afterAll(async () => {
 test("1. Обновление с бесплатного на платный план (сразу)", async () => {
   await measureTest("1. Обновление с FREE на BASE", async () => {
     const userId = await createTestUser();
-    const freePlanId = await ensureTestPlan("FREE", 0, 50);
+    await ensureTestPlan("FREE", 0, 50);
     const basePlanId = await ensureTestPlan("BASE", 1000, 200);
 
     try {
@@ -189,7 +188,7 @@ test("3. Обновление с платного на более дешевый
 
     try {
       // Обновляем план (понижение)
-      const updatedPlan = await PaymentService.updateUserPlan(
+      await PaymentService.updateUserPlan(
         userId,
         basePlanId,
         null,
@@ -251,7 +250,7 @@ test("4. Обновление плана с оплатой сейчас (payNow=
 
     try {
       // Обновляем план с оплатой сейчас
-      const updatedPlan = await PaymentService.updateUserPlan(
+      await PaymentService.updateUserPlan(
         userId,
         proPlusPlanId,
         paymentId,
@@ -301,7 +300,7 @@ test("5. Обновление плана с оплатой в день нача�
 
     try {
       // Обновляем план с оплатой в день начала (понижение)
-      const updatedPlan = await PaymentService.updateUserPlan(
+      await PaymentService.updateUserPlan(
         userId,
         proPlusPlanId, // Это повышение, но для теста проверим payNow=false
         null,
@@ -402,7 +401,7 @@ test("7. Отсроченный план с оплатой в день нача�
 
     try {
       // Обновляем план (понижение) с оплатой в день начала
-      const updatedPlan = await PaymentService.updateUserPlan(
+      await PaymentService.updateUserPlan(
         userId,
         basePlanId,
         null, // paymentId = null, так как оплата будет в день начала
@@ -442,7 +441,7 @@ test("7. Отсроченный план с оплатой в день нача�
 test("8. Множественные обновления плана", async () => {
   await measureTest("8. Множественные обновления плана", async () => {
     const userId = await createTestUser();
-    const freePlanId = await ensureTestPlan("FREE", 0, 50);
+    await ensureTestPlan("FREE", 0, 50);
     const basePlanId = await ensureTestPlan("BASE", 1000, 200);
     const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
 

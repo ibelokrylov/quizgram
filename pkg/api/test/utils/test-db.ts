@@ -161,7 +161,7 @@ export async function createTestPayment(
     amount: 1000,
     currency: "USDT",
     status: "paid",
-    method: "crypto_pay",
+    method: "card",
     invoiceId: `test-${Date.now()}`,
     invoiceUrl: "",
     trackId: `test-track-${Date.now()}`,

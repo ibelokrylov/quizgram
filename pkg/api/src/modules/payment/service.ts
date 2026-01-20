@@ -1,5 +1,6 @@
 // Сервис payment — бизнес-логика для обновления плана пользователя
 
+import crypto from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import {
   db,
@@ -8,42 +9,431 @@ import {
   quizBidTable,
   quizTable,
   upLimitTable,
-  userPaymentProTable,
   userPaymentTable,
   userTable,
-  type NewPayment,
   type NewUserPayment,
-  type NewUserPaymentPro,
-  type Payment,
   type Plan,
   type UpLimit,
 } from "../../db";
 import { logger } from "../../lib/logger";
-import { CryptoPayService } from "../../services/crypto-pay.service";
 
 export abstract class PaymentService {
   /**
    * Получение списка up_limits для тарифа Pro+
    */
   static async getUpLimits(): Promise<UpLimit[]> {
-    return await db.select().from(upLimitTable).orderBy(upLimitTable.bid);
+    logger.debug("Payment: Запрос списка up_limits");
+    const upLimits = await db.select().from(upLimitTable).orderBy(upLimitTable.bid);
+    logger.debug("Payment: Получено up_limits", { count: upLimits.length });
+    return upLimits;
   }
 
   /**
-   * Создание платежа для плана
+   * Получение статуса платежа
+   * @param paymentId - ID платежа
+   * @param userId - ID пользователя (для проверки прав доступа)
+   * @returns Статус платежа
+   */
+  static async getPaymentStatus(paymentId: number, userId: number) {
+    logger.debug("Payment: Запрос статуса платежа", { paymentId, userId });
+
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.id, paymentId))
+      .limit(1);
+
+    if (payments.length === 0) {
+      logger.error("Payment: Платёж не найден", { paymentId, userId });
+      const error = new Error("Payment not found");
+      error.name = "PaymentNotFoundError";
+      throw error;
+    }
+
+    const payment = payments[0];
+
+    if (payment.userId !== userId) {
+      logger.error("Payment: Доступ запрещён - платёж принадлежит другому пользователю", {
+        paymentId,
+        requestedByUserId: userId,
+        paymentOwnerId: payment.userId,
+      });
+      const error = new Error("Payment does not belong to user");
+      error.name = "PaymentAccessDeniedError";
+      throw error;
+    }
+
+    logger.debug("Payment: Статус платежа получен", {
+      paymentId,
+      status: payment.status,
+      amount: payment.amount,
+      currency: payment.currency,
+    });
+
+    return {
+      id: payment.id,
+      status: payment.status,
+      amount: payment.amount,
+      currency: payment.currency,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+    };
+  }
+
+  /**
+   * Проверка подписи UnitPay webhook
+   * Формула: sha256(method + "{up}" + sorted(params) + "{up}" + secretKey)
+   * @param params - Параметры запроса webhook
+   * @returns true, если подпись верная
+   */
+  static verifyUnitpaySignature(params: Record<string, any>): boolean {
+    logger.debug("UnitPay: Проверка подписи webhook", {
+      method: params.method,
+      hasSignature: !!params.signature,
+      unitpayId: params.unitpayId,
+      paramsKeys: Object.keys(params),
+    });
+
+    const secretKey = process.env.UNITPAY_SECRET_KEY;
+    if (!secretKey) {
+      logger.error("UNITPAY_SECRET_KEY не настроен");
+      return false;
+    }
+
+    const signature = params.signature;
+    if (!signature) {
+      logger.error("Отсутствует signature в запросе webhook", { params });
+      return false;
+    }
+
+    const method = params.method;
+
+    const paramKeys = Object.keys(params)
+      .filter((key) => key !== "signature" && key !== "method")
+      .sort();
+
+    const sortedParamsValues = paramKeys.map((key) => params[key]);
+
+    const signatureString = [method, ...sortedParamsValues, secretKey].join(
+      "{up}",
+    );
+
+    const calculatedSignature = crypto
+      .createHash("sha256")
+      .update(signatureString)
+      .digest("hex");
+
+    logger.debug("UnitPay: Проверка подписи", {
+      method,
+      paramKeys,
+      sortedParamsValues,
+      signatureString,
+      receivedSignature: signature,
+      calculatedSignature,
+      isValid: signature === calculatedSignature,
+    });
+
+    return signature === calculatedSignature;
+  }
+
+  /**
+   * Обработка события 'check' от UnitPay
+   * @param params - Параметры запроса от UnitPay
+   * @returns { result: { message: string } } | { error: { message: string } }
+   */
+  static async handleUnitpayCheck(params: Record<string, any>) {
+    logger.debug("UnitPay: Обработка события check", { params });
+
+    const isValid = this.verifyUnitpaySignature(params);
+    if (!isValid) {
+      logger.error("Неверная подпись webhook", { params });
+      return { error: { message: "Неверная подпись" } };
+    }
+
+    const unitpayPaymentId = Number(params.unitpayId);
+    const orderSum = Number(params.orderSum);
+
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .limit(1);
+
+    if (payments.length === 0) {
+      logger.error("Платёж не найден", { unitpayPaymentId });
+      return { error: { message: "Платёж не найден" } };
+    }
+
+    const payment = payments[0];
+
+    if (payment.status !== "pending") {
+      logger.error("Платёж не в статусе pending", { unitpayPaymentId, status: payment.status });
+      return { error: { message: "Некорректный статус платежа" } };
+    }
+
+    if (Math.abs(payment.amount - orderSum) > 0.01) {
+      logger.error("Несовпадение суммы", {
+        unitpayPaymentId,
+        expected: payment.amount,
+        received: orderSum,
+      });
+      return { error: { message: "Несовпадение суммы" } };
+    }
+
+    logger.info("UnitPay: Check успешен", { unitpayPaymentId });
+
+    return { result: { message: "Запрос успешно обработан" } };
+  }
+
+  /**
+   * Обработка события 'pay' от UnitPay (успешная оплата)
+   * @param params - Параметры запроса от UnitPay
+   * @returns { result: { message: string } } | { error: { message: string } }
+   */
+  static async handleUnitpayPay(params: Record<string, any>) {
+    logger.debug("UnitPay: Обработка события pay", { params });
+
+    const isValid = this.verifyUnitpaySignature(params);
+    if (!isValid) {
+      logger.error("Неверная подпись webhook", { params });
+      return { error: { message: "Неверная подпись" } };
+    }
+
+    const unitpayPaymentId = Number(params.unitpayId);
+    const _orderSum = Number(params.orderSum);
+
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .limit(1);
+
+    if (payments.length === 0) {
+      logger.error("Платёж не найден", { unitpayPaymentId });
+      return { error: { message: "Платёж не найден" } };
+    }
+
+    const payment = payments[0];
+
+    if (payment.status === "paid") {
+      logger.info("Платёж уже оплачен", { unitpayPaymentId });
+      return { result: { message: "Запрос успешно обработан" } };
+    }
+
+    try {
+      await db
+        .update(paymentTable)
+        .set({ status: "paid" })
+        .where(eq(paymentTable.id, payment.id));
+
+      let metadata: { planId?: number; upLimitId?: number } = {};
+      try {
+        metadata = JSON.parse(payment.metadata || "{}");
+      } catch (parseError) {
+        logger.error("Ошибка парсинга metadata платежа", parseError, {
+          unitpayPaymentId,
+          metadata: payment.metadata,
+        });
+        return { error: { message: "Ошибка парсинга metadata" } };
+      }
+      const { planId, upLimitId } = metadata;
+
+      if (!planId) {
+        logger.error("planId отсутствует в metadata", { unitpayPaymentId, metadata });
+        return { error: { message: "planId отсутствует в metadata" } };
+      }
+
+      await this.updateUserPlan(
+        payment.userId,
+        planId,
+        payment.id,
+        upLimitId,
+      );
+
+      logger.info("UnitPay: Платёж успешно обработан", {
+        unitpayPaymentId,
+        paymentId: payment.id,
+        userId: payment.userId,
+        planId,
+      });
+
+      return { result: { message: "Запрос успешно обработан" } };
+    } catch (error) {
+      logger.error("Ошибка при обработке платежа", error, { unitpayPaymentId });
+      return { error: { message: "Ошибка обработки платежа" } };
+    }
+  }
+
+  /**
+   * Обработка события 'error' от UnitPay
+   * @param params - Параметры запроса от UnitPay
+   * @returns { result: { message: string } } | { error: { message: string } }
+   */
+  static async handleUnitpayError(params: Record<string, any>) {
+    logger.debug("UnitPay: Обработка события error", { params });
+
+    const isValid = this.verifyUnitpaySignature(params);
+    if (!isValid) {
+      logger.error("Неверная подпись webhook", { params });
+      return { error: { message: "Неверная подпись" } };
+    }
+
+    const unitpayPaymentId = Number(params.unitpayId);
+
+    try {
+      await db
+        .update(paymentTable)
+        .set({ status: "failed" })
+        .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()));
+
+      logger.info("UnitPay: Статус платежа изменён на failed", {
+        unitpayPaymentId,
+      });
+
+      return { result: { message: "Запрос успешно обработан" } };
+    } catch (error) {
+      logger.error("Ошибка при обновлении статуса платежа", error, {
+        unitpayPaymentId,
+      });
+      return { error: { message: "Ошибка обновления статуса" } };
+    }
+  }
+
+  /**
+   * Обработка события 'refund' от UnitPay (возврат средств)
+   * @param params - Параметры запроса от UnitPay
+   * @returns { result: { message: string } } | { error: { message: string } }
+   */
+  static async handleUnitpayRefund(params: Record<string, any>) {
+    logger.debug("UnitPay: Обработка события refund", { params });
+
+    const isValid = this.verifyUnitpaySignature(params);
+    if (!isValid) {
+      logger.error("Неверная подпись webhook (refund)", { params });
+      return { error: { message: "Неверная подпись" } };
+    }
+
+    const unitpayPaymentId = Number(params.unitpayId);
+
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .limit(1);
+
+    if (payments.length === 0) {
+      logger.error("Платёж для возврата не найден", { unitpayPaymentId });
+      return { error: { message: "Платёж не найден" } };
+    }
+
+    const payment = payments[0];
+
+    try {
+      // Обновляем статус платежа на 'failed' (возврат = отмена)
+      await db
+        .update(paymentTable)
+        .set({
+          status: "failed",
+          metadata: JSON.stringify({
+            ...JSON.parse(payment.metadata || "{}"),
+            refundedAt: new Date().toISOString(),
+            refundReason: params.errorMessage || "Возврат средств",
+          }),
+        })
+        .where(eq(paymentTable.id, payment.id));
+
+      // Откатываем план пользователя на FREE
+      const freePlans = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.name, "FREE"))
+        .limit(1);
+
+      if (freePlans.length > 0) {
+        const freePlan = freePlans[0];
+
+        // Деактивируем текущий активный план
+        await db
+          .update(userPaymentTable)
+          .set({ isActive: false })
+          .where(
+            and(
+              eq(userPaymentTable.userId, payment.userId),
+              eq(userPaymentTable.isActive, true),
+            ),
+          );
+
+        // Обновляем план пользователя на FREE
+        await db
+          .update(userTable)
+          .set({
+            planId: freePlan.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(userTable.id, payment.userId));
+
+        logger.info("UnitPay: Возврат обработан, план откачен на FREE", {
+          unitpayPaymentId,
+          userId: payment.userId,
+        });
+      }
+
+      return { result: { message: "Запрос успешно обработан" } };
+    } catch (error) {
+      logger.error("Ошибка при обработке возврата", error, { unitpayPaymentId });
+      return { error: { message: "Ошибка обработки возврата" } };
+    }
+  }
+
+  /**
+   * Создание платежа через UnitPay
    * @param userId - ID пользователя
    * @param planId - ID плана
-   * @param upLimitId - ID дополнительного лимита (для Pro+)
-   * @param payNow - Оплата сейчас (true) или в день начала (false), по умолчанию true
-   * @returns Созданный платеж с URL для оплаты
+   * @param upLimitId - ID дополнительного лимита (опционально)
+   * @returns { paymentId: number, paymentUrl: string }
    */
   static async createPayment(
     userId: number,
     planId: number,
     upLimitId?: number,
-    payNow: boolean = true,
-  ): Promise<{ payment: Payment; invoiceUrl: string }> {
-    // Проверяем, существует ли план
+  ): Promise<{
+    paymentId: number;
+    paymentUrl: string;
+    unitpayPaymentId?: number;
+    plan?: {
+      id: number;
+      name: string;
+      price: number;
+      bidMonthLimit: number;
+    };
+    upLimit?: {
+      id: number;
+      bid: number;
+      price: number;
+    };
+    totalAmount?: number;
+  }> {
+    logger.debug("UnitPay: Начало создания платежа", {
+      userId,
+      planId,
+      upLimitId,
+    });
+
+    const projectId = process.env.UNITPAY_PROJECT_ID;
+    const secretKey = process.env.UNITPAY_SECRET_KEY;
+
+    logger.debug("UnitPay: Параметры окружения", {
+      hasProjectId: !!projectId,
+      hasSecretKey: !!secretKey,
+      projectId,
+    });
+
+    if (!projectId || !secretKey) {
+      const error = new Error("UNITPAY_PROJECT_ID или UNITPAY_SECRET_KEY не настроены");
+      error.name = "UnitpayConfigError";
+      throw error;
+    }
+
     const plans = await db
       .select()
       .from(planTable)
@@ -51,27 +441,23 @@ export abstract class PaymentService {
       .limit(1);
 
     const plan = plans[0];
-
     if (!plan) {
       const error = new Error("Plan not found");
       error.name = "PlanNotFoundError";
       throw error;
     }
 
-    // Если план бесплатный, сразу обновляем план
-    if (plan.price === 0) {
-      const updatedPlan = await this.updateUserPlan(
-        userId,
-        planId,
-        null,
-        undefined,
-        payNow,
-      );
-      throw new Error("Free plan should be activated directly");
-    }
+    logger.debug("UnitPay: План найден", {
+      planId: plan.id,
+      planName: plan.name,
+      planPrice: plan.price,
+      bidMonthLimit: plan.bidMonthLimit,
+    });
 
-    // Для Pro+ upLimitId опционален (если не указан, используется базовый лимит 200 заявок)
-    let upLimit: UpLimit | null = null;
+    let totalAmount = plan.price;
+    let additionalBid = 0;
+    let upLimit = undefined;
+
     if (plan.name === "PRO_PLUS" && upLimitId) {
       const upLimits = await db
         .select()
@@ -79,373 +465,199 @@ export abstract class PaymentService {
         .where(eq(upLimitTable.id, upLimitId))
         .limit(1);
 
-      upLimit = upLimits[0] ?? null;
-
-      if (!upLimit) {
-        const error = new Error("UpLimit not found");
-        error.name = "UpLimitNotFoundError";
-        throw error;
+      if (upLimits.length > 0) {
+        additionalBid = upLimits[0].bid;
+        totalAmount += upLimits[0].price;
+        upLimit = upLimits[0];
+        logger.debug("UnitPay: Найден дополнительный лимит", {
+          upLimitId,
+          bid: upLimits[0].bid,
+          price: upLimits[0].price,
+        });
       }
     }
 
-    // Функция для получения отображаемого имени плана
-    const getDisplayPlanName = (planName: string): string => {
-      if (planName === "FREE") {
-        return "Free";
-      }
-      if (planName === "BASE") {
-        return "Pro";
-      }
-      if (planName === "PRO_PLUS") {
-        return "Pro+";
-      }
-      return planName;
-    };
-
-    // Рассчитываем итоговую цену
-    // Для Pro+: базовая цена + цена дополнительного лимита
-    // Для других планов: только базовая цена
-    // Все цены указаны в рублях (не в копейках)
-    const totalPrice =
-      plan.name === "PRO_PLUS" && upLimit
-        ? plan.price + upLimit.price
-        : plan.price;
-
-    // Проверяем, находимся ли мы в dev-режиме
-    const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-    const isDevelopment = env.ENV !== "production";
-
-    // В dev-режиме пропускаем создание реального платежа и сразу обновляем план
-    if (isDevelopment) {
-      logger.info(
-        "DEV-режим: обход оплаты, сразу обновляем план пользователя",
-        {
-          userId,
-          planId: plan.id,
-          planName: plan.name,
-          upLimitId: upLimit?.id,
-        },
-      );
-
-      // Создаём фиктивную запись о платеже для истории (со статусом "paid")
-      const paymentData: NewPayment = {
-        userId,
-        planId: plan.id,
-        amount: totalPrice,
-        currency: "USDT",
-        status: "paid", // В dev-режиме сразу помечаем как оплаченный
-        method: "crypto_pay", // Используем crypto_pay, но помечаем в metadata как dev_bypass
-        invoiceId: `dev-${Date.now()}`, // Фиктивный invoice ID
-        invoiceUrl: "", // Нет URL для оплаты
-        trackId: `dev-${userId}-${planId}-${Date.now()}`, // Фиктивный trackId
-        metadata: JSON.stringify({
-          dev_bypass: true,
-          upLimitId: upLimit?.id,
-          payNow,
-        }),
-      };
-
-      const [payment] = await db
-        .insert(paymentTable)
-        .values(paymentData)
-        .returning();
-
-      // Обновляем план пользователя напрямую (связываем с фиктивным платежом)
-      const updatedPlan = await this.updateUserPlan(
-        userId,
-        planId,
-        payment.id,
-        upLimit?.id,
-        payNow,
-      );
-
-      // Если это Pro+ и есть upLimitId, создаём запись в user_payment_pro
-      if (updatedPlan.name === "PRO_PLUS" && upLimit?.id) {
-        const existingPro = await db
-          .select()
-          .from(userPaymentProTable)
-          .where(
-            and(
-              eq(userPaymentProTable.userId, userId),
-              eq(userPaymentProTable.upLimitId, upLimit.id),
-            ),
-          )
-          .limit(1);
-
-        if (existingPro.length === 0) {
-          const userPaymentProData: NewUserPaymentPro = {
-            userId,
-            upLimitId: upLimit.id,
-          };
-
-          await db.insert(userPaymentProTable).values(userPaymentProData);
-
-          logger.info("Создана запись user_payment_pro в dev-режиме", {
-            userId,
-            upLimitId: upLimit.id,
-          });
-        }
-      }
-
-      logger.info("План обновлён в dev-режиме (обход оплаты)", {
-        paymentId: payment.id,
-        userId,
-        planId: plan.id,
-        planName: updatedPlan.name,
-        upLimitId: upLimit?.id,
-      });
-
-      // Возвращаем фиктивный URL (или пустую строку)
-      return {
-        payment,
-        invoiceUrl: "", // В dev-режиме нет реального URL для оплаты
-      };
-    }
-
-    // Production: создаём реальный платёж через Crypto Pay
-    // Формируем описание платежа
-    let description = `Оплата тарифа ${getDisplayPlanName(plan.name)}`;
-    if (plan.name === "PRO_PLUS" && upLimit) {
-      description += ` (+${upLimit.bid} заявок)`;
-    }
-
-    // Создаём инвойс в Crypto Pay
-    // Используем фиатную валюту (RUB) с возможностью оплаты в USDT
-    // totalPrice хранится в рублях
-    const invoice = await CryptoPayService.createInvoice({
-      amount: totalPrice, // Сумма в рублях (базовая + дополнительная для Pro+)
-      currencyType: "fiat", // Используем фиатную валюту
-      fiat: "RUB", // Рубли
-      acceptedAssets: ["USDT"], // Можно оплатить в USDT
-      description,
+    logger.debug("UnitPay: Вычисление итоговой суммы", {
+      basePrice: plan.price,
+      additionalBid,
+      additionalPrice: totalAmount - plan.price,
+      totalAmount,
     });
 
-    if (!invoice) {
-      throw new Error("Не удалось создать инвойс: результат пустой");
-    }
+    const description =
+      additionalBid > 0
+        ? `План ${plan.name} с лимитом ${plan.bidMonthLimit + additionalBid} заявок`
+        : `План ${plan.name}`;
 
-    // Создаём запись о платеже в БД
-    const paymentData: NewPayment = {
+    const paymentData = {
       userId,
-      planId: plan.id,
-      amount: totalPrice, // Итоговая цена в рублях (базовая + дополнительная для Pro+)
-      currency: "USDT",
-      status: "pending",
-      method: "crypto_pay",
-      invoiceId: invoice.invoice_id.toString(),
-      invoiceUrl: invoice.pay_url,
-      trackId: invoice.hash, // Используем hash как trackId для поиска в webhook
+      planId,
+      amount: totalAmount,
+      currency: "RUB",
+      status: "pending" as const,
+      method: "card" as const,
+      provider: "unitpay" as const,
       metadata: JSON.stringify({
-        invoice_id: invoice.invoice_id,
-        hash: invoice.hash,
-        asset: invoice.asset,
-        status: invoice.status,
-        upLimitId: upLimit?.id, // Сохраняем upLimitId для Pro+
-        payNow, // Сохраняем payNow для обработки при оплате
+        planName: plan.name,
+        planId,
+        upLimitId: upLimitId ?? null,
+        additionalBid,
       }),
     };
 
-    const [payment] = await db
+    const newPayments = await db
       .insert(paymentTable)
       .values(paymentData)
       .returning();
 
-    logger.info("Платёж создан", {
-      paymentId: payment.id,
-      userId,
-      planId: plan.id,
-      invoiceId: invoice.invoice_id,
+    const newPayment = newPayments[0];
+    const paymentId = newPayment.id;
+
+    logger.debug("UnitPay: Запись создана в БД", {
+      paymentId,
+      paymentData,
     });
 
-    return {
-      payment,
-      invoiceUrl: invoice.pay_url,
-    };
-  }
+    const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+    const isDevelopment = env.ENV === "development";
 
-  /**
-   * Обработка успешного платежа
-   * @param paymentId - ID платежа
-   * @returns Обновленный план пользователя
-   */
-  static async processSuccessfulPayment(paymentId: number): Promise<Plan> {
-    // Получаем платеж
-    const payments = await db
-      .select()
-      .from(paymentTable)
-      .where(eq(paymentTable.id, paymentId))
-      .limit(1);
+    let paymentUrl: string;
+    let unitpayPaymentId: number | undefined;
 
-    const payment = payments[0];
+    if (isDevelopment) {
+      paymentUrl = `http://localhost:5173/app/payment/success?paymentId=${paymentId}`;
+      logger.info("UnitPay: Режим разработки - ссылка на страницу success", {
+        paymentUrl,
+      });
+    } else {
+      const appUrl =
+        process.env.APP_URL || "https://app.quizgram.com";
+      const resultUrl = `${appUrl}/app/payment/success?paymentId=${paymentId}`;
 
-    if (!payment) {
-      const error = new Error("Payment not found");
-      error.name = "PaymentNotFoundError";
-      throw error;
-    }
+      logger.debug("UnitPay: URL возврата", { resultUrl });
 
-    // Проверяем, что платеж ещё не обработан
-    if (payment.status === "paid") {
-      logger.warn("Платёж уже был обработан", { paymentId });
-      // Получаем план для возврата
-      const plans = await db
-        .select()
-        .from(planTable)
-        .where(eq(planTable.id, payment.planId))
-        .limit(1);
-      return plans[0];
-    }
+      const params = {
+        method: "initPayment",
+        "params[paymentType]": "card",
+        "params[projectId]": projectId,
+        "params[secretKey]": secretKey,
+        "params[sum]": totalAmount.toString(),
+        "params[account]": userId.toString(),
+        "params[desc]": description,
+        "params[currency]": "RUB",
+        "params[resultUrl]": resultUrl,
+      };
 
-    // Обновляем статус платежа
-    await db
-      .update(paymentTable)
-      .set({
-        status: "paid",
-        updatedAt: new Date(),
-      })
-      .where(eq(paymentTable.id, paymentId));
+      logger.debug("UnitPay: Параметры запроса к API", { params });
 
-    logger.info("Статус платежа обновлён на 'paid'", { paymentId });
+      const queryString = Object.entries(params)
+        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        .join("&");
 
-    // Извлекаем upLimitId и payNow из метаданных
-    let upLimitId: number | undefined;
-    let payNow: boolean = true; // По умолчанию оплата сейчас
-    if (payment.metadata) {
-      try {
-        const metadata = JSON.parse(payment.metadata);
-        upLimitId = metadata.upLimitId;
-        payNow = metadata.payNow ?? true; // По умолчанию оплата сейчас
-      } catch (error) {
-        logger.warn("Не удалось распарсить метаданные платежа", {
+      const apiUrl = `https://unitpay.ru/api?${queryString}`;
+
+      logger.debug("UnitPay: URL запроса к API", { apiUrl });
+
+      const response = await fetch(apiUrl);
+      const responseData = await response.json();
+
+      logger.debug("UnitPay: Ответ от API", { responseData });
+
+      if (responseData.error) {
+        const error = new Error(responseData.error.message);
+        error.name = "UnitpayApiError";
+        throw error;
+      }
+
+      if (responseData.result?.type === "redirect") {
+        unitpayPaymentId = responseData.result.paymentId;
+        paymentUrl = responseData.result.redirectUrl;
+
+        logger.info("UnitPay: Платёж создан через API", {
           paymentId,
-          metadata: payment.metadata,
+          unitpayPaymentId,
+          paymentUrl,
         });
+
+        if (unitpayPaymentId !== undefined) {
+          await db
+            .update(paymentTable)
+            .set({
+              invoiceId: unitpayPaymentId.toString(),
+              invoiceUrl: paymentUrl,
+            })
+            .where(eq(paymentTable.id, paymentId));
+        }
+      } else {
+        const error = new Error(
+          `Неожиданный тип ответа от UnitPay: ${responseData.result?.type}`
+        );
+        error.name = "UnitpayResponseTypeError";
+        throw error;
       }
     }
 
-    // Обновляем план пользователя и связываем с платежом
-    const plan = await this.updateUserPlan(
-      payment.userId,
-      payment.planId,
+    logger.info("Платёж создан через UnitPay", {
       paymentId,
-      upLimitId,
-      payNow,
-    );
+      userId,
+      planId,
+      amount: totalAmount,
+      paymentUrl,
+      unitpayPaymentId,
+      isDevelopment,
+    });
 
-    // Если это Pro+ и есть upLimitId, создаём запись в user_payment_pro
-    if (plan.name === "PRO_PLUS" && upLimitId) {
-      const existingPro = await db
-        .select()
-        .from(userPaymentProTable)
-        .where(
-          and(
-            eq(userPaymentProTable.userId, payment.userId),
-            eq(userPaymentProTable.upLimitId, upLimitId),
-          ),
-        )
-        .limit(1);
+    const result: {
+      paymentId: number;
+      paymentUrl: string;
+      unitpayPaymentId?: number;
+      plan?: {
+        id: number;
+        name: string;
+        price: number;
+        bidMonthLimit: number;
+      };
+      upLimit?: {
+        id: number;
+        bid: number;
+        price: number;
+      };
+      totalAmount?: number;
+    } = {
+      paymentId,
+      paymentUrl,
+      unitpayPaymentId,
+    };
 
-      if (existingPro.length === 0) {
-        const userPaymentProData: NewUserPaymentPro = {
-          userId: payment.userId,
-          upLimitId,
+    if (isDevelopment) {
+      result.plan = {
+        id: plan.id,
+        name: plan.name,
+        price: plan.price,
+        bidMonthLimit: plan.bidMonthLimit,
+      };
+
+      if (upLimit) {
+        result.upLimit = {
+          id: upLimit.id,
+          bid: upLimit.bid,
+          price: upLimit.price,
         };
-
-        await db.insert(userPaymentProTable).values(userPaymentProData);
-
-        logger.info("Создана запись user_payment_pro", {
-          userId: payment.userId,
-          upLimitId,
-        });
       }
+
+      result.totalAmount = totalAmount;
     }
 
-    logger.info("План пользователя обновлён после успешной оплаты", {
-      userId: payment.userId,
-      planId: payment.planId,
-      paymentId,
-      upLimitId,
-    });
-
-    return plan;
-  }
-
-  /**
-   * Активация отсроченного плана
-   * @param userPaymentId - ID записи user_payment отсроченного плана
-   * @returns Активированный план
-   */
-  static async activateScheduledPlan(userPaymentId: number): Promise<Plan> {
-    // Находим отсроченный план
-    const scheduledPayments = await db
-      .select({
-        userPayment: userPaymentTable,
-        plan: planTable,
-      })
-      .from(userPaymentTable)
-      .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
-      .where(eq(userPaymentTable.id, userPaymentId))
-      .limit(1);
-
-    if (scheduledPayments.length === 0) {
-      const error = new Error("Scheduled payment not found");
-      error.name = "ScheduledPaymentNotFoundError";
-      throw error;
-    }
-
-    const { userPayment, plan } = scheduledPayments[0];
-
-    // Деактивируем все старые активные записи user_payment для этого пользователя
-    await db
-      .update(userPaymentTable)
-      .set({ isActive: false })
-      .where(
-        and(
-          eq(userPaymentTable.userId, userPayment.userId),
-          eq(userPaymentTable.isActive, true),
-        ),
-      );
-
-    logger.info("Старые активные планы деактивированы", {
-      userId: userPayment.userId,
-      scheduledPlanId: plan.id,
-    });
-
-    // Активируем отсроченный план
-    await db
-      .update(userPaymentTable)
-      .set({
-        isActive: true,
-        startsAt: null, // Очищаем дату начала, так как план активирован
-      })
-      .where(eq(userPaymentTable.id, userPaymentId));
-
-    // Обновляем план пользователя
-    await db
-      .update(userTable)
-      .set({
-        planId: plan.id,
-        updatedAt: new Date(),
-      })
-      .where(eq(userTable.id, userPayment.userId));
-
-    logger.info("Отсроченный план активирован", {
-      userId: userPayment.userId,
-      planId: plan.id,
-      planName: plan.name,
-      userPaymentId,
-    });
-
-    return plan;
+    return result;
   }
 
   /**
    * Обновление плана пользователя
    * @param userId - ID пользователя
    * @param planId - ID нового плана
-   * @param paymentId - ID успешного платежа (опционально)
+   * @param paymentId - ID успешного платежа (опционально, не используется в новой логике)
    * @param upLimitId - ID дополнительного лимита для Pro+ (опционально)
-   * @param payNow - Оплата сейчас (true) или в день начала (false), по умолчанию true
+   * @param payNow - Оплата сейчас (true) или в день начала (false), по умолчанию true (не используется в новой логике)
    * @returns Обновленный план
    */
   static async updateUserPlan(
@@ -506,7 +718,6 @@ export abstract class PaymentService {
         currentPlanId: currentPlan.id,
         newPlanId: plan.id,
         startsAt: currentPlanEndsAt,
-        payNow,
       });
 
       // Для Pro+ получаем дополнительный лимит
@@ -554,7 +765,6 @@ export abstract class PaymentService {
         planId: plan.id,
         planName: plan.name,
         startsAt: currentPlanEndsAt,
-        isPaid: payNow,
       });
 
       // Возвращаем новый план (но он еще не активен)
@@ -717,6 +927,78 @@ export abstract class PaymentService {
       userId,
       planId: plan.id,
       planName: plan.name,
+    });
+
+    return plan;
+  }
+
+  /**
+   * Активация отсроченного плана
+   * @param userPaymentId - ID записи user_payment отсроченного плана
+   * @returns Активированный план
+   */
+  static async activateScheduledPlan(userPaymentId: number): Promise<Plan> {
+    logger.debug("Payment: Начало активации отсроченного плана", { userPaymentId });
+
+    // Находим отсроченный план
+    const scheduledPayments = await db
+      .select({
+        userPayment: userPaymentTable,
+        plan: planTable,
+      })
+      .from(userPaymentTable)
+      .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
+      .where(eq(userPaymentTable.id, userPaymentId))
+      .limit(1);
+
+    if (scheduledPayments.length === 0) {
+      logger.error("Payment: Отсроченный план не найден", { userPaymentId });
+      const error = new Error("Scheduled payment not found");
+      error.name = "ScheduledPaymentNotFoundError";
+      throw error;
+    }
+
+    const { userPayment, plan } = scheduledPayments[0];
+
+    // Деактивируем все старые активные записи user_payment для этого пользователя
+    await db
+      .update(userPaymentTable)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(userPaymentTable.userId, userPayment.userId),
+          eq(userPaymentTable.isActive, true),
+        ),
+      );
+
+    logger.info("Старые активные планы деактивированы", {
+      userId: userPayment.userId,
+      scheduledPlanId: plan.id,
+    });
+
+    // Активируем отсроченный план
+    await db
+      .update(userPaymentTable)
+      .set({
+        isActive: true,
+        startsAt: null, // Очищаем дату начала, так как план активирован
+      })
+      .where(eq(userPaymentTable.id, userPaymentId));
+
+    // Обновляем план пользователя
+    await db
+      .update(userTable)
+      .set({
+        planId: plan.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(userTable.id, userPayment.userId));
+
+    logger.info("Отсроченный план активирован", {
+      userId: userPayment.userId,
+      planId: plan.id,
+      planName: plan.name,
+      userPaymentId,
     });
 
     return plan;

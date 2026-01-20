@@ -96,7 +96,7 @@ export const auth = new Elysia({ prefix: '/auth' })
     cookie.session.set({
       value: response.token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 дней
     })

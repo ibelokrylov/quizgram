@@ -163,14 +163,14 @@ export const auth = new Elysia({ prefix: "/auth" })
   )
   .post(
     "/forgot-password",
-    async ({ body, set }) => {
+    async ({ body }) => {
       try {
         await AuthService.forgotPassword(body);
         const response: AuthModel.forgotPasswordSuccessResponse = {
           message: "ok",
         };
         return response;
-      } catch (error) {
+      } catch {
         // В Go коде всегда возвращается успех, даже при ошибке
         // Это сделано для безопасности (не раскрывать существование email)
         const response: AuthModel.forgotPasswordSuccessResponse = {

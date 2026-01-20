@@ -27,16 +27,12 @@ export const AuthContextProvider = (props: PropsWithChildren) => {
     if (query.data) {
       setUser(query.data);
       setIsAuth(true);
-      if (planQuery.data)
-        sessionStorage.setItem("userPlan", JSON.stringify(planQuery.data));
+      if (planQuery.data) sessionStorage.setItem("userPlan", JSON.stringify(planQuery.data));
 
       // Устанавливаем язык из профиля пользователя, если он есть
       // Но только если текущий язык в i18n не совпадает с языком из БД
       // Это предотвращает перезапись языка, который пользователь только что выбрал
-      if (
-        query.data.language &&
-        (query.data.language === "en" || query.data.language === "ru")
-      ) {
+      if (query.data.language && (query.data.language === "en" || query.data.language === "ru")) {
         const currentLang = i18n.language || "en";
         const normalizedCurrentLang = currentLang.startsWith("ru")
           ? "ru"

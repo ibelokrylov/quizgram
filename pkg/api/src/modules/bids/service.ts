@@ -189,7 +189,7 @@ export abstract class BidsService {
 
       const counts = (countsResult as unknown as CountsResult) || [];
 
-      const total = Number(counts[0]?.total || 0);
+      const _total = Number(counts[0]?.total || 0);
       const totalFull = Number(counts[0]?.total_full || 0);
       const totalNotFull = Number(counts[0]?.total_not_full || 0);
 

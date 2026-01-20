@@ -7,7 +7,7 @@ import { BackupLogService } from "../src/services/backup-log.service";
 import { S3Service } from "../src/services/s3.service";
 
 // Переменные окружения для тестов должны быть установлены
-const TEST_FOLDER = "test-backups-logs";
+const _TEST_FOLDER = "test-backups-logs";
 
 // Список файлов, созданных в тестах, для последующего удаления
 const createdFiles: string[] = [];
@@ -232,7 +232,6 @@ test("4. Бэкап лог-файла с правильным путем в S3",
   // Создаем тестовый лог-файл
   const testDate = new Date();
   testDate.setDate(testDate.getDate() - 1); // Вчера
-  const dateStr = testDate.toISOString().split("T")[0];
   const testLogContent = JSON.stringify({
     timestamp: new Date().toISOString(),
     level: "INFO",

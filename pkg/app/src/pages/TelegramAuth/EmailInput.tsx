@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { z } from "zod";
@@ -36,8 +30,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     // Валидация email
     const validation = emailSchema.safeParse({ email });
     if (!validation.success) {
-      const errorMessage =
-        validation.error.issues[0]?.message || t("telegram.auth.email.invalid");
+      const errorMessage = validation.error.issues[0]?.message || t("telegram.auth.email.invalid");
       setError(errorMessage);
       return;
     }
@@ -45,8 +38,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     try {
       await onSubmit(email);
     } catch (err: any) {
-      const errorMessage =
-        err?.message || err?.error || t("telegram.auth.email.error");
+      const errorMessage = err?.message || err?.error || t("telegram.auth.email.error");
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -56,16 +48,12 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     <Card>
       <CardHeader>
         <CardTitle>{t("telegram.auth.email.title")}</CardTitle>
-        <CardDescription>
-          {t("telegram.auth.email.description")}
-        </CardDescription>
+        <CardDescription>{t("telegram.auth.email.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email">
-              {t("telegram.auth.email.label")}
-            </FieldLabel>
+            <FieldLabel htmlFor="email">{t("telegram.auth.email.label")}</FieldLabel>
             <Input
               id="email"
               type="email"

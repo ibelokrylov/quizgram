@@ -19,12 +19,7 @@ export const Route = createFileRoute("/telegram-auth")({
   component: TelegramAuth,
 });
 
-type AuthStage =
-  | "loading"
-  | "login"
-  | "email-input"
-  | "email-verification"
-  | "success";
+type AuthStage = "loading" | "login" | "email-input" | "email-verification" | "success";
 
 function TelegramAuth() {
   const { t } = useTranslation("common");
@@ -51,10 +46,7 @@ function TelegramAuth() {
     // Пытаемся авторизоваться через Telegram
     handleTelegramLogin().catch((error) => {
       // Обработка неожиданных ошибок
-      console.error(
-        "Неожиданная ошибка при авторизации через Telegram:",
-        error,
-      );
+      console.error("Неожиданная ошибка при авторизации через Telegram:", error);
       toast.error(t("telegram.auth.login.error"));
       setStage("email-input");
     });
@@ -130,10 +122,7 @@ function TelegramAuth() {
       }
     } catch (error) {
       // Обработка неожиданных ошибок
-      console.error(
-        "Неожиданная ошибка при регистрации через Telegram:",
-        error,
-      );
+      console.error("Неожиданная ошибка при регистрации через Telegram:", error);
       toast.error(t("telegram.auth.register.error"));
     }
   };
@@ -197,10 +186,7 @@ function TelegramAuth() {
           <div className="w-full max-w-sm">
             <div className="w-full max-w-sm">
               {stage === "email-input" && (
-                <EmailInput
-                  onSubmit={handleEmailSubmit}
-                  loading={telegramAuth.loading}
-                />
+                <EmailInput onSubmit={handleEmailSubmit} loading={telegramAuth.loading} />
               )}
               {stage === "email-verification" && (
                 <EmailVerification onSuccess={handleVerificationSuccess} />

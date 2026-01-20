@@ -39,3 +39,6 @@ test/logs/
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Heap snapshots
+*.heapsnapshot
