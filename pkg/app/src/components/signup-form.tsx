@@ -17,6 +17,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const [loading, setLoading] = useState(false);
   const [invalidReferralCode, setInvalidReferralCode] = useState<string | null>(null);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [dataProcessingAgreed, setDataProcessingAgreed] = useState(false);
   const [data, setData] = useState<UserRegistration & { passwordConfirm: string }>({
     login: "",
     password: "",
@@ -212,9 +213,37 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
               </label>
             </div>
           </Field>
+          <Field>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="data-processing-agreement"
+                checked={dataProcessingAgreed}
+                onCheckedChange={(checked) => setDataProcessingAgreed(checked === true)}
+                className="mt-0.5"
+              />
+              <label
+                htmlFor="data-processing-agreement"
+                className="text-sm text-foreground leading-relaxed cursor-pointer"
+              >
+                {t("registration.dataProcessingAgreement")}{" "}
+                <Link
+                  to="/consent"
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("registration.dataProcessingConsent")}
+                </Link>
+              </label>
+            </div>
+          </Field>
           <FieldGroup>
             <Field>
-              <Button disabled={loading || !privacyAgreed} onClick={registration} type="submit">
+              <Button
+                disabled={loading || !privacyAgreed || !dataProcessingAgreed}
+                onClick={registration}
+                type="submit"
+              >
                 {t("registration.button")}
               </Button>
               <FieldDescription className="px-6 text-center">

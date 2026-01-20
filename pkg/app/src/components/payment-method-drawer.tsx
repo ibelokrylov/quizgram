@@ -205,12 +205,12 @@ export const PaymentMethodDrawer = ({
                   <label htmlFor="terms-agreement" className="text-sm leading-tight cursor-pointer">
                     {t("payment.drawer.agreement.checkbox1")}{" "}
                     <a
-                      href="/terms"
+                      href="/offer"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline hover:text-primary/80"
                     >
-                      {t("payment.drawer.agreement.terms")}
+                      {t("payment.drawer.agreement.offer")}
                     </a>{" "}
                     и{" "}
                     <a

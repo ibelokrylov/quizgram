@@ -1,6 +1,17 @@
 import { Loader } from "@/components/loader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentMethodDrawer } from "@/components/payment-method-drawer";
 import { usePlans } from "@/entities/User/usePlans";
@@ -20,6 +31,7 @@ export const PaymentPage = () => {
   const queryClient = useQueryClient();
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<{
     id: number;
     name: string;
@@ -72,6 +84,24 @@ export const PaymentPage = () => {
       setInitialUpLimitSet(true);
     }
   }, [userPlanQuery.data, upLimitsQuery.data, initialUpLimitSet]);
+
+  const handleCancelSubscription = async () => {
+    try {
+      const response = await http<{ planId: number; planName: string }>({
+        url: "/v1/payment/cancel-subscription",
+        method: "POST",
+      });
+
+      if (response.data) {
+        toast.success(t("payment.cancel_subscription.success"));
+        setShowCancelDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["user-plan"] });
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("payment.error"));
+    }
+  };
 
   const handlePlanSelect = async (planId: number) => {
     if (!query.data) {
@@ -235,6 +265,18 @@ export const PaymentPage = () => {
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">{t("plans.description")}</p>
       </div>
 
+      {userPlanQuery.data && userPlanQuery.data.price > 0 && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setShowCancelDialog(true)}
+            className="text-red-600 hover:text-red-700 hover:border-red-600"
+          >
+            {t("payment.cancel_subscription")}
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => {
           const features = getPlanFeatures(plan);
@@ -363,6 +405,26 @@ export const PaymentPage = () => {
           selectedUpLimitId={selectedUpLimitId}
         />
       )}
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("payment.cancel_subscription.confirm_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("payment.cancel_subscription.confirm_description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("payment.cancel_subscription.cancel_button")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelSubscription}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {t("payment.cancel_subscription.confirm_button")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -10,11 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TelegramAuthRouteImport } from './routes/telegram-auth'
+import { Route as SubscriptionRulesRouteImport } from './routes/subscription-rules'
 import { Route as RegistrationRouteImport } from './routes/registration'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PaymentRouteImport } from './routes/payment'
+import { Route as OfferRouteImport } from './routes/offer'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppReferralRouteImport } from './routes/app/referral'
@@ -33,6 +37,11 @@ import { Route as AppBidReportStatisticRouteRouteImport } from './routes/app/bid
 const TelegramAuthRoute = TelegramAuthRouteImport.update({
   id: '/telegram-auth',
   path: '/telegram-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionRulesRoute = SubscriptionRulesRouteImport.update({
+  id: '/subscription-rules',
+  path: '/subscription-rules',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegistrationRoute = RegistrationRouteImport.update({
@@ -55,9 +64,24 @@ const PaymentRoute = PaymentRouteImport.update({
   path: '/payment',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfferRoute = OfferRouteImport.update({
+  id: '/offer',
+  path: '/offer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsentRoute = ConsentRouteImport.update({
+  id: '/consent',
+  path: '/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -135,11 +159,15 @@ const AppBidReportStatisticRouteRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/about': typeof AboutRoute
+  '/consent': typeof ConsentRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/offer': typeof OfferRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -157,11 +185,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/about': typeof AboutRoute
+  '/consent': typeof ConsentRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/offer': typeof OfferRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -179,11 +211,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/about': typeof AboutRoute
+  '/consent': typeof ConsentRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/offer': typeof OfferRoute
   '/payment': typeof PaymentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/registration': typeof RegistrationRoute
+  '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
@@ -203,11 +239,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/about'
+    | '/consent'
     | '/forgot-password'
+    | '/offer'
     | '/payment'
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/subscription-rules'
     | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
@@ -225,11 +265,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/about'
+    | '/consent'
     | '/forgot-password'
+    | '/offer'
     | '/payment'
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/subscription-rules'
     | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
@@ -246,11 +290,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/about'
+    | '/consent'
     | '/forgot-password'
+    | '/offer'
     | '/payment'
     | '/plans'
     | '/privacy'
     | '/registration'
+    | '/subscription-rules'
     | '/telegram-auth'
     | '/app/dashboard'
     | '/app/notification'
@@ -269,11 +317,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
+  ConsentRoute: typeof ConsentRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  OfferRoute: typeof OfferRoute
   PaymentRoute: typeof PaymentRoute
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
   RegistrationRoute: typeof RegistrationRoute
+  SubscriptionRulesRoute: typeof SubscriptionRulesRoute
   TelegramAuthRoute: typeof TelegramAuthRoute
 }
 
@@ -284,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/telegram-auth'
       fullPath: '/telegram-auth'
       preLoaderRoute: typeof TelegramAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscription-rules': {
+      id: '/subscription-rules'
+      path: '/subscription-rules'
+      fullPath: '/subscription-rules'
+      preLoaderRoute: typeof SubscriptionRulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/registration': {
@@ -314,11 +373,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/offer': {
+      id: '/offer'
+      path: '/offer'
+      fullPath: '/offer'
+      preLoaderRoute: typeof OfferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consent': {
+      id: '/consent'
+      path: '/consent'
+      fullPath: '/consent'
+      preLoaderRoute: typeof ConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -478,11 +558,15 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
+  ConsentRoute: ConsentRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  OfferRoute: OfferRoute,
   PaymentRoute: PaymentRoute,
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
   RegistrationRoute: RegistrationRoute,
+  SubscriptionRulesRoute: SubscriptionRulesRoute,
   TelegramAuthRoute: TelegramAuthRoute,
 }
 export const routeTree = rootRouteImport
