@@ -92,7 +92,7 @@ export async function ensureTestPlan(name: "FREE" | "BASE" | "PRO_PLUS", price: 
 }
 
 /**
- * Создает тестовый upLimit
+ * Создает тестовый upLimit или обновляет существующий
  */
 export async function createTestUpLimit(bid: number, price: number): Promise<number> {
   // Сначала проверяем, существует ли уже запись с таким bid (из-за UNIQUE constraint)
@@ -103,6 +103,13 @@ export async function createTestUpLimit(bid: number, price: number): Promise<num
     .limit(1);
 
   if (existing.length > 0) {
+    // Обновляем price если он отличается
+    if (existing[0].price !== price) {
+      await db
+        .update(upLimitTable)
+        .set({ price })
+        .where(eq(upLimitTable.id, existing[0].id));
+    }
     return existing[0].id;
   }
 
