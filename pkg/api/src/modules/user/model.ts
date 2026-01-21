@@ -132,6 +132,7 @@ export namespace UserModel {
     name: t.String(), // "FREE" или "BASE"
     price: t.Number(),
     bidMonthLimit: t.Number(),
+    finalDayAt: t.Optional(t.String()), // Дата окончания подписки (ISO string)
   });
 
   export type userPlan = typeof userPlan.static;

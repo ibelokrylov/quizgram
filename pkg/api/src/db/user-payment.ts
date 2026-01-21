@@ -44,6 +44,8 @@ export const userPaymentTable = pgTable("user_payment", {
   paymentAttempts: integer("payment_attempts").notNull().default(0), // Количество попыток списания
   lastPaymentAttemptAt: timestamp("last_payment_attempt_at", { withTimezone: false }), // Время последней попытки
   maxPaymentAttempts: integer("max_payment_attempts").notNull().default(7), // Максимум попыток (по умолчанию 7 дней)
+  // Поля для отмены автопродления
+  cancelAutoRenew: boolean("cancel_auto_renew").notNull().default(false), // Отмена автопродления подписки
 });
 
 // Тип строки таблицы для использования в коде приложения

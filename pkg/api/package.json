@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:push:all": "bun run db:push && bun run db:migrate",
     "mock:data": "bun run scripts/mock-quiz-bids.ts",
-    "recalculate:stats": "bun run scripts/recalculate-quiz-stats.ts"
+    "recalculate:stats": "bun run scripts/recalculate-quiz-stats.ts",
+    "max-plan": "bun run scripts/assign-max-plan.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",

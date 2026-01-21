@@ -30,5 +30,6 @@ export const userPlanZod = z.object({
   name: z.string(), // "FREE" или "BASE"
   price: z.number(),
   bidMonthLimit: z.number(),
+  finalDayAt: z.string().optional(), // Дата окончания подписки (ISO string)
 });
 export type UserPlan = z.infer<typeof userPlanZod>;

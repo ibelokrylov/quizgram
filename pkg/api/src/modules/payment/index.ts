@@ -332,5 +332,58 @@ export const payment = new Elysia({ prefix: "/payment" })
               }),
             },
           },
+        )
+        .post(
+          "/cancel-subscription",
+          async (ctx) => {
+            const user: User | null = ctx.store.user;
+            if (!user) {
+              ctx.set.status = 401;
+              return { message: "Unauthorized" };
+            }
+
+            try {
+              logger.info("Payment Controller: Запрос на отмену подписки", {
+                userId: user.id,
+              });
+
+              await PaymentService.cancelSubscription(user.id);
+
+              logger.info("Payment Controller: Подписка отменена", {
+                userId: user.id,
+              });
+
+              return {
+                message: "ok",
+                data: {
+                  planId: user.planId,
+                  planName: "Отменено",
+                },
+              };
+            } catch (error) {
+              logger.error(
+                "Error cancelling subscription",
+                error instanceof Error ? error : new Error(String(error)),
+                { userId: user.id },
+              );
+
+              ctx.set.status = 400;
+              const response: PaymentModel.cancelSubscriptionErrorResponse = {
+                message: "cancel-subscription@error",
+                error:
+                  error instanceof Error ? error.message : "Unknown error",
+              };
+              return response;
+            }
+          },
+          {
+            response: {
+              200: PaymentModel.cancelSubscriptionSuccessResponse,
+              400: PaymentModel.cancelSubscriptionErrorResponse,
+              401: t.Object({
+                message: t.String(),
+              }),
+            },
+          },
         ),
-);
+  );

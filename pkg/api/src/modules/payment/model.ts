@@ -52,4 +52,26 @@ export namespace PaymentModel {
 
   export type updatePlanErrorResponse =
     typeof updatePlanErrorResponse.static;
+
+  // Успешный ответ при отмене подписки
+  export const cancelSubscriptionSuccessResponse = t.Object({
+    message: t.String(), // "ok"
+    data: t.Object({
+      planId: t.Number(),
+      planName: t.String(),
+      finalDayAt: t.String(), // ISO date string
+    }),
+  });
+
+  export type cancelSubscriptionSuccessResponse =
+    typeof cancelSubscriptionSuccessResponse.static;
+
+  // Ошибка при отмене подписки
+  export const cancelSubscriptionErrorResponse = t.Object({
+    message: t.String(), // "cancel-subscription@error"
+    error: t.Optional(t.String()),
+  });
+
+  export type cancelSubscriptionErrorResponse =
+    typeof cancelSubscriptionErrorResponse.static;
 }

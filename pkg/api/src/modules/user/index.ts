@@ -94,6 +94,7 @@ export const user = new Elysia({ prefix: "/user" })
                   name: plan.name,
                   price: plan.price,
                   bidMonthLimit: plan.bidMonthLimit,
+                  finalDayAt: plan.finalDayAt,
                 },
               };
 

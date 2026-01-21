@@ -266,7 +266,17 @@ export const PaymentPage = () => {
       </div>
 
       {userPlanQuery.data && userPlanQuery.data.price > 0 && (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4">
+          {userPlanQuery.data.finalDayAt && (
+            <p className="text-sm text-muted-foreground">
+              {t("payment.subscription_ends")}:{" "}
+              {new Date(userPlanQuery.data.finalDayAt).toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          )}
           <Button
             variant="outline"
             onClick={() => setShowCancelDialog(true)}

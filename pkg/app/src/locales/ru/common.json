@@ -347,6 +347,7 @@
   "payment.cancel_subscription.confirm_button": "Отменить подписку",
   "payment.cancel_subscription.cancel_button": "Назад",
   "payment.cancel_subscription.success": "Подписка успешно отменена",
+  "payment.subscription_ends": "Подписка заканчивается",
   "edit-quiz.publish": "Опубликовать",
   "toast.error.quiz-load": "Квиз уже опубликован",
   "toast.error.quiz-not-load": "Ошибка публикации квиза",

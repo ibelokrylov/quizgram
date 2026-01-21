@@ -1,14 +1,7 @@
-// Скрипт для ручной выдачи тарифа PRO_PLUS пользователю по email
-// Запуск: bun run scripts/assign-max-plan.ts
+// Скрипт для выдачи максимального тарифа PRO_PLUS пользователю по email
+// Запуск: bun run max-plan user@example.com
 
 import postgres from "postgres";
-
-// ============================================
-// НАСТРОЙКИ - УКАЖИТЕ EMAIL ПОЛЬЗОВАТЕЛЯ И UP_LIMIT_ID
-// ============================================
-const USER_EMAIL: string = "bellivan64@gmail.com"; // <-- Укажите email пользователя
-const UP_LIMIT_ID: number | null = 5; // <-- ID из таблицы up_limit (null = без доп. лимита)
-// ============================================
 
 const env = typeof Bun !== "undefined" ? Bun.env : process.env;
 const {
@@ -28,15 +21,20 @@ const connectionString =
 const PRO_PLUS_PLAN_ID = 3;
 
 async function assignMaxPlan() {
-  if (USER_EMAIL === "user@example.com") {
-    console.error("❌ Укажите email пользователя в переменной USER_EMAIL");
+  // Получаем email из аргументов командной строки
+  const args = typeof Bun !== "undefined" ? Bun.argv : process.argv;
+  const userEmail = args[2]; // bun run max-plan email@example.com
+
+  if (!userEmail) {
+    console.error("❌ Укажите email пользователя");
+    console.log("Использование: bun run max-plan user@example.com");
     process.exit(1);
   }
 
   const sql = postgres(connectionString);
 
   try {
-    const email = USER_EMAIL.toLowerCase().trim();
+    const email = userEmail.toLowerCase().trim();
     console.log(`\nПоиск пользователя: ${email}`);
 
     // 1. Находим пользователя по email
@@ -74,33 +72,27 @@ async function assignMaxPlan() {
     const baseBidLimit = plan.bid_month_limit;
     console.log(`✅ План: ${plan.name}, базовый лимит: ${baseBidLimit}`);
 
-    // 3. Получаем дополнительный лимит из up_limit (если указан)
+    // 3. Автоматически находим МАКСИМАЛЬНЫЙ up_limit (с наибольшим количеством заявок)
+    const allUpLimits = await sql`
+      SELECT id, bid, price
+      FROM up_limit
+      ORDER BY bid DESC
+      LIMIT 1
+    `;
+
     let additionalLimit = 0;
     let upLimitRecord = null;
-    if (UP_LIMIT_ID !== null) {
-      const upLimits = await sql`
-        SELECT id, bid, price
-        FROM up_limit
-        WHERE id = ${UP_LIMIT_ID}
-        LIMIT 1
-      `;
+    let UP_LIMIT_ID: number | null = null;
 
-      if (upLimits.length === 0) {
-        console.error(`❌ up_limit с id=${UP_LIMIT_ID} не найден`);
-        console.log(`\nДоступные up_limit:`);
-        const allUpLimits =
-          await sql`SELECT id, bid, price FROM up_limit ORDER BY bid`;
-        for (const ul of allUpLimits) {
-          console.log(`  ID=${ul.id}: +${ul.bid} заявок (${ul.price} руб.)`);
-        }
-        process.exit(1);
-      }
-
-      upLimitRecord = upLimits[0];
+    if (allUpLimits.length > 0) {
+      upLimitRecord = allUpLimits[0];
+      UP_LIMIT_ID = upLimitRecord.id;
       additionalLimit = upLimitRecord.bid;
       console.log(
-        `✅ up_limit: ID=${upLimitRecord.id}, +${additionalLimit} заявок`,
+        `✅ Максимальный up_limit: ID=${upLimitRecord.id}, +${additionalLimit} заявок (${upLimitRecord.price} руб.)`,
       );
+    } else {
+      console.log("ℹ️ up_limit не найдены в БД, используется только базовый лимит");
     }
 
     const totalLimit = baseBidLimit + additionalLimit;
@@ -192,10 +184,10 @@ async function assignMaxPlan() {
     }
 
     console.log(`\n========================================`);
-    console.log(`Пользователю ${email} выдан тариф PRO_PLUS`);
+    console.log(`✅ УСПЕШНО: Пользователю ${email} выдан МАКСИМАЛЬНЫЙ тариф PRO_PLUS`);
     console.log(`Лимит заявок: ${totalLimit}`);
     if (UP_LIMIT_ID !== null) {
-      console.log(`  (базовый ${baseBidLimit} + доп. ${additionalLimit})`);
+      console.log(`  (базовый ${baseBidLimit} + максимальный доп. лимит ${additionalLimit})`);
     }
     console.log(
       `Действует до: ${finalDayAt.toLocaleDateString("ru-RU")} 23:59`,

@@ -1018,4 +1018,42 @@ export abstract class PaymentService {
 
     return plan;
   }
+
+  /**
+   * Отмена автопродления подписки
+   * @param userId - ID пользователя
+   */
+  static async cancelSubscription(userId: number): Promise<void> {
+    logger.info("Payment: Запрос на отмену автопродления", { userId });
+
+    // Находим активный платный план пользователя
+    const currentUserPayment = await db
+      .select()
+      .from(userPaymentTable)
+      .where(
+        and(
+          eq(userPaymentTable.userId, userId),
+          eq(userPaymentTable.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    if (currentUserPayment.length === 0) {
+      logger.error("Payment: Активный платный план не найден", { userId });
+      const error = new Error("Active paid plan not found");
+      error.name = "ActivePlanNotFoundError";
+      throw error;
+    }
+
+    // Обновляем флаг отмены автопродления
+    await db
+      .update(userPaymentTable)
+      .set({ cancelAutoRenew: true })
+      .where(eq(userPaymentTable.id, currentUserPayment[0].id));
+
+    logger.info("Payment: Автопродление отменено", {
+      userId,
+      userPaymentId: currentUserPayment[0].id,
+    });
+  }
 }

@@ -1,6 +1,6 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   codeTable,
   db,
@@ -8,6 +8,7 @@ import {
   upLimitTable,
   userNotificationTable,
   userPaymentProTable,
+  userPaymentTable,
   userTable,
   type Plan,
   type User,
@@ -233,8 +234,11 @@ export abstract class UserService {
   /**
    * Получение плана пользователя по userId
    * Для Pro+ учитывает дополнительные заявки из user_payment_pro
+   * Возвращает дату окончания подписки из user_payment
    */
-  static async getUserPlan(userId: number): Promise<Plan> {
+  static async getUserPlan(
+    userId: number,
+  ): Promise<Plan & { finalDayAt?: string }> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -258,7 +262,29 @@ export abstract class UserService {
       throw error;
     }
 
+    // Получаем активную запись user_payment для даты окончания
+    const activeUserPayments = await db
+      .select({
+        finalDayAt: userPaymentTable.finalDayAt,
+        cancelAutoRenew: userPaymentTable.cancelAutoRenew,
+      })
+      .from(userPaymentTable)
+      .where(
+        and(
+          eq(userPaymentTable.userId, userId),
+          eq(userPaymentTable.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    const finalDayAt =
+      activeUserPayments.length > 0
+        ? activeUserPayments[0].finalDayAt?.toISOString()
+        : undefined;
+
     // Для Pro+ проверяем дополнительные заявки
+    let updatedPlan: Plan & { finalDayAt?: string } = { ...plan };
+
     if (plan.name === "PRO_PLUS") {
       const userPaymentPro = await db
         .select({
@@ -277,7 +303,7 @@ export abstract class UserService {
 
         if (upLimit.length > 0) {
           // Возвращаем план с обновленным лимитом (базовый + дополнительный)
-          return {
+          updatedPlan = {
             ...plan,
             bidMonthLimit: plan.bidMonthLimit + upLimit[0].bid,
           };
@@ -285,7 +311,10 @@ export abstract class UserService {
       }
     }
 
-    return plan;
+    return {
+      ...updatedPlan,
+      finalDayAt,
+    };
   }
 
   /**

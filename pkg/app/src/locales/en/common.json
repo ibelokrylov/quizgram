@@ -354,6 +354,7 @@
   "payment.cancel_subscription.confirm_button": "Cancel subscription",
   "payment.cancel_subscription.cancel_button": "Cancel",
   "payment.cancel_subscription.success": "Subscription successfully cancelled",
+  "payment.subscription_ends": "Subscription ends",
   "resizeImage.title": "Resize Image",
   "resizeImage.targetSize": "Target size: {{width}}x{{height}}",
   "resizeImage.currentSize": "Current size: {{width}}x{{height}}",
