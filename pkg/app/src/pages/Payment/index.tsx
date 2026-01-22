@@ -95,8 +95,8 @@ export const PaymentPage = () => {
       if (response.data) {
         toast.success(t("payment.cancel_subscription.success"));
         setShowCancelDialog(false);
-        queryClient.invalidateQueries({ queryKey: ["user-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["user"] });
+        await queryClient.refetchQueries({ queryKey: ["user-plan"] });
+        await queryClient.refetchQueries({ queryKey: ["user"] });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("payment.error"));
@@ -268,22 +268,34 @@ export const PaymentPage = () => {
       {userPlanQuery.data && userPlanQuery.data.price > 0 && (
         <div className="flex flex-col items-center gap-4">
           {userPlanQuery.data.finalDayAt && (
-            <p className="text-sm text-muted-foreground">
-              {t("payment.subscription_ends")}:{" "}
-              {new Date(userPlanQuery.data.finalDayAt).toLocaleDateString("ru-RU", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                {userPlanQuery.data.cancelAutoRenew
+                  ? t("payment.subscription_ends")
+                  : t("payment.next_charge")}
+                :{" "}
+                {new Date(userPlanQuery.data.finalDayAt).toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              {userPlanQuery.data.cancelAutoRenew && (
+                <p className="text-sm text-orange-600 mt-1">
+                  {t("payment.subscription_cancelled_info")}
+                </p>
+              )}
+            </div>
           )}
-          <Button
-            variant="outline"
-            onClick={() => setShowCancelDialog(true)}
-            className="text-red-600 hover:text-red-700 hover:border-red-600"
-          >
-            {t("payment.cancel_subscription")}
-          </Button>
+          {!userPlanQuery.data.cancelAutoRenew && (
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(true)}
+              className="text-red-600 hover:text-red-700 hover:border-red-600"
+            >
+              {t("payment.cancel_subscription")}
+            </Button>
+          )}
         </div>
       )}
 

@@ -238,7 +238,7 @@ export abstract class UserService {
    */
   static async getUserPlan(
     userId: number,
-  ): Promise<Plan & { finalDayAt?: string }> {
+  ): Promise<Plan & { finalDayAt?: string; cancelAutoRenew?: boolean }> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -282,8 +282,14 @@ export abstract class UserService {
         ? activeUserPayments[0].finalDayAt?.toISOString()
         : undefined;
 
+    const cancelAutoRenew =
+      activeUserPayments.length > 0
+        ? activeUserPayments[0].cancelAutoRenew
+        : undefined;
+
     // Для Pro+ проверяем дополнительные заявки
-    let updatedPlan: Plan & { finalDayAt?: string } = { ...plan };
+    let updatedPlan: Plan & { finalDayAt?: string; cancelAutoRenew?: boolean } =
+      { ...plan };
 
     if (plan.name === "PRO_PLUS") {
       const userPaymentPro = await db
@@ -314,6 +320,7 @@ export abstract class UserService {
     return {
       ...updatedPlan,
       finalDayAt,
+      cancelAutoRenew,
     };
   }
 

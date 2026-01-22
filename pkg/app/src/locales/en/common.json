@@ -355,6 +355,8 @@
   "payment.cancel_subscription.cancel_button": "Cancel",
   "payment.cancel_subscription.success": "Subscription successfully cancelled",
   "payment.subscription_ends": "Subscription ends",
+  "payment.next_charge": "Next subscription charge",
+  "payment.subscription_cancelled_info": "After this date, your plan will change to FREE",
   "resizeImage.title": "Resize Image",
   "resizeImage.targetSize": "Target size: {{width}}x{{height}}",
   "resizeImage.currentSize": "Current size: {{width}}x{{height}}",

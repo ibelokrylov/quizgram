@@ -330,6 +330,10 @@ export abstract class SchedulerService {
           planId: userPaymentTable.planId,
           finalDayAt: userPaymentTable.finalDayAt,
           planName: planTable.name,
+          planPrice: planTable.price, // Для автосписания
+          subscriptionId: userPaymentTable.subscriptionId, // ID подписки UnitPay
+          cancelAutoRenew: userPaymentTable.cancelAutoRenew, // Флаг отмены автопродления
+          paymentAttempts: userPaymentTable.paymentAttempts, // Количество попыток списания
         })
         .from(userPaymentTable)
         .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
@@ -447,76 +451,104 @@ export abstract class SchedulerService {
 
           // Проверяем, закончилась ли подписка
           if (DateUtils.isBefore(finalDayAt, today)) {
-            logger.info("Подписка истекла, перевод на FREE план", {
+            logger.info("Подписка истекла, проверка возможности автопродления", {
               userId: userPayment.userId,
               planId: userPayment.planId,
+              subscriptionId: userPayment.subscriptionId,
+              cancelAutoRenew: userPayment.cancelAutoRenew,
+              paymentAttempts: userPayment.paymentAttempts,
             });
 
-            // Получаем FREE план (id=1)
-            const freePlans = await db
-              .select()
-              .from(planTable)
-              .where(eq(planTable.id, 1))
-              .limit(1);
+            // Проверяем условия для автопродления:
+            // 1. Есть subscriptionId
+            // 2. Не отменено автопродление (cancelAutoRenew = false)
+            // 3. Еще не было попыток списания (paymentAttempts = 0)
+            const canAutoRenew =
+              userPayment.subscriptionId &&
+              !userPayment.cancelAutoRenew &&
+              userPayment.paymentAttempts === 0;
 
-            if (freePlans.length === 0) {
-              logger.error(
-                "FREE план не найден",
-                new Error("FREE plan not found"),
-                { userId: userPayment.userId }
-              );
-              errors++;
-              continue;
-            }
+            if (canAutoRenew) {
+              logger.info("Попытка автопродления подписки", {
+                userId: userPayment.userId,
+                subscriptionId: userPayment.subscriptionId,
+                planId: userPayment.planId,
+                amount: userPayment.planPrice,
+              });
 
-            const freePlan = freePlans[0];
+              try {
+                // Импортируем PaymentService динамически
+                const { PaymentService } = await import("../payment/service");
 
-            // Деактивируем текущую подписку
-            await db
-              .update(userPaymentTable)
-              .set({
-                isActive: false,
-              })
-              .where(eq(userPaymentTable.id, userPayment.userPaymentId));
+                // Вызываем метод автосписания
+                const charged = await PaymentService.chargeSubscription(
+                  userPayment.userId,
+                  userPayment.planId,
+                  userPayment.subscriptionId!,
+                  userPayment.planPrice,
+                  userPayment.userPaymentId,
+                );
 
-            // Обновляем план пользователя на FREE
-            await db
-              .update(userTable)
-              .set({
-                planId: freePlan.id,
-                updatedAt: DateUtils.toJSDate(DateUtils.now()),
-              })
-              .where(eq(userTable.id, userPayment.userId));
+                if (charged) {
+                  logger.info("Автосписание инициировано успешно", {
+                    userId: userPayment.userId,
+                    subscriptionId: userPayment.subscriptionId,
+                  });
 
-            // Отправляем уведомление о переводе на FREE план
-            try {
-              const userLanguage = userPayment.userLanguage || "ru";
-              const expirationDate = DateUtils.formatDate(DateUtils.now());
-              await MailService.sendPlanExpirationNotice(
+                  // НЕ продлеваем подписку здесь!
+                  // Продление произойдет в webhook handleUnitpayPay после подтверждения
+                  subscriptionsExtended++;
+                } else {
+                  logger.error("Автосписание не удалось, перевод на FREE план", {
+                    userId: userPayment.userId,
+                    subscriptionId: userPayment.subscriptionId,
+                  });
+
+                  // Переводим на FREE план
+                  await this.downgradeToFreePlan(
+                    userPayment.userId,
+                    userPayment.userPaymentId,
+                    userPayment.userLogin,
+                    userPayment.userLanguage,
+                    userPayment.planName,
+                  );
+                }
+              } catch (error) {
+                logger.error(
+                  "Ошибка при попытке автопродления, перевод на FREE план",
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    userId: userPayment.userId,
+                    subscriptionId: userPayment.subscriptionId,
+                  }
+                );
+
+                // При ошибке переводим на FREE план
+                await this.downgradeToFreePlan(
+                  userPayment.userId,
+                  userPayment.userPaymentId,
+                  userPayment.userLogin,
+                  userPayment.userLanguage,
+                  userPayment.planName,
+                );
+              }
+            } else {
+              // Нет условий для автопродления - переводим на FREE план
+              logger.info("Автопродление невозможно, перевод на FREE план", {
+                userId: userPayment.userId,
+                hasSubscriptionId: !!userPayment.subscriptionId,
+                cancelAutoRenew: userPayment.cancelAutoRenew,
+                paymentAttempts: userPayment.paymentAttempts,
+              });
+
+              await this.downgradeToFreePlan(
+                userPayment.userId,
+                userPayment.userPaymentId,
                 userPayment.userLogin,
-                expirationDate,
-                userLanguage,
+                userPayment.userLanguage,
                 userPayment.planName,
               );
-
-              logger.info("Отправлено письмо о переводе на FREE план", {
-                userId: userPayment.userId,
-                email: userPayment.userLogin,
-              });
-            } catch (emailError) {
-              logger.error(
-                "Ошибка при отправке письма о переводе на FREE план",
-                emailError instanceof Error
-                  ? emailError
-                  : new Error(String(emailError)),
-                {
-                  userId: userPayment.userId,
-                  email: userPayment.userLogin,
-                },
-              );
             }
-
-            subscriptionsExtended++;
           }
         } catch (error) {
           logger.error(
@@ -550,6 +582,95 @@ export abstract class SchedulerService {
           durationMs: duration,
         },
       );
+    }
+  }
+
+  /**
+   * Переводит пользователя на FREE план при истечении подписки
+   */
+  private static async downgradeToFreePlan(
+    userId: number,
+    userPaymentId: number,
+    userLogin: string,
+    userLanguage: string | null,
+    planName: string,
+  ): Promise<void> {
+    logger.info("Начало перевода на FREE план", {
+      userId,
+      userPaymentId,
+      currentPlanName: planName,
+    });
+
+    try {
+      // Получаем FREE план (id=1)
+      const freePlans = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.id, 1))
+        .limit(1);
+
+      if (freePlans.length === 0) {
+        logger.error(
+          "FREE план не найден в БД",
+          new Error("FREE plan not found"),
+          { userId }
+        );
+        return;
+      }
+
+      const freePlan = freePlans[0];
+
+      // Деактивируем текущую подписку
+      await db
+        .update(userPaymentTable)
+        .set({
+          isActive: false,
+        })
+        .where(eq(userPaymentTable.id, userPaymentId));
+
+      // Обновляем план пользователя на FREE
+      await db
+        .update(userTable)
+        .set({
+          planId: freePlan.id,
+          updatedAt: DateUtils.toJSDate(DateUtils.now()),
+        })
+        .where(eq(userTable.id, userId));
+
+      logger.info("Пользователь переведен на FREE план", {
+        userId,
+        userPaymentId,
+      });
+
+      // Отправляем уведомление
+      try {
+        const language = userLanguage || "ru";
+        const expirationDate = DateUtils.formatDate(DateUtils.now());
+        await MailService.sendPlanExpirationNotice(
+          userLogin,
+          expirationDate,
+          language,
+          planName,
+        );
+
+        logger.info("Отправлено письмо о переводе на FREE план", {
+          userId,
+          email: userLogin,
+        });
+      } catch (emailError) {
+        logger.error(
+          "Ошибка при отправке письма",
+          emailError instanceof Error ? emailError : new Error(String(emailError)),
+          { userId, email: userLogin }
+        );
+      }
+    } catch (error) {
+      logger.error(
+        "Ошибка при переводе на FREE план",
+        error instanceof Error ? error : new Error(String(error)),
+        { userId, userPaymentId }
+      );
+      throw error;
     }
   }
 }

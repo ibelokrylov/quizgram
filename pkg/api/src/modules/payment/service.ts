@@ -1,7 +1,7 @@
 // Сервис payment — бизнес-логика для обновления плана пользователя
 
 import crypto from "node:crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
   db,
   paymentTable,
@@ -201,6 +201,13 @@ export abstract class PaymentService {
 
     const unitpayPaymentId = Number(params.unitpayId);
     const _orderSum = Number(params.orderSum);
+    const subscriptionId = params.subscriptionId ? String(params.subscriptionId) : null;
+
+    logger.debug("UnitPay: Получен subscriptionId из webhook", {
+      unitpayPaymentId,
+      subscriptionId,
+      hasSubscription: !!subscriptionId,
+    });
 
     const payments = await db
       .select()
@@ -226,7 +233,12 @@ export abstract class PaymentService {
         .set({ status: "paid" })
         .where(eq(paymentTable.id, payment.id));
 
-      let metadata: { planId?: number; upLimitId?: number } = {};
+      let metadata: {
+        planId?: number;
+        upLimitId?: number;
+        isAutoRenewal?: boolean;
+        originalUserPaymentId?: number;
+      } = {};
       try {
         metadata = JSON.parse(payment.metadata || "{}");
       } catch (parseError) {
@@ -236,19 +248,45 @@ export abstract class PaymentService {
         });
         return { error: { message: "Ошибка парсинга metadata" } };
       }
-      const { planId, upLimitId } = metadata;
+      const { planId, upLimitId, isAutoRenewal, originalUserPaymentId } = metadata;
 
-      if (!planId) {
-        logger.error("planId отсутствует в metadata", { unitpayPaymentId, metadata });
-        return { error: { message: "planId отсутствует в metadata" } };
+      if (isAutoRenewal && originalUserPaymentId) {
+        // Это автопродление подписки
+        logger.info("UnitPay: Обработка автопродления подписки", {
+          unitpayPaymentId,
+          userId: payment.userId,
+          planId,
+          originalUserPaymentId,
+        });
+
+        await this.renewSubscription(
+          payment.userId,
+          originalUserPaymentId,
+          payment.id,
+          subscriptionId,
+        );
+      } else {
+        // Обычный первичный платеж
+        logger.info("UnitPay: Обработка первичного платежа", {
+          unitpayPaymentId,
+          userId: payment.userId,
+          planId,
+        });
+
+        if (!planId) {
+          logger.error("planId отсутствует в metadata", { unitpayPaymentId, metadata });
+          return { error: { message: "planId отсутствует в metadata" } };
+        }
+
+        await this.updateUserPlan(
+          payment.userId,
+          planId,
+          payment.id,
+          upLimitId,
+          true,
+          subscriptionId,
+        );
       }
-
-      await this.updateUserPlan(
-        payment.userId,
-        planId,
-        payment.id,
-        upLimitId,
-      );
 
       logger.info("UnitPay: Платёж успешно обработан", {
         unitpayPaymentId,
@@ -561,9 +599,10 @@ export abstract class PaymentService {
         "params[currency]": "RUB",
         "params[resultUrl]": resultUrl,
         "params[customerEmail]": user.login,
+        "params[subscription]": "true", // Рекуррентная подписка
       };
 
-      logger.debug("UnitPay: Параметры запроса к API", { params });
+      logger.debug("UnitPay: Параметры запроса к API (с подпиской)", { params });
 
       const queryString = Object.entries(params)
         .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
@@ -667,6 +706,192 @@ export abstract class PaymentService {
   }
 
   /**
+   * Списание средств по подписке через UnitPay API
+   * @param userId - ID пользователя
+   * @param planId - ID плана для продления
+   * @param subscriptionId - ID подписки UnitPay
+   * @param amount - Сумма списания
+   * @param userPaymentId - ID записи user_payment
+   * @returns true если списание инициировано, false если ошибка
+   */
+  static async chargeSubscription(
+    userId: number,
+    planId: number,
+    subscriptionId: string,
+    amount: number,
+    userPaymentId: number,
+  ): Promise<boolean> {
+    logger.info("UnitPay: Попытка автосписания по подписке", {
+      userId,
+      planId,
+      subscriptionId,
+      amount,
+      userPaymentId,
+    });
+
+    const projectId = process.env.UNITPAY_PROJECT_ID;
+    const secretKey = process.env.UNITPAY_SECRET_KEY;
+
+    if (!projectId || !secretKey) {
+      logger.error("UnitPay: Не настроены учетные данные");
+      return false;
+    }
+
+    try {
+      // Получаем пользователя и план
+      const users = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.id, userId))
+        .limit(1);
+
+      const user = users[0];
+      if (!user) {
+        logger.error("UnitPay: Пользователь не найден", { userId });
+        return false;
+      }
+
+      const plans = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.id, planId))
+        .limit(1);
+
+      const plan = plans[0];
+      if (!plan) {
+        logger.error("UnitPay: План не найден", { planId });
+        return false;
+      }
+
+      const description = `Автопродление подписки ${plan.name}`;
+
+      // Формируем параметры для UnitPay API
+      const params = {
+        method: "initPayment",
+        "params[paymentType]": "card",
+        "params[projectId]": projectId,
+        "params[secretKey]": secretKey,
+        "params[sum]": amount.toString(),
+        "params[account]": userId.toString(),
+        "params[desc]": description,
+        "params[currency]": "RUB",
+        "params[subscriptionId]": subscriptionId, // Ключевой параметр для автосписания
+        "params[customerEmail]": user.login,
+      };
+
+      logger.debug("UnitPay: Параметры автосписания", { params });
+
+      const queryString = Object.entries(params)
+        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        .join("&");
+
+      const apiUrl = `https://unitpay.ru/api?${queryString}`;
+      const response = await fetch(apiUrl);
+      const responseData = await response.json();
+
+      logger.debug("UnitPay: Ответ на автосписание", { responseData });
+
+      // Проверяем успешность
+      if (responseData.error) {
+        logger.error("UnitPay: Ошибка автосписания", {
+          userId,
+          subscriptionId,
+          error: responseData.error,
+        });
+
+        // Обновляем счетчики попыток
+        await db
+          .update(userPaymentTable)
+          .set({
+            paymentAttempts: sql`${userPaymentTable.paymentAttempts} + 1`,
+            lastPaymentAttemptAt: new Date(),
+          })
+          .where(eq(userPaymentTable.id, userPaymentId));
+
+        return false;
+      }
+
+      // Проверяем результат
+      if (responseData.result?.type === "redirect") {
+        logger.info("UnitPay: Автосписание инициировано", {
+          userId,
+          subscriptionId,
+          paymentId: responseData.result.paymentId,
+        });
+
+        // Создаем запись о платеже
+        const paymentData = {
+          userId,
+          planId,
+          amount,
+          currency: "RUB",
+          status: "pending" as const,
+          method: "card" as const,
+          provider: "unitpay" as const,
+          invoiceId: responseData.result.paymentId?.toString(),
+          metadata: JSON.stringify({
+            planName: plan.name,
+            planId,
+            isAutoRenewal: true, // Флаг автопродления
+            originalUserPaymentId: userPaymentId,
+          }),
+        };
+
+        await db.insert(paymentTable).values(paymentData);
+
+        // Обновляем счетчики
+        await db
+          .update(userPaymentTable)
+          .set({
+            paymentAttempts: sql`${userPaymentTable.paymentAttempts} + 1`,
+            lastPaymentAttemptAt: new Date(),
+          })
+          .where(eq(userPaymentTable.id, userPaymentId));
+
+        logger.info("UnitPay: Запись о платеже автопродления создана", {
+          userId,
+          planId,
+        });
+
+        return true; // Списание инициировано, продление будет в webhook
+      }
+
+      logger.error("UnitPay: Неожиданный тип ответа", {
+        userId,
+        subscriptionId,
+        responseType: responseData.result?.type,
+      });
+
+      return false;
+    } catch (error) {
+      logger.error(
+        "UnitPay: Исключение при автосписании",
+        error instanceof Error ? error : new Error(String(error)),
+        { userId, subscriptionId, amount }
+      );
+
+      // Обновляем счетчики даже при исключении
+      try {
+        await db
+          .update(userPaymentTable)
+          .set({
+            paymentAttempts: sql`${userPaymentTable.paymentAttempts} + 1`,
+            lastPaymentAttemptAt: new Date(),
+          })
+          .where(eq(userPaymentTable.id, userPaymentId));
+      } catch (updateError) {
+        logger.error(
+          "UnitPay: Не удалось обновить счетчик",
+          updateError instanceof Error ? updateError : new Error(String(updateError)),
+          { userPaymentId }
+        );
+      }
+
+      return false;
+    }
+  }
+
+  /**
    * Обновление плана пользователя
    * @param userId - ID пользователя
    * @param planId - ID нового плана
@@ -681,6 +906,7 @@ export abstract class PaymentService {
     paymentId: number | null = null,
     upLimitId?: number,
     payNow: boolean = true,
+    subscriptionId?: string | null,
   ): Promise<Plan> {
     // Проверяем, существует ли план
     const plans = await db
@@ -771,6 +997,7 @@ export abstract class PaymentService {
         isPaid: payNow, // Оплата сейчас или в день начала
         startsAt: currentPlanEndsAt, // Когда план начнет действовать
         scheduledPlanId: plan.id,
+        subscriptionId: subscriptionId || null, // ID подписки UnitPay
       };
 
       await db.insert(userPaymentTable).values(scheduledUserPaymentData);
@@ -914,6 +1141,7 @@ export abstract class PaymentService {
         isPaid: payNow, // Оплата сейчас или в день начала
         startsAt: null, // План применяется сразу
         scheduledPlanId: null, // Не отсроченный план
+        subscriptionId: subscriptionId || null, // ID подписки UnitPay
       };
 
       await db.insert(userPaymentTable).values(userPaymentData);
@@ -945,6 +1173,80 @@ export abstract class PaymentService {
     });
 
     return plan;
+  }
+
+  /**
+   * Продление существующей подписки (автопродление)
+   * @param userId - ID пользователя
+   * @param userPaymentId - ID исходной записи user_payment
+   * @param newPaymentId - ID нового платежа
+   * @param newSubscriptionId - Новый subscriptionId (может быть null)
+   */
+  static async renewSubscription(
+    userId: number,
+    userPaymentId: number,
+    newPaymentId: number,
+    newSubscriptionId?: string | null,
+  ): Promise<void> {
+    logger.info("Payment: Начало продления подписки", {
+      userId,
+      userPaymentId,
+      newPaymentId,
+      newSubscriptionId,
+    });
+
+    try {
+      // Получаем текущую запись user_payment
+      const currentPayments = await db
+        .select()
+        .from(userPaymentTable)
+        .where(eq(userPaymentTable.id, userPaymentId))
+        .limit(1);
+
+      if (currentPayments.length === 0) {
+        logger.error("Payment: Запись user_payment не найдена", { userPaymentId });
+        throw new Error("User payment not found");
+      }
+
+      const currentPayment = currentPayments[0];
+
+      // Вычисляем новый finalDayAt: +1 месяц от текущего finalDayAt
+      const newFinalDayAt = new Date(currentPayment.finalDayAt);
+      newFinalDayAt.setMonth(newFinalDayAt.getMonth() + 1);
+      newFinalDayAt.setHours(23, 59, 0, 0);
+
+      logger.debug("Payment: Новая дата окончания подписки", {
+        oldFinalDayAt: currentPayment.finalDayAt,
+        newFinalDayAt,
+      });
+
+      // Обновляем существующую запись user_payment
+      await db
+        .update(userPaymentTable)
+        .set({
+          finalDayAt: newFinalDayAt,
+          paymentId: newPaymentId, // Обновляем на новый платеж
+          month: currentPayment.month + 1, // Увеличиваем счетчик месяцев
+          paymentAttempts: 0, // Сбрасываем счетчик попыток
+          lastPaymentAttemptAt: new Date(),
+          subscriptionId: newSubscriptionId || currentPayment.subscriptionId, // Обновляем если пришел новый
+        })
+        .where(eq(userPaymentTable.id, userPaymentId));
+
+      logger.info("Payment: Подписка успешно продлена", {
+        userId,
+        userPaymentId,
+        newFinalDayAt,
+        newMonth: currentPayment.month + 1,
+      });
+    } catch (error) {
+      logger.error(
+        "Payment: Ошибка при продлении подписки",
+        error instanceof Error ? error : new Error(String(error)),
+        { userId, userPaymentId, newPaymentId }
+      );
+      throw error;
+    }
   }
 
   /**

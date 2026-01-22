@@ -133,6 +133,7 @@ export namespace UserModel {
     price: t.Number(),
     bidMonthLimit: t.Number(),
     finalDayAt: t.Optional(t.String()), // Дата окончания подписки (ISO string)
+    cancelAutoRenew: t.Optional(t.Boolean()), // Отменено ли автопродление
   });
 
   export type userPlan = typeof userPlan.static;

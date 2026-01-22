@@ -348,6 +348,8 @@
   "payment.cancel_subscription.cancel_button": "Назад",
   "payment.cancel_subscription.success": "Подписка успешно отменена",
   "payment.subscription_ends": "Подписка заканчивается",
+  "payment.next_charge": "Списание за подписку будет",
+  "payment.subscription_cancelled_info": "После этой даты план изменится на FREE",
   "edit-quiz.publish": "Опубликовать",
   "toast.error.quiz-load": "Квиз уже опубликован",
   "toast.error.quiz-not-load": "Ошибка публикации квиза",

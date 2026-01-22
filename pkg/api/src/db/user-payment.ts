@@ -6,6 +6,7 @@ import {
   integer,
   pgTable,
   serial,
+  text,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { paymentTable } from "./payment";
@@ -46,6 +47,8 @@ export const userPaymentTable = pgTable("user_payment", {
   maxPaymentAttempts: integer("max_payment_attempts").notNull().default(7), // Максимум попыток (по умолчанию 7 дней)
   // Поля для отмены автопродления
   cancelAutoRenew: boolean("cancel_auto_renew").notNull().default(false), // Отмена автопродления подписки
+  // ID подписки UnitPay для рекуррентных платежей
+  subscriptionId: text("subscription_id"),
 });
 
 // Тип строки таблицы для использования в коде приложения

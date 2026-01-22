@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
-import type { User } from "../../db";
+import { and, eq } from "drizzle-orm";
+import { db, type User, userPaymentTable } from "../../db";
 import { logger } from "../../lib/logger";
 import { AuthService } from "../auth/service";
 import { PaymentModel } from "./model";
@@ -60,6 +61,7 @@ export const payment = new Elysia({ prefix: "/payment" })
         profit: t.Optional(t.Union([t.String(), t.Number()])),
         paymentType: t.Optional(t.String()),
         errorMessage: t.Optional(t.String()),
+        subscriptionId: t.Optional(t.Union([t.String(), t.Number()])),
       }),
       response: {
         200: t.Union([
@@ -353,11 +355,30 @@ export const payment = new Elysia({ prefix: "/payment" })
                 userId: user.id,
               });
 
+              // Получаем finalDayAt из активной подписки
+              const activePayments = await db
+                .select({
+                  finalDayAt: userPaymentTable.finalDayAt,
+                })
+                .from(userPaymentTable)
+                .where(
+                  and(
+                    eq(userPaymentTable.userId, user.id),
+                    eq(userPaymentTable.isActive, true),
+                  ),
+                )
+                .limit(1);
+
+              const finalDayAt = activePayments.length > 0
+                ? activePayments[0].finalDayAt.toISOString()
+                : new Date().toISOString();
+
               return {
                 message: "ok",
                 data: {
                   planId: user.planId,
-                  planName: "Отменено",
+                  planName: "Подписка будет отменена",
+                  finalDayAt,
                 },
               };
             } catch (error) {

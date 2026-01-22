@@ -31,5 +31,6 @@ export const userPlanZod = z.object({
   price: z.number(),
   bidMonthLimit: z.number(),
   finalDayAt: z.string().optional(), // Дата окончания подписки (ISO string)
+  cancelAutoRenew: z.boolean().optional(), // Отменено ли автопродление
 });
 export type UserPlan = z.infer<typeof userPlanZod>;
