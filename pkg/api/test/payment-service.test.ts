@@ -187,9 +187,9 @@ test("6. handleUnitpayCheck обрабатывает проверку плате
     const userId = await createTestUser();
     const basePlanId = await ensureTestPlan("BASE", 1000, 200);
 
-    await createTestPayment(userId, basePlanId, {
+    // account теперь содержит paymentId, а не userId
+    const paymentId = await createTestPayment(userId, basePlanId, {
       status: "pending",
-      invoiceId: "123456789",
       amount: 1000,
       currency: "RUB",
     });
@@ -198,7 +198,7 @@ test("6. handleUnitpayCheck обрабатывает проверку плате
     const method = "check";
     const paramKeys = Object.keys({
       unitpayId: "123456789",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
     })
@@ -207,7 +207,7 @@ test("6. handleUnitpayCheck обрабатывает проверку плате
     const sortedParamsValues = paramKeys.map((key) => {
       const params: Record<string, any> = {
         unitpayId: "123456789",
-        account: userId.toString(),
+        account: paymentId.toString(),
         orderSum: "1000",
         orderCurrency: "RUB",
       };
@@ -226,7 +226,7 @@ test("6. handleUnitpayCheck обрабатывает проверку плате
     const params = {
       method: "check",
       unitpayId: "123456789",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
       signature,
@@ -270,6 +270,7 @@ test("8. handleUnitpayPay обрабатывает успешный платеж
     const userId = await createTestUser();
     const basePlanId = await ensureTestPlan("BASE", 1000, 200);
 
+    // account теперь содержит paymentId, а не userId
     const paymentId = await createTestPayment(userId, basePlanId, {
       status: "pending",
       invoiceId: "987654321",
@@ -285,7 +286,7 @@ test("8. handleUnitpayPay обрабатывает успешный платеж
     const method = "pay";
     const paramKeys = Object.keys({
       unitpayId: "987654321",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
     })
@@ -294,7 +295,7 @@ test("8. handleUnitpayPay обрабатывает успешный платеж
     const sortedParamsValues = paramKeys.map((key) => {
       const params: Record<string, any> = {
         unitpayId: "987654321",
-        account: userId.toString(),
+        account: paymentId.toString(),
         orderSum: "1000",
         orderCurrency: "RUB",
       };
@@ -313,7 +314,7 @@ test("8. handleUnitpayPay обрабатывает успешный платеж
     const params = {
       method: "pay",
       unitpayId: "987654321",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
       signature,
@@ -345,9 +346,11 @@ test("9. handleUnitpayPay возвращает ошибку если плате�
   await measureTest("9. handleUnitpayPay: платеж не найден", async () => {
     const crypto = require("crypto");
     const method = "pay";
+    // account теперь содержит paymentId (число), используем несуществующий ID
+    const nonExistentPaymentId = "999999";
     const paramKeys = Object.keys({
       unitpayId: "999999999",
-      account: "test",
+      account: nonExistentPaymentId,
       orderSum: "1000",
       orderCurrency: "RUB",
     })
@@ -356,7 +359,7 @@ test("9. handleUnitpayPay возвращает ошибку если плате�
     const sortedParamsValues = paramKeys.map((key) => {
       const params: Record<string, any> = {
         unitpayId: "999999999",
-        account: "test",
+        account: nonExistentPaymentId,
         orderSum: "1000",
         orderCurrency: "RUB",
       };
@@ -375,7 +378,7 @@ test("9. handleUnitpayPay возвращает ошибку если плате�
     const params = {
       method: "pay",
       unitpayId: "999999999",
-      account: "test",
+      account: nonExistentPaymentId,
       orderSum: "1000",
       orderCurrency: "RUB",
       signature,
@@ -395,6 +398,7 @@ test("10. handleUnitpayError обрабатывает ошибку платеж�
     const userId = await createTestUser();
     const basePlanId = await ensureTestPlan("BASE", 1000, 200);
 
+    // account теперь содержит paymentId, а не userId
     const paymentId = await createTestPayment(userId, basePlanId, {
       status: "pending",
       invoiceId: "555555555",
@@ -404,7 +408,7 @@ test("10. handleUnitpayError обрабатывает ошибку платеж�
     const method = "error";
     const paramKeys = Object.keys({
       unitpayId: "555555555",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
     })
@@ -413,7 +417,7 @@ test("10. handleUnitpayError обрабатывает ошибку платеж�
     const sortedParamsValues = paramKeys.map((key) => {
       const params: Record<string, any> = {
         unitpayId: "555555555",
-        account: userId.toString(),
+        account: paymentId.toString(),
         orderSum: "1000",
         orderCurrency: "RUB",
       };
@@ -432,7 +436,7 @@ test("10. handleUnitpayError обрабатывает ошибку платеж�
     const params = {
       method: "error",
       unitpayId: "555555555",
-      account: userId.toString(),
+      account: paymentId.toString(),
       orderSum: "1000",
       orderCurrency: "RUB",
       signature,
