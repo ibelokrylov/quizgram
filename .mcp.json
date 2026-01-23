@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=unrestricted"],
+      "env": {
+        "DATABASE_URI": "postgresql://postgres:postgres@localhost:5432/postgres"
+      }
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    },
+    "context7": {
+      "type": "sse",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}

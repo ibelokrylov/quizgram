@@ -29,4 +29,22 @@ export default defineConfig({
     port: 5173,
     https: {},
   },
+  build: {
+    // Используем esbuild вместо terser (быстрее, меньше памяти)
+    minify: "esbuild",
+    // Отключаем sourcemaps для production (экономит память)
+    sourcemap: false,
+    // Увеличиваем лимит для chunks
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // Ручное разделение chunks для уменьшения потребления памяти
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["@tanstack/react-router"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+  },
 });

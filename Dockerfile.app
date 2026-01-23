@@ -30,6 +30,9 @@ WORKDIR /app/pkg/app
 # Устанавливаем NODE_ENV для production сборки
 ENV NODE_ENV=production
 
+# Ограничиваем память для сборки (важно для серверов с малым RAM)
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # Собираем приложение (Vite автоматически использует переменные из .env)
 RUN bun run build
 
