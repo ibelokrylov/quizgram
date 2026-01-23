@@ -82,181 +82,311 @@ export abstract class PaymentService {
 
   /**
    * Проверка подписи UnitPay webhook
-   * Формула: sha256(method + "{up}" + sorted(params) + "{up}" + secretKey)
-   * @param params - Параметры запроса webhook
+   * Формула: sha256(method + "{up}" + sorted(params_values) + "{up}" + secretKey)
+   * Параметры сортируются по ключу, signature исключается из расчёта
+   * @param params - Параметры запроса webhook (плоский объект без method в корне)
    * @returns true, если подпись верная
    */
   static verifyUnitpaySignature(params: Record<string, any>): boolean {
-    logger.debug("UnitPay: Проверка подписи webhook", {
-      method: params.method,
-      hasSignature: !!params.signature,
-      unitpayId: params.unitpayId,
-      paramsKeys: Object.keys(params),
+    const method = params.method;
+    const signature = params.signature;
+    const unitpayId = params.unitpayId;
+
+    logger.info("UnitPay Signature: Начало проверки подписи", {
+      method,
+      unitpayId,
+      hasSignature: !!signature,
+      paramsCount: Object.keys(params).length,
+    });
+
+    logger.debug("UnitPay Signature: Все ключи параметров", {
+      keys: Object.keys(params).sort(),
     });
 
     const secretKey = process.env.UNITPAY_SECRET_KEY;
     if (!secretKey) {
-      logger.error("UNITPAY_SECRET_KEY не настроен");
+      logger.error("UnitPay Signature: UNITPAY_SECRET_KEY не настроен в окружении");
       return false;
     }
 
-    const signature = params.signature;
     if (!signature) {
-      logger.error("Отсутствует signature в запросе webhook", { params });
+      logger.error("UnitPay Signature: Отсутствует signature в запросе", {
+        unitpayId,
+        params,
+      });
       return false;
     }
 
-    const method = params.method;
+    if (!method) {
+      logger.error("UnitPay Signature: Отсутствует method в запросе", {
+        unitpayId,
+        params,
+      });
+      return false;
+    }
 
+    // Получаем все ключи кроме signature и method, сортируем по алфавиту
     const paramKeys = Object.keys(params)
       .filter((key) => key !== "signature" && key !== "method")
       .sort();
 
-    const sortedParamsValues = paramKeys.map((key) => params[key]);
+    // Получаем значения в отсортированном порядке
+    const sortedParamsValues = paramKeys.map((key) => String(params[key]));
 
-    const signatureString = [method, ...sortedParamsValues, secretKey].join(
-      "{up}",
-    );
+    // Формируем строку для хеширования: method{up}value1{up}value2{up}...{up}secretKey
+    const signatureString = [method, ...sortedParamsValues, secretKey].join("{up}");
 
     const calculatedSignature = crypto
       .createHash("sha256")
       .update(signatureString)
       .digest("hex");
 
-    logger.debug("UnitPay: Проверка подписи", {
+    const isValid = signature === calculatedSignature;
+
+    logger.info("UnitPay Signature: Результат проверки", {
+      unitpayId,
+      isValid,
+      receivedSignature: signature,
+      calculatedSignature,
+    });
+
+    logger.debug("UnitPay Signature: Детали расчёта", {
       method,
       paramKeys,
       sortedParamsValues,
-      signatureString,
-      receivedSignature: signature,
-      calculatedSignature,
-      isValid: signature === calculatedSignature,
+      signatureStringPreview: signatureString.substring(0, 100) + "...",
+      secretKeyLength: secretKey.length,
     });
 
-    return signature === calculatedSignature;
+    if (!isValid) {
+      logger.error("UnitPay Signature: Подпись НЕ совпадает", {
+        unitpayId,
+        receivedSignature: signature,
+        calculatedSignature,
+        paramKeys,
+        sortedParamsValues,
+      });
+    }
+
+    return isValid;
   }
 
   /**
    * Обработка события 'check' от UnitPay
+   * CHECK проверяет готовность системы: корректность суммы, существование платежа
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayCheck(params: Record<string, any>) {
-    logger.debug("UnitPay: Обработка события check", { params });
+    const unitpayPaymentId = params.unitpayId;
+    const orderSum = params.orderSum;
+    const account = params.account;
+    const isTest = params.test === "1";
 
+    logger.info("UnitPay CHECK: Начало обработки", {
+      unitpayPaymentId,
+      orderSum,
+      account,
+      isTest,
+      projectId: params.projectId,
+    });
+
+    // Проверка подписи
     const isValid = this.verifyUnitpaySignature(params);
     if (!isValid) {
-      logger.error("Неверная подпись webhook", { params });
+      logger.error("UnitPay CHECK: Неверная подпись webhook", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Неверная подпись" } };
     }
 
-    const unitpayPaymentId = Number(params.unitpayId);
-    const orderSum = Number(params.orderSum);
+    logger.info("UnitPay CHECK: Подпись верна", { unitpayPaymentId });
+
+    // Поиск платежа по invoiceId (unitpayId)
+    logger.debug("UnitPay CHECK: Поиск платежа в БД", {
+      searchBy: "invoiceId",
+      value: unitpayPaymentId,
+    });
 
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
       .limit(1);
 
     if (payments.length === 0) {
-      logger.error("Платёж не найден", { unitpayPaymentId });
+      logger.error("UnitPay CHECK: Платёж не найден в БД", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Платёж не найден" } };
     }
 
     const payment = payments[0];
 
+    logger.info("UnitPay CHECK: Платёж найден", {
+      unitpayPaymentId,
+      paymentId: payment.id,
+      userId: payment.userId,
+      status: payment.status,
+      amount: payment.amount,
+      currency: payment.currency,
+    });
+
+    // Проверка статуса
     if (payment.status !== "pending") {
-      logger.error("Платёж не в статусе pending", { unitpayPaymentId, status: payment.status });
+      logger.error("UnitPay CHECK: Платёж не в статусе pending", {
+        unitpayPaymentId,
+        paymentId: payment.id,
+        currentStatus: payment.status,
+      });
       return { error: { message: "Некорректный статус платежа" } };
     }
 
-    if (Math.abs(payment.amount - orderSum) > 0.01) {
-      logger.error("Несовпадение суммы", {
+    // Проверка суммы
+    const expectedAmount = payment.amount;
+    const receivedAmount = Number(orderSum);
+
+    if (Math.abs(expectedAmount - receivedAmount) > 0.01) {
+      logger.error("UnitPay CHECK: Несовпадение суммы", {
         unitpayPaymentId,
-        expected: payment.amount,
-        received: orderSum,
+        paymentId: payment.id,
+        expectedAmount,
+        receivedAmount,
+        difference: Math.abs(expectedAmount - receivedAmount),
       });
       return { error: { message: "Несовпадение суммы" } };
     }
 
-    logger.info("UnitPay: Check успешен", { unitpayPaymentId });
+    logger.info("UnitPay CHECK: Успешно завершён", {
+      unitpayPaymentId,
+      paymentId: payment.id,
+      amount: expectedAmount,
+    });
 
     return { result: { message: "Запрос успешно обработан" } };
   }
 
   /**
    * Обработка события 'pay' от UnitPay (успешная оплата)
+   * PAY уведомляет об успешном списании - необходимо оказать услугу
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayPay(params: Record<string, any>) {
-    logger.debug("UnitPay: Обработка события pay", { params });
+    const unitpayPaymentId = params.unitpayId;
+    const orderSum = params.orderSum;
+    const account = params.account;
+    const subscriptionId = params.subscriptionId ? String(params.subscriptionId) : null;
+    const isTest = params.test === "1";
 
+    logger.info("UnitPay PAY: Начало обработки", {
+      unitpayPaymentId,
+      orderSum,
+      account,
+      subscriptionId,
+      isTest,
+      projectId: params.projectId,
+      profit: params.profit,
+    });
+
+    // Проверка подписи
     const isValid = this.verifyUnitpaySignature(params);
     if (!isValid) {
-      logger.error("Неверная подпись webhook", { params });
+      logger.error("UnitPay PAY: Неверная подпись webhook", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Неверная подпись" } };
     }
 
-    const unitpayPaymentId = Number(params.unitpayId);
-    const _orderSum = Number(params.orderSum);
-    const subscriptionId = params.subscriptionId ? String(params.subscriptionId) : null;
+    logger.info("UnitPay PAY: Подпись верна", { unitpayPaymentId });
 
-    logger.debug("UnitPay: Получен subscriptionId из webhook", {
-      unitpayPaymentId,
-      subscriptionId,
-      hasSubscription: !!subscriptionId,
+    // Поиск платежа в БД
+    logger.debug("UnitPay PAY: Поиск платежа в БД", {
+      searchBy: "invoiceId",
+      value: unitpayPaymentId,
     });
 
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
       .limit(1);
 
     if (payments.length === 0) {
-      logger.error("Платёж не найден", { unitpayPaymentId });
+      logger.error("UnitPay PAY: Платёж не найден в БД", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Платёж не найден" } };
     }
 
     const payment = payments[0];
 
+    logger.info("UnitPay PAY: Платёж найден", {
+      unitpayPaymentId,
+      paymentId: payment.id,
+      userId: payment.userId,
+      status: payment.status,
+      amount: payment.amount,
+    });
+
+    // Идемпотентность: если платёж уже оплачен, возвращаем успех
     if (payment.status === "paid") {
-      logger.info("Платёж уже оплачен", { unitpayPaymentId });
+      logger.info("UnitPay PAY: Платёж уже обработан (идемпотентность)", {
+        unitpayPaymentId,
+        paymentId: payment.id,
+      });
       return { result: { message: "Запрос успешно обработан" } };
     }
 
     try {
+      // Обновляем статус платежа на "paid"
+      logger.debug("UnitPay PAY: Обновление статуса платежа на paid", {
+        paymentId: payment.id,
+      });
+
       await db
         .update(paymentTable)
         .set({ status: "paid" })
         .where(eq(paymentTable.id, payment.id));
 
+      // Парсинг metadata
       let metadata: {
         planId?: number;
         upLimitId?: number;
         isAutoRenewal?: boolean;
         originalUserPaymentId?: number;
       } = {};
+
       try {
         metadata = JSON.parse(payment.metadata || "{}");
+        logger.debug("UnitPay PAY: Metadata распарсен", {
+          paymentId: payment.id,
+          metadata,
+        });
       } catch (parseError) {
-        logger.error("Ошибка парсинга metadata платежа", parseError, {
+        logger.error("UnitPay PAY: Ошибка парсинга metadata", parseError, {
           unitpayPaymentId,
-          metadata: payment.metadata,
+          paymentId: payment.id,
+          rawMetadata: payment.metadata,
         });
         return { error: { message: "Ошибка парсинга metadata" } };
       }
+
       const { planId, upLimitId, isAutoRenewal, originalUserPaymentId } = metadata;
 
       if (isAutoRenewal && originalUserPaymentId) {
-        // Это автопродление подписки
-        logger.info("UnitPay: Обработка автопродления подписки", {
+        // Автопродление подписки
+        logger.info("UnitPay PAY: Обработка автопродления подписки", {
           unitpayPaymentId,
+          paymentId: payment.id,
           userId: payment.userId,
           planId,
           originalUserPaymentId,
+          subscriptionId,
         });
 
         await this.renewSubscription(
@@ -265,16 +395,29 @@ export abstract class PaymentService {
           payment.id,
           subscriptionId,
         );
-      } else {
-        // Обычный первичный платеж
-        logger.info("UnitPay: Обработка первичного платежа", {
+
+        logger.info("UnitPay PAY: Автопродление завершено", {
           unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        });
+      } else {
+        // Первичный платёж
+        logger.info("UnitPay PAY: Обработка первичного платежа", {
+          unitpayPaymentId,
+          paymentId: payment.id,
           userId: payment.userId,
           planId,
+          upLimitId,
+          subscriptionId,
         });
 
         if (!planId) {
-          logger.error("planId отсутствует в metadata", { unitpayPaymentId, metadata });
+          logger.error("UnitPay PAY: planId отсутствует в metadata", {
+            unitpayPaymentId,
+            paymentId: payment.id,
+            metadata,
+          });
           return { error: { message: "planId отсутствует в metadata" } };
         }
 
@@ -286,53 +429,115 @@ export abstract class PaymentService {
           true,
           subscriptionId,
         );
+
+        logger.info("UnitPay PAY: План пользователя обновлён", {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+          planId,
+        });
       }
 
-      logger.info("UnitPay: Платёж успешно обработан", {
+      logger.info("UnitPay PAY: Успешно завершён", {
         unitpayPaymentId,
         paymentId: payment.id,
         userId: payment.userId,
         planId,
+        subscriptionId,
       });
 
       return { result: { message: "Запрос успешно обработан" } };
     } catch (error) {
-      logger.error("Ошибка при обработке платежа", error, { unitpayPaymentId });
+      logger.error(
+        "UnitPay PAY: Ошибка при обработке",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        },
+      );
       return { error: { message: "Ошибка обработки платежа" } };
     }
   }
 
   /**
    * Обработка события 'error' от UnitPay
+   * ERROR уведомляет об ошибке платежа на любом этапе
+   * Статус не конечный - после ERROR может последовать PAY
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayError(params: Record<string, any>) {
-    logger.debug("UnitPay: Обработка события error", { params });
+    const unitpayPaymentId = params.unitpayId;
+    const account = params.account;
+    const errorMessage = params.errorMessage;
+    const isTest = params.test === "1";
 
+    logger.info("UnitPay ERROR: Начало обработки", {
+      unitpayPaymentId,
+      account,
+      errorMessage,
+      isTest,
+      projectId: params.projectId,
+    });
+
+    // Проверка подписи
     const isValid = this.verifyUnitpaySignature(params);
     if (!isValid) {
-      logger.error("Неверная подпись webhook", { params });
+      logger.error("UnitPay ERROR: Неверная подпись webhook", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Неверная подпись" } };
     }
 
-    const unitpayPaymentId = Number(params.unitpayId);
+    logger.info("UnitPay ERROR: Подпись верна", { unitpayPaymentId });
 
     try {
+      // Поиск платежа
+      const payments = await db
+        .select()
+        .from(paymentTable)
+        .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
+        .limit(1);
+
+      if (payments.length === 0) {
+        logger.warn("UnitPay ERROR: Платёж не найден в БД (возможно тестовый запрос)", {
+          unitpayPaymentId,
+          account,
+        });
+        return { result: { message: "Запрос успешно обработан" } };
+      }
+
+      const payment = payments[0];
+
+      logger.info("UnitPay ERROR: Платёж найден, обновление статуса на failed", {
+        unitpayPaymentId,
+        paymentId: payment.id,
+        userId: payment.userId,
+        currentStatus: payment.status,
+        errorMessage,
+      });
+
       await db
         .update(paymentTable)
         .set({ status: "failed" })
-        .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()));
+        .where(eq(paymentTable.id, payment.id));
 
-      logger.info("UnitPay: Статус платежа изменён на failed", {
+      logger.info("UnitPay ERROR: Успешно завершён", {
         unitpayPaymentId,
+        paymentId: payment.id,
+        newStatus: "failed",
       });
 
       return { result: { message: "Запрос успешно обработан" } };
     } catch (error) {
-      logger.error("Ошибка при обновлении статуса платежа", error, {
-        unitpayPaymentId,
-      });
+      logger.error(
+        "UnitPay ERROR: Ошибка при обработке",
+        error instanceof Error ? error : new Error(String(error)),
+        { unitpayPaymentId },
+      );
       return { error: { message: "Ошибка обновления статуса" } };
     }
   }
@@ -343,31 +548,60 @@ export abstract class PaymentService {
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayRefund(params: Record<string, any>) {
-    logger.debug("UnitPay: Обработка события refund", { params });
+    const unitpayPaymentId = params.unitpayId;
+    const account = params.account;
+    const isTest = params.test === "1";
 
+    logger.info("UnitPay REFUND: Начало обработки", {
+      unitpayPaymentId,
+      account,
+      isTest,
+      projectId: params.projectId,
+    });
+
+    // Проверка подписи
     const isValid = this.verifyUnitpaySignature(params);
     if (!isValid) {
-      logger.error("Неверная подпись webhook (refund)", { params });
+      logger.error("UnitPay REFUND: Неверная подпись webhook", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Неверная подпись" } };
     }
 
-    const unitpayPaymentId = Number(params.unitpayId);
+    logger.info("UnitPay REFUND: Подпись верна", { unitpayPaymentId });
 
+    // Поиск платежа
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, unitpayPaymentId.toString()))
+      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
       .limit(1);
 
     if (payments.length === 0) {
-      logger.error("Платёж для возврата не найден", { unitpayPaymentId });
+      logger.error("UnitPay REFUND: Платёж не найден в БД", {
+        unitpayPaymentId,
+        account,
+      });
       return { error: { message: "Платёж не найден" } };
     }
 
     const payment = payments[0];
 
+    logger.info("UnitPay REFUND: Платёж найден", {
+      unitpayPaymentId,
+      paymentId: payment.id,
+      userId: payment.userId,
+      status: payment.status,
+      amount: payment.amount,
+    });
+
     try {
       // Обновляем статус платежа на 'failed' (возврат = отмена)
+      logger.debug("UnitPay REFUND: Обновление статуса платежа на failed", {
+        paymentId: payment.id,
+      });
+
       await db
         .update(paymentTable)
         .set({
@@ -390,6 +624,13 @@ export abstract class PaymentService {
       if (freePlans.length > 0) {
         const freePlan = freePlans[0];
 
+        logger.info("UnitPay REFUND: Откат плана пользователя на FREE", {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+          freePlanId: freePlan.id,
+        });
+
         // Деактивируем текущий активный план
         await db
           .update(userPaymentTable)
@@ -410,15 +651,35 @@ export abstract class PaymentService {
           })
           .where(eq(userTable.id, payment.userId));
 
-        logger.info("UnitPay: Возврат обработан, план откачен на FREE", {
+        logger.info("UnitPay REFUND: План пользователя откачен на FREE", {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        });
+      } else {
+        logger.warn("UnitPay REFUND: FREE план не найден в БД", {
           unitpayPaymentId,
           userId: payment.userId,
         });
       }
 
+      logger.info("UnitPay REFUND: Успешно завершён", {
+        unitpayPaymentId,
+        paymentId: payment.id,
+        userId: payment.userId,
+      });
+
       return { result: { message: "Запрос успешно обработан" } };
     } catch (error) {
-      logger.error("Ошибка при обработке возврата", error, { unitpayPaymentId });
+      logger.error(
+        "UnitPay REFUND: Ошибка при обработке",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        },
+      );
       return { error: { message: "Ошибка обработки возврата" } };
     }
   }

@@ -9,60 +9,85 @@ import { PaymentService } from "./service";
 export const payment = new Elysia({ prefix: "/payment" })
   .state("user", null as User | null)
   // Публичный webhook endpoint (без авторизации) — должен быть доступен для UnitPay
-  .post(
+  // UnitPay отправляет GET запросы с параметрами в формате params[key]=value
+  .get(
     "/unitpay-webhook",
     async (ctx) => {
       try {
-        const params = ctx.body;
-        const method = params.method;
+        // UnitPay отправляет параметры в формате params[key]=value
+        // Нужно вручную распарсить query string, так как Elysia может не парсить вложенные скобки
+        const url = new URL(ctx.request.url);
+        const searchParams = url.searchParams;
+
+        logger.debug("UnitPay Webhook: Raw query string", {
+          rawUrl: ctx.request.url,
+          searchParamsEntries: Array.from(searchParams.entries()),
+        });
+
+        // Извлекаем method из корневого уровня
+        const method = searchParams.get("method");
+
+        // Извлекаем параметры из params[key] формата
+        const params: Record<string, string> = { method: method || "" };
+        for (const [key, value] of searchParams.entries()) {
+          const match = key.match(/^params\[(.+)\]$/);
+          if (match) {
+            params[match[1]] = value;
+          }
+        }
 
         logger.info("UnitPay Webhook: Входящий запрос", {
           method,
           unitpayId: params.unitpayId,
           account: params.account,
-          sum: params.sum,
           orderSum: params.orderSum,
+          projectId: params.projectId,
+          paymentType: params.paymentType,
+          test: params.test,
+          hasSignature: !!params.signature,
         });
 
+        logger.debug("UnitPay Webhook: Все параметры", { params });
+
+        if (!method) {
+          logger.error("UnitPay Webhook: Отсутствует method", { params });
+          return { error: { message: "Missing method" } };
+        }
+
+        let result: { result: { message: string } } | { error: { message: string } };
+
         if (method === "check") {
-          return await PaymentService.handleUnitpayCheck(params);
+          logger.info("UnitPay Webhook: Обработка CHECK", { unitpayId: params.unitpayId });
+          result = await PaymentService.handleUnitpayCheck(params);
         } else if (method === "pay") {
-          return await PaymentService.handleUnitpayPay(params);
+          logger.info("UnitPay Webhook: Обработка PAY", { unitpayId: params.unitpayId });
+          result = await PaymentService.handleUnitpayPay(params);
         } else if (method === "error") {
-          return await PaymentService.handleUnitpayError(params);
-        } else if (method === "refund") {
-          return await PaymentService.handleUnitpayRefund(params);
+          logger.info("UnitPay Webhook: Обработка ERROR", {
+            unitpayId: params.unitpayId,
+            errorMessage: params.errorMessage,
+          });
+          result = await PaymentService.handleUnitpayError(params);
+        } else if (method === "preauth") {
+          logger.info("UnitPay Webhook: Обработка PREAUTH", { unitpayId: params.unitpayId });
+          // PREAUTH не требует действий, просто подтверждаем получение
+          result = { result: { message: "Запрос успешно обработан" } };
         } else {
-          logger.error("Unknown webhook method", { method });
+          logger.error("UnitPay Webhook: Неизвестный method", { method });
           return { error: { message: "Unknown method" } };
         }
+
+        logger.info("UnitPay Webhook: Ответ", { method, result });
+        return result;
       } catch (error) {
         logger.error(
-          "Webhook processing error",
+          "UnitPay Webhook: Ошибка обработки",
           error instanceof Error ? error : new Error(String(error)),
         );
         return { error: { message: "Internal error" } };
       }
     },
     {
-      body: t.Object({
-        method: t.String(),
-        params: t.Optional(t.Record(t.String(), t.Any())),
-        signature: t.Optional(t.String()),
-        unitpayId: t.Optional(t.Union([t.String(), t.Number()])),
-        projectId: t.Optional(t.Union([t.String(), t.Number()])),
-        account: t.Optional(t.String()),
-        sum: t.Optional(t.Union([t.String(), t.Number()])),
-        orderSum: t.Optional(t.Union([t.String(), t.Number()])),
-        orderCurrency: t.Optional(t.String()),
-        date: t.Optional(t.String()),
-        payerSum: t.Optional(t.Union([t.String(), t.Number()])),
-        payerCurrency: t.Optional(t.String()),
-        profit: t.Optional(t.Union([t.String(), t.Number()])),
-        paymentType: t.Optional(t.String()),
-        errorMessage: t.Optional(t.String()),
-        subscriptionId: t.Optional(t.Union([t.String(), t.Number()])),
-      }),
       response: {
         200: t.Union([
           t.Object({ result: t.Object({ message: t.String() }) }),
