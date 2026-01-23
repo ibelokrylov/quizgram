@@ -588,6 +588,21 @@ export abstract class PaymentService {
 
       logger.debug("UnitPay: URL возврата", { resultUrl });
 
+      // cashItems для 54-ФЗ (онлайн-касса)
+      // Согласно документации UnitPay: JSON -> base64 -> URL encode
+      const cashItemsJson = JSON.stringify([
+        {
+          name: description,
+          count: 1,
+          price: totalAmount,
+          currency: "RUB",
+          nds: "none",
+          type: "service",
+          paymentMethod: "full_payment",
+        },
+      ]);
+      const cashItems = Buffer.from(cashItemsJson).toString("base64");
+
       const params = {
         method: "initPayment",
         "params[paymentType]": "card",
@@ -600,6 +615,7 @@ export abstract class PaymentService {
         "params[resultUrl]": resultUrl,
         "params[customerEmail]": user.login,
         "params[subscription]": "true", // Рекуррентная подписка
+        "params[cashItems]": cashItems,
       };
 
       logger.debug("UnitPay: Параметры запроса к API (с подпиской)", { params });
