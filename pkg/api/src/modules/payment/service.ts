@@ -174,13 +174,14 @@ export abstract class PaymentService {
   /**
    * Обработка события 'check' от UnitPay
    * CHECK проверяет готовность системы: корректность суммы, существование платежа
+   * account содержит paymentId из нашей БД
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayCheck(params: Record<string, any>) {
     const unitpayPaymentId = params.unitpayId;
     const orderSum = params.orderSum;
-    const account = params.account;
+    const account = params.account; // Это наш paymentId
     const isTest = params.test === "1";
 
     logger.info("UnitPay CHECK: Начало обработки", {
@@ -203,21 +204,32 @@ export abstract class PaymentService {
 
     logger.info("UnitPay CHECK: Подпись верна", { unitpayPaymentId });
 
-    // Поиск платежа по invoiceId (unitpayId)
+    // Поиск платежа по id (account содержит наш paymentId)
+    const paymentId = Number(account);
+
     logger.debug("UnitPay CHECK: Поиск платежа в БД", {
-      searchBy: "invoiceId",
-      value: unitpayPaymentId,
+      searchBy: "id",
+      paymentId,
     });
+
+    if (isNaN(paymentId)) {
+      logger.error("UnitPay CHECK: Невалидный account (paymentId)", {
+        unitpayPaymentId,
+        account,
+      });
+      return { error: { message: "Невалидный идентификатор платежа" } };
+    }
 
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
+      .where(eq(paymentTable.id, paymentId))
       .limit(1);
 
     if (payments.length === 0) {
       logger.error("UnitPay CHECK: Платёж не найден в БД", {
         unitpayPaymentId,
+        paymentId,
         account,
       });
       return { error: { message: "Платёж не найден" } };
@@ -232,7 +244,26 @@ export abstract class PaymentService {
       status: payment.status,
       amount: payment.amount,
       currency: payment.currency,
+      invoiceId: payment.invoiceId,
     });
+
+    // Сохраняем unitpayId (invoiceId) если ещё не сохранён
+    if (!payment.invoiceId) {
+      logger.debug("UnitPay CHECK: Сохранение unitpayId в БД", {
+        paymentId: payment.id,
+        unitpayPaymentId,
+      });
+
+      await db
+        .update(paymentTable)
+        .set({ invoiceId: String(unitpayPaymentId) })
+        .where(eq(paymentTable.id, payment.id));
+
+      logger.info("UnitPay CHECK: unitpayId сохранён", {
+        paymentId: payment.id,
+        unitpayPaymentId,
+      });
+    }
 
     // Проверка статуса
     if (payment.status !== "pending") {
@@ -271,13 +302,14 @@ export abstract class PaymentService {
   /**
    * Обработка события 'pay' от UnitPay (успешная оплата)
    * PAY уведомляет об успешном списании - необходимо оказать услугу
+   * account содержит paymentId из нашей БД
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayPay(params: Record<string, any>) {
     const unitpayPaymentId = params.unitpayId;
     const orderSum = params.orderSum;
-    const account = params.account;
+    const account = params.account; // Это наш paymentId
     const subscriptionId = params.subscriptionId ? String(params.subscriptionId) : null;
     const isTest = params.test === "1";
 
@@ -303,21 +335,32 @@ export abstract class PaymentService {
 
     logger.info("UnitPay PAY: Подпись верна", { unitpayPaymentId });
 
-    // Поиск платежа в БД
+    // Поиск платежа по id (account содержит наш paymentId)
+    const paymentId = Number(account);
+
     logger.debug("UnitPay PAY: Поиск платежа в БД", {
-      searchBy: "invoiceId",
-      value: unitpayPaymentId,
+      searchBy: "id",
+      paymentId,
     });
+
+    if (isNaN(paymentId)) {
+      logger.error("UnitPay PAY: Невалидный account (paymentId)", {
+        unitpayPaymentId,
+        account,
+      });
+      return { error: { message: "Невалидный идентификатор платежа" } };
+    }
 
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
+      .where(eq(paymentTable.id, paymentId))
       .limit(1);
 
     if (payments.length === 0) {
       logger.error("UnitPay PAY: Платёж не найден в БД", {
         unitpayPaymentId,
+        paymentId,
         account,
       });
       return { error: { message: "Платёж не найден" } };
@@ -465,12 +508,13 @@ export abstract class PaymentService {
    * Обработка события 'error' от UnitPay
    * ERROR уведомляет об ошибке платежа на любом этапе
    * Статус не конечный - после ERROR может последовать PAY
+   * account содержит paymentId из нашей БД
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayError(params: Record<string, any>) {
     const unitpayPaymentId = params.unitpayId;
-    const account = params.account;
+    const account = params.account; // Это наш paymentId
     const errorMessage = params.errorMessage;
     const isTest = params.test === "1";
 
@@ -495,16 +539,27 @@ export abstract class PaymentService {
     logger.info("UnitPay ERROR: Подпись верна", { unitpayPaymentId });
 
     try {
-      // Поиск платежа
+      // Поиск платежа по id (account содержит наш paymentId)
+      const paymentId = Number(account);
+
+      if (isNaN(paymentId)) {
+        logger.warn("UnitPay ERROR: Невалидный account (paymentId)", {
+          unitpayPaymentId,
+          account,
+        });
+        return { result: { message: "Запрос успешно обработан" } };
+      }
+
       const payments = await db
         .select()
         .from(paymentTable)
-        .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
+        .where(eq(paymentTable.id, paymentId))
         .limit(1);
 
       if (payments.length === 0) {
-        logger.warn("UnitPay ERROR: Платёж не найден в БД (возможно тестовый запрос)", {
+        logger.warn("UnitPay ERROR: Платёж не найден в БД", {
           unitpayPaymentId,
+          paymentId,
           account,
         });
         return { result: { message: "Запрос успешно обработан" } };
@@ -544,12 +599,13 @@ export abstract class PaymentService {
 
   /**
    * Обработка события 'refund' от UnitPay (возврат средств)
+   * account содержит paymentId из нашей БД
    * @param params - Параметры запроса от UnitPay
    * @returns { result: { message: string } } | { error: { message: string } }
    */
   static async handleUnitpayRefund(params: Record<string, any>) {
     const unitpayPaymentId = params.unitpayId;
-    const account = params.account;
+    const account = params.account; // Это наш paymentId
     const isTest = params.test === "1";
 
     logger.info("UnitPay REFUND: Начало обработки", {
@@ -571,16 +627,27 @@ export abstract class PaymentService {
 
     logger.info("UnitPay REFUND: Подпись верна", { unitpayPaymentId });
 
-    // Поиск платежа
+    // Поиск платежа по id (account содержит наш paymentId)
+    const paymentId = Number(account);
+
+    if (isNaN(paymentId)) {
+      logger.error("UnitPay REFUND: Невалидный account (paymentId)", {
+        unitpayPaymentId,
+        account,
+      });
+      return { error: { message: "Невалидный идентификатор платежа" } };
+    }
+
     const payments = await db
       .select()
       .from(paymentTable)
-      .where(eq(paymentTable.invoiceId, String(unitpayPaymentId)))
+      .where(eq(paymentTable.id, paymentId))
       .limit(1);
 
     if (payments.length === 0) {
       logger.error("UnitPay REFUND: Платёж не найден в БД", {
         unitpayPaymentId,
+        paymentId,
         account,
       });
       return { error: { message: "Платёж не найден" } };
@@ -870,7 +937,7 @@ export abstract class PaymentService {
         "params[projectId]": projectId,
         "params[secretKey]": secretKey,
         "params[sum]": totalAmount.toString(),
-        "params[account]": userId.toString(),
+        "params[account]": paymentId.toString(), // paymentId для идентификации в webhook
         "params[desc]": description,
         "params[currency]": "RUB",
         "params[resultUrl]": resultUrl,
