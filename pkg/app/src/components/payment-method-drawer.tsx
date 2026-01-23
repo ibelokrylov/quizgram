@@ -2,14 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Loader } from "@/components/loader";
 import { useUpLimits } from "@/entities/User/useUpLimits";
 import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
@@ -167,7 +164,7 @@ export const PaymentMethodDrawer = ({
               : `${t("payment.method.select")} для тарифа ${planName}`}
           </DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto max-w-[800px] mx-auto">
           {isDowngrade && (
             <div className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
@@ -252,17 +249,11 @@ export const PaymentMethodDrawer = ({
                 <Button
                   onClick={handleCreatePayment}
                   disabled={!canPay || isCreating}
+                  loading={isCreating}
                   className="w-full max-w-md"
                   size="lg"
                 >
-                  {isCreating ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4" />
-                      {t("payment.processing")}
-                    </>
-                  ) : (
-                    t("payment.drawer.pay_button")
-                  )}
+                  {t("payment.drawer.pay_button")}
                 </Button>
               </div>
             </>
@@ -270,24 +261,12 @@ export const PaymentMethodDrawer = ({
 
           {isFreePlan && (
             <div className="flex justify-center">
-              <Button onClick={handleFreePlan} disabled={isCreating} className="w-full" size="lg">
-                {isCreating ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4" />
-                    {t("payment.processing")}
-                  </>
-                ) : (
-                  t("payment.confirm.button")
-                )}
+              <Button onClick={handleFreePlan} disabled={isCreating} loading={isCreating} className="w-full" size="lg">
+                {t("payment.confirm.button")}
               </Button>
             </div>
           )}
         </div>
-        <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">{t("resizeImage.cancel")}</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );
