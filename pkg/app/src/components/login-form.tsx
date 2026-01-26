@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { AuthContext } from "@/entities/User/auth.context";
 import { loginUser, type LoginUser } from "@/entities/User/LoginUser.type";
 import type { User } from "@/entities/User/User.type";
-import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { queryClinet } from "@/app/query-client";
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const { t } = useTranslation();
-  const { query } = useUserPlan();
   const [data, setData] = useState<LoginUser>({
     login: "",
     password: "",
@@ -56,7 +55,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         ctx.setUser(res.data);
         ctx.setIsAuth(true);
         setLoading(false);
-        query.refetch();
+        queryClinet.invalidateQueries({ queryKey: ["user"] });
+        queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
       }
     } catch (e) {
       toast.error("Not auth");

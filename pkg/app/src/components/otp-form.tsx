@@ -52,6 +52,7 @@ export function OTPForm({
         body: { code },
       });
       queryClinet.invalidateQueries({ queryKey: ["user"] });
+      queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
       toast.success(t("verification.email.success") || "Email verified successfully");
     } catch (err: any) {
       setError(true);

@@ -57,6 +57,7 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
 
       // Инвалидируем кэш пользователя
       queryClinet.invalidateQueries({ queryKey: ["user"] });
+      queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
 
       toast.success(t("verification.email.success"));
       onSuccess();

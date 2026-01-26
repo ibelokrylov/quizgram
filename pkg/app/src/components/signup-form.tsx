@@ -5,12 +5,12 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { AuthContext } from "@/entities/User/auth.context";
 import { userRegistrationZod, type UserRegistration, type User } from "@/entities/User/User.type";
-import { useUserPlan } from "@/entities/User/useUserPlan";
 import http from "@/lib/http";
 import { Link } from "@tanstack/react-router";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { queryClinet } from "@/app/query-client";
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const [error, setError] = useState<Record<string, boolean> | null>(null);
@@ -29,7 +29,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
   const ctx = useContext(AuthContext);
   const { i18n, t } = useTranslation("common");
-  const { query } = useUserPlan();
 
   function change(v: string | boolean, type: keyof typeof data) {
     // Если изменяется реферальный код, сбрасываем ошибку и сохраненное значение
@@ -90,7 +89,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           if (res.data) {
             ctx.setUser(res.data);
             ctx.setIsAuth(true);
-            query.refetch();
+            queryClinet.invalidateQueries({ queryKey: ["user"] });
+            queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
 
             // Устанавливаем язык из ответа сервера, если он есть
             const userLanguage = res.data.language;

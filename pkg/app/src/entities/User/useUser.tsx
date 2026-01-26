@@ -38,7 +38,6 @@ export const useUser = () => {
     queryKey: ["user"],
     queryFn: _fetch,
     retry: false,
-    retryOnMount: false,
     refetchOnWindowFocus: false,
   });
 

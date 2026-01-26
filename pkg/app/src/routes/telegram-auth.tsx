@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
+import { queryClinet } from "@/app/query-client";
 
 export const Route = createFileRoute("/telegram-auth")({
   component: TelegramAuth,
@@ -72,6 +73,8 @@ function TelegramAuth() {
       // Пользователь найден и авторизован
       setIsAuth(true);
       setUser(result.user);
+      queryClinet.invalidateQueries({ queryKey: ["user"] });
+      queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
 
       // Проверяем, нужна ли верификация email
       if (result.requiresVerification) {
@@ -114,6 +117,8 @@ function TelegramAuth() {
         // Пользователь зарегистрирован и авторизован
         setIsAuth(true);
         setUser(result.user);
+        queryClinet.invalidateQueries({ queryKey: ["user"] });
+        queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
 
         // Переходим к верификации email
         setStage("email-verification");

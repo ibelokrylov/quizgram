@@ -5,10 +5,12 @@ import http from "@/lib/http";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const PaymentSuccessPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<"loading" | "pending" | "paid" | "failed">("loading");
   const [paymentId, setPaymentId] = useState<number | null>(null);
 
@@ -48,6 +50,8 @@ export const PaymentSuccessPage = () => {
           if (paymentStatus === "paid") {
             setStatus("paid");
             localStorage.removeItem("pendingPaymentId");
+            queryClient.invalidateQueries({ queryKey: ["user"] });
+            queryClient.invalidateQueries({ queryKey: ["user-plan"] });
           } else if (["failed", "expired", "underpaid"].includes(paymentStatus)) {
             setStatus("failed");
             localStorage.removeItem("pendingPaymentId");
