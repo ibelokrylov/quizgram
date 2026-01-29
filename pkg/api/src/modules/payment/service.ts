@@ -1267,6 +1267,14 @@ export abstract class PaymentService {
       throw error;
     }
 
+    const userResult = await db
+      .select({ isAdmin: userTable.isAdmin })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .limit(1);
+
+    const isAdmin = userResult[0]?.isAdmin ?? false;
+
     // Проверяем текущий активный платный план пользователя
     const currentUserPayment = await db
       .select({
@@ -1407,7 +1415,7 @@ export abstract class PaymentService {
       let currentLimit = 0;
 
       // 2. Если план платный, подсчитываем уже собранные ставки
-      if (plan.price > 0) {
+      if (plan.price > 0 && !isAdmin) {
         // Находим все активные квизы пользователя
         const activeQuizzes = await db
           .select({ id: quizTable.id })

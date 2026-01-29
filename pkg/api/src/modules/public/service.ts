@@ -707,64 +707,77 @@ export abstract class PublicService {
         // form уже сохранен в contactsForm при получении квиза
         const existingAnswers = (existingRecord[0].answer as unknown as StoredAnswerArray) || [];
 
+        const quizOwnerResult = await db
+          .select()
+          .from(userTable)
+          .where(eq(userTable.id, quiz[0].userId))
+          .limit(1);
+
+        const owner = quizOwnerResult[0];
+        const isOwnerAdmin = owner?.isAdmin ?? false;
+
         // Проверяем лимит платежа перед сохранением контактов
         let isEqualPaymentLimit = false;
-        try {
-          // Получаем активную запись user_payment для владельца квиза
-          const userPayments = await db
-            .select()
-            .from(userPaymentTable)
-            .where(
-              and(
-                eq(userPaymentTable.userId, quiz[0].userId),
-                eq(userPaymentTable.isActive, true)
+        if (isOwnerAdmin) {
+          isEqualPaymentLimit = true;
+        } else {
+          try {
+            // Получаем активную запись user_payment для владельца квиза
+            const userPayments = await db
+              .select()
+              .from(userPaymentTable)
+              .where(
+                and(
+                  eq(userPaymentTable.userId, quiz[0].userId),
+                  eq(userPaymentTable.isActive, true)
+                )
               )
-            )
-            .limit(1);
+              .limit(1);
 
-          if (userPayments.length > 0 && userPayments[0]) {
-            const userPayment = userPayments[0];
+            if (userPayments.length > 0 && userPayments[0]) {
+              const userPayment = userPayments[0];
 
-            // Проверяем, что currentLimit меньше limit
-            if (userPayment.currentLimit < userPayment.limit) {
-              // Увеличиваем currentLimit
-              await db
-                .update(userPaymentTable)
-                .set({
-                  currentLimit: sql`${userPaymentTable.currentLimit} + 1`,
-                })
-                .where(eq(userPaymentTable.id, userPayment.id));
+              // Проверяем, что currentLimit меньше limit
+              if (userPayment.currentLimit < userPayment.limit) {
+                // Увеличиваем currentLimit
+                await db
+                  .update(userPaymentTable)
+                  .set({
+                    currentLimit: sql`${userPaymentTable.currentLimit} + 1`,
+                  })
+                  .where(eq(userPaymentTable.id, userPayment.id));
 
-              isEqualPaymentLimit = true;
+                isEqualPaymentLimit = true;
 
-              logger.info("Лимит платежа увеличен при сохранении контактов", {
-                userId: quiz[0].userId,
-                userPaymentId: userPayment.id,
-                currentLimit: userPayment.currentLimit + 1,
-                limit: userPayment.limit,
-                quizBidId: existingRecord[0].id,
-              });
+                logger.info("Лимит платежа увеличен при сохранении контактов", {
+                  userId: quiz[0].userId,
+                  userPaymentId: userPayment.id,
+                  currentLimit: userPayment.currentLimit + 1,
+                  limit: userPayment.limit,
+                  quizBidId: existingRecord[0].id,
+                });
+              } else {
+                logger.debug("Лимит платежа достигнут, не увеличиваем", {
+                  userId: quiz[0].userId,
+                  currentLimit: userPayment.currentLimit,
+                  limit: userPayment.limit,
+                });
+              }
             } else {
-              logger.debug("Лимит платежа достигнут, не увеличиваем", {
+              logger.debug("Запись user_payment не найдена для пользователя", {
                 userId: quiz[0].userId,
-                currentLimit: userPayment.currentLimit,
-                limit: userPayment.limit,
               });
             }
-          } else {
-            logger.debug("Запись user_payment не найдена для пользователя", {
-              userId: quiz[0].userId,
-            });
+          } catch (paymentError) {
+            logger.error(
+              "Ошибка при проверке лимита платежа",
+              paymentError instanceof Error
+                ? paymentError
+                : new Error(String(paymentError)),
+              { userId: quiz[0].userId, quizUid },
+            );
+            // Не прерываем сохранение контактов, если проверка лимита не удалась
           }
-        } catch (paymentError) {
-          logger.error(
-            "Ошибка при проверке лимита платежа",
-            paymentError instanceof Error
-              ? paymentError
-              : new Error(String(paymentError)),
-            { userId: quiz[0].userId, quizUid },
-          );
-          // Не прерываем сохранение контактов, если проверка лимита не удалась
         }
 
         await db
@@ -802,16 +815,8 @@ export abstract class PublicService {
 
         // Отправляем уведомление владельцу квиза
         try {
-          // Получаем владельца квиза
-          const quizOwner = await db
-            .select()
-            .from(userTable)
-            .where(eq(userTable.id, quiz[0].userId))
-            .limit(1);
-
-          if (quizOwner.length > 0 && quizOwner[0]) {
-            const owner = quizOwner[0];
-
+          if (owner) {
+            
             // Получаем настройки уведомлений владельца
             try {
               const notificationSettings = await UserService.getNotificationSettings(owner.id);
