@@ -137,7 +137,7 @@ export abstract class BidsService {
         userId,
         effectiveFilters,
         true,
-        effectiveFilters.isFull === true // Включаем isEqualPaymentLimit только если isFull=true
+        effectiveFilters.isFull === true && !isAdmin // Для админа не ограничиваем isEqualPaymentLimit
       );
       const combinedWhere = this.combineWhereConditions(mainWhereConditions);
 
@@ -149,31 +149,33 @@ export abstract class BidsService {
 
       // Получаем лимит из активной записи user_payment
       let userPaymentLimit = bidMonthLimit; // По умолчанию используем лимит из плана
-      try {
-        const activeUserPayment = await db
-          .select({ limit: userPaymentTable.limit })
-          .from(userPaymentTable)
-          .where(
-            and(
-              eq(userPaymentTable.userId, userId),
-              eq(userPaymentTable.isActive, true)
+      if (!isAdmin) {
+        try {
+          const activeUserPayment = await db
+            .select({ limit: userPaymentTable.limit })
+            .from(userPaymentTable)
+            .where(
+              and(
+                eq(userPaymentTable.userId, userId),
+                eq(userPaymentTable.isActive, true)
+              )
             )
-          )
-          .limit(1);
+            .limit(1);
 
-        if (activeUserPayment.length > 0 && activeUserPayment[0]) {
-          userPaymentLimit = activeUserPayment[0].limit;
-          logger.debug("Получен лимит из активной записи user_payment", {
+          if (activeUserPayment.length > 0 && activeUserPayment[0]) {
+            userPaymentLimit = activeUserPayment[0].limit;
+            logger.debug("Получен лимит из активной записи user_payment", {
+              userId,
+              limit: userPaymentLimit,
+            });
+          }
+        } catch (paymentError) {
+          logger.warn("Не удалось получить лимит из user_payment, используется лимит из плана", {
             userId,
-            limit: userPaymentLimit,
+            planLimit: bidMonthLimit,
+            error: paymentError instanceof Error ? paymentError.message : String(paymentError),
           });
         }
-      } catch (paymentError) {
-        logger.warn("Не удалось получить лимит из user_payment, используется лимит из плана", {
-          userId,
-          planLimit: bidMonthLimit,
-          error: paymentError instanceof Error ? paymentError.message : String(paymentError),
-        });
       }
 
       // ОПТИМИЗАЦИЯ: Объединяем все COUNT запросы в один с использованием FILTER
