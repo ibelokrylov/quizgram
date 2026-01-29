@@ -1,19 +1,7 @@
 import { Loader } from "@/components/loader";
 import { Badge } from "@/components/ui/badge";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, } from "@/components/ui/drawer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import type { BidDetails } from "@/entities/Bid/bid.type";
 import { useUpdateBidStatus } from "@/entities/Bid/useBids";
 import { questionTypes } from "@/pages/EditQuiz/ui/QuestionPage/const/question.type";
@@ -214,7 +202,7 @@ const AnswerRenderer = ({
     // Для variant_image_text ищем соответствующий вариант в вопросах
     if (type === "variant_image_text" && question?.content?.variants) {
       const variant = question.content.variants.find(
-        (v: any) => v.value === answer || v.text === answer
+        (v: any) => v.value === answer || v.text === answer,
       );
       if (variant) {
         return (
@@ -232,7 +220,7 @@ const AnswerRenderer = ({
     // Для variant_image ищем соответствующий вариант
     if (type === "variant_image" && question?.content?.variants) {
       const variant = question.content.variants.find(
-        (v: any) => v.value === answer || v.text === answer
+        (v: any) => v.value === answer || v.text === answer,
       );
       if (variant?.url) {
         return <VariantImageAnswer imageUrl={variant.url} t={t} />;
@@ -420,11 +408,11 @@ const RegularQuestionCard = ({
       key={questionUid ?? idx}
       className="relative rounded-md border bg-muted/30 p-3 space-y-2 pb-7"
     >
-      <Badge variant="secondary" className="absolute -top-2.5 left-[10px]">
+      <Badge variant="secondary" className="absolute -top-2.5 left-2.5">
         {typeLabel}
       </Badge>
       {questionUid && (
-        <Badge variant="secondary" className="absolute -bottom-5 right-[10px]">
+        <Badge variant="secondary" className="absolute -bottom-5 right-2.5">
           {questionUid}
         </Badge>
       )}
@@ -485,6 +473,7 @@ const TelegramUserSection = ({ userInfo, t }: { userInfo: any; t: (key: string) 
         {JSON.stringify(userInfo, null, 2)}
       </pre>
     </div>
+    <a href={`https://t.me/${userInfo?.username}`}>https://t.me/{userInfo?.username}</a>
   </div>
 );
 
@@ -645,7 +634,7 @@ export function BidDetailsDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[98vh] max-h-[98vh]">
+      <DrawerContent className="h-[98vh] max-h-[98vh] select-auto!">
         <div className="max-w-[1000px] mx-auto w-full h-full flex flex-col overflow-hidden">
           <DrawerHeader className="shrink-0">
             <div className="space-y-3">

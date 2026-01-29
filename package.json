@@ -25,7 +25,8 @@
           "@types/node": "^24.6.0",
           "@types/react": "^19.1.16",
           "@types/react-dom": "^19.1.9",
-          "react-icons": "^5.5.0"
+          "react-icons": "^5.5.0",
+          "vite-plugin-mkcert": "^1.17.9"
         },
       "backend": {
         "bun-types": "latest",
@@ -34,7 +35,8 @@
         "@elysiajs/cors": "^1.4.0"
       },
       "all": {
-        "typescript": "^5"
+        "typescript": "^5",
+        "oxlint": "latest"
       }
     }
   },

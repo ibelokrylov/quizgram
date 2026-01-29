@@ -17,6 +17,7 @@ export interface BidListItem {
     ip: string | null;
   } | null;
   info?: any | null; // Дополнительная информация из таблицы quiz_bid (только для planId != 1)
+  tgUsername?: string | null; // Telegram username из user_info
 }
 
 // Внутренняя структура данных (data внутри ответа)

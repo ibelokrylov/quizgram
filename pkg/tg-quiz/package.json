@@ -27,6 +27,6 @@
     "react-icons": "catalog:frontend",
     "typescript": "catalog:all",
     "vite": "catalog:frontend",
-    "vite-plugin-mkcert": "^1.17.9"
+    "vite-plugin-mkcert": "catalog:frontend"
   }
 }

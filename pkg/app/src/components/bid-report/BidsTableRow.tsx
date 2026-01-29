@@ -7,7 +7,7 @@ import { useDeleteBid } from "@/entities/Bid/useBids";
 import { AuthContext } from "@/entities/User/auth.context";
 import { hasAccessToPaidContent } from "@/entities/User/access-control";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ExternalLink, Eye, Trash2 } from "lucide-react";
+import { AtSign, ExternalLink, Eye, Trash2 } from "lucide-react";
 import { useContext, useState } from "react";
 import { MdEmail, MdInfoOutline, MdPerson, MdPhone, MdTextFields } from "react-icons/md";
 import {
@@ -124,6 +124,25 @@ export function BidsTableRow({ bid }: BidsTableRowProps) {
       </TableCell>
       <TableCell className="p-3">
         <div className="flex items-center justify-end gap-2">
+          {bid.tgUsername && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(bid.tgUsername!);
+                  }}
+                  className="h-8 w-8 p-0 text-sky-500 hover:text-white dark:hover:text-sky-600"
+                >
+                  <AtSign className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Скопировать @{bid.tgUsername}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           {hasAccess && bid.info && (
             <Tooltip>
               <TooltipTrigger asChild>

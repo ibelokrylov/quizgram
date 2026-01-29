@@ -229,7 +229,8 @@ export abstract class BidsService {
           b.contacts,
           b.ip_location as "ipLocation",
           CASE WHEN ${showInfo} THEN b.info ELSE NULL END as info,
-          q.name as "quizName"
+          q.name as "quizName",
+          b.user_info->>'username' as "tgUsername"
         FROM quiz_bid b
         INNER JOIN quiz q ON b.quiz_id = q.id
         WHERE ${combinedWhere}
@@ -598,7 +599,8 @@ export abstract class BidsService {
           b.contacts,
           b.ip_location as "ipLocation",
           CASE WHEN ${showInfo} THEN b.info ELSE NULL END as info,
-          q.name as "quizName"
+          q.name as "quizName",
+          b.user_info->>'username' as "tgUsername"
         FROM quiz_bid b
         INNER JOIN quiz q ON b.quiz_id = q.id
         WHERE ${combinedWhere}
