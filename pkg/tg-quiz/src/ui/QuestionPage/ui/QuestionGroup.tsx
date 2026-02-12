@@ -1,4 +1,4 @@
-import { Text } from '@telegram-apps/telegram-ui';
+import { Placeholder } from '@telegram-apps/telegram-ui';
 import { useContext, useState } from 'react';
 import type { QuizQuestionGroup } from '../../../App.context';
 import { QuestionContext } from '../Question.context';
@@ -16,7 +16,7 @@ export const QuestionGroup = () => {
     const questionUid = question_uid as string;
     const newAnswers = {
       ...answers,
-      [questionUid]: answer
+      [questionUid]: answer,
     };
     setAnswers(newAnswers);
 
@@ -29,7 +29,7 @@ export const QuestionGroup = () => {
   }
 
   return (
-    <div className='question-group'>
+    <div className="question-group">
       {question.content.questions.map((quest, idx) => (
         <QuestionContext.Provider
           key={quest.uid}
@@ -41,7 +41,12 @@ export const QuestionGroup = () => {
             setCurrentAnswer: addCurrentAnswer,
           }}
         >
-          <Text>{quest.content?.title}</Text>
+          <Placeholder
+            className="question-header"
+            header={`${quest?.content?.title}${quest.content?.required !== undefined ? (quest?.content.required ? '*' : '') : '*'}`}
+            description={quest?.content?.description}
+          />
+
           {renderQuestion[quest.type as keyof typeof renderQuestion]}
         </QuestionContext.Provider>
       ))}

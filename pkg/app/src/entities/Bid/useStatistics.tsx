@@ -1,6 +1,6 @@
-import http from "@/lib/http";
-import { useQuery } from "@tanstack/react-query";
-import type { AbandonmentStats, DailyStats } from "./statistics.type";
+import http from '@/lib/http';
+import { useQuery } from '@tanstack/react-query';
+import type { AbandonmentStats, DailyStats } from './statistics.type';
 
 interface StatisticsParams {
   quiz_uid: string;
@@ -41,7 +41,7 @@ async function fetchAbandonmentStats(params: StatisticsParams): Promise<Abandonm
 // Хук для получения общей статистики
 export const useDailyStats = (params: StatisticsParams | null) => {
   return useQuery({
-    queryKey: ["daily-stats", params],
+    queryKey: ['daily-stats', params],
     queryFn: () => fetchDailyStats(params!),
     enabled: !!params?.quiz_uid,
     staleTime: 5 * 60 * 1000, // 5 минут (соответствует TTL кеша на сервере)
@@ -52,7 +52,7 @@ export const useDailyStats = (params: StatisticsParams | null) => {
 // Хук для получения статистики по незавершенным квизам
 export const useAbandonmentStats = (params: StatisticsParams | null) => {
   return useQuery({
-    queryKey: ["abandonment-stats", params],
+    queryKey: ['abandonment-stats', params],
     queryFn: () => fetchAbandonmentStats(params!),
     enabled: !!params?.quiz_uid,
     staleTime: 5 * 60 * 1000, // 5 минут (соответствует TTL кеша на сервере)

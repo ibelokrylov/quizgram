@@ -20,55 +20,55 @@ export interface TelegramWebApp {
   openLink(url: string, options?: { try_instant_view?: boolean }): void;
   openTelegramLink(url: string): void;
   openInvoice(url: string, callback?: (status: string) => void): void;
-  
+
   // Fullscreen методы
   requestFullscreen(): void;
   exitFullscreen(): void;
-  
+
   // BackButton
   BackButton: BackButton;
-  
+
   // MainButton (теперь BottomButton)
   MainButton: MainButton;
-  
+
   // SettingsButton
   SettingsButton: SettingsButton;
-  
+
   // HapticFeedback
   HapticFeedback: HapticFeedback;
-  
+
   // CloudStorage
   CloudStorage: CloudStorage;
-  
+
   // BiometricManager
   BiometricManager: BiometricManager;
-  
+
   // ThemeParams
   themeParams: ThemeParams;
-  
+
   // Viewport
   viewportHeight: number;
   viewportStableHeight: number;
   isExpanded: boolean;
   headerColor: string;
   backgroundColor: string;
-  
+
   // Safe Area (Bot API 8.0+)
   safeAreaInset?: SafeAreaInset;
   contentSafeAreaInset?: SafeAreaInset;
   isActive?: boolean;
   isFullscreen?: boolean;
-  
+
   // User
   initData: string;
   initDataUnsafe: InitDataUnsafe;
   version: string;
   platform: string;
-  
+
   // Состояние
   isClosingConfirmationEnabled: boolean;
   isVerticalSwipesEnabled: boolean;
-  
+
   // Методы управления
   enableClosingConfirmation(): void;
   disableClosingConfirmation(): void;
@@ -76,11 +76,11 @@ export interface TelegramWebApp {
   disableVerticalSwipes(): void;
   setHeaderColor(color: string): void;
   setBackgroundColor(color: string): void;
-  
+
   // События
   onEvent(eventType: string, eventHandler: (event: unknown) => void): void;
   offEvent(eventType: string, eventHandler: (event: unknown) => void): void;
-  
+
   // Дополнительные методы
   showPopup(params: PopupParams, callback?: (id: string) => void): void;
   showAlert(message: string, callback?: () => void): void;
@@ -98,7 +98,15 @@ export interface TelegramWebApp {
   checkHomeScreenStatus(callback?: (status: HomeScreenStatus) => void): void;
   setEmojiStatus(emoji: string, duration?: number, callback?: (success: boolean) => void): void;
   requestEmojiStatusAccess(callback?: (granted: boolean) => void): void;
-  lockOrientation(orientation: 'portrait' | 'landscape' | 'portrait-primary' | 'portrait-secondary' | 'landscape-primary' | 'landscape-secondary'): void;
+  lockOrientation(
+    orientation:
+      | 'portrait'
+      | 'landscape'
+      | 'portrait-primary'
+      | 'portrait-secondary'
+      | 'landscape-primary'
+      | 'landscape-secondary'
+  ): void;
   unlockOrientation(): void;
   setBottomBarColor(color: string): void;
   hideKeyboard(): void;
@@ -146,9 +154,16 @@ export interface HapticFeedback {
 }
 
 export interface CloudStorage {
-  setItem(key: string, value: string, callback?: (error: Error | null, success: boolean) => void): void;
+  setItem(
+    key: string,
+    value: string,
+    callback?: (error: Error | null, success: boolean) => void
+  ): void;
   getItem(key: string, callback: (error: Error | null, value: string | null) => void): void;
-  getItems(keys: string[], callback: (error: Error | null, values: Record<string, string>) => void): void;
+  getItems(
+    keys: string[],
+    callback: (error: Error | null, values: Record<string, string>) => void
+  ): void;
   removeItem(key: string, callback?: (error: Error | null, success: boolean) => void): void;
   removeItems(keys: string[], callback?: (error: Error | null, success: boolean) => void): void;
   getKeys(callback: (error: Error | null, keys: string[]) => void): void;
@@ -262,5 +277,4 @@ export interface SafeAreaInset {
   right: number;
 }
 
-export { };
-
+export {};

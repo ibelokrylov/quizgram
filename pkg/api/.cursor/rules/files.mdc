@@ -114,13 +114,13 @@ const result = await QuizFileService.uploadQuizFile(
 // В service.ts (публичный API квизов)
 
 // 1. Проверяем, является ли ответ файлом
-const isFile = answerData.answer instanceof File || 
-               answerData.answer instanceof Blob;
+const isFile = body.answer instanceof File ||
+               body.answer instanceof Blob;
 
 if (isFile) {
   // 2. Загружаем файл в S3 через QuizFileService
   const uploadResult = await QuizFileService.uploadQuizFile(
-    answerData.answer,
+    body.answer,
     quiz[0].id,
     userKey
   );
@@ -128,9 +128,9 @@ if (isFile) {
   // 3. Заменяем файл на метаданные с URL
   processedAnswer = {
     type: 'file',
-    fileName: answerData.answer.name,
-    fileSize: answerData.answer.size,
-    fileType: answerData.answer.type,
+    fileName: body.answer.name,
+    fileSize: body.answer.size,
+    fileType: body.answer.type,
     url: uploadResult.fileURL,     // ✅ URL для доступа
     s3Key: uploadResult.fileKey    // ✅ Ключ для удаления
   };

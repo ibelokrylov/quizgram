@@ -5,7 +5,7 @@ import type {
   QuizQuestionVariantImageText,
   QuizQuestionPage,
   QuizQuestionGroup,
-} from "../App.context";
+} from '../App.context';
 
 /**
  * Предзагружает все изображения из квиза для улучшения UX
@@ -14,7 +14,7 @@ export async function preloadQuizMedia(quiz: Quiz): Promise<void> {
   const imageUrls: string[] = [];
 
   // Собираем все URL изображений из квиза
-  
+
   // 1. Логотип стартовой страницы
   if (quiz.startPage && typeof quiz.startPage === 'object' && 'content' in quiz.startPage) {
     const startPage = quiz.startPage as QuizStartPageStandard;
@@ -42,7 +42,12 @@ export async function preloadQuizMedia(quiz: Quiz): Promise<void> {
       }
 
       // Изображение из страницы (page type)
-      if (question.type === 'page' && question.content && 'url' in question.content && question.content.url) {
+      if (
+        question.type === 'page' &&
+        question.content &&
+        'url' in question.content &&
+        question.content.url
+      ) {
         const pageQuestion = question as QuizQuestionPage;
         if (pageQuestion.content?.url) {
           imageUrls.push(pageQuestion.content.url);
@@ -61,7 +66,9 @@ export async function preloadQuizMedia(quiz: Quiz): Promise<void> {
               'variants' in subQuestion.content &&
               Array.isArray(subQuestion.content.variants)
             ) {
-              const variantSubQuestion = subQuestion as QuizQuestionVariantImage | QuizQuestionVariantImageText;
+              const variantSubQuestion = subQuestion as
+                | QuizQuestionVariantImage
+                | QuizQuestionVariantImageText;
               for (const variant of variantSubQuestion.content.variants) {
                 if (variant.url) {
                   imageUrls.push(variant.url);
@@ -69,7 +76,12 @@ export async function preloadQuizMedia(quiz: Quiz): Promise<void> {
               }
             }
             // Изображение из страницы вложенных вопросов
-            if (subQuestion.type === 'page' && subQuestion.content && 'url' in subQuestion.content && subQuestion.content.url) {
+            if (
+              subQuestion.type === 'page' &&
+              subQuestion.content &&
+              'url' in subQuestion.content &&
+              subQuestion.content.url
+            ) {
               const pageSubQuestion = subQuestion as QuizQuestionPage;
               if (pageSubQuestion.content?.url) {
                 imageUrls.push(pageSubQuestion.content.url);
@@ -103,4 +115,3 @@ export async function preloadQuizMedia(quiz: Quiz): Promise<void> {
   await Promise.all(promises);
   console.log(`Предзагружено ${uniqueUrls.length} изображений`);
 }
-

@@ -2,7 +2,11 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useInfiniteBids, useBidDetails, useMarkBidAsRead } from "@/entities/Bid/useBids";
+import {
+  useInfiniteBids,
+  useBidDetails,
+  useMarkBidAsRead,
+} from "@/entities/Bid/useBids";
 import { useQuizFilters } from "@/entities/Quiz/useQuizFilters";
 import { AuthContext } from "@/entities/User/auth.context";
 import { hasAccessToPaidContent } from "@/entities/User/access-control";
@@ -19,7 +23,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BidsTableFree } from "./BidsTableFree";
 import { BidsTableBase } from "./BidsTableBase";
 import { BidDetailsDrawer } from "./BidDetailsDrawer";
@@ -52,13 +60,19 @@ export function BidsReportPage() {
           : search.isFull === "all"
             ? undefined
             : undefined,
-    isRead: search.isRead === "true" ? true : search.isRead === "false" ? false : undefined,
+    isRead:
+      search.isRead === "true"
+        ? true
+        : search.isRead === "false"
+          ? false
+          : undefined,
     limit: search.limit ?? 10,
   };
 
   // Устанавливаем дефолтное значение isFull=true при первой загрузке (только для не-FREE планов)
   // Срабатывает только если в URL вообще нет параметров фильтрации
-  const hasAnyFilters = search.quiz_uid || search.status || search.isFull || search.isRead;
+  const hasAnyFilters =
+    search.quiz_uid || search.status || search.isFull || search.isRead;
   useEffect(() => {
     if (hasAccess && !hasAnyFilters) {
       navigate({
@@ -74,8 +88,15 @@ export function BidsReportPage() {
   // Получаем список квизов для фильтра
   const { data: quizFilters = [] } = useQuizFilters();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error } =
-    useInfiniteBids(filters);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+  } = useInfiniteBids(filters);
 
   // Получаем детали заявки для основного drawer
   // Благодаря кешированию (staleTime: 60s), повторные запросы будут использовать кеш
@@ -118,7 +139,7 @@ export function BidsReportPage() {
           fetchNextPage();
         }
       },
-      { threshold: 0.1, rootMargin: "100px" }
+      { threshold: 0.1, rootMargin: "100px" },
     );
 
     observer.observe(element);
@@ -130,7 +151,7 @@ export function BidsReportPage() {
 
   const handleFilterChange = (
     key: keyof BidsListFilters,
-    value: string | boolean | number | undefined
+    value: string | boolean | number | undefined,
   ) => {
     // Для boolean значений конвертируем в строку для URL
     if (typeof value === "boolean") {
@@ -145,7 +166,8 @@ export function BidsReportPage() {
       return;
     }
 
-    let newValue: string | number | undefined = value === "" ? undefined : value;
+    let newValue: string | number | undefined =
+      value === "" ? undefined : value;
 
     // Обновляем URL с новыми параметрами
     navigate({
@@ -241,7 +263,8 @@ export function BidsReportPage() {
   const shownBidsCount = bids.length;
 
   const isLimitExceeded = !hasAccess && beyondLimitCount > 0;
-  const shouldShowUpgradeBanner = hasAccess && (hasMoreBeyondLimit || beyondLimitCount > 0);
+  const shouldShowUpgradeBanner =
+    hasAccess && (hasMoreBeyondLimit || beyondLimitCount > 0);
 
   return (
     <div className="p-4 flex flex-col md:flex-row gap-6 items-start">
@@ -257,7 +280,9 @@ export function BidsReportPage() {
                 className="h-8 w-8"
                 onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
                 aria-label={
-                  isFiltersExpanded ? t("bids.filters.collapse") : t("bids.filters.expand")
+                  isFiltersExpanded
+                    ? t("bids.filters.collapse")
+                    : t("bids.filters.expand")
                 }
               >
                 {isFiltersExpanded ? (
@@ -270,7 +295,9 @@ export function BidsReportPage() {
           </div>
 
           {/* Содержимое фильтров - скрывается на мобильных, когда свернуто */}
-          <div className={`flex flex-col gap-4 ${isMobile && !isFiltersExpanded ? "hidden" : ""}`}>
+          <div
+            className={`flex flex-col gap-4 ${isMobile && !isFiltersExpanded ? "hidden" : ""}`}
+          >
             {/* Фильтр по quiz_uid */}
             <div className="space-y-2">
               <label className="text-sm font-medium">{t("bids.quiz")}</label>
@@ -290,7 +317,10 @@ export function BidsReportPage() {
               <Select
                 value={filters.status || "all"}
                 onValueChange={(value) =>
-                  handleFilterChange("status", value === "all" ? undefined : value)
+                  handleFilterChange(
+                    "status",
+                    value === "all" ? undefined : value,
+                  )
                 }
               >
                 <SelectTrigger>
@@ -298,11 +328,21 @@ export function BidsReportPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("bids.status.all")}</SelectItem>
-                  <SelectItem value="create">{t("bids.status.create")}</SelectItem>
-                  <SelectItem value="in_progress">{t("bids.status.in_progress")}</SelectItem>
-                  <SelectItem value="rejected">{t("bids.status.rejected")}</SelectItem>
-                  <SelectItem value="success">{t("bids.status.success")}</SelectItem>
-                  <SelectItem value="completed">{t("bids.status.completed")}</SelectItem>
+                  <SelectItem value="create">
+                    {t("bids.status.create")}
+                  </SelectItem>
+                  <SelectItem value="in_progress">
+                    {t("bids.status.in_progress")}
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    {t("bids.status.rejected")}
+                  </SelectItem>
+                  <SelectItem value="success">
+                    {t("bids.status.success")}
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    {t("bids.status.completed")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -312,12 +352,20 @@ export function BidsReportPage() {
               <label className="text-sm font-medium">{t("bids.list")}</label>
               <Select
                 value={
-                  filters.isRead === undefined ? "all" : filters.isRead === false ? "new" : "read"
+                  filters.isRead === undefined
+                    ? "all"
+                    : filters.isRead === false
+                      ? "new"
+                      : "read"
                 }
                 onValueChange={(value) =>
                   handleFilterChange(
                     "isRead",
-                    value === "all" ? undefined : value === "new" ? false : true
+                    value === "all"
+                      ? undefined
+                      : value === "new"
+                        ? false
+                        : true,
                   )
                 }
               >
@@ -334,22 +382,37 @@ export function BidsReportPage() {
 
             {hasAccess && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t("bids.completed")}</label>
+                <label className="text-sm font-medium">
+                  {t("bids.completed")}
+                </label>
                 <Select
                   value={
-                    search.isFull === "all" ? "all" : search.isFull === "false" ? "false" : "true" // По умолчанию или явный "true"
+                    search.isFull === "all"
+                      ? "all"
+                      : search.isFull === "false"
+                        ? "false"
+                        : "true" // По умолчанию или явный "true"
                   }
                   onValueChange={(value) =>
-                    handleFilterChange("isFull", value === "all" ? "all" : value)
+                    handleFilterChange(
+                      "isFull",
+                      value === "all" ? "all" : value,
+                    )
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t("bids.completed.yes")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("bids.completed.all")}</SelectItem>
-                    <SelectItem value="true">{t("bids.completed.yes")}</SelectItem>
-                    <SelectItem value="false">{t("bids.completed.no")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("bids.completed.all")}
+                    </SelectItem>
+                    <SelectItem value="true">
+                      {t("bids.completed.yes")}
+                    </SelectItem>
+                    <SelectItem value="false">
+                      {t("bids.completed.no")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -366,7 +429,11 @@ export function BidsReportPage() {
                   {t("bids.export.button")}
                 </Button>
               )}
-              <Button variant="outline" className="w-full" onClick={handleResetFilters}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleResetFilters}
+              >
                 {t("bids.filters.reset")}
               </Button>
             </div>
@@ -390,11 +457,15 @@ export function BidsReportPage() {
                 <p>{t("bids.completed.total", { total })}</p>
                 <p>{t("bids.shown.count", { count: shownBidsCount })}</p>
                 {deletedInLimitFull > 0 && (
-                  <p>{t("bids.deleted.inLimit", { count: deletedInLimitFull })}</p>
+                  <p>
+                    {t("bids.deleted.inLimit", { count: deletedInLimitFull })}
+                  </p>
                 )}
                 {!hasAccess && (
                   <>
-                    <p>{t("bids.available.inLimit", { count: maxAvailableFull })}</p>
+                    <p>
+                      {t("bids.available.inLimit", { count: maxAvailableFull })}
+                    </p>
                     {beyondLimitCount > 0 && (
                       <p className="text-destructive">
                         {t("bids.exceeded.limit", { count: beyondLimitCount })}
@@ -417,7 +488,9 @@ export function BidsReportPage() {
           <Card className="p-4 border-primary/20 bg-primary/5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-base">{t("bids.buy.title")}</h3>
+                <h3 className="font-semibold text-base">
+                  {t("bids.buy.title")}
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {t("bids.buy.description", { count: beyondLimitCount })}
                 </p>
@@ -433,7 +506,9 @@ export function BidsReportPage() {
           <Card className="p-4 border-primary/20 bg-primary/5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-base">{t("bids.upgrade.title")}</h3>
+                <h3 className="font-semibold text-base">
+                  {t("bids.upgrade.title")}
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {t("bids.upgrade.description", { count: beyondLimitCount })}
                 </p>
@@ -465,13 +540,15 @@ export function BidsReportPage() {
       </div>
 
       {/* Drawer с деталями заявки */}
-      <BidDetailsDrawer
-        open={isDrawerOpen}
-        onOpenChange={handleDrawerOpenChange}
-        bidDetails={bidDetails}
-        isLoading={isLoadingBidDetails}
-        isError={isErrorBidDetails}
-      />
+      {bidDetails ? (
+        <BidDetailsDrawer
+          open={isDrawerOpen}
+          onOpenChange={handleDrawerOpenChange}
+          bidDetails={bidDetails}
+          isLoading={isLoadingBidDetails}
+          isError={isErrorBidDetails}
+        />
+      ) : null}
 
       {/* Drawer с дополнительной информацией */}
       <BidInfoDrawer

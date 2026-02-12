@@ -30,6 +30,7 @@ interface LogEntry {
     message: string;
     stack?: string;
   };
+  traceId?: string;
 }
 
 class Logger {
@@ -67,7 +68,7 @@ class Logger {
     return this.currentLogFile;
   }
 
-  private formatLogEntry(level: LogLevel, message: string, data?: Record<string, any>, error?: Error): LogEntry {
+  private formatLogEntry(level: LogLevel, message: string, data?: Record<string, any>, error?: Error, traceId?: string): LogEntry {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
@@ -84,6 +85,10 @@ class Logger {
         message: error.message,
         stack: error.stack,
       };
+    }
+
+    if (traceId) {
+      entry.traceId = traceId;
     }
 
     return entry;
@@ -105,7 +110,8 @@ class Logger {
     }
 
     // Также выводим в консоль для разработки
-    const consoleMessage = `[${new Date().toISOString()}] [${entry.level}] ${entry.message}`;
+    const tracePrefix = entry.traceId ? `[${entry.traceId}] ` : "";
+    const consoleMessage = `[${new Date().toISOString()}] [${entry.level}] ${tracePrefix}${entry.message}`;
     if (entry.level === LogLevel.ERROR) {
       console.error(consoleMessage, entry.data || entry.error || "");
     } else if (entry.level === LogLevel.WARN) {
@@ -115,20 +121,20 @@ class Logger {
     }
   }
 
-  debug(message: string, data?: any): void {
-    this.writeLog(this.formatLogEntry(LogLevel.DEBUG, message, data));
+  debug(message: string, data?: any, traceId?: string): void {
+    this.writeLog(this.formatLogEntry(LogLevel.DEBUG, message, data, undefined, traceId));
   }
 
-  info(message: string, data?: Record<string, any>): void {
-    this.writeLog(this.formatLogEntry(LogLevel.INFO, message, data));
+  info(message: string, data?: Record<string, any>, traceId?: string): void {
+    this.writeLog(this.formatLogEntry(LogLevel.INFO, message, data, undefined, traceId));
   }
 
-  warn(message: string, data?: Record<string, any>): void {
-    this.writeLog(this.formatLogEntry(LogLevel.WARN, message, data));
+  warn(message: string, data?: Record<string, any>, traceId?: string): void {
+    this.writeLog(this.formatLogEntry(LogLevel.WARN, message, data, undefined, traceId));
   }
 
-  error(message: string, error?: any, data?: Record<string, any>): void {
-    this.writeLog(this.formatLogEntry(LogLevel.ERROR, message, data, error));
+  error(message: string, error?: any, data?: Record<string, any>, traceId?: string): void {
+    this.writeLog(this.formatLogEntry(LogLevel.ERROR, message, data, error, traceId));
   }
 
   private startCleanupTask(): void {

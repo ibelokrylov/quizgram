@@ -1,79 +1,32 @@
 import { Button, Card, Divider, List, Placeholder } from '@telegram-apps/telegram-ui';
 import { useContext } from 'react';
 import { AiFillWechat } from 'react-icons/ai';
-import { FaFacebook, FaInstagram, FaLinkedin, FaTelegramPlane, FaTiktok, FaWhatsapp, FaYoutube } from 'react-icons/fa';
+import {
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaTelegramPlane,
+  FaTiktok,
+  FaWhatsapp,
+  FaYoutube,
+} from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { IoLogoVk, IoMailOutline } from 'react-icons/io5';
 import { SlLink } from 'react-icons/sl';
 import { AppContext, type QuizThxPage } from '../../App.context';
 
 const socialIcons = {
-  Instagram: (
-    <FaInstagram
-      size={24}
-      className='social-icon instagram'
-    />
-  ),
-  Vk: (
-    <IoLogoVk
-      size={24}
-      className='social-icon vk'
-    />
-  ),
-  Youtube: (
-    <FaYoutube
-      size={24}
-      className='social-icon youtube'
-    />
-  ),
-  Facebook: (
-    <FaFacebook
-      size={24}
-      className='social-icon facebook'
-    />
-  ),
-  X: (
-    <FaXTwitter
-      size={24}
-      className='social-icon x'
-    />
-  ),
-  Telegram: (
-    <FaTelegramPlane
-      size={24}
-      className='social-icon telegram'
-    />
-  ),
-  Tiktok: (
-    <FaTiktok
-      size={24}
-      className='social-icon tiktok'
-    />
-  ),
-  Wechat: (
-    <AiFillWechat
-      size={24}
-      className='social-icon wechat'
-    />
-  ),
-  WhatsApp: (
-    <FaWhatsapp
-      size={24}
-      className='social-icon whatsapp'
-    />
-  ),
-  LinkedIn: (
-    <FaLinkedin
-      size={24}
-      className='social-icon linkedin'
-    />
-  ),
-  'E-mail': (
-    <IoMailOutline
-      size={24}
-      className='social-icon email'
-    />
-  ),
+  Instagram: <FaInstagram size={24} className="social-icon instagram" />,
+  Vk: <IoLogoVk size={24} className="social-icon vk" />,
+  Youtube: <FaYoutube size={24} className="social-icon youtube" />,
+  Facebook: <FaFacebook size={24} className="social-icon facebook" />,
+  X: <FaXTwitter size={24} className="social-icon x" />,
+  Telegram: <FaTelegramPlane size={24} className="social-icon telegram" />,
+  Tiktok: <FaTiktok size={24} className="social-icon tiktok" />,
+  Wechat: <AiFillWechat size={24} className="social-icon wechat" />,
+  WhatsApp: <FaWhatsapp size={24} className="social-icon whatsapp" />,
+  LinkedIn: <FaLinkedin size={24} className="social-icon linkedin" />,
+  'E-mail': <IoMailOutline size={24} className="social-icon email" />,
 };
 
 function renderTitle(title: string, uid: string) {
@@ -110,54 +63,47 @@ export const ThxPage = () => {
   const content = quiz.thxPage satisfies QuizThxPage;
 
   const processedTitle = renderTitle(content.title || 'Спасибо, [name]!', quiz.uid);
-  const processedDescription = content.description ? renderTitle(content.description, quiz.uid) : undefined;
+  const processedDescription = content.description
+    ? renderTitle(content.description, quiz.uid)
+    : undefined;
 
   return (
-    <div className='thxpage-container'>
-      <Card className='cards full'>
+    <div className="thxpage-container">
+      <Card className="cards full">
         <List>
-        <Placeholder
-          header={processedTitle}
-          description={processedDescription}
-        />
-        {content.buttons && content.buttons.length > 0 ? <Divider /> : null}
-        {content.buttons && content.buttons.map((button) => (
-          <a
-            key={button.link}
-            href={button.link}
-            className='thxpage-button-item'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            <Button
-              size='m'
-              mode='gray'
-              className='thxpage-button-item__button'
-            >
-              <span className='thxpage-button'>
-                <span>
-                  <SlLink />
-                </span>
-                <span> {button.title}</span>
-              </span>
-            </Button>
-          </a>
-        ))}
-        {content.social && content.social.length > 0 ? <Divider /> : null}
-        {content.social && content.social.length > 0 ? (
-          <div className='thxpage-social-container'>
-            {content.social.map((soc) => (
+          <Placeholder header={processedTitle} description={processedDescription} />
+          {content.buttons && content.buttons.length > 0 ? <Divider /> : null}
+          {content.buttons &&
+            content.buttons.map((button) => (
               <a
-                key={soc.type}
-                href={soc.link}
-                target='_blank'
-                rel='noopener noreferrer'
+                key={button.link}
+                href={button.link}
+                className="thxpage-button-item"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Button mode={'bezeled'}>{socialIcons[soc.type as keyof typeof socialIcons]}</Button>
+                <Button size="m" mode="gray" className="thxpage-button-item__button">
+                  <span className="thxpage-button">
+                    <span>
+                      <SlLink />
+                    </span>
+                    <span> {button.title}</span>
+                  </span>
+                </Button>
               </a>
             ))}
-          </div>
-        ) : null}
+          {content.social && content.social.length > 0 ? <Divider /> : null}
+          {content.social && content.social.length > 0 ? (
+            <div className="thxpage-social-container">
+              {content.social.map((soc) => (
+                <a key={soc.type} href={soc.link} target="_blank" rel="noopener noreferrer">
+                  <Button mode={'bezeled'}>
+                    {socialIcons[soc.type as keyof typeof socialIcons]}
+                  </Button>
+                </a>
+              ))}
+            </div>
+          ) : null}
         </List>
       </Card>
     </div>

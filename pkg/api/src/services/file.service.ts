@@ -34,7 +34,7 @@ export abstract class FileService {
    * @returns Результат загрузки
    */
   static async uploadFile(
-    file: Blob | File | Buffer | Uint8Array | any,
+    file: File,
     contentType: string,
     fileName: string,
     fileSize: number,
@@ -43,11 +43,11 @@ export abstract class FileService {
     // Проверяем тип и размер файла
     const validation = validateFileTypeAndSize(contentType, fileSize);
     if (validation.error) {
-      logger.error(
-        "Ошибка валидации файла",
-        validation.error,
-        { fileName, contentType, fileSize },
-      );
+      logger.error("Ошибка валидации файла", validation.error, {
+        fileName,
+        contentType,
+        fileSize,
+      });
       throw new Error(`file validation failed: ${validation.error.message}`);
     }
 
@@ -95,7 +95,9 @@ export abstract class FileService {
       } catch (deleteError) {
         logger.error(
           "Ошибка при удалении файла из S3 после ошибки БД",
-          deleteError instanceof Error ? deleteError : new Error(String(deleteError)),
+          deleteError instanceof Error
+            ? deleteError
+            : new Error(String(deleteError)),
           { fileKey: uploadResult.fileKey },
         );
       }

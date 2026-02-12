@@ -13,15 +13,14 @@ export const SpotifyPlayer = ({ url }: SpotifyPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Spotify audio player'
-        frameBorder='0'
-        allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+        title="Spotify audio player"
+        frameBorder="0"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

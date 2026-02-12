@@ -1,7 +1,7 @@
-import { Rating, Text } from "@telegram-apps/telegram-ui";
-import { useContext } from "react";
-import type { QuizQuestionRating } from "../../../App.context";
-import { QuestionContext } from "../Question.context";
+import { Rating, Text } from '@telegram-apps/telegram-ui';
+import { useContext } from 'react';
+import type { QuizQuestionRating } from '../../../App.context';
+import { QuestionContext } from '../Question.context';
 
 export const RatingQuestion = () => {
   const { questions, current, sendAnswer } = useContext(QuestionContext);
@@ -18,7 +18,7 @@ export const RatingQuestion = () => {
           })
         }
         precision={0.5}
-      // IconContainer={StarIcon}
+        // IconContainer={StarIcon}
       />
       <div className="rating__question-placeholder left">
         <Text>{question?.content?.left_placeholder}</Text>

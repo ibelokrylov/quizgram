@@ -727,9 +727,15 @@ export function convertToMicrosoftEmbedUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
 
-    if (urlObj.hostname.includes('microsoft.com') || urlObj.hostname.includes('microsoftstream.com')) {
+    if (
+      urlObj.hostname.includes('microsoft.com') ||
+      urlObj.hostname.includes('microsoftstream.com')
+    ) {
       // Microsoft Stream: web.microsoftstream.com/video/VIDEO_ID
-      if (urlObj.hostname.includes('microsoftstream.com') || urlObj.hostname.includes('stream.microsoft.com')) {
+      if (
+        urlObj.hostname.includes('microsoftstream.com') ||
+        urlObj.hostname.includes('stream.microsoft.com')
+      ) {
         const videoMatch = urlObj.pathname.match(/\/video\/([^/?]+)/);
         if (videoMatch) {
           return `https://web.microsoftstream.com/embed/video/${videoMatch[1]}`;
@@ -748,4 +754,3 @@ export function convertToMicrosoftEmbedUrl(url: string): string | null {
     return null;
   }
 }
-

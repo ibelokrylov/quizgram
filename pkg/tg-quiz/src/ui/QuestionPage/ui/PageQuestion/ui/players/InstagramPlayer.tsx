@@ -13,12 +13,12 @@ export const InstagramPlayer = ({ url }: InstagramPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Instagram video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Instagram video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>

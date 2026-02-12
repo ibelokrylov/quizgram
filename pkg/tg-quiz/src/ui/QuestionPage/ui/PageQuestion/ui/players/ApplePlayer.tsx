@@ -13,15 +13,14 @@ export const ApplePlayer = ({ url }: ApplePlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Apple Music player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Apple Music player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

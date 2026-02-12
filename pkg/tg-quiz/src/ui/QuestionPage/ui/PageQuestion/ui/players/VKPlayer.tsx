@@ -17,12 +17,12 @@ export const VKPlayer = ({ url }: VKPlayerProps) => {
   };
 
   return (
-    <div className='player'>
+    <div className="player">
       {/* @ts-ignore - VK Player требует нестандартные атрибуты iframe (adplaying, link, nativeplayer) для работы плеера */}
       <iframe
         src={src}
-        allow='autoplay; encrypted-media;'
-        frameBorder='0'
+        allow="autoplay; encrypted-media;"
+        frameBorder="0"
         {...vkPlayerAttrs}
       ></iframe>
     </div>

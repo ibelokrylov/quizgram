@@ -1,8 +1,8 @@
-import { Text } from "@telegram-apps/telegram-ui";
-import { type PropsWithChildren, useContext, useEffect, useState } from "react";
-import { AppContext } from "./App.context";
-import { MAIN_SITE_URL } from "./config";
-import type { SafeAreaInset } from "./types/telegram-webapp";
+import { Text } from '@telegram-apps/telegram-ui';
+import { type PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { AppContext } from './App.context';
+import { MAIN_SITE_URL } from './config';
+import type { SafeAreaInset } from './types/telegram-webapp';
 
 /**
  * Хук для получения безопасной зоны контента из Telegram SDK
@@ -30,10 +30,10 @@ function useContentSafeAreaInset(): SafeAreaInset | null {
     };
 
     // Подписываемся на событие изменения безопасной зоны контента
-    tg.onEvent?.("contentSafeAreaChanged", handleContentSafeAreaChanged);
+    tg.onEvent?.('contentSafeAreaChanged', handleContentSafeAreaChanged);
 
     return () => {
-      tg.offEvent?.("contentSafeAreaChanged", handleContentSafeAreaChanged);
+      tg.offEvent?.('contentSafeAreaChanged', handleContentSafeAreaChanged);
     };
   }, []);
 
@@ -44,7 +44,7 @@ export interface ContentLayoutProps extends PropsWithChildren {
   className?: string;
 }
 
-export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) => {
+export const ContentLayout = ({ children, className = '' }: ContentLayoutProps) => {
   const { quiz } = useContext(AppContext);
   const safeAreaInset = useContentSafeAreaInset();
 
@@ -55,16 +55,16 @@ export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) 
 
     // Устанавливаем viewport stable height
     if (tg?.viewportStableHeight) {
-      root.style.setProperty("--tg-viewport-stable-height", `${tg.viewportStableHeight}px`);
+      root.style.setProperty('--tg-viewport-stable-height', `${tg.viewportStableHeight}px`);
     } else {
-      root.style.setProperty("--tg-viewport-stable-height", "100vh");
+      root.style.setProperty('--tg-viewport-stable-height', '100vh');
     }
 
     // Устанавливаем content safe area insets
-    root.style.setProperty("--tg-content-safe-area-top", `${safeAreaInset?.top || 0}px`);
-    root.style.setProperty("--tg-content-safe-area-bottom", `${safeAreaInset?.bottom || 0}px`);
-    root.style.setProperty("--tg-content-safe-area-left", `${safeAreaInset?.left || 0}px`);
-    root.style.setProperty("--tg-content-safe-area-right", `${safeAreaInset?.right || 0}px`);
+    root.style.setProperty('--tg-content-safe-area-top', `${safeAreaInset?.top || 0}px`);
+    root.style.setProperty('--tg-content-safe-area-bottom', `${safeAreaInset?.bottom || 0}px`);
+    root.style.setProperty('--tg-content-safe-area-left', `${safeAreaInset?.left || 0}px`);
+    root.style.setProperty('--tg-content-safe-area-right', `${safeAreaInset?.right || 0}px`);
   }, [safeAreaInset]);
 
   return (
@@ -72,7 +72,7 @@ export const ContentLayout = ({ children, className = "" }: ContentLayoutProps) 
       <div className="content__body">{children}</div>
       {quiz?.isShowLogo !== false ? (
         <div className="footer__logo">
-          <Text caps weight={"3"} className="footer__logo-text">
+          <Text caps weight={'3'} className="footer__logo-text">
             Сделано в
           </Text>
           <a

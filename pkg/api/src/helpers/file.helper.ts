@@ -6,6 +6,7 @@ export enum FileType {
   Video = "video",
   Document = "document",
   Unknown = "unknown",
+  All = "all",
 }
 
 // Максимальные размеры файлов в байтах
@@ -20,7 +21,9 @@ export const MaxDocumentSize = 100 * 1024 * 1024; // 100 MB
 export function validateFileTypeAndSize(
   contentType: string,
   fileSize: number,
-): { fileType: FileType; error: null } | { fileType: FileType.Unknown; error: Error } {
+):
+  | { fileType: FileType; error: null }
+  | { fileType: FileType.Unknown; error: Error } {
   if (!contentType) {
     return {
       fileType: FileType.Unknown,
@@ -122,4 +125,100 @@ export function validateFileTypeAndSize(
   }
 
   return { fileType, error: null };
+}
+
+const mimeType = {
+  image: new Set([
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/avif",
+    "image/heic",
+    "image/heif",
+    "image/svg+xml",
+    "image/tiff",
+    "image/bmp",
+    "image/x-icon",
+  ]),
+
+  video: new Set([
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "video/x-matroska",
+    "video/x-msvideo",
+    "video/x-ms-wmv",
+    "video/mpeg",
+    "video/3gpp",
+    "video/3gpp2",
+    "video/ogg",
+  ]),
+  docs: new Set([
+    "application/pdf",
+    "text/plain",
+    "text/markdown",
+    "text/csv",
+    "text/html",
+    "application/rtf",
+    "application/json",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-word.document.macroEnabled.12",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+    "application/vnd.ms-word.template.macroEnabled.12",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel.sheet.macroEnabled.12",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+    "application/vnd.ms-excel.template.macroEnabled.12",
+    "application/vnd.ms-excel.addin.macroEnabled.12",
+    "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+    "application/vnd.openxmlformats-officedocument.presentationml.template",
+    "application/vnd.ms-powerpoint.template.macroEnabled.12",
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+    "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+    "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.spreadsheet",
+    "application/vnd.oasis.opendocument.presentation",
+  ]),
+};
+
+const maxSizePublic = 20 * 1024 * 1024;
+
+export function validatePublicFileTypeAndSize(
+  contentType: string,
+  fileSize: number,
+  typeFile: "all" | "image" | "docs" | "video",
+):
+  | { fileType: FileType; error: null }
+  | { fileType: FileType.Unknown; error: Error } {
+  if (typeFile !== "all" && !contentType) {
+    return {
+      fileType: FileType.Unknown,
+      error: new Error("content type is required"),
+    };
+  }
+
+  if (fileSize > maxSizePublic)
+    return {
+      fileType: FileType.Unknown,
+      error: new Error("Max file size 20mb"),
+    };
+
+  if (typeFile === "all") return { fileType: FileType.Document, error: null };
+
+  const parsedType = contentType.split(";")[0];
+
+  if (!mimeType[typeFile].has(parsedType))
+    return {
+      fileType: FileType.Unknown,
+      error: new Error("Filetype not supported"),
+    };
+
+  return { fileType: FileType.All, error: null };
 }

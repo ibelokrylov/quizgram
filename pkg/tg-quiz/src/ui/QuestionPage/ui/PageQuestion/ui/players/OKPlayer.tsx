@@ -13,12 +13,12 @@ export const OKPlayer = ({ url }: OKPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='OK video player'
-        frameBorder='0'
-        allow='autoplay; fullscreen'
+        title="OK video player"
+        frameBorder="0"
+        allow="autoplay; fullscreen"
         allowFullScreen
       ></iframe>
     </div>

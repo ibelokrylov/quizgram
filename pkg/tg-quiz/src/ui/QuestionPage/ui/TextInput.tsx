@@ -19,11 +19,7 @@ export const TextInput = () => {
 
   return (
     <div>
-      <Input
-        value={value}
-        onChange={handleChange}
-        header={question.content.variant}
-      />
+      <Input value={value} onChange={handleChange} header={question.content.variant} />
     </div>
   );
 };

@@ -22,16 +22,9 @@ export const SelectQuestion = () => {
   }
   return (
     <List>
-      <Select
-        onChange={(e) => handleSelect(e.target.value)}
-        header='Select'
-      >
+      <Select onChange={(e) => handleSelect(e.target.value)} header="Select">
         {question.content?.variants?.map((variant) => (
-          <option
-            key={variant}
-            value={variant}
-            onClick={() => handleSelect(variant)}
-          >
+          <option key={variant} value={variant} onClick={() => handleSelect(variant)}>
             {variant}
           </option>
         ))}

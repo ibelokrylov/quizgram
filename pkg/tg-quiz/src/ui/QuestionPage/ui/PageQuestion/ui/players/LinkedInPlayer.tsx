@@ -13,12 +13,12 @@ export const LinkedInPlayer = ({ url }: LinkedInPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='LinkedIn video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="LinkedIn video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>

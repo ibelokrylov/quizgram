@@ -13,12 +13,12 @@ export const VimeoPlayer = ({ url }: VimeoPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Vimeo video player'
-        frameBorder='0'
-        allow='autoplay; fullscreen; picture-in-picture'
+        title="Vimeo video player"
+        frameBorder="0"
+        allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
       ></iframe>
     </div>

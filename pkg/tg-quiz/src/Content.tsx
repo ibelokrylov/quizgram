@@ -13,25 +13,20 @@ const render = {
   question: <QuestionPage />,
   contact: <Contact />,
   thxPage: <ThxPage />,
-  '404': (
-    <Placeholder
-      header='404'
-      description='Квиз не найден'
-    />
-  ),
+  '404': <Placeholder header="404" description="Квиз не найден" />,
 };
 
 export const Content = () => {
   const { loading, quiz, currentStage } = useContext(AppContext);
   const platform = usePlatform();
-  const platformClass = platform === "ios" ? "platform-ios" : "platform-base";
+  const platformClass = platform === 'ios' ? 'platform-ios' : 'platform-base';
 
   // Показываем спиннер во время загрузки
   if (loading) {
     return (
       <ContentLayout>
         <div className={`loading-container ${platformClass}`}>
-          <Spinner size='l' />
+          <Spinner size="l" />
         </div>
       </ContentLayout>
     );
@@ -42,10 +37,7 @@ export const Content = () => {
     return (
       <ContentLayout>
         <div className={`loading-container ${platformClass}`}>
-          <Placeholder
-            header='404'
-            description='Квиз не найден'
-          />
+          <Placeholder header="404" description="Квиз не найден" />
         </div>
       </ContentLayout>
     );
@@ -64,7 +56,7 @@ export const Content = () => {
   return (
     <ContentLayout>
       <div className={`loading-container ${platformClass}`}>
-        <Spinner size='l' />
+        <Spinner size="l" />
       </div>
     </ContentLayout>
   );

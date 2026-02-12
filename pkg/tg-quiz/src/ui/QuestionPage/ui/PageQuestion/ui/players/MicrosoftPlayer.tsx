@@ -13,15 +13,14 @@ export const MicrosoftPlayer = ({ url }: MicrosoftPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Microsoft video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Microsoft video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

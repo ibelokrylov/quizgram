@@ -1,4 +1,92 @@
-import { t } from "elysia";
+import { Static, t } from "elysia";
+
+export const bodyAnswer = t.Object({
+  answer: t.String(),
+  question_uid: t.String(),
+  key: t.String(),
+  files: t.Optional(t.Union([t.Files(), t.File()])),
+});
+export type BodyAnswer = Static<typeof bodyAnswer>;
+
+export const AnswerVariant = t.String();
+export type AnswerVariant = Static<typeof AnswerVariant>;
+
+export const AnswerVariantImage = t.Object({
+  value: t.String(),
+  url: t.String(),
+});
+export type AnswerVariantImage = Static<typeof AnswerVariantImage>;
+
+export const AnswerVariantAndImage = t.Object({
+  value: t.String(),
+  url: t.String(),
+});
+export type AnswerVariantAndImage = Static<typeof AnswerVariantAndImage>;
+
+export const AnswerTextFields = t.String();
+export type AnswerTextFields = Static<typeof AnswerTextFields>;
+
+export const AnswerList = t.String();
+export type AnswerList = Static<typeof AnswerList>;
+
+export const AnswerCalendar = t.Union([t.Date(), t.String()]);
+export type AnswerCalendar = Static<typeof AnswerCalendar>;
+
+export const AnswerSlider = t.Number();
+export type AnswerSlider = Static<typeof AnswerSlider>;
+
+export const AnswerFiles = t.Array(
+  t.Object({
+    __fileIndex: t.Number(),
+    fileName: t.String(),
+  }),
+);
+export type AnswerFiles = Static<typeof AnswerFiles>;
+
+export const AnswerPages = t.Object({
+  type: t.String(),
+  uid: t.String(),
+  order: t.Number(),
+  content: t.Any(),
+});
+export type AnswerPages = Static<typeof AnswerPages>;
+
+export const AnswerRating = t.Number();
+export type AnswerRating = Static<typeof AnswerRating>;
+
+export const AnswerGroup = t.Array(t.Object({
+  question_uid: t.String(),
+  answer: t.Union([
+    AnswerVariant,
+    AnswerVariantImage,
+    AnswerVariantAndImage,
+    AnswerTextFields,
+    AnswerList,
+    AnswerCalendar,
+    AnswerSlider,
+    AnswerFiles,
+    AnswerPages,
+    AnswerRating,
+  ]),
+}))
+export type AnswerGroup = Static<typeof AnswerGroup>;
+
+export const Answer = t.Union([
+  t.Union([
+    AnswerVariant,
+    AnswerVariantImage,
+    AnswerVariantAndImage,
+    AnswerTextFields,
+    AnswerList,
+    AnswerCalendar,
+    AnswerSlider,
+    AnswerFiles,
+    AnswerPages,
+    AnswerRating,
+    AnswerGroup,
+  ]),
+]);
+export type Answer = Static<typeof Answer>;
 
 export const publicQuiz = t.Object({
   uid: t.String(),
@@ -24,15 +112,17 @@ const answerBase = t.Object({
     t.Record(t.String(), t.Any()),
     t.Array(t.Any()),
   ]),
-  question: t.Optional(t.Union([
-    t.String(),
-    t.Object({
-      uid: t.String(),
-      type: t.Optional(t.String()),
-      order: t.Optional(t.Number()),
-      content: t.Optional(t.Any()),
-    }),
-  ])),
+  question: t.Optional(
+    t.Union([
+      t.String(),
+      t.Object({
+        uid: t.String(),
+        type: t.Optional(t.String()),
+        order: t.Optional(t.Number()),
+        content: t.Optional(t.Any()),
+      }),
+    ]),
+  ),
   key: t.Optional(t.String()), // UUID ключ для сохранения ответов
   final_question: t.Optional(t.Boolean()), // Является ли этот вопрос последним
   // quiz_all_question больше не используется в ответах - он сохраняется при получении квиза
@@ -48,15 +138,17 @@ export const quizAnswersArray = t.Array(answerBase);
 export const quizAnswerFormData = t.Object({
   answer: t.File(),
   question_uid: t.String(),
-  question: t.Optional(t.Union([
-    t.String(),
-    t.Object({
-      uid: t.String(),
-      type: t.Optional(t.String()),
-      order: t.Optional(t.Number()),
-      content: t.Optional(t.Any()),
-    }),
-  ])),
+  question: t.Optional(
+    t.Union([
+      t.String(),
+      t.Object({
+        uid: t.String(),
+        type: t.Optional(t.String()),
+        order: t.Optional(t.Number()),
+        content: t.Optional(t.Any()),
+      }),
+    ]),
+  ),
   key: t.Optional(t.String()), // UUID ключ для сохранения ответов
   final_question: t.Optional(t.Boolean()), // Является ли этот вопрос последним
   // quiz_all_question больше не используется в ответах - он сохраняется при получении квиза

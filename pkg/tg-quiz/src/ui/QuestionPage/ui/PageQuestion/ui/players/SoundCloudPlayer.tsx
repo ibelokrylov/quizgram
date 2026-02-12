@@ -13,15 +13,14 @@ export const SoundCloudPlayer = ({ url }: SoundCloudPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='SoundCloud audio player'
-        frameBorder='0'
-        allow='autoplay'
+        title="SoundCloud audio player"
+        frameBorder="0"
+        allow="autoplay"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

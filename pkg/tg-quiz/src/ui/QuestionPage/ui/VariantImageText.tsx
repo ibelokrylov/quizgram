@@ -19,8 +19,8 @@ export const VariantImageText = () => {
   }
 
   return (
-    <div className='variant__image_text'>
-      <div className='variant__image_text-preview'>
+    <div className="variant__image_text">
+      <div className="variant__image_text-preview">
         {selected !== null ? (
           <>
             {question.content.variants[selected]?.url ? (
@@ -29,7 +29,7 @@ export const VariantImageText = () => {
                 alt={question.content.variants[selected].value}
               />
             ) : (
-              <div className='variant__image_text-preview-skeleton'>
+              <div className="variant__image_text-preview-skeleton">
                 <Skeleton>
                   <Cell>
                     <p>{question.content.variants[selected].value}</p>
@@ -39,7 +39,7 @@ export const VariantImageText = () => {
             )}
           </>
         ) : (
-          <div className='variant__image_text-preview-skeleton'>
+          <div className="variant__image_text-preview-skeleton">
             <Skeleton>
               <Cell>
                 <p>Выберите вариант</p>
@@ -48,20 +48,16 @@ export const VariantImageText = () => {
           </div>
         )}
       </div>
-      <div className='variant__image_text-variants'>
+      <div className="variant__image_text-variants">
         {question.content.variants
           ?.filter((v) => v.value)
           .map((variant, idx) => (
             <Cell
               key={idx}
-              className='answer__option-item'
-              Component='label'
+              className="answer__option-item"
+              Component="label"
               before={
-                <Selectable
-                  name='group'
-                  value={variant.value}
-                  onChange={() => handleSelect(idx)}
-                />
+                <Selectable name="group" value={variant.value} onChange={() => handleSelect(idx)} />
               }
               multiline
             >

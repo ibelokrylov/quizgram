@@ -13,12 +13,12 @@ export const PinterestPlayer = ({ url }: PinterestPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Pinterest video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Pinterest video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>

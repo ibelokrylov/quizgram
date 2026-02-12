@@ -592,5 +592,6 @@
   "telegram.auth.verification.resend": "Resend code",
   "telegram.auth.verification.error": "Error verifying code",
   "telegram.auth.verification.resendError": "Error resending code",
-  "telegram.auth.deepLink.invalid": "Invalid link. Redirecting to main page."
+  "telegram.auth.deepLink.invalid": "Invalid link. Redirecting to main page.",
+  "skip.answer": "Answer skipped"
 }

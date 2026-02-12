@@ -1,4 +1,4 @@
-import { useEffect, useState, type PropsWithChildren } from "react";
+import { type PropsWithChildren, useEffect, useState } from "react";
 import { AppContext, type AppContextType, type Quiz } from "./App.context";
 import { API_BASE_URL } from "./config";
 import { preloadQuizMedia } from "./lib/media-preloader";
@@ -7,7 +7,9 @@ import { getLaunchParams, getRawInitData } from "./lib/telegram-webapp";
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState<AppContextType["quiz"]>(undefined);
-  const [currentStage, setCurrentStage] = useState<string | undefined>(undefined);
+  const [currentStage, setCurrentStage] = useState<string | undefined>(
+    undefined,
+  );
   const [allStages, setAllStages] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
@@ -50,26 +52,12 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // 1. Telegram WebApp: tgWebAppStartParam или startParam из initData
       // 2. Браузер: startApp из URL параметров (?startApp=quizuid)
       // startapp - lowercase версия от Telegram URL, startApp - camelCase версия
-      const uidFromLaunchParams = (launchParamsTyped.tgWebAppStartParam ||
+      const uid = (launchParamsTyped.tgWebAppStartParam ||
         launchParamsTyped.startParam ||
         launchParamsTyped.startApp ||
         launchParamsTyped.startapp) as string | undefined;
-      const uid = uidFromLaunchParams;
 
-      // Логирование источника UID
-      const uidSource = launchParamsTyped.tgWebAppStartParam
-        ? "tgWebAppStartParam (Telegram)"
-        : launchParamsTyped.startParam
-          ? "startParam (Telegram)"
-          : launchParamsTyped.startApp
-            ? "startApp (Браузер)"
-            : launchParamsTyped.startapp
-              ? "startapp (URL lowercase)"
-              : "не найден";
-      console.log("[fetchQuiz] Quiz UID:", uid, "| Источник:", uidSource);
-
-      if (!uid || typeof uid !== "string" || uid.trim() === "") {
-        console.log("[fetchQuiz] Ошибка: UID квиза не найден");
+      if (!uid || uid.trim() === "") {
         setError(true);
         setCurrentStage("404");
         setLoading(false);
@@ -84,8 +72,6 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       if (initData && initData.trim().length > 0) {
         requestBody.initData = initData;
       }
-      console.log(initData);
-      console.log(window.Telegram?.WebApp.initData);
 
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${uid}`, {
         method: "POST",
@@ -138,7 +124,10 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         try {
           sessionStorage.setItem("quizKey", result.key);
         } catch (storageError) {
-          console.error("Failed to save quiz key to session storage:", storageError);
+          console.error(
+            "Failed to save quiz key to session storage:",
+            storageError,
+          );
         }
       }
 
@@ -165,10 +154,22 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     const answerValue = answer.answer;
     const isFile = answerValue instanceof File || answerValue instanceof Blob;
 
+    const isFileList = answerValue instanceof FileList;
+
     // Проверяем, является ли answer массивом (question_group) и содержит ли он файлы
     const isArrayWithFiles =
       Array.isArray(answerValue) &&
-      answerValue.some((item: any) => item instanceof File || item instanceof Blob);
+      answerValue.some(
+        (item: any) =>
+          item.answer instanceof File ||
+          item.answer instanceof Blob ||
+          item.answer instanceof FileList ||
+          (Array.isArray(item.answer) &&
+            item.answer.some(
+              (a: any) =>
+                a instanceof File || a instanceof Blob || a instanceof FileList,
+            )),
+      );
 
     // Извлекаем final_question для добавления в URL
     const finalQuestion = answer.final_question === true ? "true" : "false";
@@ -186,124 +187,117 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     }
 
     // Добавляем key в тело запроса, если он есть
-    const answerWithKey = quizKey ? { ...answerBody, key: quizKey } : answerBody;
+    const answerWithKey = quizKey
+      ? { ...answerBody, key: quizKey }
+      : answerBody;
+    if (!answerWithKey?.question_uid) throw new Error("question_uid not found");
 
-    if (isFile || isArrayWithFiles) {
-      const formData = new FormData();
+    const formData = new FormData();
+    formData.append("key", String(quizKey));
+    formData.append("question_uid", String(answer?.question_uid));
 
+    if (isFile || isArrayWithFiles || isFileList) {
       if (isArrayWithFiles) {
         // Для question_group с файлами: отправляем массив как JSON, а файлы отдельно
         const answerArray = answerValue as any[];
-        const processedArray = answerArray.map((item, index) => {
+        let fileIndex = 0;
+        const processedArray = answerArray.map((item) => {
           // item должен быть объектом {question_uid, answer}
           if (item && typeof item === "object" && "answer" in item) {
             const itemAnswer = item.answer;
-            if (itemAnswer instanceof File || itemAnswer instanceof Blob) {
-              // Файлы отправляем отдельно с индексом
-              formData.append(`file_${index}`, itemAnswer);
-              // В массиве оставляем placeholder с сохранением question_uid
+            // Если answer это FileList (multiple files)
+            if (itemAnswer instanceof FileList) {
+              const filesArray = [];
+              for (let i = 0; i < itemAnswer.length && i < 10; i++) {
+                const file = itemAnswer[i];
+                formData.append(`files`, file);
+                const placeholderIndex = fileIndex;
+                fileIndex++;
+                filesArray.push({
+                  __isFile: true,
+                  __fileIndex: placeholderIndex,
+                  fileName: file.name,
+                });
+              }
               return {
-                __isFile: true,
-                __fileIndex: index,
                 question_uid: item.question_uid,
+                answer: filesArray,
               };
             }
-          }
-          // Если item сам является File (старая структура), обрабатываем как раньше
-          if (item instanceof File || item instanceof Blob) {
-            formData.append(`file_${index}`, item);
-            return {
-              __isFile: true,
-              __fileIndex: index,
-            };
+            // Если answer это один File
+            if (itemAnswer instanceof File || itemAnswer instanceof Blob) {
+              formData.append(`files`, itemAnswer);
+              const fileName =
+                itemAnswer instanceof File ? itemAnswer.name : "file";
+              fileIndex++;
+              return {
+                question_uid: item.question_uid,
+                answer: [
+                  {
+                    __isFile: true,
+                    __fileIndex: fileIndex - 1,
+                    fileName: fileName,
+                  },
+                ],
+              };
+            }
           }
           return item;
         });
 
         // Отправляем обработанный массив как JSON
         formData.append("answer", JSON.stringify(processedArray));
-        formData.append("is_question_group", "true");
       } else {
-        // Обычный файл
-        formData.append("answer", answerValue as File | Blob);
-      }
+        // Отрабатывает при одном файле \ несколько файлов ??? (не группа)
+        // Обработка FileList (множественная загрузка файлов)
 
-      // Добавляем остальные поля из answerWithKey, если они есть
-      Object.keys(answerWithKey).forEach((key) => {
-        const value = answerWithKey[key];
-        if (value !== undefined && value !== null && key !== "answer") {
-          // answer уже обработан выше, пропускаем его
-          if (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean"
-          ) {
-            formData.append(key, String(value));
-          } else {
-            formData.append(key, JSON.stringify(value));
+        const processedArray = [];
+
+        if (answerValue instanceof File) {
+          formData.append("files", answerValue);
+          processedArray.push({
+            __fileIndex: 0,
+            fileName: answerValue.name,
+          });
+        }
+        if (answerValue instanceof FileList) {
+          for (let i = 0; i < answerValue.length && i < 10; i++) {
+            const file = answerValue[i];
+            formData.append(`files`, file);
+            processedArray.push({
+              __fileIndex: i,
+              fileName: file.name,
+            });
           }
         }
-      });
 
-      // Логируем FormData для отладки
-      console.log("Sending FormData:", {
-        isFile,
-        isArrayWithFiles,
-        formDataEntries: Array.from(formData.entries()).map(([key, value]) => {
-          // FormDataEntryValue может быть string или File
-          // File наследуется от Blob, поэтому проверяем сначала File
-          const isFile = value instanceof File;
-          // Для проверки Blob используем type assertion, так как TypeScript не может определить тип из FormData.entries()
-          const valueAsAny = value as unknown;
-          const isBlob = !isFile && valueAsAny instanceof Blob;
-          return {
-            key,
-            valueType: isFile ? "File" : isBlob ? "Blob" : typeof value,
-            fileName: isFile ? (value as File).name : undefined,
-          };
-        }),
-      });
-
-      const response = await fetch(
-        `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
-        {
-          method: "POST",
-          body: formData,
-          // НЕ устанавливаем Content-Type - браузер установит его автоматически с boundary
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Failed to save answer");
+        formData.append("answer", JSON.stringify(processedArray));
       }
     } else {
-      // Отправляем ответ без quiz_all_question (он уже сохранен при получении квиза)
-      const response = await fetch(
-        `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(answerWithKey),
-        }
+      //Convert answer object body to FormData
+      formData.append("answer", JSON.stringify(answerValue));
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: "Unknown error" }));
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`,
       );
+    }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Failed to save answer");
-      }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || "Failed to save answer");
     }
   }
 

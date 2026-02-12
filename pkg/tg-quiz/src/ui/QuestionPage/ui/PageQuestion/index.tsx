@@ -16,16 +16,12 @@ export const PageQuestion = () => {
   }, []);
 
   return (
-    <div className='flex-col'>
+    <div className="flex-col">
       <Text>{question?.content?.text}</Text>
       {question?.content?.url ? (
         <div>
           {question?.content?.type === 'img' ? (
-            <img
-              src={question?.content?.url}
-              alt='image'
-              className='page__question-image'
-            />
+            <img src={question?.content?.url} alt="image" className="page__question-image" />
           ) : (
             <Player url={question?.content?.url} />
           )}

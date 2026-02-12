@@ -13,15 +13,14 @@ export const TumblrPlayer = ({ url }: TumblrPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Tumblr video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Tumblr video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

@@ -13,15 +13,14 @@ export const GooglePlayer = ({ url }: GooglePlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Google video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Google video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>
   );
 };
-

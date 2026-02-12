@@ -22,12 +22,8 @@ export const DateCalendar = () => {
   }
 
   return (
-    <Card className='date_container'>
-      <Calendar
-        className={'date_calendar'}
-        value={value}
-        onChange={onChange}
-      />
+    <Card className="date_container">
+      <Calendar className={'date_calendar'} value={value} onChange={onChange} />
     </Card>
   );
 };

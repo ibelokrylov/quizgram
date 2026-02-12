@@ -13,12 +13,12 @@ export const TwitterPlayer = ({ url }: TwitterPlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Twitter video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="Twitter video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>

@@ -325,8 +325,9 @@ async function startApp() {
                     endTime: endTime.toISOString(),
                     durationMs,
                     success: false,
-                    errorMessage: error instanceof Error ? error.message : String(error),
-                  }
+                    errorMessage:
+                      error instanceof Error ? error.message : String(error),
+                  },
                 );
               });
           },

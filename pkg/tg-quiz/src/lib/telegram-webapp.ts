@@ -1,10 +1,10 @@
-import type { TelegramWebApp, InitDataUnsafe } from "../types/telegram-webapp";
+import type { TelegramWebApp, InitDataUnsafe } from '../types/telegram-webapp';
 
 /**
  * Получает экземпляр Telegram WebApp
  */
 export function getTelegramWebApp(): TelegramWebApp | null {
-  if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
     return window.Telegram.WebApp;
   }
   return null;
@@ -35,19 +35,19 @@ export function getLaunchParams(): Record<string, unknown> {
   const tg = getTelegramWebApp();
   const isTelegramMode = !!tg;
 
-  console.log("[getLaunchParams] Режим запуска:", isTelegramMode ? "Telegram WebApp" : "Браузер");
+  console.log('[getLaunchParams] Режим запуска:', isTelegramMode ? 'Telegram WebApp' : 'Браузер');
 
   // Парсим параметры из URL
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
-    console.log("[getLaunchParams] URL параметры:", window.location.search);
+    console.log('[getLaunchParams] URL параметры:', window.location.search);
 
     urlParams.forEach((value, key) => {
       // Преобразуем tgWebApp* параметры
-      if (key.startsWith("tgWebApp")) {
-        const paramName = key.replace("tgWebApp", "").toLowerCase();
+      if (key.startsWith('tgWebApp')) {
+        const paramName = key.replace('tgWebApp', '').toLowerCase();
         // Преобразуем camelCase в snake_case для совместимости
-        const snakeCase = paramName.replace(/([A-Z])/g, "_$1").toLowerCase();
+        const snakeCase = paramName.replace(/([A-Z])/g, '_$1').toLowerCase();
         params[snakeCase] = value;
       } else {
         params[key] = value;
@@ -55,24 +55,24 @@ export function getLaunchParams(): Record<string, unknown> {
     });
 
     // Поддержка браузерного режима: startApp или startapp (Telegram передаёт lowercase)
-    const startAppValue = urlParams.get("startApp") || urlParams.get("startapp");
+    const startAppValue = urlParams.get('startApp') || urlParams.get('startapp');
     if (startAppValue && !params.startParam) {
       params.startApp = startAppValue;
       params.startapp = startAppValue; // Сохраняем оба варианта для совместимости
-      console.log("[getLaunchParams] URL startApp/startapp =", startAppValue);
+      console.log('[getLaunchParams] URL startApp/startapp =', startAppValue);
     }
   }
 
   // Добавляем данные из initDataUnsafe (Telegram режим)
   if (tg?.initDataUnsafe) {
     const initData = tg.initDataUnsafe;
-    console.log("[getLaunchParams] Telegram initDataUnsafe:", initData);
+    console.log('[getLaunchParams] Telegram initDataUnsafe:', initData);
 
     // Добавляем start_param если есть
     if (initData.start_param) {
       params.tgWebAppStartParam = initData.start_param;
       params.startParam = initData.start_param;
-      console.log("[getLaunchParams] Telegram режим: start_param =", initData.start_param);
+      console.log('[getLaunchParams] Telegram режим: start_param =', initData.start_param);
     }
 
     // Добавляем user если есть
@@ -88,7 +88,7 @@ export function getLaunchParams(): Record<string, unknown> {
     });
   }
 
-  console.log("[getLaunchParams] Итоговые параметры:", params);
+  console.log('[getLaunchParams] Итоговые параметры:', params);
   return params;
 }
 
@@ -99,18 +99,18 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
   try {
     const params = new URLSearchParams(initData);
     const result: Partial<InitDataUnsafe> = {
-      hash: params.get("hash") || "",
-      auth_date: parseInt(params.get("auth_date") || "0", 10),
+      hash: params.get('hash') || '',
+      auth_date: parseInt(params.get('auth_date') || '0', 10),
     };
 
     // Парсим query_id
-    const queryId = params.get("query_id");
+    const queryId = params.get('query_id');
     if (queryId) {
       result.query_id = queryId;
     }
 
     // Парсим user
-    const userStr = params.get("user");
+    const userStr = params.get('user');
     if (userStr) {
       try {
         result.user = JSON.parse(decodeURIComponent(userStr));
@@ -120,7 +120,7 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
     }
 
     // Парсим receiver
-    const receiverStr = params.get("receiver");
+    const receiverStr = params.get('receiver');
     if (receiverStr) {
       try {
         result.receiver = JSON.parse(decodeURIComponent(receiverStr));
@@ -130,7 +130,7 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
     }
 
     // Парсим chat
-    const chatStr = params.get("chat");
+    const chatStr = params.get('chat');
     if (chatStr) {
       try {
         result.chat = JSON.parse(decodeURIComponent(chatStr));
@@ -140,22 +140,22 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
     }
 
     // Парсим другие поля
-    const startParam = params.get("start_param");
+    const startParam = params.get('start_param');
     if (startParam) {
       result.start_param = startParam;
     }
 
-    const chatType = params.get("chat_type");
+    const chatType = params.get('chat_type');
     if (chatType) {
       result.chat_type = chatType;
     }
 
-    const chatInstance = params.get("chat_instance");
+    const chatInstance = params.get('chat_instance');
     if (chatInstance) {
       result.chat_instance = chatInstance;
     }
 
-    const canSendAfter = params.get("can_send_after");
+    const canSendAfter = params.get('can_send_after');
     if (canSendAfter) {
       result.can_send_after = parseInt(canSendAfter, 10);
     }
@@ -170,12 +170,11 @@ export function parseInitData(initData: string): InitDataUnsafe | null {
  * Получает platform из Telegram WebApp и преобразует в формат для AppRoot
  * @returns "ios" если платформа iOS, иначе "base"
  */
-export function getPlatform(): "base" | "ios" {
+export function getPlatform(): 'base' | 'ios' {
   const tg = getTelegramWebApp();
   if (tg?.platform) {
     // Telegram возвращает "ios" для iOS устройств
-    return tg.platform.toLowerCase() === "ios" ? "ios" : "base";
+    return tg.platform.toLowerCase() === 'ios' ? 'ios' : 'base';
   }
-  return "base";
+  return 'base';
 }
-

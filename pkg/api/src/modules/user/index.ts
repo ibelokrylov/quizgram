@@ -2,10 +2,7 @@
 
 import { Elysia, t } from "elysia";
 import type { User } from "../../db";
-import {
-  FileType,
-  validateFileTypeAndSize,
-} from "../../helpers/file.helper";
+import { FileType, validateFileTypeAndSize, } from "../../helpers/file.helper";
 import { logger } from "../../lib/logger";
 import { FFmpegService } from "../../services/ffmpeg.service";
 import { FileService } from "../../services/file.service";
@@ -403,7 +400,7 @@ export const user = new Elysia({ prefix: "/user" })
 
               // Загружаем файл через FileService
               const uploadResult = await FileService.uploadFile(
-                file,
+                file as File,
                 contentType,
                 fileName,
                 fileSize,

@@ -1,12 +1,12 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { Input } from "../../../../ui/Input";
-import { QuestionContext } from "../../Question.context";
+import { useContext, useEffect, useRef, useState } from 'react';
+import { Input } from '../../../../ui/Input';
+import { QuestionContext } from '../../Question.context';
 
 export const DateMask = () => {
   const { sendAnswer, questions, current } = useContext(QuestionContext);
   const question = questions[current];
 
-  const [value, setValue] = useState<string>("");
+  const [value, setValue] = useState<string>('');
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,7 +42,7 @@ export const DateMask = () => {
 
   // Валидация введенных цифр
   const validateDigits = (digits: string): string => {
-    let validDigits = "";
+    let validDigits = '';
 
     for (let i = 0; i < digits.length && i < 8; i++) {
       const digit = digits[i];
@@ -119,22 +119,22 @@ export const DateMask = () => {
 
   // Получаем отображаемое значение
   const getDisplayValue = (): string => {
-    if (!isFocused && value === "") {
-      return "";
+    if (!isFocused && value === '') {
+      return '';
     }
 
-    if (isFocused && value === "") {
-      return "dd.mm.yyyy";
+    if (isFocused && value === '') {
+      return 'dd.mm.yyyy';
     }
 
-    const digits = value.replace(/\D/g, "");
-    const mask = "dd.mm.yyyy";
-    let result = "";
+    const digits = value.replace(/\D/g, '');
+    const mask = 'dd.mm.yyyy';
+    let result = '';
     let digitIndex = 0;
 
     for (let i = 0; i < mask.length; i++) {
-      if (mask[i] === "." || mask[i] === "/") {
-        result += ".";
+      if (mask[i] === '.' || mask[i] === '/') {
+        result += '.';
       } else if (digitIndex < digits.length) {
         result += digits[digitIndex];
         digitIndex++;
@@ -149,7 +149,7 @@ export const DateMask = () => {
   // Обработка изменения значения
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    const digits = newValue.replace(/\D/g, "");
+    const digits = newValue.replace(/\D/g, '');
 
     // Валидируем введенные цифры
     const validDigits = validateDigits(digits);
@@ -182,7 +182,7 @@ export const DateMask = () => {
   // Позиционирование каретки после последней цифры при фокусе
   useEffect(() => {
     if (isFocused && inputRef.current) {
-      const digits = value.replace(/\D/g, "");
+      const digits = value.replace(/\D/g, '');
       const position = getCursorPosition(digits);
 
       // Устанавливаем позицию каретки

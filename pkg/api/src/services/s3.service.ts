@@ -112,7 +112,10 @@ export abstract class S3Service {
 
     try {
       // Получаем ссылку на файл в S3
-      const s3File = client.file(fileKey);
+      const s3File = client.file(fileKey, {
+        type: "application/octet-stream",
+        contentDisposition: `attachment; filename="${encodeURIComponent(originalFileName)}"`,
+      });
 
       // Записываем данные в S3
       // Bun.write автоматически обрабатывает разные типы входных данных

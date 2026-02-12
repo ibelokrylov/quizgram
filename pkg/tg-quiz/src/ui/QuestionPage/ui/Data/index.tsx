@@ -8,7 +8,6 @@ export const DataQuestion = () => {
   const { questions, current } = useContext(QuestionContext);
   const question = questions[current] as QuizQuestionDate;
 
-
   if (question.content.type === 'calendar') {
     return <DateCalendar />;
   }
@@ -17,5 +16,5 @@ export const DataQuestion = () => {
     return <DateMask />;
   }
 
-  return null
+  return null;
 };

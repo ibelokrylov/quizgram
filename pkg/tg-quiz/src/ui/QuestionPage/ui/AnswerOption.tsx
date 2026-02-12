@@ -15,19 +15,13 @@ export const AnswerOption = () => {
   }
 
   return (
-    <div className='answer__option'>
+    <div className="answer__option">
       {question.content?.variants?.map((variant, idx) => (
         <Cell
           key={idx}
-          className='answer__option-item'
-          Component='label'
-          before={
-            <Selectable
-              name='group'
-              value={variant}
-              onChange={handleSelect}
-            />
-          }
+          className="answer__option-item"
+          Component="label"
+          before={<Selectable name="group" value={variant} onChange={handleSelect} />}
           multiline
         >
           {variant}

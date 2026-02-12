@@ -1,7 +1,7 @@
 {
   "name": "tg-quiz",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,8 +22,8 @@
     "@vitejs/plugin-react": "catalog:frontend",
     "babel-plugin-react-compiler": "catalog:frontend",
     "globals": "catalog:frontend",
-    "oxlint": "catalog:frontend",
     "oxfmt": "catalog:frontend",
+    "oxlint": "catalog:frontend",
     "react-icons": "catalog:frontend",
     "typescript": "catalog:all",
     "vite": "catalog:frontend",

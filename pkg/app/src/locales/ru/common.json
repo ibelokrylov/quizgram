@@ -591,5 +591,6 @@
   "telegram.auth.verification.resend": "Отправить код повторно",
   "telegram.auth.verification.error": "Ошибка при подтверждении кода",
   "telegram.auth.verification.resendError": "Ошибка при повторной отправке кода",
-  "telegram.auth.deepLink.invalid": "Невалидная ссылка. Перенаправление на главную страницу."
+  "telegram.auth.deepLink.invalid": "Невалидная ссылка. Перенаправление на главную страницу.",
+  "skip.answer": "Вопрос пропущен отвечающим"
 }

@@ -14,12 +14,12 @@ export const TikTokPlayer = ({ url }: TikTokPlayerProps) => {
   }
 
   return (
-    <div className='player player__tiktok'>
+    <div className="player player__tiktok">
       <iframe
         src={embedUrl}
-        title='TikTok video player'
-        frameBorder='0'
-        allow='autoplay; encrypted-media'
+        title="TikTok video player"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
         allowFullScreen
       ></iframe>
     </div>

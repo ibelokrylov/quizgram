@@ -13,12 +13,12 @@ export const RutubePlayer = ({ url }: RutubePlayerProps) => {
   }
 
   return (
-    <div className='player'>
+    <div className="player">
       <iframe
         src={embedUrl}
-        title='Rutube video player'
-        frameBorder='0'
-        allow='clipboard-write; autoplay'
+        title="Rutube video player"
+        frameBorder="0"
+        allow="clipboard-write; autoplay"
         allowFullScreen
       ></iframe>
     </div>

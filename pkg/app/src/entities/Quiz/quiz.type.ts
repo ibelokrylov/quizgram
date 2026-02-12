@@ -33,7 +33,7 @@ export const quizThxPageZod = z.object({
       z.object({
         title: z.string(),
         link: z.string(),
-      })
+      }),
     )
     .optional(),
   social: z.array(quizThxPageSocialZod).optional(),
@@ -73,7 +73,7 @@ export const quizZod = z.object({
         .optional(),
       uid: z.string(),
       content: z.any().optional(),
-    })
+    }),
   ),
   startPage: z
     .object({
@@ -111,7 +111,7 @@ export const quizStartPageSiteZod = z.object({
       z.object({
         order: z.number(),
         value: z.string(),
-      })
+      }),
     )
     .optional(),
   social: z
@@ -131,7 +131,7 @@ export const quizStartPageSiteZod = z.object({
           "email",
         ]),
         value: z.string(),
-      })
+      }),
     )
     .optional(),
   phone: z.string().optional(),
@@ -155,7 +155,7 @@ export const quizQuestionVariantImageZod = z.object({
     z.object({
       url: z.string(),
       value: z.string().optional(),
-    })
+    }),
   ),
 });
 
@@ -204,6 +204,9 @@ export const quizQuestionSlideZod = z.object({
 export const quizQuestionFileZod = z.object({
   title: z.string(),
   type: z.enum(["all", "image", "video", "docs"]),
+  required: z.boolean(),
+  description: z.string().optional(),
+  manyFiles: z.boolean(),
 });
 
 export const quizQuestionPageZod = z.object({
@@ -245,7 +248,14 @@ export type QuizQuestionType =
 export type Quiz = z.infer<typeof quizZod>;
 export type QuizDashboard = Pick<
   Quiz,
-  "uid" | "name" | "opened" | "openedUnique" | "full" | "isActive" | "createdAt" | "updatedAt"
+  | "uid"
+  | "name"
+  | "opened"
+  | "openedUnique"
+  | "full"
+  | "isActive"
+  | "createdAt"
+  | "updatedAt"
 >;
 
 export type QuizContact = z.infer<typeof quizContactZod>;
@@ -338,9 +348,15 @@ export type QuizQuestion =
       content?: QuizQuestion[];
     };
 
-export type QuizQuestionAnswerOptions = z.infer<typeof quizQuestionAnswerOptionsZod>;
-export type QuizQuestionVariantImage = z.infer<typeof quizQuestionVariantImageZod>;
-export type QuizQuestionVariantImageText = z.infer<typeof quizQuestionVariantImageTextZod>;
+export type QuizQuestionAnswerOptions = z.infer<
+  typeof quizQuestionAnswerOptionsZod
+>;
+export type QuizQuestionVariantImage = z.infer<
+  typeof quizQuestionVariantImageZod
+>;
+export type QuizQuestionVariantImageText = z.infer<
+  typeof quizQuestionVariantImageTextZod
+>;
 export type QuizQuestionEmoji = z.infer<typeof quizQuestionEmojiZod>;
 export type QuizQuestionInput = z.infer<typeof quizQuestionInputZod>;
 export type QuizQuestionSelect = z.infer<typeof quizQuestionSelectZod>;

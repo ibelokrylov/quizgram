@@ -44,7 +44,10 @@ export const SliderQuestion = () => {
       });
       return;
     }
-    if (Number(e.target.value) < (content?.step ?? content?.start ?? 1) || Number(e.target.value) > (content?.end ?? 100)) {
+    if (
+      Number(e.target.value) < (content?.step ?? content?.start ?? 1) ||
+      Number(e.target.value) > (content?.end ?? 100)
+    ) {
       return;
     }
     if (Number(e.target.value) % (content?.step ?? 1) !== 0) {
@@ -67,23 +70,19 @@ export const SliderQuestion = () => {
   }
 
   return (
-    <Card className='slider__question-container'>
+    <Card className="slider__question-container">
       <div>
-        <Input
-          className='slider__question-input'
-          value={value}
-          onChange={handleChange}
-        />
+        <Input className="slider__question-input" value={value} onChange={handleChange} />
       </div>
       <Slider
-        className='slider__question'
+        className="slider__question"
         min={content?.step ?? content?.start}
         max={content?.end}
         step={content?.step}
         value={value}
         onChange={handleSliderChange}
       />
-      <div className='slider__question-values'>
+      <div className="slider__question-values">
         <Text>{content?.step ?? content?.start ?? 1}</Text>
         <Text>{content?.end ?? 100}</Text>
       </div>

@@ -60,21 +60,22 @@ export type QuizContactForm = {
 
 export type QuizStartPage = QuizStartPageStandard;
 export type QuizStartPageStandard = {
-  'type': 'standard';
-  'content': {
-    'name'?: string;
-    'type'?: 'standard';
-    'phone'?: string;
-    'title'?: string;
-    'button'?: string;
-    'logo_url'?: string;
-    'disclamer'?: string;
-    'show_logo'?: boolean;
-    'description'?: string;
-    'company_name'?: string;
-    'content_align'?: 'left';
-    'background_type'?: 'image';
-    'background_mobile'?: string;
+  type: 'standard';
+  content: {
+    name?: string;
+    type?: 'standard';
+    phone?: string;
+    title?: string;
+    button?: string;
+    logo_url?: string;
+    disclamer?: string;
+    show_logo?: boolean;
+    description?: string;
+    company_name?: string;
+    content_align?: 'left';
+    background_type?: 'image';
+    background_mobile?: string;
+    required: boolean;
   };
 };
 
@@ -84,6 +85,7 @@ export type QuizQuestionGroup = {
   order: number;
   content: {
     title: string;
+    required: boolean;
     questions: (
       | QuizQuestionAnswerOptions
       | QuizQuestionVariantImage
@@ -96,6 +98,7 @@ export type QuizQuestionGroup = {
       | QuizQuestionPage
       | QuizQuestionRating
     )[];
+    description?: string;
   };
 };
 
@@ -104,21 +107,25 @@ export type QuizQuestionRating = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
     title?: string;
     left_placeholder?: string;
     right_placeholder?: string;
+    description?: string;
   };
 };
 
 export type QuizQuestionPage = {
-  'type': 'page';
-  'uid': string;
-  'order': number;
-  'content'?: {
-    'url'?: string;
-    'text'?: string;
-    'type'?: 'img' | 'video';
-    'title'?: string;
+  type: 'page';
+  uid: string;
+  order: number;
+  content?: {
+    required: boolean;
+    description?: string;
+    url?: string;
+    text?: string;
+    type?: 'img' | 'video';
+    title?: string;
   };
 };
 
@@ -129,31 +136,38 @@ export type QuizQuestionFile = {
   content: {
     title?: string;
     type: 'image' | 'video' | 'docs' | 'all';
+    required: boolean;
+    description?: string;
+    manyFiles?: boolean;
   };
 };
 
 export type QuizQuestionSlide = {
-  'type': 'slide';
-  'uid': string;
-  'order': number;
-  'content': {
-    'title': string;
-    'options'?: {
-      'end'?: number;
-      'step'?: number;
-      'start'?: number;
-      'default_select'?: number;
+  type: 'slide';
+  uid: string;
+  order: number;
+  content: {
+    required: boolean;
+    description?: string;
+    title: string;
+    options?: {
+      end?: number;
+      step?: number;
+      start?: number;
+      default_select?: number;
     };
   };
 };
 
 export type QuizQuestionDate = {
-  'type': 'date';
-  'uid': string;
-  'order': number;
-  'content': {
-    'type': 'calendar' | 'mask';
-    'title'?: string;
+  type: 'date';
+  uid: string;
+  order: number;
+  content: {
+    required: boolean;
+    description?: string;
+    type: 'calendar' | 'mask';
+    title?: string;
   };
 };
 
@@ -162,6 +176,8 @@ export type QuizQuestionSelect = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
+    description?: string;
     title?: string;
     variants?: string[];
   };
@@ -172,6 +188,8 @@ export type QuizQuestionInput = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
+    description?: string;
     title?: string;
     variant?: string;
   };
@@ -182,6 +200,8 @@ export type QuizQuestionAnswerOptions = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
+    description?: string;
     title?: string;
     variants?: string[];
   };
@@ -192,6 +212,8 @@ export type QuizQuestionVariantImage = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
+    description?: string;
     title?: string;
     variants: { url?: string; value?: string }[];
   };
@@ -202,6 +224,8 @@ export type QuizQuestionVariantImageText = {
   uid: string;
   order: number;
   content: {
+    required: boolean;
+    description?: string;
     title?: string;
     variants: { url?: string; value?: string }[];
   };

@@ -1,6 +1,6 @@
-import { Button, Card, Image, List, Placeholder, Spoiler, Text } from "@telegram-apps/telegram-ui";
-import { useContext } from "react";
-import { AppContext, type QuizStartPageStandard } from "../../../App.context";
+import { Button, Card, Image, List, Placeholder, Spoiler, Text } from '@telegram-apps/telegram-ui';
+import { useContext } from 'react';
+import { AppContext, type QuizStartPageStandard } from '../../../App.context';
 
 export const Standard = () => {
   const { nextStage, quiz } = useContext(AppContext);
@@ -17,11 +17,11 @@ export const Standard = () => {
             {/* Шапка - сверху */}
             {data?.name || data?.logo_url ? (
               <div className="start-page__header">
-                <Card className={"cards full"}>
+                <Card className={'cards full'}>
                   <div className="card__chip start-page__card-chip">
                     {data?.logo_url ? <Image size={40} src={data.logo_url} /> : null}
                     {data?.name ? (
-                      <Text weight={"3"} caps>
+                      <Text weight={'3'} caps>
                         {data.name}
                       </Text>
                     ) : null}
@@ -32,12 +32,12 @@ export const Standard = () => {
 
             {/* Основной контент - в центре */}
             <div className="start-page__main">
-              <Card className={"cards full"} style={{ paddingBottom: "1.5rem" }}>
+              <Card className={'cards full'} style={{ paddingBottom: '1.5rem' }}>
                 {data?.title || data?.description ? (
                   <Placeholder header={data?.title} description={data?.description} />
                 ) : null}
                 <div className="start-page__button-container">
-                  <Button onClick={nextStage}>{data?.button ?? "Пройти опрос"}</Button>
+                  <Button onClick={nextStage}>{data?.button ?? 'Пройти опрос'}</Button>
                 </div>
               </Card>
             </div>
