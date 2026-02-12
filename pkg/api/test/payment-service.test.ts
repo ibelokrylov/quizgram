@@ -19,6 +19,7 @@ const TEST_SECRET_KEY = "test-secret-key-12345678901234567890";
 
 beforeAll(async () => {
   process.env.UNITPAY_SECRET_KEY = TEST_SECRET_KEY;
+  process.env.UNITPAY_PROJECT_ID = "test-project-id";
   process.env.ENV = "development";
   await ensureTestPlan("FREE", 0, 10);
   await ensureTestPlan("BASE", 1000, 200);

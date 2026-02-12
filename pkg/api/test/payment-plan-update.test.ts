@@ -56,6 +56,10 @@ afterAll(async () => {
   // Сохраняем результаты тестов
   const filepath = await logger.saveResults();
   console.log(`\n📊 Результаты тестов сохранены в: ${filepath}`);
+
+  // Очищаем всех тестовых пользователей
+  const { cleanupAllTestUsers } = await import("./utils/test-db");
+  await cleanupAllTestUsers();
 });
 
 test("1. Обновление с бесплатного на платный план (сразу)", async () => {

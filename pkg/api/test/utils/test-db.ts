@@ -76,7 +76,14 @@ export async function ensureTestPlan(name: "FREE" | "BASE" | "PRO_PLUS", price: 
     .limit(1);
 
   if (existing.length > 0) {
-    return existing[0].id;
+    const plan = existing[0];
+    if (plan.price !== price || plan.bidMonthLimit !== bidMonthLimit) {
+      await db
+        .update(planTable)
+        .set({ price, bidMonthLimit })
+        .where(eq(planTable.id, plan.id));
+    }
+    return plan.id;
   }
 
   const [plan] = await db
