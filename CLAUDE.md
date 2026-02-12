@@ -10,6 +10,25 @@ Quizgram - монорепозиторий для платформы создан
 - **pkg/app** - Frontend веб-приложение (React 19 + TanStack Router + Tailwind v4)
 - **pkg/tg-quiz** - Telegram Mini App (React + Telegram UI)
 
+## Формат ответа и коммуникация
+
+### Структура ответа (обязательно)
+Всегда соблюдай порядок:
+
+1. **План** (до 5 пунктов) - что будет сделано
+2. **Отчёт** (что сделано) - с указанием `path/to/file:line` для всех изменений
+
+### Стиль общения
+- Отвечай кратко и по делу
+- Не вставляй большие фрагменты кода в ответ (только дифф/минимальные куски)
+- Сообщения об ошибках/логи в коде - на русском языке
+- Если нужно добавить что-то в `.env` - укажи это явно в результате
+
+### Если заблокирован
+- 1 строка: чего не хватает
+- Точный список: файл(ы)/команда(ы), которые нужны
+- 1 вариант обходного решения
+
 ## Critical Rules
 
 ### Language
@@ -23,9 +42,54 @@ Quizgram - монорепозиторий для платформы создан
 - **ЗАПРЕЩЕНО запускать dev-серверы** (`bun run dev`, `vite`) - серверы уже запущены на портах 5173/5174
 
 ### TypeScript
-- Используй `satisfies` вместо `as` для type assertions
-- Строгая типизация везде (no `any`)
-- Валидация: Zod для frontend, Elysia.t (TypeBox) для backend
+- **ЗАПРЕЩЕНО использовать `any`, `never`, `unknown`** - всегда используй конкретные типы
+- **Используй `satisfies` вместо `as`** для type assertions
+  - **Минимальные исключения для `as`:** `catch (e)`, namespace imports, SQL алиасы, FormData в Elysia
+- Строгая типизация везде
+- Frontend: runtime-валидация через **Zod** (схемы → `z.infer`)
+- Backend: валидация через **Elysia.t** (модели в `model.ts`)
+- Типы импортируй как `import type { ... }` (Frontend)
+
+### Базовые ограничения безопасности
+- **DELETE операции в БД ЗАПРЕЩЕНЫ** без явного согласия пользователя
+- Не выполняй разрушительные команды (`rm -rf`, `git reset --hard`, force-push) без запроса
+- Не меняй конфиги/версии линтинга без явной просьбы
+- **Тесты пишутся только для pkg/api**
+- **ЗАПРЕЩЕНО удалять тесты или подгонять их под ответы**
+- **Файлы НИКОГДА не хранить в БД/на сервере** - только загрузка в S3 → в БД метаданные/URL
+
+### Telegram Bot API
+- **ВСЕГДА используй polling режим** (и в dev, и в production)
+- Используй `node-telegram-bot-api` для всех операций с Telegram Bot API
+- Боты создаются с `polling: true` в любом окружении
+
+## Экономия контекста (критично)
+
+### Стратегия чтения файлов
+1. Сначала используй `grep` или `rg -n "<ключ>"` для поиска
+2. Потом открывай только нужные места
+3. Не читай файлы целиком без причины
+4. Если нужен большой файл - запрашивай конкретный диапазон строк
+
+### Минимизация изменений
+- Меньше файлов, меньше строк
+- Если требуется >3 файлов или >150 LOC - предложи этапы и сделай только Step 1
+- Запрашивай подтверждение перед масштабными изменениями
+
+## MCP Servers (Model Context Protocol)
+
+Для упрощения работы используй доступные MCP-серверы (конфиг в `.mcp.json`):
+
+### Доступные серверы
+- **postgres** - прямые запросы к БД, проверка структуры данных, тесты миграций
+- **browser** - тестирование React UI flows, проверка визуального поведения
+- **context7** - поиск документации по TypeScript, React, Elysia, Drizzle
+
+### Когда использовать
+- Нужен прямой SQL запрос → используй `postgres` MCP
+- Нужно проверить UI/React поведение → используй `browser` MCP
+- Нужна документация по фреймворкам → используй `context7` MCP
+- Перед database операциями → проверь подключение через `postgres` MCP
 
 ## Commands
 
@@ -33,7 +97,6 @@ Quizgram - монорепозиторий для платформы создан
 ```bash
 bun install                          # Установка зависимостей для всех пакетов
 git push                             # Автоматически запускает тесты API (husky pre-push hook)
-git push --no-verify                 # Пропуск тестов (использовать осторожно!)
 ```
 
 ### API (pkg/api)
@@ -43,7 +106,12 @@ cd pkg/api
 # Development
 bun run dev                          # Запуск dev-сервера с hot reload
 bun test                             # Запуск всех тестов + очистка тестовых данных
+bun test specific.test.ts            # Запуск конкретного теста
+bun test -t "часть названия"         # Запуск тестов по имени/паттерну
 bun run test:cleanup                 # Очистка тестовых данных после тестов
+
+# Linting
+bun run lint                         # Линтинг (oxlint)
 
 # Database Management
 bun run db:push                      # Применить изменения схемы в БД (drizzle-kit push)
@@ -120,7 +188,7 @@ src/
 ```
 
 **Module Pattern (каждый модуль):**
-- `index.ts` - HTTP routes и валидация (Elysia)
+- `index.ts` - HTTP routes и валидация (Elysia controller)
 - `service.ts` - Бизнес-логика (abstract class со static методами)
 - `model.ts` - Validation schemas (TypeBox для Elysia.t)
 
@@ -130,7 +198,7 @@ src/
 - `backup-db.service.ts` - Автоматический бэкап PostgreSQL в S3 (pg_dump + gzip)
 - `backup-log.service.ts` - Архивирование логов
 - `session.service.ts` - JWT сессии (30 дней / 1 год / 2 часа)
-- `telegram.service.ts` - Telegram bot API
+- `telegram.service.ts` - Telegram bot API (всегда polling)
 - `crypto-pay.service.ts` - Крипто-платежи (Telegram Stars)
 - `ffmpeg.service.ts` - Обработка видео/аудио
 
@@ -182,14 +250,31 @@ POST /telegram/*         # Telegram webhooks (без /v1)
 - TanStack Router - File-based routing
 - TanStack Query - Server state management
 - Zod - Runtime validation
-- i18next - Интернационализация
-- Radix UI + shadcn/ui - UI компоненты
+- i18next - Интернационализация (Russian/English)
+- Radix UI + shadcn/ui - UI компоненты (New York style)
 - Tailwind CSS v4 - Стилизация
+
+**Structure:**
+```
+src/
+├── app/                 # Global configuration (ContextHole, QueryClient, Auth)
+├── routes/              # File-based routing (TanStack Router)
+├── components/          # Reusable UI components
+│   └── ui/             # shadcn/ui components
+├── pages/               # Page-level components
+├── entities/            # Domain models (Zod schemas)
+├── lib/                 # Utils (cn(), i18n config)
+├── locales/             # i18n files (ru/, en/)
+└── hooks/               # Custom React hooks
+```
 
 **Architecture:**
 - Entity-based structure (по доменным сущностям)
 - Feature-first организация компонентов
 - Type-safe routing с TypeScript
+- Import alias: `@/` → `./src/`
+- ContextHole pattern для centralized providers
+- Предпочитай именованные экспорты (без default export)
 
 ### Telegram Mini App (pkg/tg-quiz)
 
@@ -199,6 +284,19 @@ POST /telegram/*         # Telegram webhooks (без /v1)
 - Работает внутри Telegram WebView
 - Telegram-native UI компоненты
 - Интеграция с Telegram API
+
+**Обязательная инициализация (main.tsx):**
+```typescript
+import { init, backButton } from '@telegram-apps/sdk-react';
+
+init();
+backButton.mount();
+```
+
+**Правила:**
+- Используй компоненты из `@telegram-apps/telegram-ui`
+- Обязательно импортируй стили Telegram UI
+- Навигация через `backButton` из SDK
 
 ## Database Schema (Key Tables)
 
@@ -296,26 +394,39 @@ HTTPS_KEY=/path/to/key.pem
 HTTPS_PORT=5001
 ```
 
-## Git Hooks (Husky)
+## Git Workflow
+
+### Коммиты
+- Делай `git commit` **только по явному запросу**
+- Формат сообщения: `[feat] ...`, `[fix] ...`, `[update] ...` - кратко, в стиле репозитория
+- **НЕ предлагай `git push --no-verify`** - хуки обязательны
+
+### Git Hooks (Husky)
 
 **Pre-push Hook:**
 - Автоматически запускает `bun test` в `pkg/api`
 - Блокирует push при падении тестов
-- Bypass: `git push --no-verify` (использовать осторожно!)
+- Bypass: `git push --no-verify` (использовать КРАЙНЕ осторожно!)
 
 **Installation:**
 - Hooks устанавливаются автоматически при `bun install` (скрипт `prepare`)
 
 ## Testing
 
-**API Tests:**
+### Когда запускать тесты/линтеры
+- **По умолчанию НЕ запускай автоматически** - сначала перечисли команды, попроси подтверждение
+- Исключение: пользователь прямо попросил "прогони тесты/линт"
+
+### API Tests
 ```bash
 cd pkg/api
 bun test                    # Запуск всех тестов
 bun test specific.test.ts   # Запуск конкретного теста
+bun test -t "часть названия" # Запуск тестов по имени/паттерну
+bun test src/modules/auth/  # Запуск всех тестов в директории
 ```
 
-**Test Pattern (Bun Test):**
+### Test Pattern (Bun Test)
 ```typescript
 import { test, expect } from "bun:test";
 
@@ -325,9 +436,11 @@ test("описание теста", async () => {
 });
 ```
 
-**Test Cleanup:**
-- После тестов автоматически запускается `bun run test:cleanup`
-- Скрипт очищает тестовые данные из БД
+### Важно
+- **Тесты пишутся только для pkg/api**
+- **ЗАПРЕЩЕНО удалять тесты или подгонять их под ответы**
+- Git pre-push hook автоматически запускает тесты перед push
+- После тестов автоматически запускается `bun run test:cleanup` для очистки данных
 
 ## Logging
 
@@ -339,6 +452,10 @@ test("описание теста", async () => {
 - Автоматический бэкап в S3 (ежедневно в 23:59)
 - Levels: DEBUG, INFO, WARN, ERROR
 
+**КРИТИЧНО:**
+- **ВСЕГДА используй `logger` из `../lib/logger`** вместо `console.log/error/warn`
+- Сообщения об ошибках на русском языке
+
 **Usage:**
 ```typescript
 import { logger } from "../lib/logger";
@@ -346,6 +463,7 @@ import { logger } from "../lib/logger";
 logger.info("Сообщение", { data: "context" });
 logger.error("Ошибка", error, { context: "additional" });
 logger.debug("Debug информация", { details: "..." });
+logger.warn("Предупреждение", { context: "..." });
 ```
 
 ## Backup System
@@ -418,15 +536,72 @@ await db.update(tableName)
   .where(eq(tableName.id, id));
 ```
 
+### React Component Pattern (Frontend)
+```typescript
+import { cn } from "@/lib/utils";
+import type { ComponentProps } from "react";
+
+interface Props extends ComponentProps<"div"> {
+  // props
+}
+
+export function ComponentName({ className, ...props }: Props) {
+  return (
+    <div className={cn("base-classes", className)} {...props}>
+      {/* Условный рендеринг через тернарный оператор */}
+      {condition ? <Component /> : null}
+      {/* НЕ используй: {condition && <Component />} */}
+    </div>
+  );
+}
+```
+
+**Правила для React компонентов:**
+- Компоненты должны принимать `className` и объединять через `cn()` из `@/lib/utils`
+- Условный рендеринг: `{condition ? <Component /> : null}` вместо `{condition && <Component />}`
+- Повторяющиеся элементы выносить в переиспользуемые компоненты
+
+### i18n Pattern (Frontend)
+```typescript
+import { useTranslation } from "react-i18next";
+
+export function Component() {
+  const { t } = useTranslation();
+
+  return <h1>{t("common.title")}</h1>;
+  // НЕ хардкодь строки: <h1>Заголовок</h1>
+}
+```
+
+**Правила i18n:**
+- НЕ хардкодь строки в компонентах
+- Используй `useTranslation()` и `t()` для всех пользовательских строк
+- Ключи перевода в `src/locales/*/common.json`
+
 ## Important Notes
+
+### Backend Architecture
+- **НЕ передавай целиком `ctx` в сервис** - передавай только нужные данные через деструктуризацию
+- Используй `ctx.store` через `.state()` + `.guard()` для user/session
+- Сервисы: `abstract class` со `static` методами без состояния
+- `console.*` ЗАПРЕЩЕН - используй только `logger` из `src/lib/logger`
+
+### Frontend Architecture
+- Алиас `@/` для импортов из `src/`
+- Предпочитай именованные экспорты (без default export)
+- UI-компоненты в `src/components/ui/`, feature-компоненты в `src/components/`
+- Используй ContextHole pattern для providers
 
 ### Database Operations
 - **ВСЕГДА используй Drizzle ORM** для работы с БД (не raw SQL)
 - После изменений схемы: `bun run db:push` для применения
-- Проверяй подключение к БД через MCP перед операциями
+- Проверяй подключение к БД через `postgres` MCP перед операциями
 - Используй soft delete (`deleted_at`) где возможно
+- **DELETE операции ЗАПРЕЩЕНЫ** без явного согласия
 
 ### File Operations
+- **Файлы НИКОГДА не хранить в БД/на сервере**
+- Всегда загружай в S3 → в БД сохраняй только метаданные/URL
 - Предпочитай `Bun.file()` над `node:fs` API
 - Для процессов используй `Bun.spawn()` (как в backup-db.service.ts)
 
@@ -434,6 +609,7 @@ await db.update(tableName)
 - Всегда логируй ошибки через `logger.error()`
 - Используй try-catch в async функциях
 - Возвращай понятные error messages на русском
+- Frontend: для уведомлений используй `toast.error()` (sonner)
 
 ### Security
 - Никогда не логируй sensitive data (пароли, токены)
@@ -453,13 +629,14 @@ await db.update(tableName)
 ```bash
 cd pkg/api && bunx tsc --noEmit    # Проверка типов в API
 cd pkg/app && bunx tsc --noEmit    # Проверка типов в App
+cd pkg/tg-quiz && bunx tsc --noEmit # Проверка типов в TG-Quiz
 ```
 
 ### Database Connection Issues
 - Проверь переменные окружения: `POSTGRES_*`
 - Проверь что PostgreSQL запущен: `docker compose ps`
 - Проверь healthcheck: `docker compose logs postgres`
-- Проверь через MCP (Model Context Protocol)
+- Проверь через `postgres` MCP
 
 ### Docker Issues
 ```bash
@@ -473,6 +650,31 @@ docker compose restart api       # Перезапустить API
 - Убедись что БД доступна
 - Проверь что тестовые данные очищены: `bun run test:cleanup`
 - Запусти тесты с verbose: `bun test --verbose`
+
+## Pre-commit Checklist
+
+Перед коммитом (проверочный список):
+
+```bash
+# 1. Линтинг
+cd pkg/api && bun run lint
+cd pkg/app && bun run lint
+cd pkg/tg-quiz && bun run lint
+
+# 2. Сборка Frontend
+cd pkg/app && bun run build
+cd pkg/tg-quiz && bun run build
+
+# 3. Тесты
+cd pkg/api && bun run test
+
+# 4. TypeScript проверка
+cd pkg/api && bunx tsc --noEmit
+cd pkg/app && bunx tsc --noEmit
+cd pkg/tg-quiz && bunx tsc --noEmit
+```
+
+**Примечание:** Git pre-push hook автоматически запустит тесты API, но лучше проверить всё локально.
 
 ## Additional Resources
 

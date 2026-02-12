@@ -33,6 +33,11 @@ export async function initTelegramSdk() {
   // Уведомляем Telegram, что приложение готово
   tg.ready();
 
+  document.body.style.setProperty(
+    "padding-top",
+    "calc(var(--tg-content-safe-area-inset-top) + 2rem)",
+  );
+
   // Настраиваем стили
   tg.expand();
 
