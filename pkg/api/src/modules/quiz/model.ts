@@ -1,6 +1,7 @@
 // Модели валидации и типы для модуля квиза
 
-import { t } from "elysia";
+import { t } from 'elysia';
+import { ErrorType } from '../../type/error.type';
 
 export namespace QuizModel {
   // Описание квиза в ответе
@@ -24,16 +25,11 @@ export namespace QuizModel {
     data: quiz,
   });
 
-  export type quizEditorSuccessResponse =
-    typeof quizEditorSuccessResponse.static;
+  export type quizEditorSuccessResponse = typeof quizEditorSuccessResponse.static;
 
   // Ответ при ошибке получения квиза
-  export const quizEditorErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Not find user" или "not find"
-  });
-
-  export type quizEditorErrorResponse = typeof quizEditorErrorResponse.static;
+  export const quizEditorErrorResponse = ErrorType;
+  export type quizEditorErrorResponse = ErrorType;
 
   // Тело запроса для обновления имени квиза
   export const updateQuizNameBody = t.Object({
@@ -50,17 +46,11 @@ export namespace QuizModel {
     message: t.String(), // "ok"
   });
 
-  export type updateQuizNameSuccessResponse =
-    typeof updateQuizNameSuccessResponse.static;
+  export type updateQuizNameSuccessResponse = typeof updateQuizNameSuccessResponse.static;
 
   // Ответ при ошибке обновления имени квиза
-  export const updateQuizNameErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized", "Not updated" или ошибка валидации
-  });
-
-  export type updateQuizNameErrorResponse =
-    typeof updateQuizNameErrorResponse.static;
+  export const updateQuizNameErrorResponse = ErrorType;
+  export type updateQuizNameErrorResponse = ErrorType;
 
   // Описание квиза для dashboard (упрощенная версия)
   export const quizDashboard = t.Object({
@@ -83,32 +73,22 @@ export namespace QuizModel {
     }),
   });
 
-  export type dashboardSuccessResponse =
-    typeof dashboardSuccessResponse.static;
+  export type dashboardSuccessResponse = typeof dashboardSuccessResponse.static;
 
   // Ответ при ошибке получения dashboard
-  export const dashboardErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized" или "Not found"
-  });
-
-  export type dashboardErrorResponse = typeof dashboardErrorResponse.static;
+  export const dashboardErrorResponse = ErrorType;
+  export type dashboardErrorResponse = ErrorType;
 
   // Успешный ответ при удалении квиза
   export const deleteQuizSuccessResponse = t.Object({
     message: t.String(), // "ok"
   });
 
-  export type deleteQuizSuccessResponse =
-    typeof deleteQuizSuccessResponse.static;
+  export type deleteQuizSuccessResponse = typeof deleteQuizSuccessResponse.static;
 
   // Ответ при ошибке удаления квиза
-  export const deleteQuizErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Not find user" или "not find"
-  });
-
-  export type deleteQuizErrorResponse = typeof deleteQuizErrorResponse.static;
+  export const deleteQuizErrorResponse = ErrorType;
+  export type deleteQuizErrorResponse = ErrorType;
 
   // Тело запроса для обновления квиза
   export const updateQuizBody = t.Object({
@@ -127,16 +107,11 @@ export namespace QuizModel {
     errors: t.Array(t.String()),
   });
 
-  export type updateQuizSuccessResponse =
-    typeof updateQuizSuccessResponse.static;
+  export type updateQuizSuccessResponse = typeof updateQuizSuccessResponse.static;
 
   // Ответ при ошибке обновления квиза
-  export const updateQuizErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized" или ошибка валидации
-  });
-
-  export type updateQuizErrorResponse = typeof updateQuizErrorResponse.static;
+  export const updateQuizErrorResponse = ErrorType;
+  export type updateQuizErrorResponse = ErrorType;
 
   // Успешный ответ при изменении статуса активности квиза
   export const changeActiveSuccessResponse = t.Object({
@@ -144,17 +119,11 @@ export namespace QuizModel {
     data: t.Boolean(), // Новое значение isActive
   });
 
-  export type changeActiveSuccessResponse =
-    typeof changeActiveSuccessResponse.static;
+  export type changeActiveSuccessResponse = typeof changeActiveSuccessResponse.static;
 
   // Ответ при ошибке изменения статуса активности квиза
-  export const changeActiveErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized" или "Not updated status"
-  });
-
-  export type changeActiveErrorResponse =
-    typeof changeActiveErrorResponse.static;
+  export const changeActiveErrorResponse = ErrorType;
+  export type changeActiveErrorResponse = ErrorType;
 
   // Успешный ответ при создании квиза
   export const createQuizSuccessResponse = t.Object({
@@ -169,20 +138,19 @@ export namespace QuizModel {
   export const quizFiltersSuccessResponse = t.Object({
     message: t.String(), // "ok"
     data: t.Object({
-      filters: t.Array(t.Object({
-        uid: t.String(),
-        name: t.String(),
-      })),
+      filters: t.Array(
+        t.Object({
+          uid: t.String(),
+          name: t.String(),
+        }),
+      ),
     }),
   });
   export type quizFiltersSuccessResponse = typeof quizFiltersSuccessResponse.static;
 
   // Ответ при ошибке получения фильтров квизов
-  export const quizFiltersErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized" или другая ошибка
-  });
-  export type quizFiltersErrorResponse = typeof quizFiltersErrorResponse.static;
+  export const quizFiltersErrorResponse = ErrorType;
+  export type quizFiltersErrorResponse = ErrorType;
 
   // Тело запроса для обновления is_show_logo
   export const updateQuizIsShowLogoBody = t.Object({
@@ -197,15 +165,12 @@ export namespace QuizModel {
     data: t.Boolean(), // Новое значение isShowLogo
   });
 
-  export type updateQuizIsShowLogoSuccessResponse =
-    typeof updateQuizIsShowLogoSuccessResponse.static;
+  export type updateQuizIsShowLogoSuccessResponse = typeof updateQuizIsShowLogoSuccessResponse.static;
 
   // Ответ при ошибке обновления is_show_logo
-  export const updateQuizIsShowLogoErrorResponse = t.Object({
-    message: t.String(), // "failed"
-    error: t.String(), // "Unauthorized", "Forbidden" или "Not updated"
-  });
+  export const updateQuizIsShowLogoErrorResponse = ErrorType;
+  export type updateQuizIsShowLogoErrorResponse = ErrorType;
 
-  export type updateQuizIsShowLogoErrorResponse =
-    typeof updateQuizIsShowLogoErrorResponse.static;
+  export const updateIsShared = t.Object({ isShared: t.Boolean() });
+  export type UpdateIsShared = typeof updateIsShared.static;
 }

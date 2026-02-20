@@ -29,6 +29,7 @@ import { Route as AppPaymentIndexRouteImport } from './routes/app/payment/index'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
 import { Route as AppPaymentSuccessRouteImport } from './routes/app/payment/success'
 import { Route as AppPaymentFailureRouteImport } from './routes/app/payment/failure'
+import { Route as AppImportUidRouteImport } from './routes/app/import/$uid'
 import { Route as AppPaymentWaitingRouteRouteImport } from './routes/app/payment/waiting/route'
 import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
 import { Route as AppBidReportRouteRouteImport } from './routes/app/bid/report/route'
@@ -134,6 +135,11 @@ const AppPaymentFailureRoute = AppPaymentFailureRouteImport.update({
   path: '/failure',
   getParentRoute: () => AppPaymentRouteRoute,
 } as any)
+const AppImportUidRoute = AppImportUidRouteImport.update({
+  id: '/import/$uid',
+  path: '/import/$uid',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPaymentWaitingRouteRoute = AppPaymentWaitingRouteRouteImport.update({
   id: '/waiting',
   path: '/waiting',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
   '/app/quiz/$uid': typeof AppQuizUidRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
     | '/app/quiz/$uid'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
     | '/app/quiz/$uid'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
     | '/app/quiz/$uid'
@@ -471,6 +483,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaymentFailureRouteImport
       parentRoute: typeof AppPaymentRouteRoute
     }
+    '/app/import/$uid': {
+      id: '/app/import/$uid'
+      path: '/import/$uid'
+      fullPath: '/app/import/$uid'
+      preLoaderRoute: typeof AppImportUidRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/payment/waiting': {
       id: '/app/payment/waiting'
       path: '/waiting'
@@ -538,6 +557,7 @@ interface AppRouteRouteChildren {
   AppReferralRoute: typeof AppReferralRoute
   AppBidReportRouteRoute: typeof AppBidReportRouteRouteWithChildren
   AppBidStatisticRouteRoute: typeof AppBidStatisticRouteRoute
+  AppImportUidRoute: typeof AppImportUidRoute
   AppQuizUidRoute: typeof AppQuizUidRoute
 }
 
@@ -548,6 +568,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppReferralRoute: AppReferralRoute,
   AppBidReportRouteRoute: AppBidReportRouteRouteWithChildren,
   AppBidStatisticRouteRoute: AppBidStatisticRouteRoute,
+  AppImportUidRoute: AppImportUidRoute,
   AppQuizUidRoute: AppQuizUidRoute,
 }
 

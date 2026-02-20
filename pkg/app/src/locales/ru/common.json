@@ -592,5 +592,13 @@
   "telegram.auth.verification.error": "Ошибка при подтверждении кода",
   "telegram.auth.verification.resendError": "Ошибка при повторной отправке кода",
   "telegram.auth.deepLink.invalid": "Невалидная ссылка. Перенаправление на главную страницу.",
-  "skip.answer": "Вопрос пропущен отвечающим"
+  "skip.answer": "Вопрос пропущен отвечающим",
+  "quiz.dashboard.delete.title": "Вы уверены что хотите удалить квиз?",
+  "quiz.dashboard.delete.description": "После удаление он станет недоступен для всех.",
+  "quiz.dashboard.delete.yes": "Удалить",
+  "quiz.dashboard.delete.cancel": "Отменить",
+  "edit-quiz.public.label": "Разрешить копировать квиз",
+  "edit-quiz.public.button.tooltip": "Скопировать ссылку для экспорта",
+  "edit-quiz.public.error": "Функция не доступна на бесплатном тарифе",
+  "edit-quiz.public.toast.success": "Квиз успешно изменен"
 }

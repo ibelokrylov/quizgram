@@ -20,13 +20,13 @@ COPY pkg/ ./pkg/
 
 # Устанавливаем зависимости (включая dev для drizzle-kit миграций)
 RUN bun install --linker=isolated && \
-    # Удаляем ненужные пакеты (app и tg-quiz не нужны для API)
-    rm -rf /app/pkg/app /app/pkg/tg-quiz && \
-    # Очищаем кеш bun для уменьшения размера
-    rm -rf /root/.bun/install/cache && \
-    # Удаляем тестовые файлы и документацию из node_modules
-    find /app/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "*.test.*" \) -exec rm -rf {} + 2>/dev/null || true && \
-    find /app/node_modules -type f \( -name "*.test.*" -o -name "*.spec.*" -o -name "*.map" -o -name "README.md" -o -name "CHANGELOG.md" \) -delete 2>/dev/null || true
+  # Удаляем ненужные пакеты (app и tg-quiz не нужны для API)
+  rm -rf /app/pkg/app /app/pkg/tg-quiz && \
+  # Очищаем кеш bun для уменьшения размера
+  rm -rf /root/.bun/install/cache && \
+  # Удаляем тестовые файлы и документацию из node_modules
+  find /app/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "*.test.*" \) -exec rm -rf {} + 2>/dev/null || true && \
+  find /app/node_modules -type f \( -name "*.test.*" -o -name "*.spec.*" -o -name "*.map" -o -name "README.md" -o -name "CHANGELOG.md" \) -delete 2>/dev/null || true
 
 # ============================================
 # Этап 2: Финальный образ

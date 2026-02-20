@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const quizContactFormType = z.enum(["name", "email", "phone", "text"]);
+export const quizContactFormType = z.enum(['name', 'email', 'phone', 'text']);
 export const quizContactFormZod = z.object({
   type: quizContactFormType,
   label: z.string().optional(),
@@ -56,20 +56,7 @@ export const quizZod = z.object({
   question: z.array(
     z.object({
       type: z
-        .enum([
-          "answer_option",
-          "variant_image",
-          "variant_image_text",
-          "emoji",
-          "input",
-          "select",
-          "date",
-          "slide",
-          "file",
-          "page",
-          "rating",
-          "question_group",
-        ])
+        .enum(['answer_option', 'variant_image', 'variant_image_text', 'emoji', 'input', 'select', 'date', 'slide', 'file', 'page', 'rating', 'question_group'])
         .optional(),
       uid: z.string(),
       content: z.any().optional(),
@@ -77,10 +64,11 @@ export const quizZod = z.object({
   ),
   startPage: z
     .object({
-      type: z.enum(["standard", "site"]),
+      type: z.enum(['standard', 'site']),
       content: z.any().optional(),
     })
     .optional(),
+  isShared: z.boolean(),
 });
 
 export const quizStartPageStandardZod = z.object({
@@ -94,9 +82,9 @@ export const quizStartPageStandardZod = z.object({
   company_description: z.string().optional(),
   background: z.string().optional(),
   background_mobile: z.string().optional(),
-  background_type: z.enum(["image", "video"]),
-  type: z.enum(["standard", "center", "all"]),
-  content_align: z.enum(["center", "left", "right"]),
+  background_type: z.enum(['image', 'video']),
+  type: z.enum(['standard', 'center', 'all']),
+  content_align: z.enum(['center', 'left', 'right']),
   show_logo: z.boolean(),
   link: z.string().optional(),
   disclamer: z.string().optional(),
@@ -117,19 +105,7 @@ export const quizStartPageSiteZod = z.object({
   social: z
     .array(
       z.object({
-        type: z.enum([
-          "instagram",
-          "vk",
-          "youtube",
-          "facebook",
-          "x",
-          "telegram",
-          "tiktok",
-          "wechat",
-          "whatsapp",
-          "linkedin",
-          "email",
-        ]),
+        type: z.enum(['instagram', 'vk', 'youtube', 'facebook', 'x', 'telegram', 'tiktok', 'wechat', 'whatsapp', 'linkedin', 'email']),
         value: z.string(),
       }),
     )
@@ -186,7 +162,7 @@ export const quizQuestionSelectZod = z.object({
 
 export const quizQuestionDateZod = z.object({
   title: z.string(),
-  type: z.enum(["calendar", "mask"]),
+  type: z.enum(['calendar', 'mask']),
 });
 
 export const quizQuestionSlideOptionsZod = z.object({
@@ -203,7 +179,7 @@ export const quizQuestionSlideZod = z.object({
 
 export const quizQuestionFileZod = z.object({
   title: z.string(),
-  type: z.enum(["all", "image", "video", "docs"]),
+  type: z.enum(['all', 'image', 'video', 'docs']),
   required: z.boolean(),
   description: z.string().optional(),
   manyFiles: z.boolean(),
@@ -211,7 +187,7 @@ export const quizQuestionFileZod = z.object({
 
 export const quizQuestionPageZod = z.object({
   title: z.string(),
-  type: z.enum(["img", "video"]),
+  type: z.enum(['img', 'video']),
   url: z.string().optional(),
   text: z.string().optional(),
 });
@@ -233,41 +209,31 @@ export type QuizQuestionGroup = {
 };
 
 export type QuizQuestionType =
-  | "answer_option"
-  | "variant_image"
-  | "variant_image_text"
+  | 'answer_option'
+  | 'variant_image'
+  | 'variant_image_text'
   // | 'emoji'
-  | "input"
-  | "select"
-  | "date"
-  | "slide"
-  | "file"
-  | "page"
-  | "rating"
-  | "question_group";
+  | 'input'
+  | 'select'
+  | 'date'
+  | 'slide'
+  | 'file'
+  | 'page'
+  | 'rating'
+  | 'question_group';
 export type Quiz = z.infer<typeof quizZod>;
-export type QuizDashboard = Pick<
-  Quiz,
-  | "uid"
-  | "name"
-  | "opened"
-  | "openedUnique"
-  | "full"
-  | "isActive"
-  | "createdAt"
-  | "updatedAt"
->;
+export type QuizDashboard = Pick<Quiz, 'uid' | 'name' | 'opened' | 'openedUnique' | 'full' | 'isActive' | 'createdAt' | 'updatedAt'>;
 
 export type QuizContact = z.infer<typeof quizContactZod>;
 export type QuizContactForm = z.infer<typeof quizContactFormZod>;
 
 export type QuizStartPage =
   | {
-      type: "standard";
+      type: 'standard';
       content?: QuizStartPageStandard;
     }
   | {
-      type: "site";
+      type: 'site';
       content?: QuizStartPageSite;
     };
 
@@ -276,87 +242,81 @@ export type QuizStartPageSite = z.infer<typeof quizStartPageSiteZod>;
 
 export type QuizQuestion =
   | {
-      type: "answer_option";
+      type: 'answer_option';
       uid: string;
       order: number;
       content?: QuizQuestionAnswerOptions[];
     }
   | {
-      type: "variant_image";
+      type: 'variant_image';
       uid: string;
       order: number;
       content?: QuizQuestionVariantImage;
     }
   | {
-      type: "variant_image_text";
+      type: 'variant_image_text';
       uid: string;
       order: number;
       content?: QuizQuestionVariantImageText;
     }
   | {
-      type: "emoji";
+      type: 'emoji';
       uid: string;
       order: number;
       content?: QuizQuestionEmoji;
     }
   | {
-      type: "input";
+      type: 'input';
       uid: string;
       order: number;
       content?: QuizQuestionInput;
     }
   | {
-      type: "select";
+      type: 'select';
       uid: string;
       order: number;
       content?: QuizQuestionSelect;
     }
   | {
-      type: "date";
+      type: 'date';
       uid: string;
       order: number;
       content?: QuizQuestionDate;
     }
   | {
-      type: "slide";
+      type: 'slide';
       uid: string;
       order: number;
       content?: QuizQuestionSlide;
     }
   | {
-      type: "file";
+      type: 'file';
       uid: string;
       order: number;
       content?: QuizQuestionFile;
     }
   | {
-      type: "page";
+      type: 'page';
       uid: string;
       order: number;
       content?: QuizQuestionPage;
     }
   | {
-      type: "rating";
+      type: 'rating';
       uid: string;
       order: number;
       content?: QuizQuestionRating;
     }
   | {
-      type: "question_group";
+      type: 'question_group';
       uid: string;
       order: number;
       content?: QuizQuestion[];
     };
 
-export type QuizQuestionAnswerOptions = z.infer<
-  typeof quizQuestionAnswerOptionsZod
->;
-export type QuizQuestionVariantImage = z.infer<
-  typeof quizQuestionVariantImageZod
->;
-export type QuizQuestionVariantImageText = z.infer<
-  typeof quizQuestionVariantImageTextZod
->;
+export type QuizQuestionAnswerOptions = z.infer<typeof quizQuestionAnswerOptionsZod>;
+export type QuizQuestionVariantImage = z.infer<typeof quizQuestionVariantImageZod>;
+export type QuizQuestionVariantImageText = z.infer<typeof quizQuestionVariantImageTextZod>;
 export type QuizQuestionEmoji = z.infer<typeof quizQuestionEmojiZod>;
 export type QuizQuestionInput = z.infer<typeof quizQuestionInputZod>;
 export type QuizQuestionSelect = z.infer<typeof quizQuestionSelectZod>;

@@ -593,5 +593,9 @@
   "telegram.auth.verification.error": "Error verifying code",
   "telegram.auth.verification.resendError": "Error resending code",
   "telegram.auth.deepLink.invalid": "Invalid link. Redirecting to main page.",
-  "skip.answer": "Answer skipped"
+  "skip.answer": "Answer skipped",
+  "quiz.dashboard.delete.title": "Are you sure you want to delete this quiz?",
+  "quiz.dashboard.delete.description": "After deletion, it will become unavailable to everyone.",
+  "quiz.dashboard.delete.yes": "Delete",
+  "quiz.dashboard.delete.cancel": "Cancel"
 }
