@@ -39,6 +39,6 @@ export const adminRoute = new Elysia({ prefix: '/admin' }).guard(
           limit: t.Optional(t.Number()),
           offset: t.Optional(t.Number()),
         }),
-      },
-    ),
+      }
+    )
 );

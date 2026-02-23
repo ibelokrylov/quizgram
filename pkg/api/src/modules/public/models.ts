@@ -1,4 +1,4 @@
-import { Static, t } from "elysia";
+import { Static, t } from 'elysia';
 
 export const bodyAnswer = t.Object({
   answer: t.String(),
@@ -39,7 +39,7 @@ export const AnswerFiles = t.Array(
   t.Object({
     __fileIndex: t.Number(),
     fileName: t.String(),
-  }),
+  })
 );
 export type AnswerFiles = Static<typeof AnswerFiles>;
 
@@ -54,21 +54,23 @@ export type AnswerPages = Static<typeof AnswerPages>;
 export const AnswerRating = t.Number();
 export type AnswerRating = Static<typeof AnswerRating>;
 
-export const AnswerGroup = t.Array(t.Object({
-  question_uid: t.String(),
-  answer: t.Union([
-    AnswerVariant,
-    AnswerVariantImage,
-    AnswerVariantAndImage,
-    AnswerTextFields,
-    AnswerList,
-    AnswerCalendar,
-    AnswerSlider,
-    AnswerFiles,
-    AnswerPages,
-    AnswerRating,
-  ]),
-}))
+export const AnswerGroup = t.Array(
+  t.Object({
+    question_uid: t.String(),
+    answer: t.Union([
+      AnswerVariant,
+      AnswerVariantImage,
+      AnswerVariantAndImage,
+      AnswerTextFields,
+      AnswerList,
+      AnswerCalendar,
+      AnswerSlider,
+      AnswerFiles,
+      AnswerPages,
+      AnswerRating,
+    ]),
+  })
+);
 export type AnswerGroup = Static<typeof AnswerGroup>;
 
 export const Answer = t.Union([
@@ -121,7 +123,7 @@ const answerBase = t.Object({
         order: t.Optional(t.Number()),
         content: t.Optional(t.Any()),
       }),
-    ]),
+    ])
   ),
   key: t.Optional(t.String()), // UUID ключ для сохранения ответов
   final_question: t.Optional(t.Boolean()), // Является ли этот вопрос последним
@@ -147,7 +149,7 @@ export const quizAnswerFormData = t.Object({
         order: t.Optional(t.Number()),
         content: t.Optional(t.Any()),
       }),
-    ]),
+    ])
   ),
   key: t.Optional(t.String()), // UUID ключ для сохранения ответов
   final_question: t.Optional(t.Boolean()), // Является ли этот вопрос последним

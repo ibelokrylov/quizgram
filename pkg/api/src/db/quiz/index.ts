@@ -1,6 +1,15 @@
 // Модели квиза и связанных сущностей в Drizzle ORM (PostgreSQL)
 
-import { boolean, integer, jsonb, pgEnum, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  serial,
+  timestamp,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { UserTable } from 'pkg-types';
 
 // Перечисление типов вопросов квиза (аналог QuizQuestionType в GORM)
@@ -59,7 +68,9 @@ export const quizThxPageTable = pgTable('quiz_thx_page', {
   uid: varchar('uid', { length: 36 }).unique(),
   title: varchar('title', { length: 100 }).notNull().default('Спасибо, [name]!'),
 
-  description: varchar('description', { length: 255 }).notNull().default('Здесь может быть любой текст'),
+  description: varchar('description', { length: 255 })
+    .notNull()
+    .default('Здесь может быть любой текст'),
   buttons: jsonb('buttons'),
   social: jsonb('social'),
 });

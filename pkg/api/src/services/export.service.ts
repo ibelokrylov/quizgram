@@ -58,10 +58,10 @@ export abstract class ExportService {
 
       // Создаем строку CSV
       const rows: string[] = [];
-      
+
       // Добавляем BOM для UTF-8 (чтобы Excel правильно открывал файл)
       rows.push('\uFEFF');
-      
+
       // Добавляем заголовки
       rows.push(headers.map(escapeCSV).join(';'));
 
@@ -119,14 +119,14 @@ export abstract class ExportService {
 
       const csvContent = rows.join('\n');
 
-      logger.debug("CSV file generated", {
+      logger.debug('CSV file generated', {
         bidsCount: bids.length,
         csvLength: csvContent.length,
       });
 
       return csvContent;
     } catch (error) {
-      logger.error("Failed to generate CSV", error as Error, {
+      logger.error('Failed to generate CSV', error as Error, {
         bidsCount: bids.length,
       });
       throw error;
@@ -229,18 +229,17 @@ export abstract class ExportService {
       // Генерируем буфер
       const buffer = await workbook.xlsx.writeBuffer();
 
-      logger.debug("Excel file generated", {
+      logger.debug('Excel file generated', {
         bidsCount: bids.length,
         bufferSize: buffer.byteLength,
       });
 
       return Buffer.from(buffer);
     } catch (error) {
-      logger.error("Failed to generate Excel", error as Error, {
+      logger.error('Failed to generate Excel', error as Error, {
         bidsCount: bids.length,
       });
       throw error;
     }
   }
 }
-

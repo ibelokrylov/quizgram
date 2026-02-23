@@ -1,39 +1,39 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import { CheckCircle2, Info, OctagonAlert, type LucideIcon } from "lucide-react";
-import * as React from "react";
+import { cva, type VariantProps } from 'class-variance-authority';
+import { CheckCircle2, Info, OctagonAlert, type LucideIcon } from 'lucide-react';
+import * as React from 'react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 const messageVariants = cva(
-  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium leading-5 backdrop-blur-sm border border-transparent shadow-[0_8px_20px_-15px_rgba(0,0,0,0.45)]",
+  'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium leading-5 backdrop-blur-sm border border-transparent shadow-[0_8px_20px_-15px_rgba(0,0,0,0.45)]',
   {
     variants: {
       variant: {
-        success: "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-100",
-        error: "bg-red-500/15 text-red-700 dark:bg-red-400/20 dark:text-red-50",
-        info: "bg-orange-500/15 text-orange-700 dark:bg-orange-400/20 dark:text-orange-50",
+        success: 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-100',
+        error: 'bg-red-500/15 text-red-700 dark:bg-red-400/20 dark:text-red-50',
+        info: 'bg-orange-500/15 text-orange-700 dark:bg-orange-400/20 dark:text-orange-50',
       },
     },
     defaultVariants: {
-      variant: "info",
+      variant: 'info',
     },
   }
 );
 
-const iconMap: Record<NonNullable<VariantProps<typeof messageVariants>["variant"]>, LucideIcon> = {
+const iconMap: Record<NonNullable<VariantProps<typeof messageVariants>['variant']>, LucideIcon> = {
   success: CheckCircle2,
   error: OctagonAlert,
   info: Info,
 };
 
-type MessageProps = React.ComponentProps<"div"> &
+type MessageProps = React.ComponentProps<'div'> &
   VariantProps<typeof messageVariants> & {
     title?: React.ReactNode;
     description?: React.ReactNode;
   };
 
 function Message({ className, variant, title, description, children, ...props }: MessageProps) {
-  const Icon = iconMap[variant ?? "info"];
+  const Icon = iconMap[variant ?? 'info'];
 
   return (
     <div

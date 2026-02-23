@@ -1,21 +1,21 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import type { BidListItem } from "@/entities/Bid/bid.type";
-import { useDeleteBid } from "@/entities/Bid/useBids";
-import { AuthContext } from "@/entities/User/auth.context";
-import { hasAccessToPaidContent } from "@/entities/User/access-control";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { AtSign, ExternalLink, Eye, Trash2 } from "lucide-react";
-import { useContext, useState } from "react";
-import { MdEmail, MdInfoOutline, MdPerson, MdPhone, MdTextFields } from "react-icons/md";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import type { BidListItem } from '@/entities/Bid/bid.type';
+import { useDeleteBid } from '@/entities/Bid/useBids';
+import { AuthContext } from '@/entities/User/auth.context';
+import { hasAccessToPaidContent } from '@/entities/User/access-control';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { AtSign, ExternalLink, Eye, Trash2 } from 'lucide-react';
+import { useContext, useState } from 'react';
+import { MdEmail, MdInfoOutline, MdPerson, MdPhone, MdTextFields } from 'react-icons/md';
 import {
   formatDateTime,
   formatLocation,
   getContactsList,
   getStatusColor,
   getStatusText,
-} from "./BidsTable.shared";
+} from './BidsTable.shared';
 
 interface BidsTableCardProps {
   bid: BidListItem;
@@ -31,7 +31,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
   const hasAccess = hasAccessToPaidContent(user);
 
   const handleDelete = async () => {
-    if (!confirm("Вы уверены, что хотите удалить эту заявку?")) {
+    if (!confirm('Вы уверены, что хотите удалить эту заявку?')) {
       return;
     }
 
@@ -39,8 +39,8 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
     try {
       await deleteBidMutation.mutateAsync(bid.key);
     } catch (error) {
-      console.error("Ошибка при удалении заявки:", error);
-      alert("Не удалось удалить заявку. Попробуйте еще раз.");
+      console.error('Ошибка при удалении заявки:', error);
+      alert('Не удалось удалить заявку. Попробуйте еще раз.');
     } finally {
       setIsDeleting(false);
     }
@@ -89,13 +89,13 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
                     {contactsList.map((contact, index) => {
                       const getIcon = () => {
                         switch (contact.type) {
-                          case "email":
+                          case 'email':
                             return <MdEmail className="h-3.5 w-3.5 shrink-0" />;
-                          case "phone":
+                          case 'phone':
                             return <MdPhone className="h-3.5 w-3.5 shrink-0" />;
-                          case "name":
+                          case 'name':
                             return <MdPerson className="h-3.5 w-3.5 shrink-0" />;
-                          case "text":
+                          case 'text':
                           default:
                             return <MdTextFields className="h-3.5 w-3.5 shrink-0" />;
                         }
@@ -133,7 +133,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
               size="sm"
               onClick={() => {
                 navigate({
-                  to: "/app/bid/report",
+                  to: '/app/bid/report',
                   search: (prev) => ({
                     ...prev,
                     key: bid.key,
@@ -152,7 +152,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
                 size="sm"
                 onClick={() => {
                   navigate({
-                    to: "/app/bid/report",
+                    to: '/app/bid/report',
                     search: (prev) => ({
                       ...prev,
                       infoKey: bid.key,
@@ -172,7 +172,7 @@ export function BidsTableCard({ bid }: BidsTableCardProps) {
               onClick={handleDelete}
               disabled={isDeleting}
               className="h-8 w-8 p-0 text-destructive hover:text-white dark:hover:text-destructive"
-              title={isDeleting ? "Удаление..." : "Удалить"}
+              title={isDeleting ? 'Удаление...' : 'Удалить'}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

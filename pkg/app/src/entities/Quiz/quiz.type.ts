@@ -33,7 +33,7 @@ export const quizThxPageZod = z.object({
       z.object({
         title: z.string(),
         link: z.string(),
-      }),
+      })
     )
     .optional(),
   social: z.array(quizThxPageSocialZod).optional(),
@@ -56,11 +56,24 @@ export const quizZod = z.object({
   question: z.array(
     z.object({
       type: z
-        .enum(['answer_option', 'variant_image', 'variant_image_text', 'emoji', 'input', 'select', 'date', 'slide', 'file', 'page', 'rating', 'question_group'])
+        .enum([
+          'answer_option',
+          'variant_image',
+          'variant_image_text',
+          'emoji',
+          'input',
+          'select',
+          'date',
+          'slide',
+          'file',
+          'page',
+          'rating',
+          'question_group',
+        ])
         .optional(),
       uid: z.string(),
       content: z.any().optional(),
-    }),
+    })
   ),
   startPage: z
     .object({
@@ -99,15 +112,27 @@ export const quizStartPageSiteZod = z.object({
       z.object({
         order: z.number(),
         value: z.string(),
-      }),
+      })
     )
     .optional(),
   social: z
     .array(
       z.object({
-        type: z.enum(['instagram', 'vk', 'youtube', 'facebook', 'x', 'telegram', 'tiktok', 'wechat', 'whatsapp', 'linkedin', 'email']),
+        type: z.enum([
+          'instagram',
+          'vk',
+          'youtube',
+          'facebook',
+          'x',
+          'telegram',
+          'tiktok',
+          'wechat',
+          'whatsapp',
+          'linkedin',
+          'email',
+        ]),
         value: z.string(),
-      }),
+      })
     )
     .optional(),
   phone: z.string().optional(),
@@ -131,7 +156,7 @@ export const quizQuestionVariantImageZod = z.object({
     z.object({
       url: z.string(),
       value: z.string().optional(),
-    }),
+    })
   ),
 });
 
@@ -222,7 +247,10 @@ export type QuizQuestionType =
   | 'rating'
   | 'question_group';
 export type Quiz = z.infer<typeof quizZod>;
-export type QuizDashboard = Pick<Quiz, 'uid' | 'name' | 'opened' | 'openedUnique' | 'full' | 'isActive' | 'createdAt' | 'updatedAt'>;
+export type QuizDashboard = Pick<
+  Quiz,
+  'uid' | 'name' | 'opened' | 'openedUnique' | 'full' | 'isActive' | 'createdAt' | 'updatedAt'
+>;
 
 export type QuizContact = z.infer<typeof quizContactZod>;
 export type QuizContactForm = z.infer<typeof quizContactFormZod>;

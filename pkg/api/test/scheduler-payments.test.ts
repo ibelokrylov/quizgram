@@ -315,7 +315,9 @@ test('4. Активация отсроченного плана в день на
 
       // Проверяем, что старый план деактивирован
       const allPayments = await getAllUserPayments(userId);
-      const oldPayment = allPayments.find((p) => p.planId === proPlusPlanId && p.isActive === false);
+      const oldPayment = allPayments.find(
+        (p) => p.planId === proPlusPlanId && p.isActive === false
+      );
       expect(oldPayment).toBeDefined();
 
       // Проверяем, что новый план активен
@@ -382,7 +384,9 @@ test('5. НЕ изменение подписки, если она еще акт
       expect(activePayment).not.toBeNull();
 
       // finalDayAt должна остаться той же
-      const daysDiff = Math.abs((activePayment!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.abs(
+        (activePayment!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(daysDiff).toBeLessThan(1);
 
       // currentLimit не должен быть сброшен
@@ -482,7 +486,9 @@ test('6. Обработка нескольких пользователей од
 
       // Проверяем пользователя 3 (без изменений)
       const activePayment3 = await getActiveUserPayment(userId3);
-      const daysDiff = Math.abs((activePayment3!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.abs(
+        (activePayment3!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(daysDiff).toBeLessThan(1);
 
       logger.logResult({

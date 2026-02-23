@@ -1,9 +1,9 @@
 // Сервис для работы с тарифными планами
 // Автоматически создаёт планы при запуске приложения, если их нет
 
-import { eq, sql } from "drizzle-orm";
-import { db, planTable, type Plan, upLimitTable } from "../db";
-import { logger } from "../lib/logger";
+import { eq, sql } from 'drizzle-orm';
+import { db, planTable, type Plan, upLimitTable } from '../db';
+import { logger } from '../lib/logger';
 
 export abstract class PlanService {
   /**
@@ -13,13 +13,13 @@ export abstract class PlanService {
   static async scanPlanAndCreate(): Promise<void> {
     const plans: Array<{
       id: number;
-      name: "FREE" | "BASE" | "PRO_PLUS";
+      name: 'FREE' | 'BASE' | 'PRO_PLUS';
       bidMonthLimit: number;
       price: number;
     }> = [
-      { id: 1, name: "FREE", bidMonthLimit: 10, price: 0 },
-      { id: 2, name: "BASE", bidMonthLimit: 100, price: 900 },
-      { id: 3, name: "PRO_PLUS", bidMonthLimit: 200, price: 1600 }, // Базовый лимит 200 заявок, базовая цена 1600 ₽
+      { id: 1, name: 'FREE', bidMonthLimit: 10, price: 0 },
+      { id: 2, name: 'BASE', bidMonthLimit: 100, price: 900 },
+      { id: 3, name: 'PRO_PLUS', bidMonthLimit: 200, price: 1600 }, // Базовый лимит 200 заявок, базовая цена 1600 ₽
     ];
 
     for (const planInfo of plans) {
@@ -28,13 +28,13 @@ export abstract class PlanService {
           planInfo.name,
           planInfo.id,
           planInfo.price,
-          planInfo.bidMonthLimit,
+          planInfo.bidMonthLimit
         );
       } catch (error) {
         logger.error(
           `Ошибка при создании плана ${planInfo.name}`,
           error instanceof Error ? error : new Error(String(error)),
-          { planName: planInfo.name, planId: planInfo.id },
+          { planName: planInfo.name, planId: planInfo.id }
         );
       }
     }
@@ -63,7 +63,7 @@ export abstract class PlanService {
         logger.error(
           `Ошибка при создании up_limit для ${upLimitInfo.bid} заявок`,
           error instanceof Error ? error : new Error(String(error)),
-          { bid: upLimitInfo.bid, price: upLimitInfo.price },
+          { bid: upLimitInfo.bid, price: upLimitInfo.price }
         );
       }
     }
@@ -72,10 +72,7 @@ export abstract class PlanService {
   /**
    * Проверяет существование up_limit и создаёт его, если он отсутствует
    */
-  private static async checkAndCreateUpLimit(
-    bid: number,
-    price: number,
-  ): Promise<void> {
+  private static async checkAndCreateUpLimit(bid: number, price: number): Promise<void> {
     const existingUpLimits = await db
       .select()
       .from(upLimitTable)
@@ -92,10 +89,10 @@ export abstract class PlanService {
    * Проверяет существование плана и создаёт его, если он отсутствует
    */
   private static async checkAndCreatePlan(
-    name: "FREE" | "BASE" | "PRO_PLUS",
+    name: 'FREE' | 'BASE' | 'PRO_PLUS',
     id: number,
     price: number,
-    bidLimit: number,
+    bidLimit: number
   ): Promise<void> {
     // Проверяем, существует ли план с таким именем
     const existingPlans = await db
@@ -111,9 +108,14 @@ export abstract class PlanService {
       // Используем SQL напрямую для явного задания id
       // Это необходимо, так как serial поля в Drizzle обычно не позволяют задавать id явно
       await db.execute(
-        sql`INSERT INTO plan (id, name, price, bid_month_limit) VALUES (${id}, ${name}::plan_name, ${price}, ${bidLimit}) ON CONFLICT (id) DO NOTHING`,
+        sql`INSERT INTO plan (id, name, price, bid_month_limit) VALUES (${id}, ${name}::plan_name, ${price}, ${bidLimit}) ON CONFLICT (id) DO NOTHING`
       );
-      logger.info(`План ${name} успешно создан`, { planId: id, planName: name, price, bidMonthLimit: bidLimit });
+      logger.info(`План ${name} успешно создан`, {
+        planId: id,
+        planName: name,
+        price,
+        bidMonthLimit: bidLimit,
+      });
     }
   }
 
@@ -128,11 +130,7 @@ export abstract class PlanService {
    * Получить план по ID
    */
   static async getPlanById(id: number): Promise<Plan | null> {
-    const plans = await db
-      .select()
-      .from(planTable)
-      .where(eq(planTable.id, id))
-      .limit(1);
+    const plans = await db.select().from(planTable).where(eq(planTable.id, id)).limit(1);
 
     return plans[0] ?? null;
   }

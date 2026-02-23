@@ -9,7 +9,7 @@ export const VariantImageAnswer = ({
     <div className="flex justify-center">
       <img
         src={imageUrl}
-        alt={t("bids.details.answer")}
+        alt={t('bids.details.answer')}
         className="rounded-md w-64 h-64 object-cover"
       />
     </div>

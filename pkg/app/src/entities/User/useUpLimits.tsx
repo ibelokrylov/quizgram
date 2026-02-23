@@ -1,5 +1,5 @@
-import http from "@/lib/http";
-import { useQuery } from "@tanstack/react-query";
+import http from '@/lib/http';
+import { useQuery } from '@tanstack/react-query';
 
 export type UpLimit = {
   id: number;
@@ -10,13 +10,13 @@ export type UpLimit = {
 export const useUpLimits = () => {
   async function _fetch(): Promise<UpLimit[]> {
     const { data } = await http<UpLimit[]>({
-      url: "/v1/payment/up-limits",
+      url: '/v1/payment/up-limits',
     });
     return data ?? [];
   }
 
   const query = useQuery({
-    queryKey: ["up-limits"],
+    queryKey: ['up-limits'],
     queryFn: _fetch,
     retry: false,
     retryOnMount: false,

@@ -1,1 +1,1 @@
-export type BotType = 'quiz' | 'crm'
+export type BotType = 'quiz' | 'crm';

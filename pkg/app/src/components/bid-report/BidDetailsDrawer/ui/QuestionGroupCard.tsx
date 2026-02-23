@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import SubQuestionAnswer from "./SubQuestionAnswer";
+import { Badge } from '@/components/ui/badge';
+import SubQuestionAnswer from './SubQuestionAnswer';
 
 export interface QuestionGroupCardProps {
   item: any;
@@ -34,7 +34,7 @@ const QuestionGroupCard = ({
         </Badge>
       )}
       {title && <div className="text-xs lg:text-sm font-medium pt-1">{title}</div>}
-      <div className={title ? "space-y-4" : "pt-3 space-y-4"}>
+      <div className={title ? 'space-y-4' : 'pt-3 space-y-4'}>
         {item.answer.map((subAnswer: any, subIdx: number) => {
           const subQuestionUid = subAnswer?.question_uid;
           const subQuestion = subQuestions.find((sq: any) => sq?.uid === subQuestionUid);

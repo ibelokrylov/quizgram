@@ -5,20 +5,13 @@ export interface ContactFieldProps {
 }
 
 export const formatPhoneNumber = (value: string): string => {
-  return value.startsWith("+") ? value : `+${value}`;
+  return value.startsWith('+') ? value : `+${value}`;
 };
 
-const ContactField = ({
-  contactKey,
-  value,
-  contactsForm,
-}: ContactFieldProps) => {
-  const fieldInfo = contactsForm?.find(
-    (field: any) => field.type === contactKey,
-  );
+const ContactField = ({ contactKey, value, contactsForm }: ContactFieldProps) => {
+  const fieldInfo = contactsForm?.find((field: any) => field.type === contactKey);
   const label = fieldInfo?.label || contactKey;
-  const displayValue =
-    contactKey === "phone" ? formatPhoneNumber(value) : value;
+  const displayValue = contactKey === 'phone' ? formatPhoneNumber(value) : value;
 
   return (
     <div>

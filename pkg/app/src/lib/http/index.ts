@@ -1,14 +1,14 @@
 const http = async <T = undefined>(dto: {
   url: string;
-  method?: "GET" | "POST" | "DELETE" | "PUT";
+  method?: 'GET' | 'POST' | 'DELETE' | 'PUT';
   body?: Record<never, never>;
   formData?: FormData;
 }): Promise<HttpResponse<T>> => {
-  const { method = "GET" } = dto;
-  const _url = dto.url.startsWith("http") ? dto.url : import.meta.env.VITE_PUBLIC_API_URL + dto.url;
+  const { method = 'GET' } = dto;
+  const _url = dto.url.startsWith('http') ? dto.url : import.meta.env.VITE_PUBLIC_API_URL + dto.url;
 
   const config: RequestInit = {
-    credentials: "include",
+    credentials: 'include',
     method,
   };
 
@@ -16,7 +16,7 @@ const http = async <T = undefined>(dto: {
     config.body = dto.formData;
   } else if (dto.body) {
     const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append('Content-Type', 'application/json');
     config.body = JSON.stringify(dto.body);
     config.headers = myHeaders;
   }
@@ -28,7 +28,7 @@ const http = async <T = undefined>(dto: {
     // Обработка специальных случаев для Telegram авторизации
     if (response.status === 404 && data?.requiresRegistration) {
       // Пользователь не найден - требуется регистрация через Telegram
-      const error = new Error(data?.error || "registration_required");
+      const error = new Error(data?.error || 'registration_required');
       (error as any).requiresRegistration = true;
       throw error;
     }

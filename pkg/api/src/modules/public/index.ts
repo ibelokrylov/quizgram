@@ -1,13 +1,13 @@
-import Elysia, { t } from "elysia";
-import { logger } from "../../lib/logger";
-import { IpLocationService } from "../../services/ip-location.service";
-import { SessionService } from "../../services/session.service";
-import { bodyAnswer, publicQuiz, quizContacts } from "./models";
-import { PublicService } from "./service";
+import Elysia, { t } from 'elysia';
+import { logger } from '../../lib/logger';
+import { IpLocationService } from '../../services/ip-location.service';
+import { SessionService } from '../../services/session.service';
+import { bodyAnswer, publicQuiz, quizContacts } from './models';
+import { PublicService } from './service';
 
-export const publicModule = new Elysia({ prefix: "/public" })
+export const publicModule = new Elysia({ prefix: '/public' })
   .post(
-    "/quiz/:uid",
+    '/quiz/:uid',
     async (ctx) => {
       const { uid } = ctx.params;
       const { body } = ctx;
@@ -24,22 +24,19 @@ export const publicModule = new Elysia({ prefix: "/public" })
           // Проверяем, есть ли текущий quizUID в массиве
           if (!session.quizUIDs.includes(uid)) {
             // Добавляем quizUID в токен
-            const updatedToken = await SessionService.addQuizUIDToToken(
-              bidToken.toString(),
-              uid,
-            );
+            const updatedToken = await SessionService.addQuizUIDToToken(bidToken.toString(), uid);
             ctx.cookie.bidToken.set({
               value: updatedToken,
               httpOnly: true,
               secure: true,
-              sameSite: "none",
+              sameSite: 'none',
               maxAge: 30 * 24 * 60 * 60, // 30 дней
-              path: "/",
+              path: '/',
             });
             shouldIncrementOpened = true;
           }
         } catch (error) {
-          logger.debug("Invalid or expired bidToken", {
+          logger.debug('Invalid or expired bidToken', {
             uid,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -58,9 +55,9 @@ export const publicModule = new Elysia({ prefix: "/public" })
           value: token,
           httpOnly: true,
           secure: true,
-          sameSite: "none",
+          sameSite: 'none',
           maxAge: 30 * 24 * 60 * 60, // 30 дней
-          path: "/",
+          path: '/',
         });
 
         shouldIncrementOpened = true;
@@ -72,7 +69,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
       try {
         await PublicService.incrementQuizOpened(uid, shouldIncrementOpened);
       } catch (error) {
-        logger.error("Failed to increment quiz opened", error as Error, {
+        logger.error('Failed to increment quiz opened', error as Error, {
           uid,
           shouldIncrementOpened,
         });
@@ -87,22 +84,19 @@ export const publicModule = new Elysia({ prefix: "/public" })
       // Получаем IP адрес и определяем геолокацию
       let ipLocation = null;
       try {
-        logger.debug("Starting IP location determination", {
+        logger.debug('Starting IP location determination', {
           uid,
           url: ctx.request.url,
           headers: {
-            "x-forwarded-for": ctx.request.headers.get("x-forwarded-for"),
-            "x-real-ip": ctx.request.headers.get("x-real-ip"),
-            "cf-connecting-ip": ctx.request.headers.get("cf-connecting-ip"),
+            'x-forwarded-for': ctx.request.headers.get('x-forwarded-for'),
+            'x-real-ip': ctx.request.headers.get('x-real-ip'),
+            'cf-connecting-ip': ctx.request.headers.get('cf-connecting-ip'),
           },
         });
 
-        ipLocation = await IpLocationService.getLocationFromRequest(
-          ctx.request,
-          ctx.server,
-        );
+        ipLocation = await IpLocationService.getLocationFromRequest(ctx.request, ctx.server);
 
-        logger.info("IP location determined successfully", {
+        logger.info('IP location determined successfully', {
           uid,
           ipLocation,
           hasCountry: !!ipLocation?.country,
@@ -111,15 +105,14 @@ export const publicModule = new Elysia({ prefix: "/public" })
         });
       } catch (error) {
         logger.error(
-          "Failed to get IP location",
+          'Failed to get IP location',
           error instanceof Error ? error : new Error(String(error)),
           {
             uid,
-            errorMessage:
-              error instanceof Error ? error.message : String(error),
+            errorMessage: error instanceof Error ? error.message : String(error),
             errorStack: error instanceof Error ? error.stack : undefined,
             url: ctx.request.url,
-          },
+          }
         );
         // Продолжаем выполнение даже если не удалось определить геолокацию
       }
@@ -130,7 +123,7 @@ export const publicModule = new Elysia({ prefix: "/public" })
         key,
         initData,
         isFirst,
-        ipLocation,
+        ipLocation
       );
 
       return {
@@ -155,14 +148,14 @@ export const publicModule = new Elysia({ prefix: "/public" })
           error: t.String(),
         }),
       },
-    },
+    }
   )
   .post(
-    "/quiz/:uid/answer",
+    '/quiz/:uid/answer',
     async (ctx) => {
       const { uid } = ctx.params;
       const { body, query } = ctx;
-      const finalQuestion = query.final_question === "true";
+      const finalQuestion = query.final_question === 'true';
       const traceId = crypto.randomUUID();
 
       // Логируем начало запроса с traceId
@@ -174,13 +167,13 @@ export const publicModule = new Elysia({ prefix: "/public" })
           body,
           typeBody: typeof body,
         },
-        traceId,
+        traceId
       );
 
       // Используем key из запроса приоритетно, иначе используем bidToken
       if (!body.key) {
         throw new Error(
-          "Session key is required. Please provide 'key' in request body or ensure bidToken cookie is set.",
+          "Session key is required. Please provide 'key' in request body or ensure bidToken cookie is set."
         );
       }
 
@@ -188,25 +181,25 @@ export const publicModule = new Elysia({ prefix: "/public" })
         await PublicService.saveQuizAnswer(uid, body, finalQuestion, traceId);
       } catch (error) {
         logger.error(
-          "Failed to save individual answer",
+          'Failed to save individual answer',
           error as Error,
           {
             uid,
             answer: body,
             error,
           },
-          traceId,
+          traceId
         );
         throw error;
       }
 
       return {
         success: true,
-        message: "Answer saved successfully",
+        message: 'Answer saved successfully',
       };
     },
     {
-      type: "multipart",
+      type: 'multipart',
       params: t.Object({
         uid: t.String(),
       }),
@@ -227,10 +220,10 @@ export const publicModule = new Elysia({ prefix: "/public" })
           error: t.String(),
         }),
       },
-    },
+    }
   )
   .post(
-    "/quiz/:uid/contacts",
+    '/quiz/:uid/contacts',
     async (ctx) => {
       const { uid } = ctx.params;
       const { body } = ctx;
@@ -238,25 +231,20 @@ export const publicModule = new Elysia({ prefix: "/public" })
 
       try {
         // Используем key из body приоритетно, иначе используем bidToken
-        const userKey: string | undefined =
-          body.key || (bidToken ? String(bidToken) : undefined);
+        const userKey: string | undefined = body.key || (bidToken ? String(bidToken) : undefined);
 
         // Удаляем key из body перед передачей в сервис
         const { key: _, ...contactsDataWithoutKey } = body;
 
         // Сохраняем контакты и обновляем статус сессии
-        await PublicService.saveQuizContacts(
-          uid,
-          contactsDataWithoutKey,
-          userKey,
-        );
+        await PublicService.saveQuizContacts(uid, contactsDataWithoutKey, userKey);
 
         return {
           success: true,
-          message: "Contacts saved successfully",
+          message: 'Contacts saved successfully',
         };
       } catch (error) {
-        logger.error("Failed to save quiz contacts", error as Error, {
+        logger.error('Failed to save quiz contacts', error as Error, {
           uid,
           body,
         });
@@ -264,8 +252,8 @@ export const publicModule = new Elysia({ prefix: "/public" })
         ctx.set.status = 500;
         return {
           success: false,
-          message: "Failed to save contacts",
-          error: error instanceof Error ? error.message : "Unknown error",
+          message: 'Failed to save contacts',
+          error: error instanceof Error ? error.message : 'Unknown error',
         };
       }
     },
@@ -290,5 +278,5 @@ export const publicModule = new Elysia({ prefix: "/public" })
           error: t.String(),
         }),
       },
-    },
+    }
   );

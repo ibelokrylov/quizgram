@@ -20,5 +20,26 @@
     "titleBar.activeBackground": "#004C0C",
     "titleBar.activeForeground": "#EDFFEF"
   },
-  "cSpell.words": ["квиз", "квизов", "квизы"]
+  "cSpell.words": ["квиз", "квизов", "квизы"],
+
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always"
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "recommendations": ["oxc.oxc-vscode"],
+  "unwantedRecommendations": ["biomejs.biome", "esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
 }

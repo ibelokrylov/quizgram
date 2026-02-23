@@ -1,9 +1,17 @@
 // Скрипт для генерации тестовых данных в таблице quiz_bid
 // Использование: bun run scripts/mock-quiz-bids.ts --isFull 30 --isEmpty 40 --repeated 50 --quiz-uid acc55c8c-4d20-4f22-bd7c-94f06aa9aaaf
 
-import { and, asc, eq, sql } from "drizzle-orm";
-import { db, quizBidTable, quizContactTable, quizOpenTable, quizQuestionTable, quizTable, userPaymentTable } from "../src/db";
-import { logger } from "../src/lib/logger";
+import { and, asc, eq, sql } from 'drizzle-orm';
+import {
+  db,
+  quizBidTable,
+  quizContactTable,
+  quizOpenTable,
+  quizQuestionTable,
+  quizTable,
+  userPaymentTable,
+} from '../src/db';
+import { logger } from '../src/lib/logger';
 
 interface Args {
   isFull?: number;
@@ -19,16 +27,16 @@ function parseArgs(): Args {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === "--isFull" && i + 1 < argv.length) {
+    if (arg === '--isFull' && i + 1 < argv.length) {
       args.isFull = parseInt(argv[i + 1], 10);
       i++;
-    } else if (arg === "--isEmpty" && i + 1 < argv.length) {
+    } else if (arg === '--isEmpty' && i + 1 < argv.length) {
       args.isEmpty = parseInt(argv[i + 1], 10);
       i++;
-    } else if (arg === "--repeated" && i + 1 < argv.length) {
+    } else if (arg === '--repeated' && i + 1 < argv.length) {
       args.repeated = parseInt(argv[i + 1], 10);
       i++;
-    } else if (arg === "--quiz-uid" && i + 1 < argv.length) {
+    } else if (arg === '--quiz-uid' && i + 1 < argv.length) {
       args.quizUid = argv[i + 1];
       i++;
     }
@@ -48,62 +56,64 @@ function generateAnswerForQuestion(question: any): any {
   const content = question.content || {};
 
   switch (type) {
-    case "answer_option":
-    case "variant_image":
-    case "variant_image_text":
+    case 'answer_option':
+    case 'variant_image':
+    case 'variant_image_text':
       // Выбираем случайный вариант
       const variants = content.variants || [];
       if (variants.length > 0) {
         const randomVariant = variants[Math.floor(Math.random() * variants.length)];
-        return randomVariant.value || randomVariant.text || randomVariant.uid || "Вариант 1";
+        return randomVariant.value || randomVariant.text || randomVariant.uid || 'Вариант 1';
       }
-      return "Вариант 1";
+      return 'Вариант 1';
 
-    case "emoji":
+    case 'emoji':
       const emojis = content.emojis || [];
       if (emojis.length > 0) {
         const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        return randomEmoji.value || randomEmoji.emoji || "😊";
+        return randomEmoji.value || randomEmoji.emoji || '😊';
       }
-      return "😊";
+      return '😊';
 
-    case "input":
-      return `Тестовый ответ на вопрос "${content.title || "Вопрос"}"`;
+    case 'input':
+      return `Тестовый ответ на вопрос "${content.title || 'Вопрос'}"`;
 
-    case "select":
+    case 'select':
       const options = content.options || [];
       if (options.length > 0) {
         const randomOption = options[Math.floor(Math.random() * options.length)];
         return randomOption.value || randomOption.text || options[0];
       }
-      return "Опция 1";
+      return 'Опция 1';
 
-    case "date":
+    case 'date':
       // Генерируем случайную дату за последний год
       const now = new Date();
       const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-      const randomDate = new Date(yearAgo.getTime() + Math.random() * (now.getTime() - yearAgo.getTime()));
-      return randomDate.toISOString().split("T")[0];
+      const randomDate = new Date(
+        yearAgo.getTime() + Math.random() * (now.getTime() - yearAgo.getTime())
+      );
+      return randomDate.toISOString().split('T')[0];
 
-    case "slide":
+    case 'slide':
       return Math.floor(Math.random() * 100);
 
-    case "rating":
+    case 'rating':
       const maxRating = content.max || 5;
       return Math.floor(Math.random() * maxRating) + 1;
 
-    case "file":
+    case 'file':
       // Для файлов возвращаем объект с URL (симуляция)
       return {
-        type: "file",
-        fileName: "test-file.jpg",
+        type: 'file',
+        fileName: 'test-file.jpg',
         fileSize: 1024,
-        fileType: "image/jpeg",
-        url: "https://example.com/test-file.jpg",
-        s3Key: "test/key/test-file.jpg",
+        fileType: 'image/jpeg',
+        url: 'https://example.com/test-file.jpg',
+        s3Key: 'test/key/test-file.jpg',
       };
 
-    case "question_group":
+    case 'question_group':
       // Для группы вопросов возвращаем массив ответов
       const subQuestions = content.questions || [];
       return subQuestions.map((subQ: any) => ({
@@ -112,19 +122,22 @@ function generateAnswerForQuestion(question: any): any {
         question: subQ,
       }));
 
-    case "page":
+    case 'page':
       // Страницы не требуют ответа
       return null;
 
     default:
-      return "Тестовый ответ";
+      return 'Тестовый ответ';
   }
 }
 
 // Генерация ответов на контакты
 // Для isFull заполняются только обязательные поля (required: true)
 // Для isEmpty можно вернуть null или частичное заполнение
-function generateContacts(contactsForm: any[] | null, isFull: boolean = false): Record<string, string> | null {
+function generateContacts(
+  contactsForm: any[] | null,
+  isFull: boolean = false
+): Record<string, string> | null {
   if (!contactsForm || contactsForm.length === 0) {
     return null;
   }
@@ -132,8 +145,8 @@ function generateContacts(contactsForm: any[] | null, isFull: boolean = false): 
   const contacts: Record<string, string> = {};
 
   for (const field of contactsForm) {
-    const fieldType = field.type || "text";
-    const fieldName = field.name || field.uid || "field";
+    const fieldType = field.type || 'text';
+    const fieldName = field.name || field.uid || 'field';
     const isRequired = field.required === true;
 
     // Для полностью пройденных квизов заполняем только обязательные поля
@@ -143,16 +156,16 @@ function generateContacts(contactsForm: any[] | null, isFull: boolean = false): 
     }
 
     switch (fieldType) {
-      case "name":
+      case 'name':
         contacts[fieldName] = `Тестовый Пользователь ${Math.floor(Math.random() * 1000)}`;
         break;
-      case "email":
+      case 'email':
         contacts[fieldName] = `test${Math.floor(Math.random() * 10000)}@example.com`;
         break;
-      case "phone":
+      case 'phone':
         contacts[fieldName] = `+7${Math.floor(9000000000 + Math.random() * 1000000000)}`;
         break;
-      case "text":
+      case 'text':
         contacts[fieldName] = `Тестовое значение для ${fieldName}`;
         break;
       default:
@@ -207,12 +220,7 @@ async function createFullBid(
     const userPayments = await db
       .select()
       .from(userPaymentTable)
-      .where(
-        and(
-          eq(userPaymentTable.userId, userId),
-          eq(userPaymentTable.isActive, true)
-        )
-      )
+      .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
       .limit(1);
 
     if (userPayments.length > 0 && userPayments[0]) {
@@ -228,7 +236,7 @@ async function createFullBid(
 
         isEqualPaymentLimit = true;
 
-        logger.info("Лимит платежа увеличен при создании тестовой записи", {
+        logger.info('Лимит платежа увеличен при создании тестовой записи', {
           userId,
           userPaymentId: userPayment.id,
           currentLimit: userPayment.currentLimit + 1,
@@ -238,7 +246,7 @@ async function createFullBid(
     }
   } catch (error) {
     logger.error(
-      "Ошибка при проверке лимита платежа",
+      'Ошибка при проверке лимита платежа',
       error instanceof Error ? error : new Error(String(error)),
       { userId }
     );
@@ -255,7 +263,7 @@ async function createFullBid(
     contacts: contacts,
     contactsForm: contactsForm,
     first: true,
-    status: "create",
+    status: 'create',
     isFull: true,
     isRead: false,
     isEqualPaymentLimit,
@@ -267,7 +275,7 @@ async function createFullBid(
     updatedAt,
   });
 
-  logger.debug("Создана полностью пройденная запись", { quizId, key, isEqualPaymentLimit });
+  logger.debug('Создана полностью пройденная запись', { quizId, key, isEqualPaymentLimit });
 }
 
 // Создание неполной записи (isEmpty) - вариант 1: не заполнен контакт
@@ -295,7 +303,7 @@ async function createEmptyBidNoContacts(
     contacts: null, // Контакты не заполнены
     contactsForm: contactsForm,
     first: true,
-    status: "create",
+    status: 'create',
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
@@ -307,7 +315,7 @@ async function createEmptyBidNoContacts(
     updatedAt,
   });
 
-  logger.debug("Создана запись без контактов", { quizId, key });
+  logger.debug('Создана запись без контактов', { quizId, key });
 }
 
 // Создание неполной записи (isEmpty) - вариант 2: заполнен только первый вопрос
@@ -342,7 +350,7 @@ async function createEmptyBidOneQuestion(
     contacts: null,
     contactsForm: contactsForm,
     first: true,
-    status: "create",
+    status: 'create',
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
@@ -354,11 +362,16 @@ async function createEmptyBidOneQuestion(
     updatedAt,
   });
 
-  logger.debug("Создана запись с одним вопросом", { quizId, key });
+  logger.debug('Создана запись с одним вопросом', { quizId, key });
 }
 
 // Создание неполной записи (isEmpty) - вариант 3: просто открыл и вышел
-async function createEmptyBidMinimal(quizId: number, questions: any[], contactsForm: any[] | null, quizCreatedAt: Date): Promise<void> {
+async function createEmptyBidMinimal(
+  quizId: number,
+  questions: any[],
+  contactsForm: any[] | null,
+  quizCreatedAt: Date
+): Promise<void> {
   const key = generateUUID();
   const createdAt = generateCreatedAt(quizCreatedAt);
   const updatedAt = generateUpdatedAt(createdAt);
@@ -371,7 +384,7 @@ async function createEmptyBidMinimal(quizId: number, questions: any[], contactsF
     contacts: null,
     contactsForm: contactsForm,
     first: true,
-    status: "create",
+    status: 'create',
     isFull: false,
     isRead: false,
     isEqualPaymentLimit: false,
@@ -383,11 +396,15 @@ async function createEmptyBidMinimal(quizId: number, questions: any[], contactsF
     updatedAt,
   });
 
-  logger.debug("Создана минимальная запись", { quizId, key });
+  logger.debug('Создана минимальная запись', { quizId, key });
 }
 
 // Пересчет статистики quiz_open для квиза
-async function recalculateQuizStats(quizUid: string, quizId: number, repeatedOpenings: number = 0): Promise<void> {
+async function recalculateQuizStats(
+  quizUid: string,
+  quizId: number,
+  repeatedOpenings: number = 0
+): Promise<void> {
   try {
     // Подсчитываем статистику из quiz_bid
     const statsResult = await db.execute(sql`
@@ -399,11 +416,13 @@ async function recalculateQuizStats(quizUid: string, quizId: number, repeatedOpe
       WHERE quiz_id = ${quizId} AND deleted_at IS NULL
     `);
 
-    const stats = (statsResult as unknown as Array<{
-      opened: number | string;
-      opened_unique: number | string;
-      full: number | string;
-    }>)[0];
+    const stats = (
+      statsResult as unknown as Array<{
+        opened: number | string;
+        opened_unique: number | string;
+        full: number | string;
+      }>
+    )[0];
 
     const openedUnique = Number(stats?.opened_unique || 0);
     const full = Number(stats?.full || 0);
@@ -428,7 +447,7 @@ async function recalculateQuizStats(quizUid: string, quizId: number, repeatedOpe
         },
       });
 
-    logger.info("Статистика quiz_open пересчитана", {
+    logger.info('Статистика quiz_open пересчитана', {
       quizUid,
       opened,
       openedUnique,
@@ -437,12 +456,14 @@ async function recalculateQuizStats(quizUid: string, quizId: number, repeatedOpe
     });
 
     console.log(`\n📊 Статистика квиза обновлена:`);
-    console.log(`   Открытий: ${opened} (${openedUnique} уникальных + ${repeatedOpenings} повторных)`);
+    console.log(
+      `   Открытий: ${opened} (${openedUnique} уникальных + ${repeatedOpenings} повторных)`
+    );
     console.log(`   Уникальных открытий: ${openedUnique}`);
     console.log(`   Прохождений: ${full}`);
   } catch (error) {
     logger.error(
-      "Ошибка при пересчете статистики quiz_open",
+      'Ошибка при пересчете статистики quiz_open',
       error instanceof Error ? error : new Error(String(error)),
       { quizUid, quizId, repeatedOpenings }
     );
@@ -454,16 +475,18 @@ async function main() {
   const args = parseArgs();
 
   if (!args.quizUid) {
-    console.error("❌ Ошибка: необходимо указать --quiz-uid");
+    console.error('❌ Ошибка: необходимо указать --quiz-uid');
     process.exit(1);
   }
 
   if (!args.isFull && !args.isEmpty && !args.repeated) {
-    console.error("❌ Ошибка: необходимо указать хотя бы один из флагов --isFull, --isEmpty или --repeated");
+    console.error(
+      '❌ Ошибка: необходимо указать хотя бы один из флагов --isFull, --isEmpty или --repeated'
+    );
     process.exit(1);
   }
 
-  console.log("Начинаю генерацию тестовых данных...");
+  console.log('Начинаю генерацию тестовых данных...');
   console.log(`Квиз UID: ${args.quizUid}`);
   console.log(`Полностью пройденных: ${args.isFull || 0}`);
   console.log(`Неполных: ${args.isEmpty || 0}`);
@@ -498,7 +521,7 @@ async function main() {
       .orderBy(asc(quizQuestionTable.order));
 
     if (questions.length === 0) {
-      console.warn("⚠️  Внимание: в квизе нет вопросов");
+      console.warn('⚠️  Внимание: в квизе нет вопросов');
     }
 
     // Получаем форму контактов
@@ -508,12 +531,13 @@ async function main() {
       .where(eq(quizContactTable.quizId, quizId))
       .limit(1);
 
-    const contactsForm = contacts.length > 0 && contacts[0].form ? (contacts[0].form as any[]) : null;
+    const contactsForm =
+      contacts.length > 0 && contacts[0].form ? (contacts[0].form as any[]) : null;
 
     // Создаем полностью пройденные записи
     if (args.isFull && args.isFull > 0) {
       if (questions.length === 0) {
-        console.warn("⚠️  Внимание: невозможно создать полностью пройденные записи без вопросов");
+        console.warn('⚠️  Внимание: невозможно создать полностью пройденные записи без вопросов');
       } else {
         console.log(`\nСоздаю ${args.isFull} полностью пройденных записей...`);
         for (let i = 0; i < args.isFull; i++) {
@@ -546,15 +570,15 @@ async function main() {
     }
 
     // Пересчитываем статистику quiz_open
-    console.log("\n📊 Пересчитываю статистику квиза...");
+    console.log('\n📊 Пересчитываю статистику квиза...');
     await recalculateQuizStats(args.quizUid!, quizId, args.repeated || 0);
 
-    console.log("\n✅ Генерация тестовых данных завершена успешно");
+    console.log('\n✅ Генерация тестовых данных завершена успешно');
     process.exit(0);
   } catch (error) {
-    console.error("❌ Ошибка при генерации тестовых данных:", error);
+    console.error('❌ Ошибка при генерации тестовых данных:', error);
     logger.error(
-      "Ошибка при генерации тестовых данных",
+      'Ошибка при генерации тестовых данных',
       error instanceof Error ? error : new Error(String(error)),
       { args }
     );
@@ -563,4 +587,3 @@ async function main() {
 }
 
 main();
-

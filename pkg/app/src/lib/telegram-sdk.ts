@@ -1,10 +1,10 @@
-import type { TelegramWebApp } from "../types/telegram-webapp";
+import type { TelegramWebApp } from '../types/telegram-webapp';
 
 /**
  * Получает экземпляр Telegram WebApp
  */
 function getTelegramWebApp(): TelegramWebApp | null {
-  if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
     return window.Telegram.WebApp;
   }
   return null;
@@ -34,15 +34,15 @@ export async function initTelegramSdk() {
   tg.ready();
 
   document.body.style.setProperty(
-    "padding-top",
-    "calc(var(--tg-content-safe-area-inset-top) + 2rem)",
+    'padding-top',
+    'calc(var(--tg-content-safe-area-inset-top) + 2rem)'
   );
 
   // Настраиваем стили
   tg.expand();
 
   // Переводим приложение в полноэкранный режим (убирает верхнюю и нижнюю панели Telegram)
-  if (typeof tg.requestFullscreen === "function") {
+  if (typeof tg.requestFullscreen === 'function') {
     tg.requestFullscreen();
   }
 }

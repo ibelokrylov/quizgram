@@ -1,26 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Combobox } from "@/components/ui/combobox";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAbandonmentStats, useDailyStats } from "@/entities/Bid/useStatistics";
-import { useQuizFilters } from "@/entities/Quiz/useQuizFilters";
-import { Calendar, X } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { AbandonmentStatsChart } from "./AbandonmentStatsChart";
-import { DailyStatsChart } from "./DailyStatsChart";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAbandonmentStats, useDailyStats } from '@/entities/Bid/useStatistics';
+import { useQuizFilters } from '@/entities/Quiz/useQuizFilters';
+import { Calendar, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { AbandonmentStatsChart } from './AbandonmentStatsChart';
+import { DailyStatsChart } from './DailyStatsChart';
 
 export function BidStatisticPage() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const search = useSearch({ from: "/app/bid/statistic" });
+  const search = useSearch({ from: '/app/bid/statistic' });
 
   // Используем значения из URL как источник истины
-  const selectedQuizUid = search.quiz_uid || "";
-  const startDate = search.start || "";
-  const endDate = search.end || "";
+  const selectedQuizUid = search.quiz_uid || '';
+  const startDate = search.start || '';
+  const endDate = search.end || '';
 
   // Получаем список квизов для фильтра
   const { data: quizFilters } = useQuizFilters();
@@ -57,7 +57,7 @@ export function BidStatisticPage() {
   const handleQuizChange = (value: string | undefined) => {
     // Навигируем на страницу с новым quiz_uid в URL
     navigate({
-      to: "/app/bid/statistic",
+      to: '/app/bid/statistic',
       search: {
         quiz_uid: value || undefined,
         start: startDate || undefined,
@@ -70,7 +70,7 @@ export function BidStatisticPage() {
     const newStartDate = e.target.value;
     // Обновляем URL при изменении даты
     navigate({
-      to: "/app/bid/statistic",
+      to: '/app/bid/statistic',
       search: {
         quiz_uid: selectedQuizUid || undefined,
         start: newStartDate || undefined,
@@ -83,7 +83,7 @@ export function BidStatisticPage() {
     const newEndDate = e.target.value;
     // Обновляем URL при изменении даты
     navigate({
-      to: "/app/bid/statistic",
+      to: '/app/bid/statistic',
       search: {
         quiz_uid: selectedQuizUid || undefined,
         start: startDate || undefined,
@@ -95,7 +95,7 @@ export function BidStatisticPage() {
   const handleClearFilters = () => {
     // Очищаем URL параметры
     navigate({
-      to: "/app/bid/statistic",
+      to: '/app/bid/statistic',
       search: {},
     });
   };
@@ -104,19 +104,19 @@ export function BidStatisticPage() {
     <div className="flex flex-col gap-6 p-4">
       {/* Заголовок */}
       <div>
-        <h1 className="text-2xl font-bold">{t("bids.statistic.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("bids.statistic.description")}</p>
+        <h1 className="text-2xl font-bold">{t('bids.statistic.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('bids.statistic.description')}</p>
       </div>
 
       {/* Фильтры */}
       <Card className="p-4">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{t("bids.statistic.filters")}</h2>
+            <h2 className="text-lg font-semibold">{t('bids.statistic.filters')}</h2>
             {selectedQuizUid ? (
               <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-8">
                 <X className="h-4 w-4 mr-2" />
-                {t("bids.statistic.clearFilters")}
+                {t('bids.statistic.clearFilters')}
               </Button>
             ) : null}
           </div>
@@ -124,20 +124,20 @@ export function BidStatisticPage() {
           <div className="grid gap-4 md:grid-cols-3">
             {/* Выбор квиза */}
             <Field>
-              <FieldLabel>{t("bids.quiz")}</FieldLabel>
+              <FieldLabel>{t('bids.quiz')}</FieldLabel>
               <Combobox
                 options={quizOptions}
                 value={selectedQuizUid}
                 onValueChange={handleQuizChange}
-                placeholder={t("bids.quiz.select")}
-                searchPlaceholder={t("bids.quiz.search")}
-                emptyText={t("bids.quiz.notFound")}
+                placeholder={t('bids.quiz.select')}
+                searchPlaceholder={t('bids.quiz.search')}
+                emptyText={t('bids.quiz.notFound')}
               />
             </Field>
 
             {/* Дата начала */}
             <Field>
-              <FieldLabel>{t("bids.statistic.startDate")}</FieldLabel>
+              <FieldLabel>{t('bids.statistic.startDate')}</FieldLabel>
               <div className="relative">
                 <Input
                   type="date"
@@ -152,7 +152,7 @@ export function BidStatisticPage() {
 
             {/* Дата окончания */}
             <Field>
-              <FieldLabel>{t("bids.statistic.endDate")}</FieldLabel>
+              <FieldLabel>{t('bids.statistic.endDate')}</FieldLabel>
               <div className="relative">
                 <Input
                   type="date"
@@ -182,7 +182,7 @@ export function BidStatisticPage() {
           ) : dailyError ? (
             <Card className="p-6">
               <div className="flex items-center justify-center h-[300px]">
-                <p className="text-destructive">{t("bids.statistic.errorLoadingDaily")}</p>
+                <p className="text-destructive">{t('bids.statistic.errorLoadingDaily')}</p>
               </div>
             </Card>
           ) : dailyStats ? (
@@ -200,7 +200,7 @@ export function BidStatisticPage() {
           ) : abandonmentError ? (
             <Card className="p-6">
               <div className="flex items-center justify-center h-[300px]">
-                <p className="text-destructive">{t("bids.statistic.errorLoadingAbandonment")}</p>
+                <p className="text-destructive">{t('bids.statistic.errorLoadingAbandonment')}</p>
               </div>
             </Card>
           ) : abandonmentStats ? (
@@ -214,9 +214,9 @@ export function BidStatisticPage() {
               <Calendar className="h-8 w-8 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">{t("bids.statistic.selectQuiz")}</h3>
+              <h3 className="text-lg font-semibold">{t('bids.statistic.selectQuiz')}</h3>
               <p className="text-sm text-muted-foreground">
-                {t("bids.statistic.selectQuizDescription")}
+                {t('bids.statistic.selectQuizDescription')}
               </p>
             </div>
           </div>

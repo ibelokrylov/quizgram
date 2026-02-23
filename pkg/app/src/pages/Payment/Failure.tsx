@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 export const PaymentFailurePage = () => {
   const { t } = useTranslation();
@@ -25,13 +25,13 @@ export const PaymentFailurePage = () => {
               />
             </svg>
           </div>
-          <CardTitle>{t("payment.result.failure.title")}</CardTitle>
-          <CardDescription>{t("payment.result.failure.description")}</CardDescription>
+          <CardTitle>{t('payment.result.failure.title')}</CardTitle>
+          <CardDescription>{t('payment.result.failure.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Link to="/app/payment">
             <Button variant="outline" className="w-full">
-              {t("payment.result.failure.button")}
+              {t('payment.result.failure.button')}
             </Button>
           </Link>
         </CardContent>

@@ -2,14 +2,14 @@
 // Использует библиотеку jose для прямой работы с JWT
 // Аналог SessionService из Go API
 
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = typeof Bun !== "undefined" ? Bun.env.JWT_SECRET : process.env.JWT_SECRET || "";
+const JWT_SECRET = typeof Bun !== 'undefined' ? Bun.env.JWT_SECRET : process.env.JWT_SECRET || '';
 
 // Получаем секретный ключ для JWT
 function getSecretKey(): Uint8Array {
   if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET environment variable is not set");
+    throw new Error('JWT_SECRET environment variable is not set');
   }
   return new TextEncoder().encode(JWT_SECRET);
 }
@@ -36,9 +36,9 @@ export abstract class SessionService {
     const payload: JWTPayload<UserSession> = { data: { ID: userId } };
 
     const token = await new SignJWT(payload as unknown as Record<string, unknown>)
-      .setProtectedHeader({ alg: "HS256" })
+      .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime("30d") // Токен действителен 30 дней
+      .setExpirationTime('30d') // Токен действителен 30 дней
       .sign(secretKey);
 
     return token;
@@ -52,20 +52,24 @@ export abstract class SessionService {
 
     try {
       const { payload } = await jwtVerify(tokenString, secretKey, {
-        algorithms: ["HS256"],
+        algorithms: ['HS256'],
       });
 
       const decoded = payload as unknown as JWTPayload<UserSession>;
 
       if (!decoded || !decoded.data || !decoded.data.ID) {
-        throw new Error("Invalid token structure");
+        throw new Error('Invalid token structure');
       }
 
       return decoded.data;
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes("expired") || error.message.includes("Expired") || error.message.includes("JWTExpired")) {
-          throw new Error("Token has expired");
+        if (
+          error.message.includes('expired') ||
+          error.message.includes('Expired') ||
+          error.message.includes('JWTExpired')
+        ) {
+          throw new Error('Token has expired');
         }
         throw new Error(`Token parsing error: ${error.message}`);
       }
@@ -81,9 +85,9 @@ export abstract class SessionService {
     const payload: JWTPayload<BidSession> = { data: { quizUIDs } };
 
     const token = await new SignJWT(payload as unknown as Record<string, unknown>)
-      .setProtectedHeader({ alg: "HS256" })
+      .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime("7d") // Токен действителен 7 дней
+      .setExpirationTime('7d') // Токен действителен 7 дней
       .sign(secretKey);
 
     return token;
@@ -111,20 +115,29 @@ export abstract class SessionService {
 
     try {
       const { payload } = await jwtVerify(tokenString, secretKey, {
-        algorithms: ["HS256"],
+        algorithms: ['HS256'],
       });
 
       const decoded = payload as unknown as JWTPayload<BidSession>;
 
-      if (!decoded || !decoded.data || !decoded.data.quizUIDs || !Array.isArray(decoded.data.quizUIDs)) {
-        throw new Error("Invalid token structure");
+      if (
+        !decoded ||
+        !decoded.data ||
+        !decoded.data.quizUIDs ||
+        !Array.isArray(decoded.data.quizUIDs)
+      ) {
+        throw new Error('Invalid token structure');
       }
 
       return decoded.data;
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes("expired") || error.message.includes("Expired") || error.message.includes("JWTExpired")) {
-          throw new Error("Token has expired");
+        if (
+          error.message.includes('expired') ||
+          error.message.includes('Expired') ||
+          error.message.includes('JWTExpired')
+        ) {
+          throw new Error('Token has expired');
         }
         throw new Error(`Token parsing error: ${error.message}`);
       }

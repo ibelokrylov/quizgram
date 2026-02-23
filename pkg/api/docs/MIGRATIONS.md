@@ -33,10 +33,10 @@ bun run db:migrate:status
 
 ```typescript
 // src/db/user.ts
-export const userTable = pgTable("user", {
-  id: serial("id").primaryKey(),
-  login: text("login").notNull(),
-  avatar: text("avatar"), // Новое поле
+export const userTable = pgTable('user', {
+  id: serial('id').primaryKey(),
+  login: text('login').notNull(),
+  avatar: text('avatar'), // Новое поле
 });
 ```
 
@@ -49,11 +49,11 @@ export const userTable = pgTable("user", {
 ```
 
 ```typescript
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "004-название",
-  description: "Описание изменения",
+  name: '004-название',
+  description: 'Описание изменения',
   async up(sql) {
     await sql`
       CREATE INDEX IF NOT EXISTS idx_user_avatar 
@@ -66,7 +66,7 @@ export const migration: MigrationFile = {
 Добавь в `src/migrations/index.ts`:
 
 ```typescript
-import { migration as migration004 } from "./004-название";
+import { migration as migration004 } from './004-название';
 
 export const migrations: MigrationFile[] = [
   migration001,
@@ -84,6 +84,7 @@ bun run db:push
 ```
 
 Эта команда:
+
 1. Выполнит все новые миграции
 2. Синхронизирует схему Drizzle с PostgreSQL
 
@@ -118,11 +119,11 @@ pkg/api/
 
 ## 📋 Существующие миграции
 
-| № | Название | Описание |
-|---|----------|----------|
-| 001 | add-bids-indexes | Индексы для оптимизации quiz_bid |
+| №   | Название                   | Описание                            |
+| --- | -------------------------- | ----------------------------------- |
+| 001 | add-bids-indexes           | Индексы для оптимизации quiz_bid    |
 | 002 | add-user-payment-is-active | Поле is_active для истории платежей |
-| 003 | fix-user-payment-final-day | Исправление расчета finalDayAt |
+| 003 | fix-user-payment-final-day | Исправление расчета finalDayAt      |
 
 ## ⚠️ Важные правила
 
@@ -131,7 +132,7 @@ pkg/api/
 3. **Проверяй через MCP** - убедись, что изменения применены корректно
 4. **Добавляй описания** - понятные имена и описания миграций
 
-## 🔍 Таблица _migrations
+## 🔍 Таблица \_migrations
 
 В БД автоматически создается таблица для отслеживания:
 
@@ -148,9 +149,9 @@ CREATE TABLE _migrations (
 SELECT * FROM _migrations ORDER BY executed_at;
 ```
 
-| name | executed_at |
-|------|-------------|
-| 001-add-bids-indexes | 2025-12-24 19:43:05 |
+| name                           | executed_at         |
+| ------------------------------ | ------------------- |
+| 001-add-bids-indexes           | 2025-12-24 19:43:05 |
 | 002-add-user-payment-is-active | 2025-12-24 19:43:05 |
 | 003-fix-user-payment-final-day | 2025-12-24 19:43:05 |
 
@@ -171,8 +172,8 @@ bun run db:migrate:status
 
 ```typescript
 export const migration: MigrationFile = {
-  name: "005-rollback-something",
-  description: "Откат изменений из миграции 004",
+  name: '005-rollback-something',
+  description: 'Откат изменений из миграции 004',
   async up(sql) {
     await sql`
       DROP INDEX IF EXISTS idx_user_avatar;
@@ -187,4 +188,3 @@ export const migration: MigrationFile = {
 - [Подробная документация миграций](../src/migrations/README.md)
 - [Cursor Rules для проекта](../.cursor/rules/project-bapi.mdc)
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
-

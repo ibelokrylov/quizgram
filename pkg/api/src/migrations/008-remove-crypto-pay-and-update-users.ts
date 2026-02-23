@@ -1,8 +1,8 @@
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "008-remove-crypto-pay-and-update-users",
-  description: "Удаляет логику Crypto Pay и переводит всех пользователей с платных планов на FREE",
+  name: '008-remove-crypto-pay-and-update-users',
+  description: 'Удаляет логику Crypto Pay и переводит всех пользователей с платных планов на FREE',
   async up(sql) {
     // Обновляем всех пользователей с платными планов (planId != 1) на FREE план (id=1)
     await sql`

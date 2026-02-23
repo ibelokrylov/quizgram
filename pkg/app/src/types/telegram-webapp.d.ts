@@ -100,12 +100,12 @@ export interface TelegramWebApp {
   requestEmojiStatusAccess(callback?: (granted: boolean) => void): void;
   lockOrientation(
     orientation:
-      | "portrait"
-      | "landscape"
-      | "portrait-primary"
-      | "portrait-secondary"
-      | "landscape-primary"
-      | "landscape-secondary"
+      | 'portrait'
+      | 'landscape'
+      | 'portrait-primary'
+      | 'portrait-secondary'
+      | 'landscape-primary'
+      | 'landscape-secondary'
   ): void;
   unlockOrientation(): void;
   setBottomBarColor(color: string): void;
@@ -148,8 +148,8 @@ export interface SettingsButton {
 }
 
 export interface HapticFeedback {
-  impactOccurred(style: "light" | "medium" | "heavy" | "rigid" | "soft"): void;
-  notificationOccurred(type: "error" | "success" | "warning"): void;
+  impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+  notificationOccurred(type: 'error' | 'success' | 'warning'): void;
   selectionChanged(): void;
 }
 
@@ -172,7 +172,7 @@ export interface CloudStorage {
 export interface BiometricManager {
   isInited: boolean;
   isBiometricAvailable: boolean;
-  biometricType: "finger" | "face" | "unknown";
+  biometricType: 'finger' | 'face' | 'unknown';
   isAccessRequested: boolean;
   isAccessGranted: boolean;
   isAccessDenied: boolean;
@@ -227,7 +227,7 @@ export interface WebAppUser {
 
 export interface WebAppChat {
   id: number;
-  type: "group" | "supergroup" | "channel";
+  type: 'group' | 'supergroup' | 'channel';
   title: string;
   username?: string;
   photo_url?: string;
@@ -241,7 +241,7 @@ export interface PopupParams {
 
 export interface PopupButton {
   id?: string;
-  type?: "default" | "ok" | "close" | "cancel" | "destructive";
+  type?: 'default' | 'ok' | 'close' | 'cancel' | 'destructive';
   text?: string;
 }
 

@@ -1,11 +1,11 @@
 // Сервис для работы с файлами пользователей
 // Обрабатывает валидацию, загрузку в S3 и сохранение в БД
 
-import { eq } from "drizzle-orm";
-import { db, userFileTable, type NewUserFile } from "../db";
-import { FileType, validateFileTypeAndSize } from "../helpers/file.helper";
-import { logger } from "../lib/logger";
-import { S3Service, type UploadResult } from "./s3.service";
+import { eq } from 'drizzle-orm';
+import { db, userFileTable, type NewUserFile } from '../db';
+import { FileType, validateFileTypeAndSize } from '../helpers/file.helper';
+import { logger } from '../lib/logger';
+import { S3Service, type UploadResult } from './s3.service';
 
 export abstract class FileService {
   /**
@@ -14,13 +14,13 @@ export abstract class FileService {
   private static getFolderByFileType(fileType: FileType): string {
     switch (fileType) {
       case FileType.Image:
-        return "images";
+        return 'images';
       case FileType.Video:
-        return "videos";
+        return 'videos';
       case FileType.Document:
-        return "documents";
+        return 'documents';
       default:
-        return "files";
+        return 'files';
     }
   }
 
@@ -38,12 +38,12 @@ export abstract class FileService {
     contentType: string,
     fileName: string,
     fileSize: number,
-    userId: number,
+    userId: number
   ): Promise<UploadResult> {
     // Проверяем тип и размер файла
     const validation = validateFileTypeAndSize(contentType, fileSize);
     if (validation.error) {
-      logger.error("Ошибка валидации файла", validation.error, {
+      logger.error('Ошибка валидации файла', validation.error, {
         fileName,
         contentType,
         fileSize,
@@ -60,16 +60,15 @@ export abstract class FileService {
       uploadResult = await S3Service.uploadFile(file, fileName, folder);
     } catch (error) {
       logger.error(
-        "Ошибка при загрузке файла в S3",
+        'Ошибка при загрузке файла в S3',
         error instanceof Error ? error : new Error(String(error)),
-        { fileName, folder },
+        { fileName, folder }
       );
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`failed to upload file: ${errorMessage}`);
     }
 
-    logger.info("Файл успешно загружен", {
+    logger.info('Файл успешно загружен', {
       fileName,
       fileKey: uploadResult.fileKey,
       fileURL: uploadResult.fileURL,
@@ -94,11 +93,9 @@ export abstract class FileService {
         await S3Service.deleteFile(uploadResult.fileKey);
       } catch (deleteError) {
         logger.error(
-          "Ошибка при удалении файла из S3 после ошибки БД",
-          deleteError instanceof Error
-            ? deleteError
-            : new Error(String(deleteError)),
-          { fileKey: uploadResult.fileKey },
+          'Ошибка при удалении файла из S3 после ошибки БД',
+          deleteError instanceof Error ? deleteError : new Error(String(deleteError)),
+          { fileKey: uploadResult.fileKey }
         );
       }
       throw error;
@@ -122,7 +119,7 @@ export abstract class FileService {
 
     const file = files[0];
     if (!file || file.userId !== userId) {
-      throw new Error("File not found or access denied");
+      throw new Error('File not found or access denied');
     }
 
     // Удаляем из БД
@@ -133,9 +130,9 @@ export abstract class FileService {
       await S3Service.deleteFile(file.fileKey);
     } catch (error) {
       logger.error(
-        "Ошибка при удалении файла из S3",
+        'Ошибка при удалении файла из S3',
         error instanceof Error ? error : new Error(String(error)),
-        { fileKey: file.fileKey, userId },
+        { fileKey: file.fileKey, userId }
       );
       // Не прерываем процесс, если не удалось удалить из S3
       // Файл уже удален из БД

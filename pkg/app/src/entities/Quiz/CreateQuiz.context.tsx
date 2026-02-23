@@ -1,6 +1,6 @@
-import { set } from "@/app/db/index-db";
-import { createContext, useState, type PropsWithChildren } from "react";
-import type { Quiz } from "./quiz.type";
+import { set } from '@/app/db/index-db';
+import { createContext, useState, type PropsWithChildren } from 'react';
+import type { Quiz } from './quiz.type';
 
 export const CreateQuizContext = createContext<CreateQuizContextType>({
   quiz: undefined,

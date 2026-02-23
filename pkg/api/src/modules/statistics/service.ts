@@ -1,6 +1,6 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
-import { DateTime } from "luxon";
-import { db, quizBidTable, quizOpenTable, quizTable } from "../../db";
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { DateTime } from 'luxon';
+import { db, quizBidTable, quizOpenTable, quizTable } from '../../db';
 import {
   addDays,
   addMonths,
@@ -8,9 +8,9 @@ import {
   fromISO,
   now,
   toISO,
-} from "../../lib/date-utils";
-import { logger } from "../../lib/logger";
-import type { StatisticsModel } from "./model";
+} from '../../lib/date-utils';
+import { logger } from '../../lib/logger';
+import type { StatisticsModel } from './model';
 
 // Кеш для хранения статистики (простой in-memory кеш)
 interface CacheEntry<T> {
@@ -24,11 +24,14 @@ const CACHE_TTL = 5 * 60;
 
 // Хранилище кеша
 const dailyStatsCache = new Map<string, CacheEntry<StatisticsModel.dailyStatsResponse>>();
-const abandonmentStatsCache = new Map<string, CacheEntry<StatisticsModel.abandonmentStatsResponse>>();
+const abandonmentStatsCache = new Map<
+  string,
+  CacheEntry<StatisticsModel.abandonmentStatsResponse>
+>();
 
 // Утилита для создания ключа кеша
 function createCacheKey(quizUid: string, start?: string, end?: string): string {
-  return `${quizUid}:${start || ""}:${end || ""}`;
+  return `${quizUid}:${start || ''}:${end || ''}`;
 }
 
 // Утилита для проверки валидности кеша
@@ -45,7 +48,7 @@ function toDateTime(value: string | Date | DateTime | null | undefined): DateTim
   if (value instanceof Date) {
     return DateTime.fromJSDate(value);
   }
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     const dt = DateTime.fromISO(value);
     if (!dt.isValid) {
       throw new Error(`Не удалось преобразовать значение в DateTime: ${value}`);
@@ -58,11 +61,11 @@ function toDateTime(value: string | Date | DateTime | null | undefined): DateTim
 // Утилита для генерации массива дат между start и end
 function generateDateRange(start: DateTime | string, end: DateTime | string): string[] {
   const dates: string[] = [];
-  const startDate = typeof start === "string" ? fromISO(start) : start;
-  const endDate = typeof end === "string" ? fromISO(end) : end;
-  let currentDate = startDate.startOf("day");
+  const startDate = typeof start === 'string' ? fromISO(start) : start;
+  const endDate = typeof end === 'string' ? fromISO(end) : end;
+  let currentDate = startDate.startOf('day');
 
-  const endDateStart = endDate.startOf("day");
+  const endDateStart = endDate.startOf('day');
 
   while (currentDate <= endDateStart) {
     dates.push(formatDateUtil(currentDate));
@@ -76,7 +79,9 @@ export abstract class StatisticsService {
   /**
    * Получить общую статистику по дням
    */
-  static async getDailyStats(params: StatisticsModel.queryParams): Promise<StatisticsModel.dailyStatsResponse> {
+  static async getDailyStats(
+    params: StatisticsModel.queryParams
+  ): Promise<StatisticsModel.dailyStatsResponse> {
     const { quiz_uid, start, end } = params;
 
     // Проверяем кеш
@@ -84,7 +89,7 @@ export abstract class StatisticsService {
     const cachedEntry = dailyStatsCache.get(cacheKey);
 
     if (isCacheValid(cachedEntry)) {
-      logger.debug("Статистика получена из кеша", { quiz_uid, cacheKey });
+      logger.debug('Статистика получена из кеша', { quiz_uid, cacheKey });
       return cachedEntry!.data;
     }
 
@@ -100,7 +105,7 @@ export abstract class StatisticsService {
         .limit(1);
 
       if (quizResult.length === 0) {
-        throw new Error("Квиз не найден");
+        throw new Error('Квиз не найден');
       }
 
       const quiz = quizResult[0];
@@ -150,7 +155,7 @@ export abstract class StatisticsService {
       // Получаем статистику из базы данных
       // total_opens = все открытия (включая повторные, first=false)
       // unique_opens = только уникальные открытия (first=true)
-      // 
+      //
       // Важно: повторные открытия (first=false) не создают новые записи в quiz_bid,
       // они только увеличивают счетчик в quiz_open. Поэтому для разбивки по дням
       // мы используем данные из quiz_bid (только уникальные открытия),
@@ -189,13 +194,17 @@ export abstract class StatisticsService {
         .limit(1);
 
       const totalOpened = quizOpenStats.length > 0 ? Number(quizOpenStats[0].opened) : 0;
-      const totalOpenedUnique = quizOpenStats.length > 0 ? Number(quizOpenStats[0].openedUnique) : 0;
+      const totalOpenedUnique =
+        quizOpenStats.length > 0 ? Number(quizOpenStats[0].openedUnique) : 0;
 
       // Вычисляем общее количество повторных открытий за все время
       const totalRepeatedOpens = totalOpened - totalOpenedUnique;
 
       // Вычисляем количество уникальных открытий в выбранном периоде
-      const _totalUniqueInPeriod = statsResult.reduce((sum, row) => sum + Number(row.unique_opens), 0);
+      const _totalUniqueInPeriod = statsResult.reduce(
+        (sum, row) => sum + Number(row.unique_opens),
+        0
+      );
 
       // Вычисляем коэффициент для распределения повторных открытий по дням
       // Распределяем повторные открытия пропорционально уникальным открытиям по дням
@@ -203,13 +212,16 @@ export abstract class StatisticsService {
       const ratio = totalOpenedUnique > 0 ? totalRepeatedOpens / totalOpenedUnique : 0;
 
       // Создаем карту для быстрого доступа к статистике по дате
-      const statsMap = new Map<string, {
-        total_opens: number;
-        unique_opens: number;
-        repeated_opens: number;
-        completed: number;
-        not_completed: number;
-      }>();
+      const statsMap = new Map<
+        string,
+        {
+          total_opens: number;
+          unique_opens: number;
+          repeated_opens: number;
+          completed: number;
+          not_completed: number;
+        }
+      >();
 
       for (const row of statsResult) {
         const uniqueOpens = Number(row.unique_opens);
@@ -261,7 +273,7 @@ export abstract class StatisticsService {
         expiresAt: generatedAt.plus({ seconds: CACHE_TTL }),
       });
 
-      logger.info("Общая статистика рассчитана", {
+      logger.info('Общая статистика рассчитана', {
         quiz_uid,
         period: response.period,
         total_days: daily.length,
@@ -270,7 +282,7 @@ export abstract class StatisticsService {
       return response;
     } catch (error) {
       logger.error(
-        "Ошибка при получении общей статистики",
+        'Ошибка при получении общей статистики',
         error instanceof Error ? error : new Error(String(error)),
         { quiz_uid, start, end }
       );
@@ -291,7 +303,7 @@ export abstract class StatisticsService {
     const cachedEntry = abandonmentStatsCache.get(cacheKey);
 
     if (isCacheValid(cachedEntry)) {
-      logger.debug("Статистика по незавершенным квизам получена из кеша", { quiz_uid, cacheKey });
+      logger.debug('Статистика по незавершенным квизам получена из кеша', { quiz_uid, cacheKey });
       return cachedEntry!.data;
     }
 
@@ -307,7 +319,7 @@ export abstract class StatisticsService {
         .limit(1);
 
       if (quizResult.length === 0) {
-        throw new Error("Квиз не найден");
+        throw new Error('Квиз не найден');
       }
 
       const quiz = quizResult[0];
@@ -370,20 +382,28 @@ export abstract class StatisticsService {
 
       // Группируем статистику по дням
       // by_question использует question_uid как ключ
-      const dailyStatsMap = new Map<string, {
-        no_answers: number;
-        by_question: Map<string, {
-          question_uid: string;
-          question_number: number;
-          question_title?: string;
-          question_type?: string;
-          count: number;
-        }>;
-        completed_no_contacts: number;
-      }>();
+      const dailyStatsMap = new Map<
+        string,
+        {
+          no_answers: number;
+          by_question: Map<
+            string,
+            {
+              question_uid: string;
+              question_number: number;
+              question_title?: string;
+              question_type?: string;
+              count: number;
+            }
+          >;
+          completed_no_contacts: number;
+        }
+      >();
 
       // Вспомогательная функция для определения вопроса отвала
-      const getDropoutQuestion = (bid: typeof bidsResult[0]): {
+      const getDropoutQuestion = (
+        bid: (typeof bidsResult)[0]
+      ): {
         question_uid: string;
         question_number: number;
         question_title?: string;
@@ -397,7 +417,8 @@ export abstract class StatisticsService {
         // Если есть info с данными об отвале, используем их (приоритет)
         if (bid.info && typeof bid.info === 'object' && 'dropoutIndex' in bid.info) {
           const info = bid.info as any;
-          const dropoutIndex = typeof info.dropoutIndex === 'number' ? info.dropoutIndex : answersCount;
+          const dropoutIndex =
+            typeof info.dropoutIndex === 'number' ? info.dropoutIndex : answersCount;
 
           // Если есть dropoutQuestionUid в info, используем его
           if (info.dropoutQuestionUid && typeof info.dropoutQuestionUid === 'string') {
@@ -406,7 +427,10 @@ export abstract class StatisticsService {
             if (question) {
               return {
                 question_uid: info.dropoutQuestionUid,
-                question_number: (typeof info.dropoutQuestionNumber === 'number' ? info.dropoutQuestionNumber : dropoutIndex + 1),
+                question_number:
+                  typeof info.dropoutQuestionNumber === 'number'
+                    ? info.dropoutQuestionNumber
+                    : dropoutIndex + 1,
                 question_title: question?.content?.title || question?.content?.text || undefined,
                 question_type: question?.type || undefined,
               };
@@ -418,7 +442,10 @@ export abstract class StatisticsService {
             const question = questions[dropoutIndex];
             return {
               question_uid: question?.uid || `unknown-${dropoutIndex}`,
-              question_number: (typeof info.dropoutQuestionNumber === 'number' ? info.dropoutQuestionNumber : dropoutIndex + 1),
+              question_number:
+                typeof info.dropoutQuestionNumber === 'number'
+                  ? info.dropoutQuestionNumber
+                  : dropoutIndex + 1,
               question_title: question?.content?.title || question?.content?.text || undefined,
               question_type: question?.type || undefined,
             };
@@ -507,8 +534,9 @@ export abstract class StatisticsService {
 
         // Преобразуем Map в массив и сортируем по номеру вопроса
         const byQuestion = stats?.by_question
-          ? Array.from(stats.by_question.values())
-            .sort((a, b) => a.question_number - b.question_number)
+          ? Array.from(stats.by_question.values()).sort(
+              (a, b) => a.question_number - b.question_number
+            )
           : [];
 
         return {
@@ -538,7 +566,7 @@ export abstract class StatisticsService {
         expiresAt: generatedAt.plus({ seconds: CACHE_TTL }),
       });
 
-      logger.info("Статистика по незавершенным квизам рассчитана", {
+      logger.info('Статистика по незавершенным квизам рассчитана', {
         quiz_uid,
         period: response.period,
         total_days: daily.length,
@@ -548,7 +576,7 @@ export abstract class StatisticsService {
       return response;
     } catch (error) {
       logger.error(
-        "Ошибка при получении статистики по незавершенным квизам",
+        'Ошибка при получении статистики по незавершенным квизам',
         error instanceof Error ? error : new Error(String(error)),
         { quiz_uid, start, end }
       );
@@ -572,13 +600,12 @@ export abstract class StatisticsService {
           abandonmentStatsCache.delete(key);
         }
       }
-      logger.info("Кеш статистики очищен для квиза", { quiz_uid: quizUid });
+      logger.info('Кеш статистики очищен для квиза', { quiz_uid: quizUid });
     } else {
       // Очищаем весь кеш
       dailyStatsCache.clear();
       abandonmentStatsCache.clear();
-      logger.info("Весь кеш статистики очищен");
+      logger.info('Весь кеш статистики очищен');
     }
   }
 }
-

@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { motion, type HTMLMotionProps } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import * as React from "react";
+import { cn } from '@/lib/utils';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import * as React from 'react';
 
-interface InputNoBorderProps extends HTMLMotionProps<"input"> {
+interface InputNoBorderProps extends HTMLMotionProps<'input'> {
   initialWidth?: number;
   maxWidth?: number;
   maxLength?: number;
@@ -33,12 +33,12 @@ function InputNoBorder({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const currentValue = value ?? defaultValue ?? "";
+  const currentValue = value ?? defaultValue ?? '';
   const currentLength = String(currentValue).length;
   const showCounter = maxLength !== undefined && isFocused;
 
   const fontSizeStyle = fontSize
-    ? { fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize }
+    ? { fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize }
     : undefined;
 
   const updateWidth = React.useCallback(() => {
@@ -88,16 +88,16 @@ function InputNoBorder({
   }, [className, fontSize, updateWidth]);
 
   React.useEffect(() => {
-    window.addEventListener("resize", updateWidth);
+    window.addEventListener('resize', updateWidth);
     return () => {
-      window.removeEventListener("resize", updateWidth);
+      window.removeEventListener('resize', updateWidth);
     };
   }, [updateWidth]);
 
   return (
     <div ref={containerRef} className="inline-block relative">
       <span ref={measureRef} className="invisible absolute whitespace-pre px-3" aria-hidden="true">
-        {currentValue || (props.placeholder ?? "")}
+        {currentValue || (props.placeholder ?? '')}
       </span>
       <motion.input
         ref={inputRef}
@@ -119,21 +119,21 @@ function InputNoBorder({
         onMouseLeave={onMouseLeave}
         animate={{ width: `${width}px` }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 300,
           damping: 30,
         }}
         style={fontSizeStyle}
         className={cn(
-          "file:text-foreground placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none h-9 rounded-md bg-transparent px-3 py-1 text-base transition-colors outline-none file:inline-flex file:h-7 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+          'file:text-foreground placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none h-9 rounded-md bg-transparent px-3 py-1 text-base transition-colors outline-none file:inline-flex file:h-7 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
           className
         )}
         {...props}
       />
-      <div className="absolute right-0 pointer-events-none" style={{ bottom: "-5px" }}>
-        <span className="text-xs text-muted-foreground">{t("input.edit")}</span>
+      <div className="absolute right-0 pointer-events-none" style={{ bottom: '-5px' }}>
+        <span className="text-xs text-muted-foreground">{t('input.edit')}</span>
       </div>
       {maxLength !== undefined && (
         <motion.div
@@ -143,15 +143,15 @@ function InputNoBorder({
           }}
           transition={{
             duration: 0.2,
-            ease: "easeOut",
+            ease: 'easeOut',
           }}
           className="absolute left-0 pointer-events-none"
-          style={{ bottom: "100%", marginBottom: "4px" }}
+          style={{ bottom: '100%', marginBottom: '4px' }}
         >
           <span
             className={cn(
-              "text-xs text-muted-foreground",
-              currentLength >= maxLength && "text-destructive"
+              'text-xs text-muted-foreground',
+              currentLength >= maxLength && 'text-destructive'
             )}
           >
             {currentLength}/{maxLength}

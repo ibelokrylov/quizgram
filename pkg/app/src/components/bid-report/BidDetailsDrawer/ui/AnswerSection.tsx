@@ -1,5 +1,5 @@
-import QuestionGroupCard from "@/components/bid-report/BidDetailsDrawer/ui/QuestionGroupCard.tsx";
-import RegularQuestionCard from "@/components/bid-report/BidDetailsDrawer/ui/RegularQuestionCard.tsx";
+import QuestionGroupCard from '@/components/bid-report/BidDetailsDrawer/ui/QuestionGroupCard.tsx';
+import RegularQuestionCard from '@/components/bid-report/BidDetailsDrawer/ui/RegularQuestionCard.tsx';
 
 // Компонент для секции ответов на вопросы
 interface AnswersSectionProps {
@@ -35,7 +35,7 @@ export const AnswersSection = ({
 
   return (
     <div className="space-y-3 pt-4 border-t">
-      <h3 className="font-semibold text-base lg:text-lg">{t("bids.details.answers")}</h3>
+      <h3 className="font-semibold text-base lg:text-lg">{t('bids.details.answers')}</h3>
       <div className="space-y-6">
         {questions?.map((question: any, idx: number) => {
           const item = data.find((i) => i.question_uid === question.uid);
@@ -43,10 +43,10 @@ export const AnswersSection = ({
 
           const title = question?.content?.title || question?.title || null;
 
-          const typeRaw = question?.type || "unknown";
+          const typeRaw = question?.type || 'unknown';
           const typeLabel = questionTypeLabelByType.get(typeRaw) || typeRaw;
           if (!isNew) {
-            const isQuestionGroup = typeRaw === "question_group";
+            const isQuestionGroup = typeRaw === 'question_group';
             const answerIsArray = Array.isArray(item?.answer);
 
             if (isQuestionGroup && answerIsArray) {
@@ -65,7 +65,7 @@ export const AnswersSection = ({
               );
             }
           } else {
-            const isQuestionGroup = typeRaw === "question_group";
+            const isQuestionGroup = typeRaw === 'question_group';
             const answerIsArray = Array.isArray(item?.answer?.answer);
             if (isQuestionGroup && answerIsArray) {
               return (

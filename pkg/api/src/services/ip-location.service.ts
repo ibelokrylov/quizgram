@@ -22,16 +22,16 @@ export abstract class IpLocationService {
       'x-real-ip': request.headers.get('x-real-ip'),
       'cf-connecting-ip': request.headers.get('cf-connecting-ip'),
       'x-forwarded': request.headers.get('x-forwarded'),
-      'forwarded': request.headers.get('forwarded'),
+      forwarded: request.headers.get('forwarded'),
     };
-    
+
     logger.debug('Checking IP headers', { headers, url: request.url });
 
     // Проверяем заголовок x-forwarded-for (для прокси/балансировщиков)
     const forwardedFor = request.headers.get('x-forwarded-for');
     if (forwardedFor) {
       // x-forwarded-for может содержать несколько IP через запятую, берем первый
-      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      const ips = forwardedFor.split(',').map((ip) => ip.trim());
       const ip = ips[0] || null;
       logger.debug('IP found in x-forwarded-for', { ip, allIps: ips });
       return ip;
@@ -63,7 +63,9 @@ export abstract class IpLocationService {
         return hostname;
       }
     } catch (error) {
-      logger.debug('Failed to parse URL for IP extraction', { error: error instanceof Error ? error.message : String(error) });
+      logger.debug('Failed to parse URL for IP extraction', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Пытаемся получить IP через Bun server API (для локальной разработки)
@@ -78,7 +80,9 @@ export abstract class IpLocationService {
         }
       }
     } catch (error) {
-      logger.debug('Failed to get IP via Bun API', { error: error instanceof Error ? error.message : String(error) });
+      logger.debug('Failed to get IP via Bun API', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Для локальной разработки: если hostname localhost, возвращаем 127.0.0.1
@@ -89,7 +93,9 @@ export abstract class IpLocationService {
         return '127.0.0.1';
       }
     } catch (error) {
-      logger.debug('Failed to parse URL for localhost check', { error: error instanceof Error ? error.message : String(error) });
+      logger.debug('Failed to parse URL for localhost check', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     logger.warn('No IP address found in request headers or URL', { headers, url: request.url });
@@ -147,25 +153,32 @@ export abstract class IpLocationService {
     try {
       // Используем ip-api.com (бесплатный, до 45 запросов в минуту без регистрации)
       // Формат: http://ip-api.com/json/{ip}?fields=status,message,country,city,query
-      const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,query`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-        // Таймаут 5 секунд
-        signal: AbortSignal.timeout(5000),
-      });
+      const response = await fetch(
+        `http://ip-api.com/json/${ip}?fields=status,message,country,city,query`,
+        {
+          headers: {
+            Accept: 'application/json',
+          },
+          // Таймаут 5 секунд
+          signal: AbortSignal.timeout(5000),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       logger.debug('IP geolocation API response', { ip, status: data.status, data });
 
       // Проверяем статус ответа
       if (data.status === 'fail') {
-        logger.warn('IP geolocation API returned fail status', { ip, message: data.message, fullResponse: data });
+        logger.warn('IP geolocation API returned fail status', {
+          ip,
+          message: data.message,
+          fullResponse: data,
+        });
         return {
           country: null,
           city: null,
@@ -178,11 +191,15 @@ export abstract class IpLocationService {
         city: data.city || null,
         ip: data.query || ip,
       };
-      
+
       logger.debug('IP geolocation successful', { ip, result });
       return result;
     } catch (error) {
-      logger.error('Failed to get IP geolocation', error instanceof Error ? error : new Error(String(error)), { ip });
+      logger.error(
+        'Failed to get IP geolocation',
+        error instanceof Error ? error : new Error(String(error)),
+        { ip }
+      );
       // В случае ошибки возвращаем IP без геолокации
       return {
         country: null,
@@ -199,14 +216,17 @@ export abstract class IpLocationService {
    * @returns Объект с информацией о геолокации
    */
   static async getLocationFromRequest(request: Request, server?: any): Promise<IpLocation> {
-    logger.debug('Starting location determination from request', { url: request.url, method: request.method });
-    
+    logger.debug('Starting location determination from request', {
+      url: request.url,
+      method: request.method,
+    });
+
     const ip = this.getClientIp(request, server);
     logger.debug('IP extracted from request', { ip });
-    
+
     const location = await this.getLocationByIp(ip);
     logger.debug('Location determination completed', { ip, location });
-    
+
     return location;
   }
 }

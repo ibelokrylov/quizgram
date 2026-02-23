@@ -32,7 +32,7 @@
 **Решение:** Использовать dynamic import для компонентов с графиками:
 
 ```tsx
-const RechartsComponent = lazy(() => import("./components/Charts"));
+const RechartsComponent = lazy(() => import('./components/Charts'));
 ```
 
 **Ожидаемый эффект:** -100-150 KB из основного бандла
@@ -87,11 +87,11 @@ bun add -D rollup-plugin-visualizer
 
 ```ts
 // vite.config.ts
-import { visualizer } from "rollup-plugin-visualizer";
+import { visualizer } from 'rollup-plugin-visualizer';
 
 plugins: [
   visualizer({
-    filename: "dist/stats.html",
+    filename: 'dist/stats.html',
     open: true,
     gzipSize: true,
   }),
@@ -108,10 +108,10 @@ plugins: [
 
 ```tsx
 // Плохо
-import { IconHome, IconUser } from "@tabler/icons-react";
+import { IconHome, IconUser } from '@tabler/icons-react';
 
 // Хорошо
-import IconHome from "@tabler/icons-react/dist/esm/icons/IconHome";
+import IconHome from '@tabler/icons-react/dist/esm/icons/IconHome';
 ```
 
 ---
@@ -131,7 +131,7 @@ import IconHome from "@tabler/icons-react/dist/esm/icons/IconHome";
 ```ts
 // Только для development
 if (import.meta.env.DEV) {
-  import("@tanstack/react-router-devtools");
+  import('@tanstack/react-router-devtools');
 }
 ```
 

@@ -1,15 +1,13 @@
-import { type PropsWithChildren, useEffect, useState } from "react";
-import { AppContext, type AppContextType, type Quiz } from "./App.context";
-import { API_BASE_URL } from "./config";
-import { preloadQuizMedia } from "./lib/media-preloader";
-import { getLaunchParams, getRawInitData } from "./lib/telegram-webapp";
+import { type PropsWithChildren, useEffect, useState } from 'react';
+import { AppContext, type AppContextType, type Quiz } from './App.context';
+import { API_BASE_URL } from './config';
+import { preloadQuizMedia } from './lib/media-preloader';
+import { getLaunchParams, getRawInitData } from './lib/telegram-webapp';
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
-  const [quiz, setQuiz] = useState<AppContextType["quiz"]>(undefined);
-  const [currentStage, setCurrentStage] = useState<string | undefined>(
-    undefined,
-  );
+  const [quiz, setQuiz] = useState<AppContextType['quiz']>(undefined);
+  const [currentStage, setCurrentStage] = useState<string | undefined>(undefined);
   const [allStages, setAllStages] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
@@ -20,17 +18,17 @@ export const AppContextProvider = (props: PropsWithChildren) => {
   function generateStages(quiz: Quiz) {
     const stages = [];
     if (quiz.startPage) {
-      stages.push("startPage");
+      stages.push('startPage');
     }
     if (quiz.question && quiz.question.length > 0) {
-      stages.push("question");
+      stages.push('question');
     }
     // Проверяем, что contact - это массив и он не пустой
     if (Array.isArray(quiz.contact) && quiz.contact.length > 0) {
-      stages.push("contact");
+      stages.push('contact');
     }
     if (quiz.thxPage) {
-      stages.push("thxPage");
+      stages.push('thxPage');
     }
     setAllStages(stages);
     setCurrentStage(stages[0]);
@@ -57,9 +55,9 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         launchParamsTyped.startApp ||
         launchParamsTyped.startapp) as string | undefined;
 
-      if (!uid || uid.trim() === "") {
+      if (!uid || uid.trim() === '') {
         setError(true);
-        setCurrentStage("404");
+        setCurrentStage('404');
         setLoading(false);
         return;
       }
@@ -74,17 +72,17 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       }
 
       const response = await fetch(`${API_BASE_URL}/v1/public/quiz/${uid}`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include", // Для отправки cookies (bidToken)
+        credentials: 'include', // Для отправки cookies (bidToken)
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         setError(true);
-        setCurrentStage("404");
+        setCurrentStage('404');
         setLoading(false);
         return;
       }
@@ -94,7 +92,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Проверяем, что данные есть и не пустые
       if (!result || !result.data) {
         setError(true);
-        setCurrentStage("404");
+        setCurrentStage('404');
         setLoading(false);
         return;
       }
@@ -108,7 +106,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         const questions = [];
         for (const question of result.data.question) {
           const keys = Object.keys(question.content);
-          if (keys.length === 0 && keys[0] === "title") {
+          if (keys.length === 0 && keys[0] === 'title') {
             continue;
           }
           questions.push(question);
@@ -122,12 +120,9 @@ export const AppContextProvider = (props: PropsWithChildren) => {
       // Сохраняем key в session storage (обновляем при каждом запросе)
       if (result.key) {
         try {
-          sessionStorage.setItem("quizKey", result.key);
+          sessionStorage.setItem('quizKey', result.key);
         } catch (storageError) {
-          console.error(
-            "Failed to save quiz key to session storage:",
-            storageError,
-          );
+          console.error('Failed to save quiz key to session storage:', storageError);
         }
       }
 
@@ -137,12 +132,12 @@ export const AppContextProvider = (props: PropsWithChildren) => {
 
       // Предзагружаем медиа асинхронно (не блокируем UI)
       preloadQuizMedia(result.data).catch((error: unknown) => {
-        console.error("Ошибка при предзагрузке медиа:", error);
+        console.error('Ошибка при предзагрузке медиа:', error);
       });
     } catch (err) {
-      console.error("Failed to fetch quiz:", err);
+      console.error('Failed to fetch quiz:', err);
       setError(true);
-      setCurrentStage("404");
+      setCurrentStage('404');
       setLoading(false);
     }
   }
@@ -166,13 +161,12 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           item.answer instanceof FileList ||
           (Array.isArray(item.answer) &&
             item.answer.some(
-              (a: any) =>
-                a instanceof File || a instanceof Blob || a instanceof FileList,
-            )),
+              (a: any) => a instanceof File || a instanceof Blob || a instanceof FileList
+            ))
       );
 
     // Извлекаем final_question для добавления в URL
-    const finalQuestion = answer.final_question === true ? "true" : "false";
+    const finalQuestion = answer.final_question === true ? 'true' : 'false';
 
     // Удаляем final_question из answer, чтобы не отправлять его в теле запроса
     // quiz_all_question больше не отправляется - он сохраняется автоматически при получении квиза
@@ -181,20 +175,18 @@ export const AppContextProvider = (props: PropsWithChildren) => {
     // Получаем key из sessionStorage
     let quizKey: string | null = null;
     try {
-      quizKey = sessionStorage.getItem("quizKey");
+      quizKey = sessionStorage.getItem('quizKey');
     } catch (error) {
-      console.error("Failed to get quiz key from session storage:", error);
+      console.error('Failed to get quiz key from session storage:', error);
     }
 
     // Добавляем key в тело запроса, если он есть
-    const answerWithKey = quizKey
-      ? { ...answerBody, key: quizKey }
-      : answerBody;
-    if (!answerWithKey?.question_uid) throw new Error("question_uid not found");
+    const answerWithKey = quizKey ? { ...answerBody, key: quizKey } : answerBody;
+    if (!answerWithKey?.question_uid) throw new Error('question_uid not found');
 
     const formData = new FormData();
-    formData.append("key", String(quizKey));
-    formData.append("question_uid", String(answer?.question_uid));
+    formData.append('key', String(quizKey));
+    formData.append('question_uid', String(answer?.question_uid));
 
     if (isFile || isArrayWithFiles || isFileList) {
       if (isArrayWithFiles) {
@@ -203,7 +195,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         let fileIndex = 0;
         const processedArray = answerArray.map((item) => {
           // item должен быть объектом {question_uid, answer}
-          if (item && typeof item === "object" && "answer" in item) {
+          if (item && typeof item === 'object' && 'answer' in item) {
             const itemAnswer = item.answer;
             // Если answer это FileList (multiple files)
             if (itemAnswer instanceof FileList) {
@@ -227,8 +219,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
             // Если answer это один File
             if (itemAnswer instanceof File || itemAnswer instanceof Blob) {
               formData.append(`files`, itemAnswer);
-              const fileName =
-                itemAnswer instanceof File ? itemAnswer.name : "file";
+              const fileName = itemAnswer instanceof File ? itemAnswer.name : 'file';
               fileIndex++;
               return {
                 question_uid: item.question_uid,
@@ -246,7 +237,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         });
 
         // Отправляем обработанный массив как JSON
-        formData.append("answer", JSON.stringify(processedArray));
+        formData.append('answer', JSON.stringify(processedArray));
       } else {
         // Отрабатывает при одном файле \ несколько файлов ??? (не группа)
         // Обработка FileList (множественная загрузка файлов)
@@ -254,7 +245,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         const processedArray = [];
 
         if (answerValue instanceof File) {
-          formData.append("files", answerValue);
+          formData.append('files', answerValue);
           processedArray.push({
             __fileIndex: 0,
             fileName: answerValue.name,
@@ -271,33 +262,29 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           }
         }
 
-        formData.append("answer", JSON.stringify(processedArray));
+        formData.append('answer', JSON.stringify(processedArray));
       }
     } else {
       //Convert answer object body to FormData
-      formData.append("answer", JSON.stringify(answerValue));
+      formData.append('answer', JSON.stringify(answerValue));
     }
 
     const response = await fetch(
       `${API_BASE_URL}/v1/public/quiz/${quiz?.uid}/answer?final_question=${finalQuestion}`,
       {
-        method: "POST",
+        method: 'POST',
         body: formData,
-      },
+      }
     );
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: "Unknown error" }));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`,
-      );
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const result = await response.json();
     if (!result.success) {
-      throw new Error(result.message || "Failed to save answer");
+      throw new Error(result.message || 'Failed to save answer');
     }
   }
 
@@ -311,7 +298,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
           setLoading,
           quiz: undefined,
           setQuiz,
-          currentStage: "404",
+          currentStage: '404',
           setCurrentStage,
           nextStage,
           sendAnswer,
@@ -329,7 +316,7 @@ export const AppContextProvider = (props: PropsWithChildren) => {
         setLoading,
         quiz,
         setQuiz,
-        currentStage: currentStage || "404", // Гарантируем, что currentStage всегда строка
+        currentStage: currentStage || '404', // Гарантируем, что currentStage всегда строка
         setCurrentStage,
         nextStage,
         sendAnswer,

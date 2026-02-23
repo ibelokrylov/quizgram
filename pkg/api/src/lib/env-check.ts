@@ -1,7 +1,7 @@
 // Проверка переменных окружения при запуске приложения
 // Если обязательные переменные отсутствуют, приложение не запустится
 
-import { logger } from "./logger";
+import { logger } from './logger';
 
 interface EnvVar {
   name: string;
@@ -12,139 +12,137 @@ interface EnvVar {
 // Список обязательных переменных окружения
 const REQUIRED_ENV_VARS: EnvVar[] = [
   {
-    name: "JWT_SECRET",
+    name: 'JWT_SECRET',
     required: true,
-    description: "Секретный ключ для JWT токенов",
+    description: 'Секретный ключ для JWT токенов',
   },
   {
-    name: "BOT_QUIZ_TOKEN",
+    name: 'BOT_QUIZ_TOKEN',
     required: true,
-    description:
-      "Токен Telegram бота для квизов (используется для валидации initData)",
+    description: 'Токен Telegram бота для квизов (используется для валидации initData)',
   },
   {
-    name: "BOT_CRM_TOKEN",
+    name: 'BOT_CRM_TOKEN',
     required: true,
-    description: "Токен Telegram CRM бота",
+    description: 'Токен Telegram CRM бота',
   },
 ];
 
 // Список переменных для базы данных (хотя бы DATABASE_URL или все POSTGRES_*)
 const _DATABASE_ENV_VARS: EnvVar[] = [
   {
-    name: "DATABASE_URL",
+    name: 'DATABASE_URL',
     required: false,
-    description: "Полный URL подключения к PostgreSQL",
+    description: 'Полный URL подключения к PostgreSQL',
   },
   {
-    name: "POSTGRES_USER",
+    name: 'POSTGRES_USER',
     required: false,
-    description: "Пользователь PostgreSQL",
+    description: 'Пользователь PostgreSQL',
   },
   {
-    name: "POSTGRES_PASSWORD",
+    name: 'POSTGRES_PASSWORD',
     required: false,
-    description: "Пароль PostgreSQL",
+    description: 'Пароль PostgreSQL',
   },
   {
-    name: "POSTGRES_DB",
+    name: 'POSTGRES_DB',
     required: false,
-    description: "Имя базы данных PostgreSQL",
+    description: 'Имя базы данных PostgreSQL',
   },
 ];
 
 // Список опциональных переменных (для информационных сообщений)
 const OPTIONAL_ENV_VARS: EnvVar[] = [
   {
-    name: "S3_ACCESS_KEY",
+    name: 'S3_ACCESS_KEY',
     required: false,
-    description: "S3 Access Key (для работы с файлами)",
+    description: 'S3 Access Key (для работы с файлами)',
   },
   {
-    name: "S3_SECRET_ACCESS_KEY",
+    name: 'S3_SECRET_ACCESS_KEY',
     required: false,
-    description: "S3 Secret Access Key (для работы с файлами)",
+    description: 'S3 Secret Access Key (для работы с файлами)',
   },
   {
-    name: "S3_BUCKET_NAME",
+    name: 'S3_BUCKET_NAME',
     required: false,
-    description: "S3 Bucket Name (для работы с файлами)",
+    description: 'S3 Bucket Name (для работы с файлами)',
   },
   {
-    name: "MAIL_HOST",
+    name: 'MAIL_HOST',
     required: false,
-    description: "SMTP хост (для отправки email)",
+    description: 'SMTP хост (для отправки email)',
   },
   {
-    name: "MAIL_USER",
+    name: 'MAIL_USER',
     required: false,
-    description: "SMTP пользователь (для отправки email)",
+    description: 'SMTP пользователь (для отправки email)',
   },
   {
-    name: "MAIL_PASS",
+    name: 'MAIL_PASS',
     required: false,
-    description: "SMTP пароль (для отправки email)",
+    description: 'SMTP пароль (для отправки email)',
   },
   {
-    name: "APP_URLS",
+    name: 'APP_URLS',
     required: false,
-    description: "Разрешенные URL для CORS (через запятую)",
+    description: 'Разрешенные URL для CORS (через запятую)',
   },
   {
-    name: "ENV",
+    name: 'ENV',
     required: false,
-    description: "Окружение (production/development)",
+    description: 'Окружение (production/development)',
   },
   {
-    name: "IS_DEV",
+    name: 'IS_DEV',
     required: false,
-    description: "Режим разработки (true/false)",
+    description: 'Режим разработки (true/false)',
   },
   {
-    name: "TZ",
+    name: 'TZ',
     required: false,
-    description: "Часовой пояс (по умолчанию UTC)",
+    description: 'Часовой пояс (по умолчанию UTC)',
   },
   {
-    name: "APP_NAME",
+    name: 'APP_NAME',
     required: false,
-    description: "Название приложения (по умолчанию TGMApp)",
+    description: 'Название приложения (по умолчанию TGMApp)',
   },
   {
-    name: "HTTPS_CERT",
+    name: 'HTTPS_CERT',
     required: false,
-    description: "Путь к SSL сертификату (для HTTPS)",
+    description: 'Путь к SSL сертификату (для HTTPS)',
   },
   {
-    name: "HTTPS_KEY",
+    name: 'HTTPS_KEY',
     required: false,
-    description: "Путь к приватному ключу SSL (для HTTPS)",
+    description: 'Путь к приватному ключу SSL (для HTTPS)',
   },
   {
-    name: "HTTPS_PORT",
+    name: 'HTTPS_PORT',
     required: false,
-    description: "Порт для HTTPS сервера (по умолчанию 5001)",
+    description: 'Порт для HTTPS сервера (по умолчанию 5001)',
   },
   {
-    name: "PORT",
+    name: 'PORT',
     required: false,
-    description:
-      "Порт для HTTP сервера (по умолчанию 5001, используется если HTTPS не настроен)",
+    description: 'Порт для HTTP сервера (по умолчанию 5001, используется если HTTPS не настроен)',
   },
   {
-    name: "UNITPAY_PROJECT_ID",
+    name: 'UNITPAY_PROJECT_ID',
     required: false,
-    description: "ID проекта в UnitPay (для приёма платежей)",
+    description: 'ID проекта в UnitPay (для приёма платежей)',
   },
   {
-    name: "UNITPAY_SECRET_KEY",
+    name: 'UNITPAY_SECRET_KEY',
     required: false,
-    description: "Секретный ключ UnitPay (для проверки подписи webhook)",
+    description: 'Секретный ключ UnitPay (для проверки подписи webhook)',
   },
   {
-    name: "UNITPAY_PROJECT_PUBLIC_KEY",
+    name: 'UNITPAY_PROJECT_PUBLIC_KEY',
     required: false,
-    description: "Публичный ключ проекта UnitPay",
+    description: 'Публичный ключ проекта UnitPay',
   },
 ];
 
@@ -153,69 +151,63 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
  * @throws Error если обязательные переменные отсутствуют
  */
 export function checkRequiredEnvVars(): void {
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const missing: string[] = [];
   const errors: string[] = [];
 
   // Проверяем обязательные переменные
   for (const envVar of REQUIRED_ENV_VARS) {
     const value = env[envVar.name];
-    if (!value || value.trim() === "" || value === "ДОБАВИТЬ_ТОКЕН") {
+    if (!value || value.trim() === '' || value === 'ДОБАВИТЬ_ТОКЕН') {
       missing.push(envVar.name);
-      errors.push(
-        `  ❌ ${envVar.name}${envVar.description ? ` - ${envVar.description}` : ""}`,
-      );
+      errors.push(`  ❌ ${envVar.name}${envVar.description ? ` - ${envVar.description}` : ''}`);
     }
   }
 
   // Проверяем переменные базы данных
   // Нужен либо DATABASE_URL, либо все POSTGRES_*
   const hasDatabaseUrl = !!env.DATABASE_URL;
-  const hasPostgresVars =
-    !!env.POSTGRES_USER && !!env.POSTGRES_PASSWORD && !!env.POSTGRES_DB;
+  const hasPostgresVars = !!env.POSTGRES_USER && !!env.POSTGRES_PASSWORD && !!env.POSTGRES_DB;
 
   if (!hasDatabaseUrl && !hasPostgresVars) {
-    missing.push("DATABASE_CONFIG");
+    missing.push('DATABASE_CONFIG');
     errors.push(
-      "  ❌ DATABASE_CONFIG - Необходимо указать либо DATABASE_URL, либо все переменные: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB",
+      '  ❌ DATABASE_CONFIG - Необходимо указать либо DATABASE_URL, либо все переменные: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB'
     );
   }
 
   // Если есть ошибки, выводим их и завершаем приложение
   if (errors.length > 0) {
     const errorMessage = [
-      "",
-      "═══════════════════════════════════════════════════════════════",
-      "  КРИТИЧЕСКАЯ ОШИБКА: Отсутствуют обязательные переменные окружения",
-      "═══════════════════════════════════════════════════════════════",
-      "",
-      "Отсутствующие переменные:",
+      '',
+      '═══════════════════════════════════════════════════════════════',
+      '  КРИТИЧЕСКАЯ ОШИБКА: Отсутствуют обязательные переменные окружения',
+      '═══════════════════════════════════════════════════════════════',
+      '',
+      'Отсутствующие переменные:',
       ...errors,
-      "",
-      "Пожалуйста, настройте все обязательные переменные окружения в файле .env",
-      "и перезапустите приложение.",
-      "",
-      "═══════════════════════════════════════════════════════════════",
-      "",
-    ].join("\n");
+      '',
+      'Пожалуйста, настройте все обязательные переменные окружения в файле .env',
+      'и перезапустите приложение.',
+      '',
+      '═══════════════════════════════════════════════════════════════',
+      '',
+    ].join('\n');
 
-    logger.error(
-      errorMessage,
-      new Error("Missing required environment variables"),
-    );
+    logger.error(errorMessage, new Error('Missing required environment variables'));
 
     // Выводим также информацию об опциональных переменных
     const optionalMissing: string[] = [];
     for (const envVar of OPTIONAL_ENV_VARS) {
       const value = env[envVar.name];
-      if (!value || value.trim() === "") {
+      if (!value || value.trim() === '') {
         optionalMissing.push(envVar.name);
       }
     }
 
     if (optionalMissing.length > 0) {
       logger.warn(
-        `Отсутствуют опциональные переменные окружения (${optionalMissing.length}): ${optionalMissing.join(", ")}`,
+        `Отсутствуют опциональные переменные окружения (${optionalMissing.length}): ${optionalMissing.join(', ')}`
       );
     }
 
@@ -226,21 +218,21 @@ export function checkRequiredEnvVars(): void {
   const optionalMissing: string[] = [];
   for (const envVar of OPTIONAL_ENV_VARS) {
     const value = env[envVar.name];
-    if (!value || value.trim() === "") {
+    if (!value || value.trim() === '') {
       optionalMissing.push(envVar.name);
     }
   }
 
   if (optionalMissing.length > 0) {
     logger.warn(
-      `Отсутствуют опциональные переменные окружения (${optionalMissing.length}): ${optionalMissing.join(", ")}`,
+      `Отсутствуют опциональные переменные окружения (${optionalMissing.length}): ${optionalMissing.join(', ')}`,
       {
         missing: optionalMissing,
-      },
+      }
     );
   }
 
-  logger.info("Проверка переменных окружения завершена успешно", {
+  logger.info('Проверка переменных окружения завершена успешно', {
     required: REQUIRED_ENV_VARS.length,
     optional: OPTIONAL_ENV_VARS.length,
     optionalMissing: optionalMissing.length,

@@ -62,7 +62,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/dashboard',
@@ -110,7 +110,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             return response;
           } catch (error) {
             console.log(error);
-            logger.error('Ошибка при получении дашборда квизов', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при получении дашборда квизов',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             set.status = 400;
 
             const response: QuizModel.dashboardErrorResponse = {
@@ -134,7 +138,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .put(
         '/name/:uid',
@@ -171,7 +175,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при обновлении имени квиза', error instanceof Error ? error : new Error(String(error)), { userId: user.id, quizUid: uid });
+            logger.error(
+              'Ошибка при обновлении имени квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id, quizUid: uid }
+            );
             set.status = 400;
 
             const response: QuizModel.updateQuizNameErrorResponse = {
@@ -198,7 +206,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .delete(
         '/:uid',
@@ -235,7 +243,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при удалении квиза', error instanceof Error ? error : new Error(String(error)), { userId: user.id, quizUid: uid });
+            logger.error(
+              'Ошибка при удалении квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id, quizUid: uid }
+            );
             set.status = 400;
 
             const response: QuizModel.deleteQuizErrorResponse = {
@@ -261,7 +273,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .put(
         '/:uid',
@@ -291,7 +303,13 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
           }
 
           try {
-            const [ok, errors] = await QuizService.updateQuiz(uid, user.id, body, user.planId, user.isAdmin ?? false);
+            const [ok, errors] = await QuizService.updateQuiz(
+              uid,
+              user.id,
+              body,
+              user.planId,
+              user.isAdmin ?? false
+            );
 
             const response: QuizModel.updateQuizSuccessResponse = {
               ok: ok,
@@ -300,7 +318,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при обновлении квиза', error instanceof Error ? error : new Error(String(error)), { userId: user.id, quizUid: uid });
+            logger.error(
+              'Ошибка при обновлении квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id, quizUid: uid }
+            );
             set.status = 400;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -328,7 +350,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .post(
         '/active/:uid',
@@ -366,10 +388,14 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при изменении статуса активности квиза', error instanceof Error ? error : new Error(String(error)), {
-              userId: user.id,
-              quizUid: uid,
-            });
+            logger.error(
+              'Ошибка при изменении статуса активности квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              {
+                userId: user.id,
+                quizUid: uid,
+              }
+            );
             set.status = 400;
 
             const response: QuizModel.changeActiveErrorResponse = {
@@ -395,7 +421,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
               error: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/:uid',
@@ -444,7 +470,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             return response;
           } catch (error) {
             console.log(error);
-            logger.error('Ошибка при получении данных квиза', error instanceof Error ? error : new Error(String(error)), { userId: user.id, quizUid: uid });
+            logger.error(
+              'Ошибка при получении данных квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id, quizUid: uid }
+            );
             set.status = 400;
 
             const response: QuizModel.quizEditorErrorResponse = {
@@ -467,7 +497,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             400: QuizModel.quizEditorErrorResponse,
             401: ErrorType,
           },
-        },
+        }
       )
       .put(
         '/is-show-logo/:uid',
@@ -506,7 +536,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
           }
 
           try {
-            const newIsShowLogo = await QuizService.updateQuizIsShowLogo(uid, user.id, body.isShowLogo);
+            const newIsShowLogo = await QuizService.updateQuizIsShowLogo(
+              uid,
+              user.id,
+              body.isShowLogo
+            );
 
             const response: QuizModel.updateQuizIsShowLogoSuccessResponse = {
               message: 'ok',
@@ -515,10 +549,14 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при изменении is_show_logo квиза', error instanceof Error ? error : new Error(String(error)), {
-              userId: user.id,
-              quizUid: uid,
-            });
+            logger.error(
+              'Ошибка при изменении is_show_logo квиза',
+              error instanceof Error ? error : new Error(String(error)),
+              {
+                userId: user.id,
+                quizUid: uid,
+              }
+            );
             set.status = 400;
 
             const response: QuizModel.updateQuizIsShowLogoErrorResponse = {
@@ -546,7 +584,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             }),
             403: QuizModel.updateQuizIsShowLogoErrorResponse,
           },
-        },
+        }
       )
       .get(
         '/filters',
@@ -573,7 +611,11 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при получении фильтров квизов', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при получении фильтров квизов',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             ctx.set.status = 500;
 
             const response: QuizModel.quizFiltersErrorResponse = {
@@ -590,7 +632,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             401: QuizModel.quizFiltersErrorResponse,
             500: QuizModel.quizFiltersErrorResponse,
           },
-        },
+        }
       )
       .put(
         '/is-shared/:uid',
@@ -633,7 +675,7 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
           body: t.Object({
             isShared: t.Boolean(),
           }),
-        },
+        }
       )
       .post(
         '/is-shared/:uid',
@@ -700,6 +742,6 @@ export const quiz = new Elysia({ prefix: '/quiz' }).state('user', null as User |
             401: ErrorType,
             500: ErrorType,
           },
-        },
-      ),
+        }
+      )
 );

@@ -1,11 +1,11 @@
 // Утилита для логирования результатов тестов в файлы
 
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
 
 interface TestResult {
   testName: string;
-  status: "passed" | "failed" | "skipped";
+  status: 'passed' | 'failed' | 'skipped';
   duration: number;
   error?: string;
   data?: Record<string, any>;
@@ -34,7 +34,7 @@ export class TestLogger {
     this.startTime = new Date();
   }
 
-  logResult(result: Omit<TestResult, "timestamp">) {
+  logResult(result: Omit<TestResult, 'timestamp'>) {
     this.results.push({
       ...result,
       timestamp: new Date().toISOString(),
@@ -51,26 +51,26 @@ export class TestLogger {
       endTime: endTime.toISOString(),
       duration,
       totalTests: this.results.length,
-      passed: this.results.filter((r) => r.status === "passed").length,
-      failed: this.results.filter((r) => r.status === "failed").length,
-      skipped: this.results.filter((r) => r.status === "skipped").length,
+      passed: this.results.filter((r) => r.status === 'passed').length,
+      failed: this.results.filter((r) => r.status === 'failed').length,
+      skipped: this.results.filter((r) => r.status === 'skipped').length,
       results: this.results,
     };
 
     // Создаем директорию test/logs если её нет
-    const logsDir = join(process.cwd(), "test", "logs");
+    const logsDir = join(process.cwd(), 'test', 'logs');
     await mkdir(logsDir, { recursive: true });
 
     // Формируем имя файла с текущей датой
-    const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const filename = `${date}.json`;
     const filepath = join(logsDir, filename);
 
     // Читаем существующие результаты, если файл есть
     let existingResults: TestSuiteResult[] = [];
     try {
-      const { readFile } = await import("fs/promises");
-      const existingContent = await readFile(filepath, "utf-8");
+      const { readFile } = await import('fs/promises');
+      const existingContent = await readFile(filepath, 'utf-8');
       existingResults = JSON.parse(existingContent);
     } catch {
       // Файл не существует или пустой - это нормально
@@ -80,7 +80,7 @@ export class TestLogger {
     existingResults.push(suiteResult);
 
     // Сохраняем в JSON формате
-    await writeFile(filepath, JSON.stringify(existingResults, null, 2), "utf-8");
+    await writeFile(filepath, JSON.stringify(existingResults, null, 2), 'utf-8');
 
     return filepath;
   }
@@ -89,4 +89,3 @@ export class TestLogger {
     return this.results;
   }
 }
-

@@ -9,12 +9,15 @@
 ### 1. Схема таблицы `user_payment`
 
 **Добавлено новое поле:**
+
 - `is_active` (boolean, NOT NULL, default: true) - признак активной записи тарифа
 
 **Удалён constraint:**
+
 - `user_payment_user_id_unique` - уникальность на `user_id` убрана, т.к. у пользователя может быть несколько записей в истории
 
 **Добавлен индекс:**
+
 - `idx_user_payment_is_active` на `(user_id, is_active)` для оптимизации запросов активных тарифов
 
 ### 2. Логика переключения тарифов
@@ -62,10 +65,12 @@ bun run db:push
 ## Изменения в коде
 
 ### 1. Схема БД (`src/db/user-payment.ts`)
+
 - Добавлено поле `isActive: boolean("is_active").notNull().default(true)`
 - Убран `.unique()` constraint с `userId`
 
 ### 2. Сервис платежей (`src/modules/payment/service.ts`)
+
 - Метод `updateUserPlan` переработан для поддержки истории тарифов
 - Добавлена логика учёта собранных ставок при переключении на платный тариф
 - Импортированы `quizTable` и `quizBidTable` для работы со ставками
@@ -77,6 +82,7 @@ bun run db:push
 Все существующие записи `user_payment` автоматически получат `is_active = true`.
 
 При первом переключении тарифа после миграции:
+
 - Старая запись деактивируется (`is_active = false`)
 - Создаётся новая активная запись
 
@@ -111,12 +117,6 @@ user_payment:
 const activePayment = await db
   .select()
   .from(userPaymentTable)
-  .where(
-    and(
-      eq(userPaymentTable.userId, userId),
-      eq(userPaymentTable.isActive, true)
-    )
-  )
+  .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
   .limit(1);
 ```
-

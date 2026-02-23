@@ -1,25 +1,25 @@
-import { Loader } from "@/components/loader";
-import { Badge } from "@/components/ui/badge";
+import { Loader } from '@/components/loader';
+import { Badge } from '@/components/ui/badge';
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
-import type { BidDetails } from "@/entities/Bid/bid.type";
-import { useUpdateBidStatus } from "@/entities/Bid/useBids";
-import { questionTypes } from "@/pages/EditQuiz/ui/QuestionPage/const/question.type";
-import { Link } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { AnswersSection } from "./ui/AnswerSection";
-import ContactsSection from "./ui/ContactsSection";
-import TelegramUserSection from "./ui/TelegramUserSection";
-import BidStatusSelector from "./ui/BidStatusSelector";
-import { isBefore } from "date-fns";
+} from '@/components/ui/drawer';
+import type { BidDetails } from '@/entities/Bid/bid.type';
+import { useUpdateBidStatus } from '@/entities/Bid/useBids';
+import { questionTypes } from '@/pages/EditQuiz/ui/QuestionPage/const/question.type';
+import { Link } from '@tanstack/react-router';
+import { ExternalLink } from 'lucide-react';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { AnswersSection } from './ui/AnswerSection';
+import ContactsSection from './ui/ContactsSection';
+import TelegramUserSection from './ui/TelegramUserSection';
+import BidStatusSelector from './ui/BidStatusSelector';
+import { isBefore } from 'date-fns';
 
 interface BidDetailsDrawerProps {
   open: boolean;
@@ -40,7 +40,7 @@ export function BidDetailsDrawer({
   const updateBidStatus = useUpdateBidStatus();
 
   if (!bidDetails) {
-    throw new Error("BidDetails undefined");
+    throw new Error('BidDetails undefined');
   }
 
   const questionTypeLabelByType = useMemo(() => {
@@ -59,21 +59,18 @@ export function BidDetailsDrawer({
         key: bidDetails.key,
         status: newStatus,
       });
-      toast.success(t("bids.details.statusUpdated"));
+      toast.success(t('bids.details.statusUpdated'));
     } catch {
-      toast.error(t("bids.details.statusUpdateFailed"));
+      toast.error(t('bids.details.statusUpdateFailed'));
     }
   };
 
   const isNew = useMemo(
     () =>
       import.meta.env.VITE_NEW_ANSWER
-        ? isBefore(
-            new Date(import.meta.env.VITE_NEW_ANSWER),
-            new Date(bidDetails.createdAt),
-          )
+        ? isBefore(new Date(import.meta.env.VITE_NEW_ANSWER), new Date(bidDetails.createdAt))
         : false,
-    [],
+    []
   );
 
   return (
@@ -84,26 +81,22 @@ export function BidDetailsDrawer({
             <div className="space-y-3">
               <DrawerTitle className="text-base lg:text-lg">
                 {bidDetails
-                  ? t("bids.details.key", { key: bidDetails.key })
-                  : t("bids.details.loading")}
+                  ? t('bids.details.key', { key: bidDetails.key })
+                  : t('bids.details.loading')}
               </DrawerTitle>
               {bidDetails && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant={bidDetails.isFull ? "default" : "secondary"}>
+                  <Badge variant={bidDetails.isFull ? 'default' : 'secondary'}>
                     {bidDetails.isFull
-                      ? t("bids.details.completed.full")
-                      : t("bids.details.completed.notFull")}
+                      ? t('bids.details.completed.full')
+                      : t('bids.details.completed.notFull')}
                   </Badge>
-                  {bidDetails.first && (
-                    <Badge variant="outline">{t("bids.details.first")}</Badge>
-                  )}
+                  {bidDetails.first && <Badge variant="outline">{t('bids.details.first')}</Badge>}
                 </div>
               )}
               {bidDetails && (
                 <DrawerDescription className="flex items-center gap-2 text-xs lg:text-sm">
-                  <span>
-                    {t("bids.details.quiz", { name: bidDetails.quizName })}
-                  </span>
+                  <span>{t('bids.details.quiz', { name: bidDetails.quizName })}</span>
                   <Link
                     to="/app/quiz/$uid"
                     params={{ uid: bidDetails.uid }}
@@ -111,7 +104,7 @@ export function BidDetailsDrawer({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                   >
                     <ExternalLink className="h-3 w-3 lg:h-4 lg:w-4" />
-                    {t("bids.details.openEditor")}
+                    {t('bids.details.openEditor')}
                   </Link>
                 </DrawerDescription>
               )}
@@ -124,9 +117,7 @@ export function BidDetailsDrawer({
                 <Loader />
               </div>
             ) : isError ? (
-              <div className="text-xs lg:text-sm text-destructive">
-                {t("bids.details.error")}
-              </div>
+              <div className="text-xs lg:text-sm text-destructive">{t('bids.details.error')}</div>
             ) : bidDetails ? (
               <div className="space-y-6">
                 {/* Основная информация */}
@@ -140,7 +131,7 @@ export function BidDetailsDrawer({
                     />
                     <div>
                       <p className="text-xs lg:text-sm text-muted-foreground">
-                        {t("bids.details.created.label")}
+                        {t('bids.details.created.label')}
                       </p>
                       <p className="text-sm lg:text-base font-medium">
                         {bidDetails.createdAt
@@ -148,37 +139,34 @@ export function BidDetailsDrawer({
                               const date = new Date(bidDetails.createdAt);
                               return isNaN(date.getTime())
                                 ? bidDetails.createdAt
-                                : date.toLocaleString("ru-RU", {
-                                    year: "numeric",
-                                    month: "2-digit",
-                                    day: "2-digit",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
+                                : date.toLocaleString('ru-RU', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
                                   });
                             })()
-                          : "-"}
+                          : '-'}
                       </p>
                     </div>
                   </div>
                 </div>
                 {/* Контакты */}
-                {bidDetails.contacts &&
-                  Object.keys(bidDetails.contacts).length > 0 && (
-                    <ContactsSection
-                      contacts={bidDetails.contacts}
-                      contactsForm={bidDetails.contactsForm}
-                      t={t}
-                    />
-                  )}
+                {bidDetails.contacts && Object.keys(bidDetails.contacts).length > 0 && (
+                  <ContactsSection
+                    contacts={bidDetails.contacts}
+                    contactsForm={bidDetails.contactsForm}
+                    t={t}
+                  />
+                )}
                 {/* Информация о пользователе Telegram */}
                 {bidDetails.userInfo && (
                   <TelegramUserSection userInfo={bidDetails.userInfo} t={t} />
                 )}
                 {/* Ответы на вопросы квиза */}
                 {bidDetails.data != null &&
-                (Array.isArray(bidDetails.data)
-                  ? bidDetails.data.length > 0
-                  : true) ? (
+                (Array.isArray(bidDetails.data) ? bidDetails.data.length > 0 : true) ? (
                   <AnswersSection
                     data={bidDetails.data}
                     questions={bidDetails.questions}

@@ -1,19 +1,19 @@
 // Тесты для BackupLogService
 
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
-import { BackupLogService } from "../src/services/backup-log.service";
-import { S3Service } from "../src/services/s3.service";
+import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { BackupLogService } from '../src/services/backup-log.service';
+import { S3Service } from '../src/services/s3.service';
 
 // Переменные окружения для тестов должны быть установлены
-const _TEST_FOLDER = "test-backups-logs";
+const _TEST_FOLDER = 'test-backups-logs';
 
 // Список файлов, созданных в тестах, для последующего удаления
 const createdFiles: string[] = [];
 
 // Временная директория для тестовых логов
-const TEST_LOG_DIR = resolve("test-logs-backup");
+const TEST_LOG_DIR = resolve('test-logs-backup');
 
 /**
  * Очистка созданных файлов после тестов
@@ -38,31 +38,27 @@ function createTestLogFile(date: Date, content: string): string {
     mkdirSync(TEST_LOG_DIR, { recursive: true });
   }
 
-  const dateStr = date.toISOString().split("T")[0];
+  const dateStr = date.toISOString().split('T')[0];
   const logFileName = `${dateStr}.log`;
   const logFilePath = join(TEST_LOG_DIR, logFileName);
 
-  writeFileSync(logFilePath, content, "utf-8");
+  writeFileSync(logFilePath, content, 'utf-8');
   return logFilePath;
 }
 
 beforeAll(async () => {
   // Проверяем наличие необходимых переменных окружения
-  const requiredEnvVars = [
-    "S3_ACCESS_KEY",
-    "S3_SECRET_ACCESS_KEY",
-    "S3_BUCKET_NAME",
-  ];
+  const requiredEnvVars = ['S3_ACCESS_KEY', 'S3_SECRET_ACCESS_KEY', 'S3_BUCKET_NAME'];
 
   const missingVars = requiredEnvVars.filter(
-    (varName) => !process.env[varName] && !(typeof Bun !== "undefined" && Bun.env[varName]),
+    (varName) => !process.env[varName] && !(typeof Bun !== 'undefined' && Bun.env[varName])
   );
 
   if (missingVars.length > 0) {
     console.warn(
-      `⚠️  Предупреждение: Отсутствуют переменные окружения для S3: ${missingVars.join(", ")}`,
+      `⚠️  Предупреждение: Отсутствуют переменные окружения для S3: ${missingVars.join(', ')}`
     );
-    console.warn("Тесты BackupLogService будут пропущены, если переменные не установлены");
+    console.warn('Тесты BackupLogService будут пропущены, если переменные не установлены');
   }
 
   // Создаем тестовую директорию для логов
@@ -76,31 +72,29 @@ afterAll(async () => {
   await cleanupTestFiles();
 });
 
-test("1. Бэкап существующего лог-файла", async () => {
+test('1. Бэкап существующего лог-файла', async () => {
   // Пропускаем тест, если нет переменных окружения
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   // Создаем тестовый лог-файл за вчерашний день
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const testLogContent = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level: "INFO",
-    message: "Тестовое сообщение для бэкапа",
-  }) + "\n";
+  const testLogContent =
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: 'INFO',
+      message: 'Тестовое сообщение для бэкапа',
+    }) + '\n';
 
   const logFilePath = createTestLogFile(yesterday, testLogContent);
 
   // Временно переопределяем LOG_DIR через переменную окружения
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const originalLogDir = env.LOG_DIR;
-  
-  if (typeof Bun !== "undefined") {
+
+  if (typeof Bun !== 'undefined') {
     Bun.env.LOG_DIR = TEST_LOG_DIR;
   } else {
     process.env.LOG_DIR = TEST_LOG_DIR;
@@ -121,13 +115,13 @@ test("1. Бэкап существующего лог-файла", async () => {
   } finally {
     // Восстанавливаем оригинальный LOG_DIR
     if (originalLogDir) {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         Bun.env.LOG_DIR = originalLogDir;
       } else {
         process.env.LOG_DIR = originalLogDir;
       }
     } else {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         delete Bun.env.LOG_DIR;
       } else {
         delete process.env.LOG_DIR;
@@ -136,18 +130,15 @@ test("1. Бэкап существующего лог-файла", async () => {
 
     // Удаляем тестовый лог-файл
     if (existsSync(logFilePath)) {
-      const { unlinkSync } = await import("fs");
+      const { unlinkSync } = await import('fs');
       unlinkSync(logFilePath);
     }
   }
 });
 
-test("2. Бэкап несуществующего лог-файла (пропуск)", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('2. Бэкап несуществующего лог-файла (пропуск)', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
@@ -159,29 +150,27 @@ test("2. Бэкап несуществующего лог-файла (пропу
   expect(true).toBe(true); // Если дошли сюда, значит ошибок не было
 });
 
-test("3. Бэкап лог-файла за вчерашний день (backupYesterdayLog)", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('3. Бэкап лог-файла за вчерашний день (backupYesterdayLog)', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   // Создаем тестовый лог-файл за вчерашний день
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const testLogContent = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level: "INFO",
-    message: "Тестовое сообщение для backupYesterdayLog",
-  }) + "\n";
+  const testLogContent =
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: 'INFO',
+      message: 'Тестовое сообщение для backupYesterdayLog',
+    }) + '\n';
 
   const logFilePath = createTestLogFile(yesterday, testLogContent);
 
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const originalLogDir = env.LOG_DIR;
-  
-  if (typeof Bun !== "undefined") {
+
+  if (typeof Bun !== 'undefined') {
     Bun.env.LOG_DIR = TEST_LOG_DIR;
   } else {
     process.env.LOG_DIR = TEST_LOG_DIR;
@@ -200,13 +189,13 @@ test("3. Бэкап лог-файла за вчерашний день (backupYe
     expect(result?.fileKey).toBeDefined();
   } finally {
     if (originalLogDir) {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         Bun.env.LOG_DIR = originalLogDir;
       } else {
         process.env.LOG_DIR = originalLogDir;
       }
     } else {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         delete Bun.env.LOG_DIR;
       } else {
         delete process.env.LOG_DIR;
@@ -214,36 +203,34 @@ test("3. Бэкап лог-файла за вчерашний день (backupYe
     }
 
     if (existsSync(logFilePath)) {
-      const { unlinkSync } = await import("fs");
+      const { unlinkSync } = await import('fs');
       unlinkSync(logFilePath);
     }
   }
 });
 
-test("4. Бэкап лог-файла с правильным путем в S3", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('4. Бэкап лог-файла с правильным путем в S3', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   // Создаем тестовый лог-файл
   const testDate = new Date();
   testDate.setDate(testDate.getDate() - 1); // Вчера
-  const testLogContent = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level: "INFO",
-    message: "Тестовое сообщение для проверки пути в S3",
-  }) + "\n";
+  const testLogContent =
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: 'INFO',
+      message: 'Тестовое сообщение для проверки пути в S3',
+    }) + '\n';
 
   const logFilePath = createTestLogFile(testDate, testLogContent);
 
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const originalLogDir = env.LOG_DIR;
-  
-  if (typeof Bun !== "undefined") {
+
+  if (typeof Bun !== 'undefined') {
     Bun.env.LOG_DIR = TEST_LOG_DIR;
   } else {
     process.env.LOG_DIR = TEST_LOG_DIR;
@@ -269,13 +256,13 @@ test("4. Бэкап лог-файла с правильным путем в S3",
     }
   } finally {
     if (originalLogDir) {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         Bun.env.LOG_DIR = originalLogDir;
       } else {
         process.env.LOG_DIR = originalLogDir;
       }
     } else {
-      if (typeof Bun !== "undefined") {
+      if (typeof Bun !== 'undefined') {
         delete Bun.env.LOG_DIR;
       } else {
         delete process.env.LOG_DIR;
@@ -283,9 +270,8 @@ test("4. Бэкап лог-файла с правильным путем в S3",
     }
 
     if (existsSync(logFilePath)) {
-      const { unlinkSync } = await import("fs");
+      const { unlinkSync } = await import('fs');
       unlinkSync(logFilePath);
     }
   }
 });
-

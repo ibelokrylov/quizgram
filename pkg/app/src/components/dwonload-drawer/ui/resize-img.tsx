@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
-import type { DownloadFile } from "@/entities/DownloadFile/download-file.type";
-import http from "@/lib/http";
-import { ZoomIn, ZoomOut } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import type { DownloadFile } from '@/entities/DownloadFile/download-file.type';
+import http from '@/lib/http';
+import { ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
-type ResizeMode = "cover" | "contain" | "fill";
+type ResizeMode = 'cover' | 'contain' | 'fill';
 
 interface ResizeImgProps {
   targetWidth: number;
@@ -29,13 +29,13 @@ export const ResizeImg = ({
   onChangeLoading,
 }: ResizeImgProps) => {
   const { t } = useTranslation();
-  const [mode, setMode] = useState<ResizeMode>("cover");
-  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
+  const [mode, setMode] = useState<ResizeMode>('cover');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [imageSize, setImageSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -56,7 +56,7 @@ export const ResizeImg = ({
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       canvas.width = targetWidth;
@@ -75,7 +75,7 @@ export const ResizeImg = ({
       let offsetY = 0;
 
       switch (resizeMode) {
-        case "cover":
+        case 'cover':
           // Заполнить весь canvas, обрезая лишнее
           // Теперь всегда применяем оба offset для возможности перемещения по обеим осям
           if (imgRatio > targetRatio) {
@@ -90,7 +90,7 @@ export const ResizeImg = ({
           offsetY = (targetHeight - drawHeight) / 2 + customOffset.y;
           break;
 
-        case "contain":
+        case 'contain':
           // Вписать изображение полностью
           if (imgRatio > targetRatio) {
             drawWidth = targetWidth * zoomLevel;
@@ -103,7 +103,7 @@ export const ResizeImg = ({
           }
           break;
 
-        case "fill":
+        case 'fill':
           // Растянуть на весь canvas
           drawWidth = targetWidth;
           drawHeight = targetHeight;
@@ -125,7 +125,7 @@ export const ResizeImg = ({
 
     img.onload = () => {
       setImageSize({ width: img.width, height: img.height });
-      drawPreview(img, "cover", "#ffffff", { x: 0, y: 0 }, 1);
+      drawPreview(img, 'cover', '#ffffff', { x: 0, y: 0 }, 1);
     };
 
     img.src = url;
@@ -152,13 +152,13 @@ export const ResizeImg = ({
   }, [mode]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (mode !== "cover") return;
+    if (mode !== 'cover') return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || mode !== "cover") return;
+    if (!isDragging || mode !== 'cover') return;
 
     const newOffset = {
       x: e.clientX - dragStart.x,
@@ -217,7 +217,7 @@ export const ResizeImg = ({
             if (blob) {
               resolve(blob);
             } else {
-              reject(new Error("Failed to create blob"));
+              reject(new Error('Failed to create blob'));
             }
           },
           file.type,
@@ -230,11 +230,11 @@ export const ResizeImg = ({
 
       // Загружаем на сервер
       const formData = new FormData();
-      formData.append("file", resizedFile);
+      formData.append('file', resizedFile);
 
       const res = await http<DownloadFile>({
-        url: "/v1/user/upload-file",
-        method: "POST",
+        url: '/v1/user/upload-file',
+        method: 'POST',
         formData,
       });
       if (res.data) {
@@ -242,7 +242,7 @@ export const ResizeImg = ({
       }
     } catch (err) {
       console.error(err);
-      toast.error(t("fileUpload.error.invalidFormat"));
+      toast.error(t('fileUpload.error.invalidFormat'));
     } finally {
       onChangeLoading?.(false);
     }
@@ -250,18 +250,18 @@ export const ResizeImg = ({
 
   return (
     <div className="w-full px-4 py-2 pb-5 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">{t("resizeImage.title")}</h1>
+      <h1 className="text-2xl font-bold">{t('resizeImage.title')}</h1>
 
       <div className="flex flex-col gap-2">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {t("resizeImage.targetSize", {
+          {t('resizeImage.targetSize', {
             width: targetWidth,
             height: targetHeight,
           })}
         </p>
         {imageSize && (
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t("resizeImage.currentSize", {
+            {t('resizeImage.currentSize', {
               width: imageSize.width,
               height: imageSize.height,
             })}
@@ -275,8 +275,8 @@ export const ResizeImg = ({
           ref={canvasRef}
           className="max-w-full h-auto"
           style={{
-            maxHeight: "300px",
-            cursor: mode === "cover" ? (isDragging ? "grabbing" : "grab") : "default",
+            maxHeight: '300px',
+            cursor: mode === 'cover' ? (isDragging ? 'grabbing' : 'grab') : 'default',
           }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -285,16 +285,16 @@ export const ResizeImg = ({
         />
       </div>
 
-      {mode === "cover" && (
+      {mode === 'cover' && (
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          {t("resizeImage.dragToPosition")}
+          {t('resizeImage.dragToPosition')}
         </p>
       )}
 
       {/* Zoom slider */}
-      {mode === "cover" && (
+      {mode === 'cover' && (
         <div className="flex flex-col gap-2">
-          <Label>{t("resizeImage.zoom")}</Label>
+          <Label>{t('resizeImage.zoom')}</Label>
           <div className="flex items-center gap-3">
             <ZoomOut className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
             <Slider
@@ -315,16 +315,16 @@ export const ResizeImg = ({
 
       {/* Режим изменения размера */}
       <div className="flex flex-col gap-2">
-        <Label>{t("resizeImage.mode.cover")}</Label>
+        <Label>{t('resizeImage.mode.cover')}</Label>
         <RadioGroup value={mode} onValueChange={(value: string) => setMode(value as ResizeMode)}>
           <div className="flex items-start space-x-2">
             <RadioGroupItem value="cover" id="cover" />
             <div className="flex flex-col">
               <Label htmlFor="cover" className="cursor-pointer">
-                {t("resizeImage.mode.cover")}
+                {t('resizeImage.mode.cover')}
               </Label>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("resizeImage.mode.cover.description")}
+                {t('resizeImage.mode.cover.description')}
               </p>
             </div>
           </div>
@@ -332,10 +332,10 @@ export const ResizeImg = ({
             <RadioGroupItem value="contain" id="contain" />
             <div className="flex flex-col">
               <Label htmlFor="contain" className="cursor-pointer">
-                {t("resizeImage.mode.contain")}
+                {t('resizeImage.mode.contain')}
               </Label>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("resizeImage.mode.contain.description")}
+                {t('resizeImage.mode.contain.description')}
               </p>
             </div>
           </div>
@@ -343,10 +343,10 @@ export const ResizeImg = ({
             <RadioGroupItem value="fill" id="fill" />
             <div className="flex flex-col">
               <Label htmlFor="fill" className="cursor-pointer">
-                {t("resizeImage.mode.fill")}
+                {t('resizeImage.mode.fill')}
               </Label>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("resizeImage.mode.fill.description")}
+                {t('resizeImage.mode.fill.description')}
               </p>
             </div>
           </div>
@@ -354,9 +354,9 @@ export const ResizeImg = ({
       </div>
 
       {/* Цвет фона (только для contain) */}
-      {mode === "contain" && (
+      {mode === 'contain' && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="bg-color">{t("resizeImage.backgroundColor")}</Label>
+          <Label htmlFor="bg-color">{t('resizeImage.backgroundColor')}</Label>
           <div className="flex gap-2 items-center">
             <input
               id="bg-color"
@@ -378,9 +378,9 @@ export const ResizeImg = ({
       {/* Кнопки действий */}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onCancel}>
-          {t("resizeImage.cancel")}
+          {t('resizeImage.cancel')}
         </Button>
-        <Button onClick={handleUpload}>{t("resizeImage.upload")}</Button>
+        <Button onClick={handleUpload}>{t('resizeImage.upload')}</Button>
       </div>
     </div>
   );

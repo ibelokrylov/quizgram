@@ -96,8 +96,8 @@ export abstract class SchedulerService {
             sql`${quizBidTable.info}
             IS NULL`,
             lt(quizBidTable.updatedAt, DateUtils.toJSDate(minutesAgo)),
-            isNull(quizBidTable.deletedAt),
-          ),
+            isNull(quizBidTable.deletedAt)
+          )
         );
 
       if (bidsToProcess.length === 0) {
@@ -294,8 +294,8 @@ export abstract class SchedulerService {
             isNull(UserTable.deletedAt), // Только не удаленные пользователи
             sql`${userPaymentTable.planId}
             != 1`, // Только платные планы
-            eq(userPaymentTable.isActive, true), // Только активные записи user_payment
-          ),
+            eq(userPaymentTable.isActive, true) // Только активные записи user_payment
+          )
         );
 
       if (usersWithPayments.length === 0) {
@@ -328,8 +328,8 @@ export abstract class SchedulerService {
             DATE
             (
             ${sql.raw('CURRENT_DATE')}
-            )`, // Начинаются сегодня
-          ),
+            )` // Начинаются сегодня
+          )
         );
 
       logger.info('Найдено отсроченных планов для активации', {
@@ -356,10 +356,14 @@ export abstract class SchedulerService {
 
           scheduledPlansActivated++;
         } catch (error) {
-          logger.error('Ошибка при активации отсроченного плана', error instanceof Error ? error : new Error(String(error)), {
-            userId: scheduledPayment.userId,
-            userPaymentId: scheduledPayment.userPaymentId,
-          });
+          logger.error(
+            'Ошибка при активации отсроченного плана',
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              userId: scheduledPayment.userId,
+              userPaymentId: scheduledPayment.userPaymentId,
+            }
+          );
           errors++;
         }
       }
@@ -370,7 +374,10 @@ export abstract class SchedulerService {
           const finalDayAt = DateUtils.fromJSDate(userPayment.finalDayAt);
 
           // Проверяем, заканчивается ли подписка через 2 дня
-          if (DateUtils.isBetweenInclusive(finalDayAt, today, twoDaysLater) && !userPayment.cancelAutoRenew) {
+          if (
+            DateUtils.isBetweenInclusive(finalDayAt, today, twoDaysLater) &&
+            !userPayment.cancelAutoRenew
+          ) {
             try {
               const userLanguage = userPayment.userLanguage || 'ru';
 
@@ -382,14 +389,25 @@ export abstract class SchedulerService {
               const [isFindEmailRemind] = await db
                 .select({ id: mailTable.id })
                 .from(mailTable)
-                .where(and(eq(mailTable.userId, userPayment.userId), gte(mailTable.createdAt, startOfMonth), lt(mailTable.createdAt, startOfNextMonth)))
+                .where(
+                  and(
+                    eq(mailTable.userId, userPayment.userId),
+                    gte(mailTable.createdAt, startOfMonth),
+                    lt(mailTable.createdAt, startOfNextMonth)
+                  )
+                )
                 .limit(1);
 
               if (!isFindEmailRemind) {
                 // Отправляем письмо о предстоящем окончании подписки
                 await MailService.sendPaymentReminder(userPayment.userLogin, userLanguage);
 
-                await db.insert(mailTable).values({ type: 'subscribe_send_info_payment_2_days', userId: userPayment.userId });
+                await db
+                  .insert(mailTable)
+                  .values({
+                    type: 'subscribe_send_info_payment_2_days',
+                    userId: userPayment.userId,
+                  });
 
                 logger.info('Отправлено письмо о предстоящем окончании подписки', {
                   userId: userPayment.userId,
@@ -400,10 +418,14 @@ export abstract class SchedulerService {
                 emailsSent++;
               }
             } catch (emailError) {
-              logger.error('Ошибка при отправке письма', emailError instanceof Error ? emailError : new Error(String(emailError)), {
-                userId: userPayment.userId,
-                email: userPayment.userLogin,
-              });
+              logger.error(
+                'Ошибка при отправке письма',
+                emailError instanceof Error ? emailError : new Error(String(emailError)),
+                {
+                  userId: userPayment.userId,
+                  email: userPayment.userLogin,
+                }
+              );
               errors++;
             }
           }
@@ -422,7 +444,10 @@ export abstract class SchedulerService {
             // 1. Есть subscriptionId
             // 2. Не отменено автопродление (cancelAutoRenew = false)
             // 3. Еще не было попыток списания (paymentAttempts = 0)
-            const canAutoRenew = userPayment.subscriptionId && !userPayment.cancelAutoRenew && userPayment.paymentAttempts === 0;
+            const canAutoRenew =
+              userPayment.subscriptionId &&
+              !userPayment.cancelAutoRenew &&
+              userPayment.paymentAttempts === 0;
 
             if (canAutoRenew) {
               logger.info('Попытка автопродления подписки', {
@@ -442,7 +467,7 @@ export abstract class SchedulerService {
                   userPayment.planId,
                   userPayment.subscriptionId!,
                   userPayment.planPrice,
-                  userPayment.userPaymentId,
+                  userPayment.userPaymentId
                 );
 
                 if (charged) {
@@ -466,14 +491,18 @@ export abstract class SchedulerService {
                     userPayment.userPaymentId,
                     userPayment.userLogin,
                     userPayment.userLanguage,
-                    userPayment.planName,
+                    userPayment.planName
                   );
                 }
               } catch (error) {
-                logger.error('Ошибка при попытке автопродления, перевод на FREE план', error instanceof Error ? error : new Error(String(error)), {
-                  userId: userPayment.userId,
-                  subscriptionId: userPayment.subscriptionId,
-                });
+                logger.error(
+                  'Ошибка при попытке автопродления, перевод на FREE план',
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    userId: userPayment.userId,
+                    subscriptionId: userPayment.subscriptionId,
+                  }
+                );
 
                 // При ошибке переводим на FREE план
                 await this.downgradeToFreePlan(
@@ -481,7 +510,7 @@ export abstract class SchedulerService {
                   userPayment.userPaymentId,
                   userPayment.userLogin,
                   userPayment.userLanguage,
-                  userPayment.planName,
+                  userPayment.planName
                 );
               }
             } else {
@@ -498,15 +527,19 @@ export abstract class SchedulerService {
                 userPayment.userPaymentId,
                 userPayment.userLogin,
                 userPayment.userLanguage,
-                userPayment.planName,
+                userPayment.planName
               );
             }
           }
         } catch (error) {
-          logger.error('Ошибка при обработке платежа пользователя', error instanceof Error ? error : new Error(String(error)), {
-            userId: userPayment.userId,
-            userPaymentId: userPayment.userPaymentId,
-          });
+          logger.error(
+            'Ошибка при обработке платежа пользователя',
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              userId: userPayment.userId,
+              userPaymentId: userPayment.userPaymentId,
+            }
+          );
           errors++;
         }
       }
@@ -523,9 +556,13 @@ export abstract class SchedulerService {
       });
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error('Ошибка при обработке платежей', error instanceof Error ? error : new Error(String(error)), {
-        durationMs: duration,
-      });
+      logger.error(
+        'Ошибка при обработке платежей',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          durationMs: duration,
+        }
+      );
     }
   }
 
@@ -537,7 +574,7 @@ export abstract class SchedulerService {
     userPaymentId: number,
     userLogin: string,
     userLanguage: string | null,
-    planName: string,
+    planName: string
   ): Promise<void> {
     logger.info('Начало перевода на FREE план', {
       userId,
@@ -589,10 +626,18 @@ export abstract class SchedulerService {
           email: userLogin,
         });
       } catch (emailError) {
-        logger.error('Ошибка при отправке письма', emailError instanceof Error ? emailError : new Error(String(emailError)), { userId, email: userLogin });
+        logger.error(
+          'Ошибка при отправке письма',
+          emailError instanceof Error ? emailError : new Error(String(emailError)),
+          { userId, email: userLogin }
+        );
       }
     } catch (error) {
-      logger.error('Ошибка при переводе на FREE план', error instanceof Error ? error : new Error(String(error)), { userId, userPaymentId });
+      logger.error(
+        'Ошибка при переводе на FREE план',
+        error instanceof Error ? error : new Error(String(error)),
+        { userId, userPaymentId }
+      );
       throw error;
     }
   }

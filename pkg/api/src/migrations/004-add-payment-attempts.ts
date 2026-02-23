@@ -1,14 +1,15 @@
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "004-add-payment-attempts",
-  description: "Добавляет поля для отслеживания попыток списания платежей и расширяет enum payment_method",
+  name: '004-add-payment-attempts',
+  description:
+    'Добавляет поля для отслеживания попыток списания платежей и расширяет enum payment_method',
   async up(sql) {
     // Добавляем новые значения в enum payment_method
     await sql`
       ALTER TYPE payment_method ADD VALUE IF NOT EXISTS 'card';
     `;
-    
+
     await sql`
       ALTER TYPE payment_method ADD VALUE IF NOT EXISTS 'bank_transfer';
     `;
@@ -22,4 +23,3 @@ export const migration: MigrationFile = {
     `;
   },
 };
-

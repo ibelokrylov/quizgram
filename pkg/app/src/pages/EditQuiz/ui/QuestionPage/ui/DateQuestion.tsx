@@ -1,17 +1,17 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Quiz, QuizQuestionDate } from "@/entities/Quiz/quiz.type";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Quiz, QuizQuestionDate } from '@/entities/Quiz/quiz.type';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const DateQuestion = ({
   question,
   setQuestion,
 }: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
 }) => {
   const content = question?.content as QuizQuestionDate;
-  const [types, setTypes] = useState<string>(content?.type ?? "calendar");
+  const [types, setTypes] = useState<string>(content?.type ?? 'calendar');
   const { t } = useTranslation();
 
   function onValueChange(v: string) {
@@ -36,9 +36,9 @@ export const DateQuestion = ({
     <Tabs onValueChange={onValueChange} value={types} className="w-[400px]">
       <TabsList>
         <TabsTrigger value="calendar">
-          {t("edit-quiz.question-page.question.date.calendar")}
+          {t('edit-quiz.question-page.question.date.calendar')}
         </TabsTrigger>
-        <TabsTrigger value="mask">{t("edit-quiz.question-page.question.date.mask")}</TabsTrigger>
+        <TabsTrigger value="mask">{t('edit-quiz.question-page.question.date.mask')}</TabsTrigger>
       </TabsList>
     </Tabs>
   );

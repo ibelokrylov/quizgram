@@ -1,12 +1,12 @@
-import type { Quiz, QuizQuestionGroup } from "@/entities/Quiz/quiz.type";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { v7 } from "uuid";
-import { Question } from "./Question";
+import type { Quiz, QuizQuestionGroup } from '@/entities/Quiz/quiz.type';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { v7 } from 'uuid';
+import { Question } from './Question';
 
 export const QuestionGroup = (props: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
 }) => {
   const content = props.question?.content as QuizQuestionGroup;
   const { t } = useTranslation();
@@ -18,10 +18,10 @@ export const QuestionGroup = (props: {
       props.setQuestion({
         ...props.question,
         content: {
-          title: props.question.content?.title ?? "Заголовок группы вопросов",
+          title: props.question.content?.title ?? 'Заголовок группы вопросов',
           questions: [{ uid: v7() }],
         },
-      } as Quiz["question"][0]);
+      } as Quiz['question'][0]);
     }
   }, [content]);
 
@@ -37,9 +37,9 @@ export const QuestionGroup = (props: {
               title: props.question?.content?.title,
               questions: questions,
             },
-          } as Quiz["question"][0])
+          } as Quiz['question'][0])
         }
-        addButtonLabel={t("edit-quiz.question-page.add-question")}
+        addButtonLabel={t('edit-quiz.question-page.add-question')}
       />
     </div>
   );

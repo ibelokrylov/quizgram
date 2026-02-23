@@ -1,17 +1,17 @@
-import { Elysia, t } from "elysia";
-import { and, eq } from "drizzle-orm";
-import { db, type User, userPaymentTable } from "../../db";
-import { logger } from "../../lib/logger";
-import { AuthService } from "../auth/service";
-import { PaymentModel } from "./model";
-import { PaymentService } from "./service";
+import { Elysia, t } from 'elysia';
+import { and, eq } from 'drizzle-orm';
+import { db, type User, userPaymentTable } from '../../db';
+import { logger } from '../../lib/logger';
+import { AuthService } from '../auth/service';
+import { PaymentModel } from './model';
+import { PaymentService } from './service';
 
-export const payment = new Elysia({ prefix: "/payment" })
-  .state("user", null as User | null)
+export const payment = new Elysia({ prefix: '/payment' })
+  .state('user', null as User | null)
   // Публичный webhook endpoint (без авторизации) — должен быть доступен для UnitPay
   // UnitPay отправляет GET запросы с параметрами в формате params[key]=value
   .get(
-    "/unitpay-webhook",
+    '/unitpay-webhook',
     async (ctx) => {
       try {
         // UnitPay отправляет параметры в формате params[key]=value
@@ -19,16 +19,16 @@ export const payment = new Elysia({ prefix: "/payment" })
         const url = new URL(ctx.request.url);
         const searchParams = url.searchParams;
 
-        logger.debug("UnitPay Webhook: Raw query string", {
+        logger.debug('UnitPay Webhook: Raw query string', {
           rawUrl: ctx.request.url,
           searchParamsEntries: Array.from(searchParams.entries()),
         });
 
         // Извлекаем method из корневого уровня
-        const method = searchParams.get("method");
+        const method = searchParams.get('method');
 
         // Извлекаем параметры из params[key] формата
-        const params: Record<string, string> = { method: method || "" };
+        const params: Record<string, string> = { method: method || '' };
         for (const [key, value] of searchParams.entries()) {
           const match = key.match(/^params\[(.+)\]$/);
           if (match) {
@@ -36,7 +36,7 @@ export const payment = new Elysia({ prefix: "/payment" })
           }
         }
 
-        logger.info("UnitPay Webhook: Входящий запрос", {
+        logger.info('UnitPay Webhook: Входящий запрос', {
           method,
           unitpayId: params.unitpayId,
           account: params.account,
@@ -47,44 +47,44 @@ export const payment = new Elysia({ prefix: "/payment" })
           hasSignature: !!params.signature,
         });
 
-        logger.debug("UnitPay Webhook: Все параметры", { params });
+        logger.debug('UnitPay Webhook: Все параметры', { params });
 
         if (!method) {
-          logger.error("UnitPay Webhook: Отсутствует method", { params });
-          return { error: { message: "Missing method" } };
+          logger.error('UnitPay Webhook: Отсутствует method', { params });
+          return { error: { message: 'Missing method' } };
         }
 
         let result: { result: { message: string } } | { error: { message: string } };
 
-        if (method === "check") {
-          logger.info("UnitPay Webhook: Обработка CHECK", { unitpayId: params.unitpayId });
+        if (method === 'check') {
+          logger.info('UnitPay Webhook: Обработка CHECK', { unitpayId: params.unitpayId });
           result = await PaymentService.handleUnitpayCheck(params);
-        } else if (method === "pay") {
-          logger.info("UnitPay Webhook: Обработка PAY", { unitpayId: params.unitpayId });
+        } else if (method === 'pay') {
+          logger.info('UnitPay Webhook: Обработка PAY', { unitpayId: params.unitpayId });
           result = await PaymentService.handleUnitpayPay(params);
-        } else if (method === "error") {
-          logger.info("UnitPay Webhook: Обработка ERROR", {
+        } else if (method === 'error') {
+          logger.info('UnitPay Webhook: Обработка ERROR', {
             unitpayId: params.unitpayId,
             errorMessage: params.errorMessage,
           });
           result = await PaymentService.handleUnitpayError(params);
-        } else if (method === "preauth") {
-          logger.info("UnitPay Webhook: Обработка PREAUTH", { unitpayId: params.unitpayId });
+        } else if (method === 'preauth') {
+          logger.info('UnitPay Webhook: Обработка PREAUTH', { unitpayId: params.unitpayId });
           // PREAUTH не требует действий, просто подтверждаем получение
-          result = { result: { message: "Запрос успешно обработан" } };
+          result = { result: { message: 'Запрос успешно обработан' } };
         } else {
-          logger.error("UnitPay Webhook: Неизвестный method", { method });
-          return { error: { message: "Unknown method" } };
+          logger.error('UnitPay Webhook: Неизвестный method', { method });
+          return { error: { message: 'Unknown method' } };
         }
 
-        logger.info("UnitPay Webhook: Ответ", { method, result });
+        logger.info('UnitPay Webhook: Ответ', { method, result });
         return result;
       } catch (error) {
         logger.error(
-          "UnitPay Webhook: Ошибка обработки",
-          error instanceof Error ? error : new Error(String(error)),
+          'UnitPay Webhook: Ошибка обработки',
+          error instanceof Error ? error : new Error(String(error))
         );
-        return { error: { message: "Internal error" } };
+        return { error: { message: 'Internal error' } };
       }
     },
     {
@@ -94,7 +94,7 @@ export const payment = new Elysia({ prefix: "/payment" })
           t.Object({ error: t.Object({ message: t.String() }) }),
         ]),
       },
-    },
+    }
   )
   // Защищённые endpoints (требуют авторизации)
   .guard(
@@ -102,11 +102,9 @@ export const payment = new Elysia({ prefix: "/payment" })
       async beforeHandle(ctx) {
         if (!ctx.cookie.token.value) {
           ctx.set.status = 401;
-          return { message: "Unauthorized" };
+          return { message: 'Unauthorized' };
         } else {
-          const user = await AuthService.getUserFromToken(
-            ctx.cookie.token.value.toString(),
-          );
+          const user = await AuthService.getUserFromToken(ctx.cookie.token.value.toString());
           ctx.store.user = (user || null) as User | null;
         }
       },
@@ -114,12 +112,12 @@ export const payment = new Elysia({ prefix: "/payment" })
     (app) =>
       app
         .post(
-          "/create",
+          '/create',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             try {
@@ -129,56 +127,49 @@ export const payment = new Elysia({ prefix: "/payment" })
               };
 
               const planId = Number(body.planId);
-              const upLimitId = body.upLimitId
-                ? Number(body.upLimitId)
-                : undefined;
+              const upLimitId = body.upLimitId ? Number(body.upLimitId) : undefined;
 
-              logger.debug("Payment Controller: Запрос на создание платежа", {
+              logger.debug('Payment Controller: Запрос на создание платежа', {
                 userId: user.id,
                 planId,
                 upLimitId,
               });
 
               if (isNaN(planId)) {
-                logger.error("Payment Controller: Невалидный planId", {
+                logger.error('Payment Controller: Невалидный planId', {
                   userId: user.id,
                   planId: body.planId,
                 });
                 ctx.set.status = 400;
                 return {
-                  message: "create-payment@error",
-                  error: "Invalid plan ID",
+                  message: 'create-payment@error',
+                  error: 'Invalid plan ID',
                 };
               }
 
-              const result = await PaymentService.createPayment(
-                user.id,
-                planId,
-                upLimitId,
-              );
+              const result = await PaymentService.createPayment(user.id, planId, upLimitId);
 
-              logger.info("Payment Controller: Платёж создан успешно", {
+              logger.info('Payment Controller: Платёж создан успешно', {
                 userId: user.id,
                 paymentId: result.paymentId,
                 planId,
               });
 
               return {
-                message: "ok",
+                message: 'ok',
                 data: result,
               };
             } catch (error) {
               logger.error(
-                "Error creating payment",
+                'Error creating payment',
                 error instanceof Error ? error : new Error(String(error)),
-                { userId: user.id },
+                { userId: user.id }
               );
 
               ctx.set.status = 400;
               return {
-                message: "create-payment@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'create-payment@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
             }
           },
@@ -197,75 +188,72 @@ export const payment = new Elysia({ prefix: "/payment" })
                 message: t.String(),
               }),
             },
-          },
+          }
         )
-        .get("/status/:paymentId", async (ctx) => {
+        .get('/status/:paymentId', async (ctx) => {
           const user: User | null = ctx.store.user;
           if (!user) {
             ctx.set.status = 401;
-            return { message: "Unauthorized" };
+            return { message: 'Unauthorized' };
           }
 
           try {
             const paymentId = Number(ctx.params.paymentId);
 
-            logger.debug("Payment Controller: Запрос статуса платежа", {
+            logger.debug('Payment Controller: Запрос статуса платежа', {
               userId: user.id,
               paymentId: ctx.params.paymentId,
             });
 
             if (isNaN(paymentId)) {
-              logger.error("Payment Controller: Невалидный paymentId", {
+              logger.error('Payment Controller: Невалидный paymentId', {
                 userId: user.id,
                 paymentId: ctx.params.paymentId,
               });
               ctx.set.status = 400;
               return {
-                message: "get-payment-status@error",
-                error: "Invalid payment ID",
+                message: 'get-payment-status@error',
+                error: 'Invalid payment ID',
               };
             }
 
-            const paymentStatus = await PaymentService.getPaymentStatus(
-              paymentId,
-              user.id,
-            );
+            const paymentStatus = await PaymentService.getPaymentStatus(paymentId, user.id);
 
-            logger.debug("Payment Controller: Статус платежа получен", {
+            logger.debug('Payment Controller: Статус платежа получен', {
               userId: user.id,
               paymentId,
               status: paymentStatus.status,
             });
 
             return {
-              message: "ok",
+              message: 'ok',
               data: paymentStatus,
             };
           } catch (error) {
             logger.error(
-              "Error getting payment status",
+              'Error getting payment status',
               error instanceof Error ? error : new Error(String(error)),
-              { userId: user.id },
+              { userId: user.id }
             );
 
             ctx.set.status = 404;
             return {
-              message: "get-payment-status@error",
-              error: error instanceof Error ? error.message : "Unknown error",
+              message: 'get-payment-status@error',
+              error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
         })
-        .get("/up-limits", async (ctx) => {
+        .get('/up-limits', async (ctx) => {
           const user: User | null = ctx.store.user;
           if (!user) {
             ctx.set.status = 401;
-            return { message: "Unauthorized" };
+            return { message: 'Unauthorized' };
           }
 
           try {
             const upLimits = await PaymentService.getUpLimits();
             return {
-              message: "ok",
+              message: 'ok',
               data: upLimits.map((ul) => ({
                 id: ul.id,
                 bid: ul.bid,
@@ -274,56 +262,56 @@ export const payment = new Elysia({ prefix: "/payment" })
             };
           } catch (error) {
             logger.error(
-              "Error getting up_limits",
-              error instanceof Error ? error : new Error(String(error)),
+              'Error getting up_limits',
+              error instanceof Error ? error : new Error(String(error))
             );
             ctx.set.status = 500;
             return {
-              message: "error",
-              error: error instanceof Error ? error.message : "Unknown error",
+              message: 'error',
+              error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
         })
         .post(
-          "/:planId",
+          '/:planId',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             try {
               const planId = Number(ctx.params.planId);
 
-              logger.debug("Payment Controller: Запрос на обновление плана", {
+              logger.debug('Payment Controller: Запрос на обновление плана', {
                 userId: user.id,
                 planId: ctx.params.planId,
                 currentPlanId: user.planId,
               });
 
               if (isNaN(planId)) {
-                logger.error("Payment Controller: Невалидный planId для обновления", {
+                logger.error('Payment Controller: Невалидный planId для обновления', {
                   userId: user.id,
                   planId: ctx.params.planId,
                 });
                 ctx.set.status = 400;
                 return {
-                  message: "update-plan@error",
-                  error: "Invalid plan ID",
+                  message: 'update-plan@error',
+                  error: 'Invalid plan ID',
                 };
               }
 
               const plan = await PaymentService.updateUserPlan(user.id, planId);
 
-              logger.info("Payment Controller: План обновлён успешно", {
+              logger.info('Payment Controller: План обновлён успешно', {
                 userId: user.id,
                 newPlanId: plan.id,
                 newPlanName: plan.name,
               });
 
               const response: PaymentModel.updatePlanSuccessResponse = {
-                message: "ok",
+                message: 'ok',
                 data: {
                   planId: plan.id,
                   planName: plan.name,
@@ -333,16 +321,15 @@ export const payment = new Elysia({ prefix: "/payment" })
               return response;
             } catch (error) {
               logger.error(
-                "Error updating user plan",
+                'Error updating user plan',
                 error instanceof Error ? error : new Error(String(error)),
-                { userId: user.id, planId: ctx.params.planId },
+                { userId: user.id, planId: ctx.params.planId }
               );
 
               ctx.set.status = 400;
               const response: PaymentModel.updatePlanErrorResponse = {
-                message: "update-plan@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'update-plan@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
               return response;
             }
@@ -358,25 +345,25 @@ export const payment = new Elysia({ prefix: "/payment" })
                 message: t.String(),
               }),
             },
-          },
+          }
         )
         .post(
-          "/cancel-subscription",
+          '/cancel-subscription',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             try {
-              logger.info("Payment Controller: Запрос на отмену подписки", {
+              logger.info('Payment Controller: Запрос на отмену подписки', {
                 userId: user.id,
               });
 
               await PaymentService.cancelSubscription(user.id);
 
-              logger.info("Payment Controller: Подписка отменена", {
+              logger.info('Payment Controller: Подписка отменена', {
                 userId: user.id,
               });
 
@@ -387,37 +374,34 @@ export const payment = new Elysia({ prefix: "/payment" })
                 })
                 .from(userPaymentTable)
                 .where(
-                  and(
-                    eq(userPaymentTable.userId, user.id),
-                    eq(userPaymentTable.isActive, true),
-                  ),
+                  and(eq(userPaymentTable.userId, user.id), eq(userPaymentTable.isActive, true))
                 )
                 .limit(1);
 
-              const finalDayAt = activePayments.length > 0
-                ? activePayments[0].finalDayAt.toISOString()
-                : new Date().toISOString();
+              const finalDayAt =
+                activePayments.length > 0
+                  ? activePayments[0].finalDayAt.toISOString()
+                  : new Date().toISOString();
 
               return {
-                message: "ok",
+                message: 'ok',
                 data: {
                   planId: user.planId,
-                  planName: "Подписка будет отменена",
+                  planName: 'Подписка будет отменена',
                   finalDayAt,
                 },
               };
             } catch (error) {
               logger.error(
-                "Error cancelling subscription",
+                'Error cancelling subscription',
                 error instanceof Error ? error : new Error(String(error)),
-                { userId: user.id },
+                { userId: user.id }
               );
 
               ctx.set.status = 400;
               const response: PaymentModel.cancelSubscriptionErrorResponse = {
-                message: "cancel-subscription@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'cancel-subscription@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
               return response;
             }
@@ -430,6 +414,6 @@ export const payment = new Elysia({ prefix: "/payment" })
                 message: t.String(),
               }),
             },
-          },
-        ),
+          }
+        )
   );

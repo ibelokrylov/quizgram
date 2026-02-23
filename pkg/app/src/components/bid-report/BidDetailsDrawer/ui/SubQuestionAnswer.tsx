@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import AnswerRenderer from "./AnswerRenderer";
+import { Badge } from '@/components/ui/badge';
+import AnswerRenderer from './AnswerRenderer';
 
 export interface SubQuestionAnswerProps {
   subAnswer: any;
@@ -17,7 +17,7 @@ const SubQuestionAnswer = ({
 }: SubQuestionAnswerProps & { t: (key: string) => string; isNew: boolean; files: [] }) => {
   const subQuestionUid = subAnswer?.question_uid;
   const subTitle = subQuestion?.content?.title || subQuestion?.title || null;
-  const subTypeRaw = subQuestion?.type || "unknown";
+  const subTypeRaw = subQuestion?.type || 'unknown';
   const subTypeLabel = questionTypeLabelByType.get(subTypeRaw) || subTypeRaw;
 
   return (
@@ -31,7 +31,7 @@ const SubQuestionAnswer = ({
         )}
       </div>
       {subTitle && <div className="text-xs lg:text-sm font-medium">{subTitle}</div>}
-      <div className={subTitle ? "" : "pt-1"}>
+      <div className={subTitle ? '' : 'pt-1'}>
         <AnswerRenderer
           isNew={isNew}
           answer={{ answer: subAnswer?.answer, files }}

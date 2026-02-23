@@ -7,7 +7,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { usePlans } from '@/entities/User/usePlans';
 import http from '@/lib/http';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -71,7 +79,9 @@ function RouteComponent() {
               <TableCell>{user.id}</TableCell>
               <TableCell>{user.login}</TableCell>
               <TableCell>{user.name}</TableCell>
-              <TableCell>{plans.query.data?.find((plan) => plan.id === user.planId)?.name}</TableCell>
+              <TableCell>
+                {plans.query.data?.find((plan) => plan.id === user.planId)?.name}
+              </TableCell>
               <TableCell>{user.quizCount}</TableCell>
               <TableCell>{user.isVerification ? 'true' : 'false'}</TableCell>
               <TableCell>{user.language}</TableCell>
@@ -89,14 +99,18 @@ function RouteComponent() {
           </PaginationItem>
           {offset !== 1 ? (
             <PaginationItem>
-              <PaginationLink onClick={() => handlePageChange(offset - 1)}>{offset - 1}</PaginationLink>
+              <PaginationLink onClick={() => handlePageChange(offset - 1)}>
+                {offset - 1}
+              </PaginationLink>
             </PaginationItem>
           ) : null}
           <PaginationItem>
             <PaginationLink isActive>{offset}</PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink onClick={() => handlePageChange(offset + 1)}>{offset + 1}</PaginationLink>
+            <PaginationLink onClick={() => handlePageChange(offset + 1)}>
+              {offset + 1}
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
             <PaginationEllipsis />

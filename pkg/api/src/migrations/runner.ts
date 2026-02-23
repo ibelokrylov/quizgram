@@ -1,10 +1,10 @@
 // Runner для выполнения миграций
 // Автоматически проверяет и выполняет новые миграции
 
-import postgres from "postgres";
-import { db, migrationTable } from "../db";
-import { logger } from "../lib/logger";
-import type { MigrationFile, MigrationStatus } from "./types";
+import postgres from 'postgres';
+import { db, migrationTable } from '../db';
+import { logger } from '../lib/logger';
+import type { MigrationFile, MigrationStatus } from './types';
 
 export class MigrationRunner {
   private sql: postgres.Sql;
@@ -23,20 +23,18 @@ export class MigrationRunner {
         executed_at TIMESTAMP NOT NULL DEFAULT NOW()
       )
     `;
-    logger.info("Таблица миграций проверена/создана");
+    logger.info('Таблица миграций проверена/создана');
   }
 
   // Получение списка выполненных миграций
   private async getExecutedMigrations(): Promise<Set<string>> {
     try {
-      const executed = await db
-        .select({ name: migrationTable.name })
-        .from(migrationTable);
-      
+      const executed = await db.select({ name: migrationTable.name }).from(migrationTable);
+
       return new Set(executed.map((m) => m.name));
     } catch (error) {
       // Если таблица не существует, вернём пустой Set
-      logger.warn("Не удалось получить выполненные миграции, таблица может не существовать", {
+      logger.warn('Не удалось получить выполненные миграции, таблица может не существовать', {
         error: error instanceof Error ? error.message : String(error),
       });
       return new Set();
@@ -47,14 +45,12 @@ export class MigrationRunner {
   async getStatus(): Promise<MigrationStatus[]> {
     await this.ensureMigrationTable();
     const executedMigrations = await this.getExecutedMigrations();
-    
+
     // Получаем детальную информацию о выполненных миграциях
     const executedDetails = new Map<string, Date>();
     if (executedMigrations.size > 0) {
-      const details = await db
-        .select()
-        .from(migrationTable);
-      
+      const details = await db.select().from(migrationTable);
+
       for (const migration of details) {
         executedDetails.set(migration.name, migration.executedAt);
       }
@@ -70,17 +66,15 @@ export class MigrationRunner {
 
   // Выполнение всех pending миграций
   async runPending(): Promise<void> {
-    logger.info("Запуск системы миграций...");
-    
+    logger.info('Запуск системы миграций...');
+
     await this.ensureMigrationTable();
     const executedMigrations = await this.getExecutedMigrations();
 
-    const pendingMigrations = this.migrations.filter(
-      (m) => !executedMigrations.has(m.name)
-    );
+    const pendingMigrations = this.migrations.filter((m) => !executedMigrations.has(m.name));
 
     if (pendingMigrations.length === 0) {
-      logger.info("✅ Все миграции уже выполнены");
+      logger.info('✅ Все миграции уже выполнены');
       return;
     }
 
@@ -106,7 +100,7 @@ export class MigrationRunner {
       }
     }
 
-    logger.info("✅ Все миграции успешно применены");
+    logger.info('✅ Все миграции успешно применены');
   }
 
   // Закрытие соединения
@@ -114,4 +108,3 @@ export class MigrationRunner {
     await this.sql.end();
   }
 }
-

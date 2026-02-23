@@ -1,13 +1,13 @@
-import { get, set } from "@/app/db/index-db";
-import { CreateQuizContextProvider } from "@/entities/Quiz/CreateQuiz.context";
-import type { Quiz } from "@/entities/Quiz/quiz.type";
-import http from "@/lib/http";
-import { EditQuiz } from "@/pages/EditQuiz";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { v7 } from "uuid";
+import { get, set } from '@/app/db/index-db';
+import { CreateQuizContextProvider } from '@/entities/Quiz/CreateQuiz.context';
+import type { Quiz } from '@/entities/Quiz/quiz.type';
+import http from '@/lib/http';
+import { EditQuiz } from '@/pages/EditQuiz';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { v7 } from 'uuid';
 
-export const Route = createFileRoute("/app/quiz/$uid")({
+export const Route = createFileRoute('/app/quiz/$uid')({
   component: RouteComponent,
   loader: async ({ params }) => {
     try {
@@ -25,27 +25,27 @@ export const Route = createFileRoute("/app/quiz/$uid")({
             uid: v7(),
             form: [
               {
-                type: "name",
-                label: "Имя",
-                placeholder: "Иван",
+                type: 'name',
+                label: 'Имя',
+                placeholder: 'Иван',
                 required: true,
                 mask: undefined,
                 step: 0,
               },
               {
-                type: "email",
-                label: "Email",
-                placeholder: "mail@example.com",
+                type: 'email',
+                label: 'Email',
+                placeholder: 'mail@example.com',
                 required: true,
                 mask: undefined,
                 step: 0,
               },
               {
-                type: "phone",
-                label: "Телефон",
-                placeholder: "+7 (999) 999-99-99",
+                type: 'phone',
+                label: 'Телефон',
+                placeholder: '+7 (999) 999-99-99',
                 required: true,
-                mask: "+7 (###) ###-##-##",
+                mask: '+7 (###) ###-##-##',
                 step: 0,
               },
             ],
@@ -60,14 +60,14 @@ export const Route = createFileRoute("/app/quiz/$uid")({
       if (Object.keys(data?.thxPage ?? {})?.length === 0) {
         data.thxPage = {
           uid: v7(),
-          title: "Спасибо, [name]!",
-          description: "Здесь может быть любой текст",
+          title: 'Спасибо, [name]!',
+          description: 'Здесь может быть любой текст',
           buttons: [],
           social: [],
         };
         isLoadToServer = false;
       }
-      console.log("data", data);
+      console.log('data', data);
       await set(uid, { data: data, isLoadToServer });
       return { quiz: data, isLoadToServer };
     } catch (error) {
@@ -83,7 +83,7 @@ function RouteComponent() {
 
   useEffect(() => {
     if (!quiz) {
-      navigate({ to: "/app" });
+      navigate({ to: '/app' });
     }
   }, [quiz]);
 

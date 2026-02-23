@@ -1,20 +1,20 @@
-import http from "@/lib/http";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import type { BidsListData, BidsListFilters, BidDetails } from "./bid.type";
+import http from '@/lib/http';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import type { BidsListData, BidsListFilters, BidDetails } from './bid.type';
 
 async function fetchBids(filters: BidsListFilters = {}): Promise<BidsListData> {
   const params = new URLSearchParams();
-  if (filters.quiz_uid) params.append("quiz_uid", filters.quiz_uid);
-  if (filters.status) params.append("status", filters.status);
-  if (filters.isFull !== undefined) params.append("isFull", String(filters.isFull));
-  if (filters.isRead !== undefined) params.append("isRead", String(filters.isRead));
-  if (filters.limit) params.append("limit", String(filters.limit));
-  if (filters.offset !== undefined) params.append("offset", String(filters.offset));
+  if (filters.quiz_uid) params.append('quiz_uid', filters.quiz_uid);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.isFull !== undefined) params.append('isFull', String(filters.isFull));
+  if (filters.isRead !== undefined) params.append('isRead', String(filters.isRead));
+  if (filters.limit) params.append('limit', String(filters.limit));
+  if (filters.offset !== undefined) params.append('offset', String(filters.offset));
 
   const queryString = params.toString();
-  const url = `/v1/bids${queryString ? `?${queryString}` : ""}`;
+  const url = `/v1/bids${queryString ? `?${queryString}` : ''}`;
 
   const response = await http<BidsListData>({
     url,
@@ -24,7 +24,7 @@ async function fetchBids(filters: BidsListFilters = {}): Promise<BidsListData> {
 
 export const useBids = (filters?: BidsListFilters) => {
   const query = useQuery({
-    queryKey: ["bids", filters],
+    queryKey: ['bids', filters],
     queryFn: () => fetchBids(filters),
     retry: false,
     retryOnMount: false,
@@ -34,11 +34,11 @@ export const useBids = (filters?: BidsListFilters) => {
   return { query };
 };
 
-export const useInfiniteBids = (filters?: Omit<BidsListFilters, "offset">) => {
+export const useInfiniteBids = (filters?: Omit<BidsListFilters, 'offset'>) => {
   const limit = filters?.limit || 10;
 
   return useInfiniteQuery({
-    queryKey: ["bids", "infinite", filters],
+    queryKey: ['bids', 'infinite', filters],
     queryFn: ({ pageParam = 0 }) => fetchBids({ ...filters, offset: pageParam as number, limit }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
@@ -55,7 +55,7 @@ export const useInfiniteBids = (filters?: Omit<BidsListFilters, "offset">) => {
 async function deleteBid(key: string): Promise<void> {
   await http({
     url: `/v1/bids/${key}`,
-    method: "DELETE",
+    method: 'DELETE',
   });
 }
 
@@ -66,7 +66,7 @@ export const useDeleteBid = () => {
     mutationFn: deleteBid,
     onSuccess: () => {
       // Инвалидируем все запросы заявок, чтобы обновить список
-      queryClient.invalidateQueries({ queryKey: ["bids"] });
+      queryClient.invalidateQueries({ queryKey: ['bids'] });
     },
   });
 };
@@ -80,7 +80,7 @@ async function fetchBidDetails(key: string): Promise<BidDetails> {
 
 export const useBidDetails = (key: string | undefined) => {
   return useQuery({
-    queryKey: ["bids", "details", key],
+    queryKey: ['bids', 'details', key],
     queryFn: () => fetchBidDetails(key!),
     enabled: !!key,
     retry: false,
@@ -97,7 +97,7 @@ export const useMarkBidAsRead = () => {
   const queryClient = useQueryClient();
 
   return (key: string) => {
-    queryClient.setQueriesData({ queryKey: ["bids", "infinite"] }, (oldData: any) => {
+    queryClient.setQueriesData({ queryKey: ['bids', 'infinite'] }, (oldData: any) => {
       if (!oldData) return oldData;
 
       return {
@@ -118,15 +118,15 @@ export const useUpdateBidStatus = () => {
   return useMutation({
     mutationFn: async ({ key, status }: { key: string; status: string }) => {
       await http({
-        url: "/v1/bids/status",
-        method: "PUT",
+        url: '/v1/bids/status',
+        method: 'PUT',
         body: { key, status },
       });
     },
     onSuccess: (_, variables) => {
       // Обновляем кеш деталей заявки
       queryClient.setQueryData(
-        ["bids", "details", variables.key],
+        ['bids', 'details', variables.key],
         (oldData: BidDetails | undefined) => {
           if (!oldData) return oldData;
           return { ...oldData, status: variables.status };
@@ -134,7 +134,7 @@ export const useUpdateBidStatus = () => {
       );
 
       // Обновляем кеш списка заявок
-      queryClient.setQueriesData({ queryKey: ["bids", "infinite"] }, (oldData: any) => {
+      queryClient.setQueriesData({ queryKey: ['bids', 'infinite'] }, (oldData: any) => {
         if (!oldData) return oldData;
 
         return {
@@ -153,45 +153,45 @@ export const useUpdateBidStatus = () => {
 
 // Хук для экспорта заявок
 export const useExportBids = () => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
 
   return useMutation({
     mutationFn: async ({
       filters,
       format,
     }: {
-      filters: Omit<BidsListFilters, "limit" | "offset">;
-      format: "csv" | "excel";
+      filters: Omit<BidsListFilters, 'limit' | 'offset'>;
+      format: 'csv' | 'excel';
     }) => {
       // Формируем query параметры
       const params = new URLSearchParams();
-      params.append("format", format);
-      if (filters.quiz_uid) params.append("quiz_uid", filters.quiz_uid);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.isFull !== undefined) params.append("isFull", String(filters.isFull));
-      if (filters.isRead !== undefined) params.append("isRead", String(filters.isRead));
+      params.append('format', format);
+      if (filters.quiz_uid) params.append('quiz_uid', filters.quiz_uid);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.isFull !== undefined) params.append('isFull', String(filters.isFull));
+      if (filters.isRead !== undefined) params.append('isRead', String(filters.isRead));
 
       const queryString = params.toString();
-      const url = `/v1/bids/export${queryString ? `?${queryString}` : ""}`;
+      const url = `/v1/bids/export${queryString ? `?${queryString}` : ''}`;
 
       // Делаем запрос для получения файла
       const apiUrl = import.meta.env.VITE_PUBLIC_API_URL + url;
       const response = await fetch(apiUrl, {
-        credentials: "include",
-        method: "GET",
+        credentials: 'include',
+        method: 'GET',
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData?.error || "Failed to export bids");
+        throw new Error(errorData?.error || 'Failed to export bids');
       }
 
       // Получаем файл как Blob
       const blob = await response.blob();
 
       // Определяем имя файла из заголовка Content-Disposition или генерируем
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let fileName = `bids_report_${new Date().toISOString().split("T")[0]}.${format === "csv" ? "csv" : "xlsx"}`;
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let fileName = `bids_report_${new Date().toISOString().split('T')[0]}.${format === 'csv' ? 'csv' : 'xlsx'}`;
 
       if (contentDisposition) {
         const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i);
@@ -202,7 +202,7 @@ export const useExportBids = () => {
 
       // Создаем временную ссылку и скачиваем файл
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = fileName;
       document.body.appendChild(link);
@@ -210,10 +210,10 @@ export const useExportBids = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
 
-      toast.success(t("bids.export.success"));
+      toast.success(t('bids.export.success'));
     },
     onError: (error: Error) => {
-      toast.error(t("bids.export.error"), {
+      toast.error(t('bids.export.error'), {
         description: error.message,
       });
     },

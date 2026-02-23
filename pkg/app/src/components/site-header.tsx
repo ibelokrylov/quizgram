@@ -52,34 +52,28 @@ export function SiteHeader() {
   const titleKey = getTitleByPath(router.pathname);
 
   return (
-    <header className='flex h-[68px] sm:h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)'>
-      <div className='flex flex-row gap-2 items-center max-w-[1400px] w-full pr-3'>
-        <div className='flex sm:hidden flex-wrap w-full items-center gap-1 px-4'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator
-            orientation='vertical'
-            className='mx-2 data-[orientation=vertical]:h-4'
-          />
+    <header className="flex h-[68px] sm:h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex flex-row gap-2 items-center max-w-[1400px] w-full pr-3">
+        <div className="flex sm:hidden flex-wrap w-full items-center gap-1 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
           <div className={'flex flex-col gap-1'}>
-            <h1 className='text-base font-medium'>{titleKey ? t(titleKey) : t('titles.app')}</h1>
+            <h1 className="text-base font-medium">{titleKey ? t(titleKey) : t('titles.app')}</h1>
             {headerContent ? <>{headerContent}</> : null}
           </div>
         </div>
-        <div className='hidden sm:flex flex-wrap w-full items-center gap-1 px-4'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator
-            orientation='vertical'
-            className='mx-2 data-[orientation=vertical]:h-4'
-          />
-          <h1 className='text-base font-medium'>{titleKey ? t(titleKey) : t('titles.app')}</h1>
+        <div className="hidden sm:flex flex-wrap w-full items-center gap-1 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+          <h1 className="text-base font-medium">{titleKey ? t(titleKey) : t('titles.app')}</h1>
           {headerContent ? (
-            <div className='flex items-center gap-2'>
+            <div className="flex items-center gap-2">
               <Separator orientation={'vertical'} />
               {headerContent}
             </div>
           ) : null}
         </div>
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
         </div>

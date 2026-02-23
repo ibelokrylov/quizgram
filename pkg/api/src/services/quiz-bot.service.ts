@@ -1,9 +1,9 @@
-import { logger } from "../lib/logger";
-import { BaseTelegramBotService, type TelegramUpdate } from "./base-telegram-bot.service";
-import { CrmBotService } from "./crm-bot.service";
+import { logger } from '../lib/logger';
+import { BaseTelegramBotService, type TelegramUpdate } from './base-telegram-bot.service';
+import { CrmBotService } from './crm-bot.service';
 
 // Экспортируем типы для обратной совместимости
-export type { TelegramChat, TelegramMessage, TelegramUpdate } from "./base-telegram-bot.service";
+export type { TelegramChat, TelegramMessage, TelegramUpdate } from './base-telegram-bot.service';
 
 /**
  * Сервис квиз-бота Quizgram.
@@ -17,7 +17,7 @@ export abstract class QuizBotService extends BaseTelegramBotService {
   static async handleUpdate(update: TelegramUpdate): Promise<void> {
     const message = update.message;
 
-    logger.debug("Получен апдейт от Telegram для квиз-бота", {
+    logger.debug('Получен апдейт от Telegram для квиз-бота', {
       updateId: update.update_id,
       hasMessage: !!message,
       chatId: message?.chat.id,
@@ -25,7 +25,7 @@ export abstract class QuizBotService extends BaseTelegramBotService {
     });
 
     if (!message || !message.text) {
-      logger.debug("Получен апдейт без текстового сообщения для квиз-бота", {
+      logger.debug('Получен апдейт без текстового сообщения для квиз-бота', {
         updateId: update.update_id,
       });
       return;
@@ -33,40 +33,40 @@ export abstract class QuizBotService extends BaseTelegramBotService {
 
     const text = message.text.trim();
 
-    if (text === "/start") {
-      logger.debug("Обработка команды /start квиз-бота", {
+    if (text === '/start') {
+      logger.debug('Обработка команды /start квиз-бота', {
         updateId: update.update_id,
         chatId: message.chat.id,
       });
       const name = BaseTelegramBotService.getUserDisplayName(message);
       const welcomeText =
         `Привет, ${name}! 🎉\n\n` +
-        "Это QuizGram — конструктор квизов в Telegram Mini App\n\n" +
-        "Создавайте квизы, которые открываются мгновенно, цепляют внимание и собирают заявки прямо внутри Telegram — без сайта и программиста.\n\n" +
-        "Сейчас берём первые проекты и бесплатно внедряем квиз в ваш Telegram-канал или продукт.";
+        'Это QuizGram — конструктор квизов в Telegram Mini App\n\n' +
+        'Создавайте квизы, которые открываются мгновенно, цепляют внимание и собирают заявки прямо внутри Telegram — без сайта и программиста.\n\n' +
+        'Сейчас берём первые проекты и бесплатно внедряем квиз в ваш Telegram-канал или продукт.';
 
       const keyboard = {
         inline_keyboard: [
           [
             {
-              text: "Внедрить квиз бесплатно",
-              url: "https://t.me/Quiz_gram_bot?startapp=2cd17041-1d5d-4b82-a7cf-12c0d583d1ad",
+              text: 'Внедрить квиз бесплатно',
+              url: 'https://t.me/Quiz_gram_bot?startapp=2cd17041-1d5d-4b82-a7cf-12c0d583d1ad',
             },
           ],
           [
             {
-              text: "Подробнее о продукте",
-              url: "https://quizgram.site",
+              text: 'Подробнее о продукте',
+              url: 'https://quizgram.site',
             },
           ],
         ],
       };
 
       await BaseTelegramBotService.sendMessage(
-        "BOT_QUIZ_TOKEN",
+        'BOT_QUIZ_TOKEN',
         message.chat.id,
         welcomeText,
-        "HTML",
+        'HTML',
         false,
         keyboard
       );
@@ -74,7 +74,7 @@ export abstract class QuizBotService extends BaseTelegramBotService {
     }
 
     // Остальные команды пока игнорируем
-    logger.debug("Квиз-бот получил не поддерживаемую команду", {
+    logger.debug('Квиз-бот получил не поддерживаемую команду', {
       updateId: update.update_id,
       text,
     });
@@ -87,33 +87,33 @@ export abstract class QuizBotService extends BaseTelegramBotService {
  */
 export function initTelegramBotsOnStartup(): void {
   try {
-    logger.info("Инициализация Telegram ботов при старте API", {
-      mode: "polling",
+    logger.info('Инициализация Telegram ботов при старте API', {
+      mode: 'polling',
     });
 
     // Всегда запускаем polling для обоих ботов
-    logger.info("Запуск polling для Telegram ботов");
+    logger.info('Запуск polling для Telegram ботов');
 
-    BaseTelegramBotService.startPolling("BOT_QUIZ_TOKEN", QuizBotService.handleUpdate).catch(
+    BaseTelegramBotService.startPolling('BOT_QUIZ_TOKEN', QuizBotService.handleUpdate).catch(
       (error) => {
         logger.error(
-          "Ошибка при запуске polling для квиз-бота",
+          'Ошибка при запуске polling для квиз-бота',
           error instanceof Error ? error : new Error(String(error))
         );
       }
     );
 
-    BaseTelegramBotService.startPolling("BOT_CRM_TOKEN", CrmBotService.handleUpdate).catch(
+    BaseTelegramBotService.startPolling('BOT_CRM_TOKEN', CrmBotService.handleUpdate).catch(
       (error) => {
         logger.error(
-          "Ошибка при запуске polling для CRM-бота",
+          'Ошибка при запуске polling для CRM-бота',
           error instanceof Error ? error : new Error(String(error))
         );
       }
     );
   } catch (error) {
     logger.error(
-      "Ошибка инициализации Telegram ботов при старте",
+      'Ошибка инициализации Telegram ботов при старте',
       error instanceof Error ? error : new Error(String(error))
     );
   }
@@ -123,7 +123,7 @@ export function initTelegramBotsOnStartup(): void {
  * Останавливает все Telegram боты (останавливает polling и очищает кэш)
  */
 export async function stopTelegramBots(): Promise<void> {
-  logger.info("Остановка Telegram ботов");
+  logger.info('Остановка Telegram ботов');
 
   const bots = Array.from(BaseTelegramBotService.getBotsCache().entries());
 
@@ -132,11 +132,11 @@ export async function stopTelegramBots(): Promise<void> {
       // Останавливаем polling если он был запущен
       if (bot.isPolling()) {
         await bot.stopPolling();
-        logger.info("Polling остановлен для Telegram бота", { tokenEnvKey });
+        logger.info('Polling остановлен для Telegram бота', { tokenEnvKey });
       }
     } catch (error) {
       logger.error(
-        "Ошибка при остановке Telegram бота",
+        'Ошибка при остановке Telegram бота',
         error instanceof Error ? error : new Error(String(error)),
         { tokenEnvKey }
       );
@@ -146,5 +146,5 @@ export async function stopTelegramBots(): Promise<void> {
   // Очищаем кэш ботов
   BaseTelegramBotService.getBotsCache().clear();
 
-  logger.info("Все Telegram боты остановлены");
+  logger.info('Все Telegram боты остановлены');
 }

@@ -5,6 +5,7 @@
 ## Зачем Luxon?
 
 Luxon обеспечивает:
+
 - ✅ Надёжную работу с часовыми поясами
 - ✅ Удобное API для манипуляций с датами
 - ✅ Иммутабельность (в отличие от нативного Date)
@@ -20,7 +21,7 @@ Luxon обеспечивает:
 #### Получение текущей даты/времени
 
 ```typescript
-import * as DateUtils from "../lib/date-utils";
+import * as DateUtils from '../lib/date-utils';
 
 // Текущая дата/время
 const now = DateUtils.now();
@@ -56,10 +57,10 @@ const iso = DateUtils.toISO(now); // "2025-12-24T19:52:17.000Z"
 const date = DateUtils.formatDate(now); // "2025-12-24"
 
 // Кастомный формат
-const custom = DateUtils.format(now, "dd.MM.yyyy HH:mm"); // "24.12.2025 19:52"
+const custom = DateUtils.format(now, 'dd.MM.yyyy HH:mm'); // "24.12.2025 19:52"
 
 // Для отображения пользователю (локализованный)
-const userDate = DateUtils.formatUserDate(now, "ru"); // "24 декабря 2025 г."
+const userDate = DateUtils.formatUserDate(now, 'ru'); // "24 декабря 2025 г."
 ```
 
 #### Сравнение дат
@@ -70,16 +71,16 @@ const date2 = DateUtils.addDays(date1, 1);
 
 // Проверка порядка
 if (DateUtils.isBefore(date1, date2)) {
-  console.log("date1 раньше date2");
+  console.log('date1 раньше date2');
 }
 
 if (DateUtils.isAfter(date2, date1)) {
-  console.log("date2 позже date1");
+  console.log('date2 позже date1');
 }
 
 // Проверка диапазона
 if (DateUtils.isBetween(now, date1, date2)) {
-  console.log("now находится между date1 и date2");
+  console.log('now находится между date1 и date2');
 }
 
 // Разница в днях
@@ -96,7 +97,7 @@ const jsDate = DateUtils.toJSDate(now);
 const dateTime = DateUtils.fromJSDate(jsDate);
 
 // ISO строка → DateTime
-const fromISO = DateUtils.fromISO("2025-12-24T19:52:17.000Z");
+const fromISO = DateUtils.fromISO('2025-12-24T19:52:17.000Z');
 ```
 
 ### Специфичные для бизнес-логики
@@ -111,12 +112,12 @@ const in7Days = DateUtils.calculateDatePlusDaysEndOfDay(7);
 
 // Проверить, сегодня ли эта дата
 if (DateUtils.isToday(someDate)) {
-  console.log("Эта дата сегодня");
+  console.log('Эта дата сегодня');
 }
 
 // Проверить, находимся ли мы в диапазоне часов (для планировщика)
 if (DateUtils.isWithinHourRange(0, 2)) {
-  console.log("Сейчас между 00:00 и 02:00");
+  console.log('Сейчас между 00:00 и 02:00');
 }
 ```
 
@@ -195,26 +196,28 @@ TZ=Europe/Moscow
 Или явно указать при вызове функций:
 
 ```typescript
-const moscowTime = DateUtils.now("Europe/Moscow");
-const startOfDayMoscow = DateUtils.startOfToday("Europe/Moscow");
+const moscowTime = DateUtils.now('Europe/Moscow');
+const startOfDayMoscow = DateUtils.startOfToday('Europe/Moscow');
 ```
 
 ## Best Practices
 
 1. **Всегда используйте DateUtils вместо new Date()**
+
    ```typescript
    // ❌ Плохо
    const now = new Date();
-   
+
    // ✅ Хорошо
    const now = DateUtils.now();
    ```
 
 2. **Преобразуйте DateTime в Date только перед сохранением в БД**
+
    ```typescript
    // Работайте с DateTime
    const endDate = DateUtils.calculateSubscriptionEndDate();
-   
+
    // Преобразуйте перед сохранением
    await db.update(table).set({
      finalDayAt: DateUtils.toJSDate(endDate),
@@ -222,6 +225,7 @@ const startOfDayMoscow = DateUtils.startOfToday("Europe/Moscow");
    ```
 
 3. **Используйте иммутабельные операции**
+
    ```typescript
    // DateTime иммутабелен - каждая операция возвращает новый объект
    const now = DateUtils.now();
@@ -230,11 +234,12 @@ const startOfDayMoscow = DateUtils.startOfToday("Europe/Moscow");
    ```
 
 4. **Используйте специализированные функции**
+
    ```typescript
    // ❌ Плохо - сложно, подвержено ошибкам
    const date = DateUtils.now();
    const endDate = date.plus({ months: 1 }).set({ hour: 23, minute: 59, second: 0 });
-   
+
    // ✅ Хорошо - явное намерение
    const endDate = DateUtils.calculateSubscriptionEndDate();
    ```
@@ -254,4 +259,3 @@ const startOfDayMoscow = DateUtils.startOfToday("Europe/Moscow");
 
 - [Luxon Documentation](https://moment.github.io/luxon/#/)
 - [Luxon API Reference](https://moment.github.io/luxon/api-docs/index.html)
-

@@ -1,7 +1,7 @@
-import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
-import type { Quiz, QuizContact } from "@/entities/Quiz/quiz.type";
-import { useContext } from "react";
-import { ContactEditForm } from "./ui/ContactEditForm";
+import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
+import type { Quiz, QuizContact } from '@/entities/Quiz/quiz.type';
+import { useContext } from 'react';
+import { ContactEditForm } from './ui/ContactEditForm';
 
 export const ContactsPage = () => {
   const { quiz, setQuiz } = useContext(CreateQuizContext);

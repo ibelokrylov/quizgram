@@ -142,7 +142,7 @@ export namespace QuizModel {
         t.Object({
           uid: t.String(),
           name: t.String(),
-        }),
+        })
       ),
     }),
   });
@@ -165,7 +165,8 @@ export namespace QuizModel {
     data: t.Boolean(), // Новое значение isShowLogo
   });
 
-  export type updateQuizIsShowLogoSuccessResponse = typeof updateQuizIsShowLogoSuccessResponse.static;
+  export type updateQuizIsShowLogoSuccessResponse =
+    typeof updateQuizIsShowLogoSuccessResponse.static;
 
   // Ответ при ошибке обновления is_show_logo
   export const updateQuizIsShowLogoErrorResponse = ErrorType;

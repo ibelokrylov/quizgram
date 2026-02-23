@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Card } from "@/components/ui/card";
+import { Card } from '@/components/ui/card';
 import {
   ChartContainer,
   ChartLegend,
@@ -8,9 +8,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
-import type { DailyStats } from "@/entities/Bid/statistics.type";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+} from '@/components/ui/chart';
+import type { DailyStats } from '@/entities/Bid/statistics.type';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 interface DailyStatsChartProps {
   data: DailyStats;
@@ -18,27 +18,27 @@ interface DailyStatsChartProps {
 
 const viewsChartConfig = {
   total_opens: {
-    label: "Всего открытий",
-    color: "#8884d8",
+    label: 'Всего открытий',
+    color: '#8884d8',
   },
   unique_opens: {
-    label: "Уникальных открытий",
-    color: "#82ca9d",
+    label: 'Уникальных открытий',
+    color: '#82ca9d',
   },
   repeated_opens: {
-    label: "Неуникальных открытий",
-    color: "#ffc658",
+    label: 'Неуникальных открытий',
+    color: '#ffc658',
   },
 } satisfies ChartConfig;
 
 const completionChartConfig = {
   completed: {
-    label: "Пройденных",
-    color: "#10b981",
+    label: 'Пройденных',
+    color: '#10b981',
   },
   not_completed: {
-    label: "Не пройденных",
-    color: "#f59e0b",
+    label: 'Не пройденных',
+    color: '#f59e0b',
   },
 } satisfies ChartConfig;
 
@@ -68,10 +68,10 @@ export function DailyStatsChart({ data }: DailyStatsChartProps) {
           Период: {data.period.start} - {data.period.end}
         </p>
         <p className="text-xs text-muted-foreground">
-          Обновлено:{" "}
-          {new Date(data.generated_at).toLocaleString("ru-RU", {
-            dateStyle: "short",
-            timeStyle: "short",
+          Обновлено:{' '}
+          {new Date(data.generated_at).toLocaleString('ru-RU', {
+            dateStyle: 'short',
+            timeStyle: 'short',
           })}
         </p>
       </div>
@@ -108,9 +108,9 @@ export function DailyStatsChart({ data }: DailyStatsChartProps) {
                 dataKey="date"
                 tickFormatter={formatDate}
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
-              <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
               <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area
@@ -170,9 +170,9 @@ export function DailyStatsChart({ data }: DailyStatsChartProps) {
                 dataKey="date"
                 tickFormatter={formatDate}
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
-              <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
               <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area

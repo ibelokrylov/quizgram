@@ -1,5 +1,5 @@
-import TelegramBot from "node-telegram-bot-api";
-import { logger } from "../lib/logger";
+import TelegramBot from 'node-telegram-bot-api';
+import { logger } from '../lib/logger';
 
 // Минимальные типы для работы с Telegram Bot API
 export interface TelegramChat {
@@ -51,7 +51,7 @@ export abstract class BaseTelegramBotService {
   static getBot(tokenEnvKey: string, usePolling: boolean = false): TelegramBot {
     const existing = this.bots.get(tokenEnvKey);
     if (existing) {
-      logger.debug("Используется кэшированный инстанс Telegram бота", {
+      logger.debug('Используется кэшированный инстанс Telegram бота', {
         tokenEnvKey,
       });
       return existing;
@@ -63,7 +63,7 @@ export abstract class BaseTelegramBotService {
       const error = new Error(
         `Переменная окружения ${tokenEnvKey} не установлена для Telegram бота`
       );
-      logger.error("Ошибка конфигурации Telegram бота", error, { tokenEnvKey });
+      logger.error('Ошибка конфигурации Telegram бота', error, { tokenEnvKey });
       throw error;
     }
 
@@ -71,13 +71,13 @@ export abstract class BaseTelegramBotService {
     const bot = new TelegramBot(token, { polling: usePolling });
     this.bots.set(tokenEnvKey, bot);
 
-    logger.info("Инициализирован Telegram бот", { tokenEnvKey });
+    logger.info('Инициализирован Telegram бот', { tokenEnvKey });
 
     // Пытаемся получить информацию о боте (getMe) и залогировать её
     bot
       .getMe()
       .then((me) => {
-        logger.info("Успешное подключение к Telegram боту", {
+        logger.info('Успешное подключение к Telegram боту', {
           tokenEnvKey,
           botId: me.id,
           botUsername: me.username,
@@ -86,7 +86,7 @@ export abstract class BaseTelegramBotService {
       })
       .catch((error) => {
         logger.error(
-          "Не удалось получить информацию о Telegram боте (getMe)",
+          'Не удалось получить информацию о Telegram боте (getMe)',
           error instanceof Error ? error : new Error(String(error)),
           { tokenEnvKey }
         );
@@ -105,14 +105,14 @@ export abstract class BaseTelegramBotService {
     tokenEnvKey: string,
     chatId: number,
     text: string,
-    parseMode: "HTML" | "Markdown" | "MarkdownV2" = "HTML",
+    parseMode: 'HTML' | 'Markdown' | 'MarkdownV2' = 'HTML',
     disableWebPagePreview: boolean = false,
     replyMarkup?: InlineKeyboardMarkup
   ): Promise<void> {
     const bot = this.getBot(tokenEnvKey);
 
     try {
-      logger.debug("Отправка сообщения в Telegram бота", {
+      logger.debug('Отправка сообщения в Telegram бота', {
         tokenEnvKey,
         chatId,
         textPreview: text,
@@ -133,7 +133,7 @@ export abstract class BaseTelegramBotService {
 
       const result = await bot.sendMessage(chatId, text, options);
 
-      logger.info("Сообщение успешно отправлено в Telegram", {
+      logger.info('Сообщение успешно отправлено в Telegram', {
         tokenEnvKey,
         chatId,
         parseMode,
@@ -143,7 +143,7 @@ export abstract class BaseTelegramBotService {
       });
     } catch (error) {
       logger.error(
-        "Ошибка при отправке сообщения через node-telegram-bot-api",
+        'Ошибка при отправке сообщения через node-telegram-bot-api',
         error instanceof Error ? error : new Error(String(error)),
         { tokenEnvKey, chatId, parseMode }
       );
@@ -155,7 +155,7 @@ export abstract class BaseTelegramBotService {
    * Получение человекочитаемого имени пользователя
    */
   static getUserDisplayName(message: TelegramMessage): string {
-    return message.chat.first_name || message.chat.username || "друг";
+    return message.chat.first_name || message.chat.username || 'друг';
   }
 
   /**
@@ -164,7 +164,7 @@ export abstract class BaseTelegramBotService {
    */
   static escapeMarkdownV2(text: string): string {
     // eslint-disable-next-line no-useless-escape
-    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, "\\$1");
+    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
   }
 
   /**
@@ -176,7 +176,7 @@ export abstract class BaseTelegramBotService {
     const bot = this.getBot(tokenEnvKey);
 
     try {
-      logger.info("Настройка webhook для Telegram бота", {
+      logger.info('Настройка webhook для Telegram бота', {
         tokenEnvKey,
         webhookUrl,
       });
@@ -184,7 +184,7 @@ export abstract class BaseTelegramBotService {
       await bot.setWebHook(webhookUrl);
 
       const webhookInfo = await bot.getWebHookInfo();
-      logger.info("Webhook успешно настроен", {
+      logger.info('Webhook успешно настроен', {
         tokenEnvKey,
         webhookUrl,
         webhookInfo: {
@@ -195,7 +195,7 @@ export abstract class BaseTelegramBotService {
       });
     } catch (error) {
       logger.error(
-        "Ошибка при настройке webhook для Telegram бота",
+        'Ошибка при настройке webhook для Telegram бота',
         error instanceof Error ? error : new Error(String(error)),
         { tokenEnvKey, webhookUrl }
       );
@@ -211,14 +211,14 @@ export abstract class BaseTelegramBotService {
     const bot = this.getBot(tokenEnvKey);
 
     try {
-      logger.info("Удаление webhook для Telegram бота", { tokenEnvKey });
+      logger.info('Удаление webhook для Telegram бота', { tokenEnvKey });
 
       await bot.deleteWebHook();
 
-      logger.info("Webhook успешно удалён", { tokenEnvKey });
+      logger.info('Webhook успешно удалён', { tokenEnvKey });
     } catch (error) {
       logger.error(
-        "Ошибка при удалении webhook для Telegram бота",
+        'Ошибка при удалении webhook для Telegram бота',
         error instanceof Error ? error : new Error(String(error)),
         { tokenEnvKey }
       );
@@ -240,16 +240,16 @@ export abstract class BaseTelegramBotService {
     // Удаляем webhook, если он был настроен (polling и webhook не могут работать одновременно)
     try {
       await bot.deleteWebHook();
-      logger.info("Webhook удалён для запуска polling", { tokenEnvKey });
+      logger.info('Webhook удалён для запуска polling', { tokenEnvKey });
     } catch (error) {
-      logger.debug("Ошибка при удалении webhook (может быть не настроен)", {
+      logger.debug('Ошибка при удалении webhook (может быть не настроен)', {
         tokenEnvKey,
         error: error instanceof Error ? error.message : String(error),
       });
     }
 
     // Настраиваем обработчики событий
-    bot.on("message", async (msg) => {
+    bot.on('message', async (msg) => {
       const update: TelegramUpdate = {
         update_id: 0, // В polling режиме update_id не используется
         message: {
@@ -267,14 +267,14 @@ export abstract class BaseTelegramBotService {
         await handler(update);
       } catch (error) {
         logger.error(
-          "Ошибка при обработке сообщения в polling режиме",
+          'Ошибка при обработке сообщения в polling режиме',
           error instanceof Error ? error : new Error(String(error)),
           { tokenEnvKey, chatId: msg.chat.id }
         );
       }
     });
 
-    logger.info("Polling запущен для Telegram бота", { tokenEnvKey });
+    logger.info('Polling запущен для Telegram бота', { tokenEnvKey });
   }
 
   /**

@@ -1,7 +1,7 @@
-import { MoonIcon, SunIcon } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
+import { MoonIcon, SunIcon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { Button } from './ui/button';
 
 export const ThemeToggle = () => {
   const { setTheme, resolvedTheme } = useTheme();
@@ -19,13 +19,13 @@ export const ThemeToggle = () => {
     );
   }
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = resolvedTheme === 'dark';
 
   const toggleTheme = () => {
     if (isDark) {
-      setTheme("light");
+      setTheme('light');
     } else {
-      setTheme("dark");
+      setTheme('dark');
     }
   };
 

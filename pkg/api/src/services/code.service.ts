@@ -20,7 +20,9 @@ export abstract class CodeService {
     const existingCodes = await db
       .select()
       .from(codeTable)
-      .where(and(eq(codeTable.type, type), eq(codeTable.userId, userId), eq(codeTable.isActive, true)))
+      .where(
+        and(eq(codeTable.type, type), eq(codeTable.userId, userId), eq(codeTable.isActive, true))
+      )
       .limit(1);
 
     const existingCode = existingCodes[0];
@@ -87,7 +89,14 @@ export abstract class CodeService {
     const codes = await db
       .select()
       .from(codeTable)
-      .where(and(eq(codeTable.value, code), eq(codeTable.type, codeType), eq(codeTable.userId, userId), eq(codeTable.isActive, true)))
+      .where(
+        and(
+          eq(codeTable.value, code),
+          eq(codeTable.type, codeType),
+          eq(codeTable.userId, userId),
+          eq(codeTable.isActive, true)
+        )
+      )
       .limit(1);
 
     return codes[0] ?? null;
@@ -100,7 +109,13 @@ export abstract class CodeService {
     await db
       .update(codeTable)
       .set({ isActive: false })
-      .where(and(eq(codeTable.userId, userId), eq(codeTable.type, codeType), or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false))));
+      .where(
+        and(
+          eq(codeTable.userId, userId),
+          eq(codeTable.type, codeType),
+          or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false))
+        )
+      );
   }
 
   /**

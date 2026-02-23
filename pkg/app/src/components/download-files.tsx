@@ -1,23 +1,23 @@
-import { cn } from "@/lib/utils";
-import { ImageOff, MonitorDown, Trash, Wallpaper } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { DownloadDrawer } from "./dwonload-drawer";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { cn } from '@/lib/utils';
+import { ImageOff, MonitorDown, Trash, Wallpaper } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { DownloadDrawer } from './dwonload-drawer';
+import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export const DownloadFiles = ({
   showDownloadMobile = true,
   onChangeLoading,
   onFinal,
-  type = "image",
+  type = 'image',
   ...props
 }: {
   resize?: {
     width: number;
     height: number;
   };
-  type?: "image" | "video";
+  type?: 'image' | 'video';
   image?: string;
   mobileImage?: string;
   tooltipWeb?: string;
@@ -25,8 +25,8 @@ export const DownloadFiles = ({
   className?: string;
   showDownloadMobile?: boolean;
   onChangeLoading?: (loading: boolean) => void;
-  onFinal?: (value: string, type: "image" | "mobile") => void;
-  deleteImage?: (type: "image" | "mobile") => void;
+  onFinal?: (value: string, type: 'image' | 'mobile') => void;
+  deleteImage?: (type: 'image' | 'mobile') => void;
   classNameIconWallpaper?: string;
   icon?: React.ReactNode;
   classNamePreview?: string;
@@ -35,25 +35,25 @@ export const DownloadFiles = ({
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [typeDownload, setTypeDownload] = useState<"image" | "mobile">("image");
+  const [typeDownload, setTypeDownload] = useState<'image' | 'mobile'>('image');
 
   const handleDownloadImage = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setOpen(true);
-    setTypeDownload("image");
+    setTypeDownload('image');
     console.log(123);
   };
 
   const handleDownloadMobileImage = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setTypeDownload("mobile");
+    setTypeDownload('mobile');
     setOpen(true);
   };
 
   const mainClassName = cn(
-    "w-full h-full bg-gray-200 dark:bg-neutral-800 rounded-md p-3 cursor-pointer",
+    'w-full h-full bg-gray-200 dark:bg-neutral-800 rounded-md p-3 cursor-pointer',
     props.className
   );
 
@@ -63,7 +63,7 @@ export const DownloadFiles = ({
         {showDownloadMobile && !props.image ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant={"outline"} size={"icon"} onClick={handleDownloadImage}>
+              <Button variant={'outline'} size={'icon'} onClick={handleDownloadImage}>
                 <MonitorDown />
               </Button>
             </TooltipTrigger>
@@ -76,34 +76,34 @@ export const DownloadFiles = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={"destructive"}
-                size={"icon"}
-                onClick={() => props?.deleteImage?.("mobile")}
+                variant={'destructive'}
+                size={'icon'}
+                onClick={() => props?.deleteImage?.('mobile')}
               >
                 <Trash />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{t("downloadImage.standard.delete.mobile")}</TooltipContent>
+            <TooltipContent>{t('downloadImage.standard.delete.mobile')}</TooltipContent>
           </Tooltip>
         ) : null}
         {props.image ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={"destructive"}
-                size={"icon"}
-                onClick={() => props?.deleteImage?.("image")}
+                variant={'destructive'}
+                size={'icon'}
+                onClick={() => props?.deleteImage?.('image')}
               >
                 <ImageOff />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{t("downloadImage.standard.delete.mobile")}</TooltipContent>
+            <TooltipContent>{t('downloadImage.standard.delete.mobile')}</TooltipContent>
           </Tooltip>
         ) : null}
       </div>
       {props.mobileImage ? (
-        <div className={cn(mainClassName, "overflow-hidden relative")}>
-          {type === "video" ? (
+        <div className={cn(mainClassName, 'overflow-hidden relative')}>
+          {type === 'video' ? (
             <video
               src={props.mobileImage}
               autoPlay
@@ -112,7 +112,7 @@ export const DownloadFiles = ({
               className="absolute inset-0 w-full h-full object-cover rounded-md z-0"
             />
           ) : null}
-          {type === "image" ? (
+          {type === 'image' ? (
             <img
               src={props.mobileImage}
               alt="image"
@@ -130,7 +130,7 @@ export const DownloadFiles = ({
               {props.icon ?? (
                 <Wallpaper
                   className={cn(
-                    "size-10 text-gray-500 dark:text-neutral-400 mx-auto absolute top-1/2 left-1/2 -translate-x-1/2",
+                    'size-10 text-gray-500 dark:text-neutral-400 mx-auto absolute top-1/2 left-1/2 -translate-x-1/2',
                     props.classNameIconWallpaper
                   )}
                 />
@@ -143,7 +143,7 @@ export const DownloadFiles = ({
         </Tooltip>
       )}
       <DownloadDrawer
-        defaultUrl={type === "video" ? props.mobileImage : undefined}
+        defaultUrl={type === 'video' ? props.mobileImage : undefined}
         disableDownload={props.disableDownload}
         onChangeLoading={onChangeLoading}
         onFinal={(value) => onFinal?.(value, typeDownload)}

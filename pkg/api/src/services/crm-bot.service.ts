@@ -1,11 +1,11 @@
-import { logger } from "../lib/logger";
-import { UserService } from "../modules/user/service";
+import { logger } from '../lib/logger';
+import { UserService } from '../modules/user/service';
 import {
   BaseTelegramBotService,
   type InlineKeyboardMarkup,
   type TelegramMessage,
   type TelegramUpdate,
-} from "./base-telegram-bot.service";
+} from './base-telegram-bot.service';
 
 /**
  * Сервис CRM-бота Quizgram.
@@ -19,14 +19,14 @@ export abstract class CrmBotService extends BaseTelegramBotService {
    * @param webhookUrl - URL для webhook (должен быть HTTPS в production)
    */
   static async setWebhook(webhookUrl: string): Promise<void> {
-    await BaseTelegramBotService.setWebhook("BOT_CRM_TOKEN", webhookUrl);
+    await BaseTelegramBotService.setWebhook('BOT_CRM_TOKEN', webhookUrl);
   }
 
   /**
    * Удаление webhook для CRM-бота
    */
   static async deleteWebhook(): Promise<void> {
-    await BaseTelegramBotService.deleteWebhook("BOT_CRM_TOKEN");
+    await BaseTelegramBotService.deleteWebhook('BOT_CRM_TOKEN');
   }
   /**
    * Обработка входящего апдейта от Telegram (webhook или polling).
@@ -35,7 +35,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
   static async handleUpdate(update: TelegramUpdate): Promise<void> {
     const message: TelegramMessage | undefined = update.message;
 
-    logger.debug("Получен апдейт от Telegram для CRM-бота", {
+    logger.debug('Получен апдейт от Telegram для CRM-бота', {
       updateId: update.update_id,
       hasMessage: !!message,
       chatId: message?.chat.id,
@@ -43,7 +43,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
     });
 
     if (!message || !message.text) {
-      logger.debug("Получен апдейт без текстового сообщения для CRM-бота", {
+      logger.debug('Получен апдейт без текстового сообщения для CRM-бота', {
         updateId: update.update_id,
       });
       return;
@@ -51,8 +51,8 @@ export abstract class CrmBotService extends BaseTelegramBotService {
 
     const text = message.text.trim();
 
-    if (text === "/start") {
-      logger.debug("Обработка команды /start CRM-бота", {
+    if (text === '/start') {
+      logger.debug('Обработка команды /start CRM-бота', {
         updateId: update.update_id,
         chatId: message.chat.id,
       });
@@ -61,48 +61,51 @@ export abstract class CrmBotService extends BaseTelegramBotService {
       const escapedName = BaseTelegramBotService.escapeMarkdownV2(name);
       const welcomeText =
         `Привет, ${escapedName}\\! 👋\n\n` +
-        "Я CRM\\-бот Quizgram\\.\n\n" +
-        "🎯 Управляй своими квизами:";
+        'Я CRM\\-бот Quizgram\\.\n\n' +
+        '🎯 Управляй своими квизами:';
 
       // Создаем inline keyboard с двумя кнопками
-      const appWebUrl = process.env.APP_WEB_URL || "https://app.quizgram.site";
-      const keyboard: InlineKeyboardMarkup = process.env.ENV === 'production' ? {
-        inline_keyboard: [
-          [
-            {
-              text: "📱 Открыть Telegram App",
-              url: "https://t.me/Quiz_gramm_bot?startapp=openStudioInBot",
-            },
-          ],
-          [
-            {
-              text: "🌐 Открыть Web версию",
-              url: appWebUrl,
-            },
-          ],
-        ],
-      } : {
-        inline_keyboard: [
-          [
-            {
-              text: "📱 Открыть Telegram App",
-              url: "https://t.me/tg_union_bot?startapp=openStudioInBot",
-            },
-          ],
-          [
-            {
-              text: "🌐 Открыть Web версию",
-              url: appWebUrl,
-            },
-          ],
-        ],
-      };
+      const appWebUrl = process.env.APP_WEB_URL || 'https://app.quizgram.site';
+      const keyboard: InlineKeyboardMarkup =
+        process.env.ENV === 'production'
+          ? {
+              inline_keyboard: [
+                [
+                  {
+                    text: '📱 Открыть Telegram App',
+                    url: 'https://t.me/Quiz_gramm_bot?startapp=openStudioInBot',
+                  },
+                ],
+                [
+                  {
+                    text: '🌐 Открыть Web версию',
+                    url: appWebUrl,
+                  },
+                ],
+              ],
+            }
+          : {
+              inline_keyboard: [
+                [
+                  {
+                    text: '📱 Открыть Telegram App',
+                    url: 'https://t.me/tg_union_bot?startapp=openStudioInBot',
+                  },
+                ],
+                [
+                  {
+                    text: '🌐 Открыть Web версию',
+                    url: appWebUrl,
+                  },
+                ],
+              ],
+            };
 
       await BaseTelegramBotService.sendMessage(
-        "BOT_CRM_TOKEN",
+        'BOT_CRM_TOKEN',
         message.chat.id,
         welcomeText,
-        "MarkdownV2",
+        'MarkdownV2',
         false,
         keyboard
       );
@@ -111,7 +114,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
 
     // Проверяем, является ли сообщение UID (UUID формат - 36 символов)
     if (text.length === 36) {
-      logger.debug("Обработка UID для привязки Telegram", {
+      logger.debug('Обработка UID для привязки Telegram', {
         updateId: update.update_id,
         chatId: message.chat.id,
         uid: text,
@@ -122,14 +125,14 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         const user = await UserService.findByUid(text);
 
         if (!user) {
-          logger.warn("Пользователь с указанным UID не найден", {
+          logger.warn('Пользователь с указанным UID не найден', {
             uid: text,
             chatId: message.chat.id,
           });
           await BaseTelegramBotService.sendMessage(
-            "BOT_CRM_TOKEN",
+            'BOT_CRM_TOKEN',
             message.chat.id,
-            "❌ Пользователь с указанным UID не найден."
+            '❌ Пользователь с указанным UID не найден.'
           );
           return;
         }
@@ -137,7 +140,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         // Проверяем, не привязан ли уже Telegram ID
         if (user.telegramId) {
           logger.warn(
-            "Попытка привязать Telegram ID к пользователю, у которого уже есть привязка",
+            'Попытка привязать Telegram ID к пользователю, у которого уже есть привязка',
             {
               userId: user.id,
               uid: user.uid,
@@ -146,9 +149,9 @@ export abstract class CrmBotService extends BaseTelegramBotService {
             }
           );
           await BaseTelegramBotService.sendMessage(
-            "BOT_CRM_TOKEN",
+            'BOT_CRM_TOKEN',
             message.chat.id,
-            "⚠️ Этот пользователь уже привязан к боту. Обратитесь к администрации."
+            '⚠️ Этот пользователь уже привязан к боту. Обратитесь к администрации.'
           );
           return;
         }
@@ -157,7 +160,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         const telegramId = String(message.chat.id);
         await UserService.updateTelegramId(user.id, telegramId);
 
-        logger.info("Telegram ID успешно привязан к пользователю", {
+        logger.info('Telegram ID успешно привязан к пользователю', {
           userId: user.id,
           uid: user.uid,
           telegramId,
@@ -165,14 +168,14 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         });
 
         await BaseTelegramBotService.sendMessage(
-          "BOT_CRM_TOKEN",
+          'BOT_CRM_TOKEN',
           message.chat.id,
-          "✅ Ваш Telegram успешно привязан к аккаунту!"
+          '✅ Ваш Telegram успешно привязан к аккаунту!'
         );
         return;
       } catch (error) {
         logger.error(
-          "Ошибка при привязке Telegram ID к пользователю",
+          'Ошибка при привязке Telegram ID к пользователю',
           error instanceof Error ? error : new Error(String(error)),
           {
             uid: text,
@@ -180,16 +183,16 @@ export abstract class CrmBotService extends BaseTelegramBotService {
           }
         );
         await BaseTelegramBotService.sendMessage(
-          "BOT_CRM_TOKEN",
+          'BOT_CRM_TOKEN',
           message.chat.id,
-          "❌ Произошла ошибка при привязке аккаунта. Попробуйте позже."
+          '❌ Произошла ошибка при привязке аккаунта. Попробуйте позже.'
         );
         return;
       }
     }
 
     // Остальные команды пока игнорируем
-    logger.debug("CRM-бот получил не поддерживаемую команду", {
+    logger.debug('CRM-бот получил не поддерживаемую команду', {
       updateId: update.update_id,
       text,
     });

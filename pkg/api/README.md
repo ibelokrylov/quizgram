@@ -7,16 +7,19 @@ Backend API проект, построенный на современных т�
 Этот проект использует следующие технологии:
 
 ### [Bun](https://bun.com/docs)
+
 Быстрый JavaScript runtime, bundler и менеджер пакетов. Bun обеспечивает высокую производительность и современный инструментарий для разработки.
 
 **Документация:** https://bun.com/docs
 
 ### [Elysia](https://elysiajs.com/table-of-content.html)
+
 Быстрый и дружелюбный веб-фреймворк для Bun. Elysia предоставляет элегантный API для создания REST API и веб-приложений.
 
 **Документация:** https://elysiajs.com/table-of-content.html
 
 ### [Drizzle ORM](https://orm.drizzle.team/docs/overview) (PostgreSQL)
+
 Легковесная и производительная ORM для TypeScript. Используется для работы с PostgreSQL базой данных.
 
 **Документация:** https://orm.drizzle.team/docs/overview
@@ -24,6 +27,7 @@ Backend API проект, построенный на современных т�
 ## Начало работы
 
 ### Установка зависимостей
+
 ```bash
 bun install
 ```
@@ -61,21 +65,25 @@ src/
 Проект следует рекомендациям [Elysia Best Practices](https://elysiajs.com/essential/best-practice.html#folder-structure):
 
 #### 1. **Controller (index.ts)**
+
 - Обрабатывает HTTP-запросы: роутинг, валидация запросов, работа с cookies
 - Использует Elysia instance как контроллер (не класс, привязанный к Context)
 - Извлекает нужные данные из контекста и передаёт их в сервис
 
 #### 2. **Service (service.ts)**
+
 - Содержит бизнес-логику, отделённую от HTTP-слоя
 - Использует `abstract class` со `static` методами, если не нужно хранить состояние
 - Не зависит от Elysia Context, что упрощает тестирование и переиспользование
 
 #### 3. **Model (model.ts)**
+
 - Определяет структуру данных и валидацию через Elysia.t
 - Использует `typeof model.static` для получения TypeScript типов
 - Группирует связанные модели в namespace
 
 #### 4. **Database (db/)**
+
 - Схемы Drizzle ORM для работы с PostgreSQL
 - Экспортируются все таблицы из `db/index.ts`
 - Используются в сервисах для работы с данными
@@ -84,14 +92,15 @@ src/
 
 ```typescript
 // modules/auth/index.ts - Controller
-import { Elysia } from 'elysia'
-import { AuthService } from './service'
-import { AuthModel } from './model'
+import { Elysia } from 'elysia';
+import { AuthService } from './service';
+import { AuthModel } from './model';
 
-export const auth = new Elysia({ prefix: '/auth' })
-  .post('/sign-in', async ({ body, cookie }) => {
-    const response = await AuthService.signIn(body)
-    
+export const auth = new Elysia({ prefix: '/auth' }).post(
+  '/sign-in',
+  async ({ body, cookie }) => {
+    const response = await AuthService.signIn(body);
+
     // Устанавливаем сессионную cookie
     cookie.session.set({
       value: response.token,
@@ -99,57 +108,56 @@ export const auth = new Elysia({ prefix: '/auth' })
       secure: process.env.ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 дней
-    })
-    
-    return response
-  }, {
+    });
+
+    return response;
+  },
+  {
     body: AuthModel.signInBody,
     response: {
       200: AuthModel.signInResponse,
-      400: AuthModel.signInInvalid
-    }
-  })
+      400: AuthModel.signInInvalid,
+    },
+  }
+);
 
 // modules/auth/service.ts - Service
-import { eq } from 'drizzle-orm'
-import { db, userTable } from '../../db'
-import type { AuthModel } from './model'
+import { eq } from 'drizzle-orm';
+import { db, userTable } from '../../db';
+import type { AuthModel } from './model';
 
 export abstract class AuthService {
   static async signIn({ username, password }: AuthModel.signInBody) {
     // Бизнес-логика здесь
-    const users = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.login, username))
-      .limit(1)
+    const users = await db.select().from(userTable).where(eq(userTable.login, username)).limit(1);
     // ...
   }
 }
 
 // modules/auth/model.ts - Model
-import { t } from 'elysia'
+import { t } from 'elysia';
 
 export namespace AuthModel {
   export const signInBody = t.Object({
     username: t.String(),
     password: t.String(),
-  })
-  
-  export type signInBody = typeof signInBody.static
-  
+  });
+
+  export type signInBody = typeof signInBody.static;
+
   export const signInResponse = t.Object({
     username: t.String(),
     token: t.String(),
-  })
-  
-  export type signInResponse = typeof signInResponse.static
+  });
+
+  export type signInResponse = typeof signInResponse.static;
 }
 ```
 
 ## Разработка
 
 Для запуска сервера разработки выполните:
+
 ```bash
 bun run dev
 ```
@@ -179,6 +187,7 @@ bun run db:push
 ```
 
 Эта команда:
+
 1. Выполнит все новые миграции (`db:migrate`)
 2. Синхронизирует схему Drizzle с PostgreSQL (`drizzle-kit push`)
 
@@ -197,11 +206,11 @@ bun run db:migrate:status
 1. Создай файл `src/migrations/00X-название.ts`:
 
 ```typescript
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "004-add-user-avatar",
-  description: "Добавление поля avatar в таблицу user",
+  name: '004-add-user-avatar',
+  description: 'Добавление поля avatar в таблицу user',
   async up(sql) {
     await sql`
       ALTER TABLE "user" 
@@ -214,7 +223,7 @@ export const migration: MigrationFile = {
 2. Добавь в `src/migrations/index.ts`:
 
 ```typescript
-import { migration as migration004 } from "./004-add-user-avatar";
+import { migration as migration004 } from './004-add-user-avatar';
 
 export const migrations: MigrationFile[] = [
   migration001,
@@ -234,15 +243,15 @@ bun run db:push
 
 В БД созданы и выполнены 3 миграции:
 
-| № | Название | Описание | Статус |
-|---|----------|----------|--------|
-| 001 | add-bids-indexes | Индексы для оптимизации quiz_bid | ✅ Выполнена |
-| 002 | add-user-payment-is-active | Поле is_active для истории | ✅ Выполнена |
-| 003 | fix-user-payment-final-day | Исправление finalDayAt | ✅ Выполнена |
+| №   | Название                   | Описание                         | Статус       |
+| --- | -------------------------- | -------------------------------- | ------------ |
+| 001 | add-bids-indexes           | Индексы для оптимизации quiz_bid | ✅ Выполнена |
+| 002 | add-user-payment-is-active | Поле is_active для истории       | ✅ Выполнена |
+| 003 | fix-user-payment-final-day | Исправление finalDayAt           | ✅ Выполнена |
 
 ### Технические детали
 
-#### Таблица _migrations
+#### Таблица \_migrations
 
 ```sql
 CREATE TABLE _migrations (
@@ -255,9 +264,9 @@ CREATE TABLE _migrations (
 
 1. Runner проверяет существование таблицы `_migrations`
 2. Получает список выполненных миграций из БД
-3. Фильтрует pending миграции (которых нет в _migrations)
+3. Фильтрует pending миграции (которых нет в \_migrations)
 4. Выполняет каждую pending миграцию
-5. Записывает выполненную миграцию в _migrations
+5. Записывает выполненную миграцию в \_migrations
 6. При ошибке - останавливается и выводит детали
 
 #### Интеграция с db:push
@@ -297,17 +306,23 @@ CREATE TABLE _migrations (
 ##### 1. Схема БД (`src/db/user-payment.ts`)
 
 **Изменения:**
+
 - ✅ Добавлено поле `isActive` (boolean, default: true)
 - ✅ Убран `.unique()` constraint с `userId` (теперь у пользователя может быть несколько записей)
 
 **Результат:**
+
 ```typescript
-export const userPaymentTable = pgTable("user_payment", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => userTable.id),
-  planId: integer("plan_id").notNull().references(() => planTable.id),
+export const userPaymentTable = pgTable('user_payment', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => userTable.id),
+  planId: integer('plan_id')
+    .notNull()
+    .references(() => planTable.id),
   // ... другие поля
-  isActive: boolean("is_active").notNull().default(true), // ← НОВОЕ ПОЛЕ
+  isActive: boolean('is_active').notNull().default(true), // ← НОВОЕ ПОЛЕ
 });
 ```
 
@@ -322,11 +337,13 @@ export const userPaymentTable = pgTable("user_payment", {
 ##### 3. Исправление finalDayAt
 
 **Проблема:**
+
 - Использовалось: **+30 дней**
 - Ожидалось: **+1 месяц**
 
 **Решение:**
 Заменено `setDate(getDate() + 30)` на `setMonth(getMonth() + 1)` во всех местах:
+
 - `src/modules/payment/service.ts` - при переключении тарифа
 - `src/modules/auth/service.ts` - при регистрации пользователя
 - `src/modules/scheduler/service.ts` - при продлении подписки
@@ -356,6 +373,7 @@ user_payment:
 #### 🔧 Дополнительные команды
 
 **Посмотреть историю тарифов пользователя:**
+
 ```sql
 SELECT id, user_id, plan_id, created_at, limit, current_limit, is_active
 FROM user_payment
@@ -364,6 +382,7 @@ ORDER BY created_at DESC;
 ```
 
 **Посмотреть активный тариф:**
+
 ```sql
 SELECT * FROM user_payment
 WHERE user_id = 123 AND is_active = true;
@@ -378,6 +397,7 @@ WHERE user_id = 123 AND is_active = true;
 #### 🎯 Цель изменений
 
 Разделить процесс CI/CD на два независимых стейджа:
+
 1. **Build** - автоматическая проверка сборки всех пакетов
 2. **Deploy** - мануальный деплой на production сервер
 
@@ -386,11 +406,13 @@ WHERE user_id = 123 AND is_active = true;
 ##### `build.yml` - Автоматическая сборка пакетов
 
 **Триггеры:**
+
 - Автоматически при push в `main` (если изменены `pkg/**`)
 - Автоматически при Pull Request в `main`
 - Вручную через GitHub Actions UI
 
 **Что делает:**
+
 - Устанавливает Bun runtime
 - Устанавливает все зависимости (`bun install`)
 - Проверяет TypeScript типы для `pkg/api`
@@ -400,6 +422,7 @@ WHERE user_id = 123 AND is_active = true;
 - Загружает артефакты сборки (хранятся 7 дней)
 
 **Зачем:**
+
 - Быстрая проверка что код собирается без ошибок
 - Раннее обнаружение проблем сборки
 - Артефакты для отладки
@@ -407,20 +430,24 @@ WHERE user_id = 123 AND is_active = true;
 ##### `deploy.yml` - Деплой на сервер
 
 **Изменения:**
+
 - **Только мануальный запуск**
 - Сборка происходит на сервере через Docker
 - Перезапуск **только app, api, tg-quiz** (PostgreSQL не трогаем)
 
 **Новые параметры:**
+
 - `skip_git_pull` - Пропустить обновление кода (default: false)
 - `skip_env_update` - Пропустить обновление .env файлов (default: false)
 
 **Команда деплоя:**
+
 ```bash
 docker compose up -d --build app api tg-quiz
 ```
 
 **Зачем:**
+
 - Больше контроля над деплоем
 - Безопасность: PostgreSQL не перезапускается
 - Гибкость: можно пропустить обновление кода или .env
@@ -428,28 +455,31 @@ docker compose up -d --build app api tg-quiz
 #### 🔒 Безопасность
 
 ✅ **PostgreSQL защищён**
+
 - Никогда не перезапускается в `deploy.yml`
 
 ✅ **Контроль деплоя**
+
 - Деплой только вручную
 - Параметры для пропуска шагов
 - Показ логов после деплоя
 
 ✅ **Секреты**
+
 - Все чувствительные данные в GitHub Secrets
 - SSH через проверенные known_hosts
 - Docker Hub через токен (не пароль)
 
 #### 📊 Сравнение: Было vs Стало
 
-| Аспект | Было | Стало |
-|--------|------|-------|
-| **Сборка** | В деплое | Отдельный workflow |
-| **Деплой** | Автоматически | Только вручную |
-| **PostgreSQL** | Мог перезапуститься | Никогда не перезапускается |
-| **Контроль** | Низкий | Высокий |
-| **Безопасность** | Средняя | Высокая |
-| **Гибкость** | Низкая | Высокая |
+| Аспект           | Было                | Стало                      |
+| ---------------- | ------------------- | -------------------------- |
+| **Сборка**       | В деплое            | Отдельный workflow         |
+| **Деплой**       | Автоматически       | Только вручную             |
+| **PostgreSQL**   | Мог перезапуститься | Никогда не перезапускается |
+| **Контроль**     | Низкий              | Высокий                    |
+| **Безопасность** | Средняя             | Высокая                    |
+| **Гибкость**     | Низкая              | Высокая                    |
 
 #### 🚀 Процесс деплоя
 
@@ -458,6 +488,7 @@ docker compose up -d --build app api tg-quiz
 3. Запускаешь Deploy to Server вручную
 
 **Если нужен быстрый деплой:**
+
 ```
 Deploy to Server с параметром skip_git_pull: true
 ```

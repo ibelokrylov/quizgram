@@ -1,9 +1,11 @@
 # План интеграции Telegram Mini App в pkg/app
 
 ## Цель
+
 Интегрировать поддержку Telegram Mini App в основное приложение (pkg/app) для обработки deep links из Telegram и автоматической авторизации/регистрации пользователей через Telegram.
 
 ## Контекст
+
 - В API отправляется сообщение с deep link: `https://t.me/Quiz_gramm_bot?startapp=L2FwcC9iaWQvcmVwb3J0P2xpbWl0PTEwJmlzRnVsbD10cnVlJmtleT1iMzQ1NTBlNy1jMzgxLTRiOWItYjNhMC0xM2NhZTkyZGRkZGQ`
 - Параметр `startapp` содержит base64-encoded путь в приложении
 - Нужно обработать этот параметр и направить пользователя на нужный URL
@@ -12,6 +14,7 @@
 ## Этапы реализации
 
 ### Этап 1: Установка и настройка Telegram SDK ✅
+
 - [x] Добавить официальный скрипт Telegram в `index.html`: `<script src="https://telegram.org/js/telegram-web-app.js?59"></script>`
 - [x] Скопировать типы для Telegram WebApp из `pkg/tg-quiz/src/types/telegram-webapp.d.ts` в `pkg/app/src/types/telegram-webapp.d.ts`
 - [x] Создать файл `src/lib/telegram-sdk.ts` для инициализации SDK (аналогично `pkg/tg-quiz/src/init-telegram-sdk.tsx`)
@@ -19,6 +22,7 @@
 - [x] Добавить проверку наличия Telegram окружения (для dev режима - graceful degradation)
 
 **Резюме выполненной работы:**
+
 - Добавлен официальный скрипт Telegram WebApp в `index.html` (версия ?59)
 - Скопированы типы TypeScript для Telegram WebApp API в `src/types/telegram-webapp.d.ts`
 - Создан модуль `src/lib/telegram-sdk.ts` с функциями:
@@ -29,6 +33,7 @@
 - Реализована graceful degradation - при отсутствии Telegram окружения приложение работает нормально без ошибок
 
 ### Этап 2: Обработка deep links (startapp параметр) ✅
+
 - [x] Создать утилиту `src/lib/telegram-deep-link.ts` для парсинга параметра `startapp`
 - [x] Реализовать функцию декодирования base64 пути из `startapp` (параметр передается в `window.Telegram.WebApp.initDataUnsafe.start_param`)
 - [x] Также проверить URL параметр `tgWebAppStartParam` (GET параметр из URL)
@@ -38,8 +43,9 @@
 - [x] Обработать случай, когда пользователь открывает приложение через Telegram Mini App (проверка `window.Telegram?.WebApp` обязательна)
 
 **Резюме выполненной работы:**
+
 - Создан модуль `src/lib/telegram-deep-link.ts` с функциями:
-  - `base64urlToBase64()` - преобразование base64url в base64 (замена - на +, _ на /, добавление padding =)
+  - `base64urlToBase64()` - преобразование base64url в base64 (замена - на +, \_ на /, добавление padding =)
   - `decodeStartAppParam()` - декодирование base64url строки в исходный путь (использует atob для декодирования)
   - `getStartAppParam()` - получение параметра startapp из двух источников:
     1. `window.Telegram.WebApp.initDataUnsafe.start_param` (приоритет)
@@ -52,9 +58,10 @@
   - При монтировании компонента вызывается `processTelegramDeepLink()`
   - Deep link декодируется и сохраняется в sessionStorage под ключом `telegram_deep_link_target`
   - Редирект не выполняется сразу - путь сохраняется для использования после авторизации
-- Формат совместим с API: в API путь кодируется в base64, затем преобразуется в base64url (замена + на -, / на _, удаление =). В frontend выполняется обратное преобразование.
+- Формат совместим с API: в API путь кодируется в base64, затем преобразуется в base64url (замена + на -, / на \_, удаление =). В frontend выполняется обратное преобразование.
 
 ### Этап 3: API endpoints для Telegram авторизации ✅
+
 - [x] Создать endpoint `/v1/auth/telegram/login` в `pkg/api/src/modules/auth/index.ts`
   - Принимает `initData` от Telegram
   - Проверяет валидность данных через Telegram Bot API
@@ -77,6 +84,7 @@
   - `telegramRegisterBody` - для регистрации через Telegram
 
 **Резюме выполненной работы:**
+
 - Обновлен `pkg/api/src/services/telegram.service.ts`:
   - Добавлен метод `getCrmBotToken()` для получения токена CRM-бота (`BOT_CRM_TOKEN`)
   - Метод `validateInitData()` теперь использует `getCrmBotToken()` вместо `getBotToken()`
@@ -119,6 +127,7 @@
     - Возвращает данные пользователя
 
 ### Этап 4: UI для регистрации через Telegram ✅
+
 - [x] Создать страницу `src/routes/telegram-auth.tsx` для обработки Telegram авторизации
 - [x] Создать компонент `src/pages/TelegramAuth/EmailInput.tsx`:
   - Форма ввода email
@@ -139,6 +148,7 @@
   - И другие необходимые ключи
 
 **Резюме выполненной работы:**
+
 - Создана страница `src/routes/telegram-auth.tsx`:
   - Проверяет доступность Telegram окружения (редирект на главную если недоступно)
   - Если пользователь уже авторизован - проверяет deep link и редиректит
@@ -168,6 +178,7 @@
   - `telegram.auth.verification.*` - все ключи для формы верификации
 
 ### Этап 5: Логика авторизации через Telegram ✅
+
 - [x] Создать хук `src/hooks/useTelegramAuth.ts`:
   - Получение `initData` из `window.Telegram.WebApp.initData`
   - Получение данных пользователя из `window.Telegram.WebApp.initDataUnsafe.user`
@@ -185,6 +196,7 @@
   - Если пользователь найден - редиректить на сохраненный URL
 
 **Резюме выполненной работы:**
+
 - Создан хук `src/hooks/useTelegramAuth.ts`:
   - `getInitData()` - получение initData из Telegram WebApp
   - `getTelegramUser()` - получение данных пользователя из initDataUnsafe (только для UI)
@@ -214,6 +226,7 @@
   - Удален локальный state `loading` - используется `telegramAuth.loading`
 
 ### Этап 6: Интеграция с существующей системой авторизации ✅
+
 - [x] Обновить `src/entities/User/User.type.ts`:
   - Убедиться, что `telegramId` присутствует в типе
 - [x] Обновить `src/lib/http.ts`:
@@ -225,6 +238,7 @@
   - Если Telegram недоступен - игнорировать параметр `startapp`
 
 **Резюме выполненной работы:**
+
 - Проверен `src/entities/User/User.type.ts`:
   - Поле `telegramId: z.string().nullable().optional()` уже присутствует в типе User
   - Никаких изменений не требуется
@@ -244,6 +258,7 @@
   - Логика интегрирована с AuthContext для проверки статуса авторизации
 
 ### Этап 7: Обработка навигации после авторизации ✅
+
 - [x] После успешной авторизации/регистрации:
   - Проверять наличие сохраненного URL из deep link
   - Если есть - редиректить на этот URL
@@ -252,6 +267,7 @@
 - [x] Обрабатывать случаи невалидных deep links (показывать ошибку)
 
 **Резюме выполненной работы:**
+
 - Обновлена функция `processTelegramDeepLink()` в `src/lib/telegram-deep-link.ts`:
   - Добавлена валидация пути через `isValidDeepLinkPath()` перед сохранением
   - Если путь невалиден - возвращает null и не сохраняет его
@@ -273,6 +289,7 @@
   - `telegram.auth.deepLink.invalid` - сообщение об ошибке невалидного deep link (русский и английский)
 
 ### Этап 8: Тестирование и доработка
+
 - [ ] Протестировать авторизацию существующего пользователя через Telegram
 - [ ] Протестировать регистрацию нового пользователя через Telegram
 - [ ] Протестировать ввод email и верификацию
@@ -301,6 +318,7 @@
 ## Технические детали
 
 ### Telegram SDK
+
 - Использовать официальный скрипт из документации: `https://telegram.org/js/telegram-web-app.js?59`
 - Скрипт добавляется в `<head>` секцию `index.html`
 - После загрузки скрипта доступен глобальный объект `window.Telegram.WebApp`
@@ -311,21 +329,25 @@
   - `window.Telegram.WebApp.initDataUnsafe.start_param` - параметр из deep link
 
 ### Валидация initData
+
 - Использовать Telegram Bot API для валидации
 - Нужен Bot Token из переменных окружения
 - Использовать метод `validateWebAppData` или реализовать локально через crypto
 
 ### Структура initData
+
 ```
 user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22John%22%2C%22last_name%22%3A%22Doe%22%2C%22username%22%3A%22johndoe%22%2C%22language_code%22%3A%22en%22%7D&auth_date=1234567890&hash=...
 ```
 
 ### API изменения
+
 - Добавить поле `telegramId` в модель регистрации (опционально)
 - При регистрации через Telegram - автоматически заполнять `telegramId`
 - При авторизации через Telegram - искать по `telegramId`
 
 ### Безопасность
+
 - Всегда валидировать `initData` на сервере
 - Не доверять данным от клиента
 - Использовать HTTPS для всех запросов
@@ -334,14 +356,17 @@ user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22John%22%2C%22last_name%22%3
 ## Зависимости
 
 ### Новые зависимости для pkg/app
+
 - Нет новых зависимостей - используется официальный скрипт Telegram из CDN
 
 ### Новые зависимости для pkg/api
+
 - Возможно, библиотека для валидации Telegram WebApp данных (или реализовать через crypto)
 
 ## Файлы для создания/изменения
 
 ### pkg/app
+
 - `src/lib/telegram-sdk.ts` (новый, аналогично `pkg/tg-quiz/src/init-telegram-sdk.tsx`)
 - `src/lib/telegram-deep-link.ts` (новый)
 - `src/types/telegram-webapp.d.ts` (новый, скопировать из `pkg/tg-quiz/src/types/telegram-webapp.d.ts`)
@@ -357,14 +382,15 @@ user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22John%22%2C%22last_name%22%3
 - `src/locales/en/common.json` (изменить)
 
 ### pkg/api
+
 - `src/modules/auth/index.ts` (изменить)
 - `src/modules/auth/service.ts` (изменить)
 - `src/modules/auth/model.ts` (изменить)
 - Возможно, новый сервис для валидации Telegram данных
 
 ## Примечания
+
 - Интеграция должна работать как в Telegram Mini App, так и в обычном браузере (graceful degradation)
 - При работе в обычном браузере - показывать стандартную форму логина
 - Deep links должны обрабатываться корректно даже если пользователь уже авторизован
 - Email верификация обязательна для регистрации через Telegram
-

@@ -1,7 +1,7 @@
-import { isTelegramAvailable } from "@/lib/telegram-sdk";
-import http from "@/lib/http";
-import type { User } from "@/entities/User/User.type";
-import { useState, useCallback } from "react";
+import { isTelegramAvailable } from '@/lib/telegram-sdk';
+import http from '@/lib/http';
+import type { User } from '@/entities/User/User.type';
+import { useState, useCallback } from 'react';
 
 type TelegramAuthResult =
   | { success: true; user: User; requiresVerification: boolean }
@@ -45,7 +45,7 @@ export function useTelegramAuth() {
       return {
         success: false,
         requiresRegistration: false,
-        error: "Telegram недоступен",
+        error: 'Telegram недоступен',
       };
     }
 
@@ -54,7 +54,7 @@ export function useTelegramAuth() {
       return {
         success: false,
         requiresRegistration: true,
-        error: "InitData не найден",
+        error: 'InitData не найден',
       };
     }
 
@@ -62,8 +62,8 @@ export function useTelegramAuth() {
 
     try {
       const res = await http<User>({
-        url: "/v1/auth/telegram/login",
-        method: "POST",
+        url: '/v1/auth/telegram/login',
+        method: 'POST',
         body: { initData },
       });
 
@@ -74,7 +74,7 @@ export function useTelegramAuth() {
           user: res.data,
           requiresVerification: !res.data.isVerification,
         };
-      } else if (res.message === "registration_required" || (res as any).requiresRegistration) {
+      } else if (res.message === 'registration_required' || (res as any).requiresRegistration) {
         // Пользователь не найден - требуется регистрация
         return {
           success: false,
@@ -85,11 +85,11 @@ export function useTelegramAuth() {
         return {
           success: false,
           requiresRegistration: false,
-          error: res.message || "Ошибка авторизации",
+          error: res.message || 'Ошибка авторизации',
         };
       }
     } catch (err: any) {
-      const errorMessage = err?.message || err?.error || "Ошибка авторизации";
+      const errorMessage = err?.message || err?.error || 'Ошибка авторизации';
       return {
         success: false,
         requiresRegistration: false,
@@ -109,7 +109,7 @@ export function useTelegramAuth() {
         return {
           success: false,
           requiresRegistration: false,
-          error: "Telegram недоступен",
+          error: 'Telegram недоступен',
         };
       }
 
@@ -118,7 +118,7 @@ export function useTelegramAuth() {
         return {
           success: false,
           requiresRegistration: false,
-          error: "InitData не найден",
+          error: 'InitData не найден',
         };
       }
 
@@ -126,8 +126,8 @@ export function useTelegramAuth() {
 
       try {
         const res = await http<User>({
-          url: "/v1/auth/telegram/register",
-          method: "POST",
+          url: '/v1/auth/telegram/register',
+          method: 'POST',
           body: {
             initData,
             email,
@@ -147,11 +147,11 @@ export function useTelegramAuth() {
           return {
             success: false,
             requiresRegistration: false,
-            error: res.message || "Ошибка регистрации",
+            error: res.message || 'Ошибка регистрации',
           };
         }
       } catch (err: any) {
-        const errorMessage = err?.message || err?.error || "Ошибка регистрации";
+        const errorMessage = err?.message || err?.error || 'Ошибка регистрации';
         return {
           success: false,
           requiresRegistration: false,

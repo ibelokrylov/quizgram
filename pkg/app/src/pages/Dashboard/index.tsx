@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
-import type { QuizDashboard } from "@/entities/Quiz/quiz.type";
-import { useDashboard } from "@/entities/Quiz/useDashboard";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { DashboardQuiz } from "./ui/DashboardQuiz";
+import { Button } from '@/components/ui/button';
+import type { QuizDashboard } from '@/entities/Quiz/quiz.type';
+import { useDashboard } from '@/entities/Quiz/useDashboard';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { DashboardQuiz } from './ui/DashboardQuiz';
 
 export const DashboardPage = () => {
   const [queryParams, setQueryParams] = useState<{
@@ -41,11 +41,11 @@ export const DashboardPage = () => {
     <div className="flex flex-col gap-5 p-1 md:p-2">
       {isEmpty ? (
         <div className="mt-8 flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground text-lg">{t("quiz.dashboard.empty")}</p>
+          <p className="text-muted-foreground text-lg">{t('quiz.dashboard.empty')}</p>
         </div>
       ) : (
         <>
-          <div className={"mt-2 grid grid-cols-1 md:grid-cols-2 gap-2"}>
+          <div className={'mt-2 grid grid-cols-1 md:grid-cols-2 gap-2'}>
             {quizzes?.map((quiz) => (
               <DashboardQuiz onDeleteQuiz={() => deleteQuiz(quiz.uid)} key={quiz.uid} quiz={quiz} />
             ))}
@@ -53,10 +53,10 @@ export const DashboardPage = () => {
           {(query?.data?.count ?? 0) > 0 && quizzes?.length !== query?.data?.count ? (
             <div>
               <Button
-                variant={"outline"}
+                variant={'outline'}
                 onClick={() => setQueryParams({ ...queryParams, page: queryParams.page + 1 })}
               >
-                {t("quiz.load-more")}
+                {t('quiz.load-more')}
               </Button>
             </div>
           ) : null}

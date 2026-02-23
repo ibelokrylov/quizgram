@@ -1,15 +1,15 @@
 // Скрипт для создания схемы public в PostgreSQL
 // Используется перед миграциями, если схема не существует
 
-import postgres from "postgres";
+import postgres from 'postgres';
 
-const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
 const {
   POSTGRES_USER,
   POSTGRES_PASSWORD,
   POSTGRES_DB,
-  POSTGRES_HOST = "localhost",
-  POSTGRES_PORT = "5432",
+  POSTGRES_HOST = 'localhost',
+  POSTGRES_PORT = '5432',
   DATABASE_URL,
 } = env;
 
@@ -24,15 +24,15 @@ async function createSchema() {
   try {
     // Создаем схему public, если она не существует
     await sql`CREATE SCHEMA IF NOT EXISTS public`;
-    
+
     // Предоставляем права на схему
     await sql`GRANT ALL ON SCHEMA public TO postgres`;
     await sql`GRANT ALL ON SCHEMA public TO public`;
 
-    console.log("✅ Схема public успешно создана");
+    console.log('✅ Схема public успешно создана');
     process.exit(0);
   } catch (error) {
-    console.error("❌ Ошибка при создании схемы public:", error);
+    console.error('❌ Ошибка при создании схемы public:', error);
     process.exit(1);
   } finally {
     await sql.end();
@@ -40,4 +40,3 @@ async function createSchema() {
 }
 
 createSchema();
-

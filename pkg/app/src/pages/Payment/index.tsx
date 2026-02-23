@@ -1,7 +1,7 @@
-import { Loader } from "@/components/loader";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader } from '@/components/loader';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,17 +11,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentMethodDrawer } from "@/components/payment-method-drawer";
-import { usePlans } from "@/entities/User/usePlans";
-import { useUpLimits } from "@/entities/User/useUpLimits";
-import { useUserPlan } from "@/entities/User/useUserPlan";
-import http from "@/lib/http";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+} from '@/components/ui/alert-dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PaymentMethodDrawer } from '@/components/payment-method-drawer';
+import { usePlans } from '@/entities/User/usePlans';
+import { useUpLimits } from '@/entities/User/useUpLimits';
+import { useUserPlan } from '@/entities/User/useUserPlan';
+import http from '@/lib/http';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const PaymentPage = () => {
   const { t } = useTranslation();
@@ -42,14 +42,14 @@ export const PaymentPage = () => {
 
   // Форматируем название плана для отображения
   const getDisplayPlanName = (planName: string) => {
-    if (planName === "FREE") {
-      return t("plans.price.free");
+    if (planName === 'FREE') {
+      return t('plans.price.free');
     }
-    if (planName === "BASE") {
-      return "Pro";
+    if (planName === 'BASE') {
+      return 'Pro';
     }
-    if (planName === "PRO_PLUS") {
-      return "Pro+";
+    if (planName === 'PRO_PLUS') {
+      return 'Pro+';
     }
     return planName;
   };
@@ -59,7 +59,7 @@ export const PaymentPage = () => {
     if (
       !initialUpLimitSet &&
       userPlanQuery.data &&
-      userPlanQuery.data.name === "PRO_PLUS" &&
+      userPlanQuery.data.name === 'PRO_PLUS' &&
       upLimitsQuery.data &&
       upLimitsQuery.data.length > 0
     ) {
@@ -88,18 +88,18 @@ export const PaymentPage = () => {
   const handleCancelSubscription = async () => {
     try {
       const response = await http<{ planId: number; planName: string }>({
-        url: "/v1/payment/cancel-subscription",
-        method: "POST",
+        url: '/v1/payment/cancel-subscription',
+        method: 'POST',
       });
 
       if (response.data) {
-        toast.success(t("payment.cancel_subscription.success"));
+        toast.success(t('payment.cancel_subscription.success'));
         setShowCancelDialog(false);
-        await queryClient.refetchQueries({ queryKey: ["user-plan"] });
-        await queryClient.refetchQueries({ queryKey: ["user"] });
+        await queryClient.refetchQueries({ queryKey: ['user-plan'] });
+        await queryClient.refetchQueries({ queryKey: ['user'] });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("payment.error"));
+      toast.error(error instanceof Error ? error.message : t('payment.error'));
     }
   };
 
@@ -124,18 +124,18 @@ export const PaymentPage = () => {
       try {
         const response = await http<{ planId: number; planName: string }>({
           url: `/v1/payment/${planId}`,
-          method: "POST",
+          method: 'POST',
         });
 
         if (response.data) {
           const displayPlanName = getDisplayPlanName(response.data.planName);
-          toast.success(t("payment.success", { plan: displayPlanName }));
+          toast.success(t('payment.success', { plan: displayPlanName }));
           // Инвалидируем кэш плана пользователя, чтобы обновить данные
-          queryClient.invalidateQueries({ queryKey: ["user-plan"] });
-          queryClient.invalidateQueries({ queryKey: ["user"] });
+          queryClient.invalidateQueries({ queryKey: ['user-plan'] });
+          queryClient.invalidateQueries({ queryKey: ['user'] });
         }
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : t("payment.error"));
+        toast.error(error instanceof Error ? error.message : t('payment.error'));
       } finally {
         setLoadingPlanId(null);
       }
@@ -162,8 +162,8 @@ export const PaymentPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">{t("payment.title")}</h1>
-          <p className="text-red-500">{t("plans.error.load")}</p>
+          <h1 className="text-3xl font-bold">{t('payment.title')}</h1>
+          <p className="text-red-500">{t('plans.error.load')}</p>
         </div>
       </div>
     );
@@ -172,38 +172,38 @@ export const PaymentPage = () => {
   const plans = query.data;
 
   // Определяем, является ли план платным
-  const isPaidPlan = (planName: string) => planName !== "FREE";
+  const isPaidPlan = (planName: string) => planName !== 'FREE';
 
   // Форматируем цену
   const formatPrice = (price: number, planName: string) => {
-    if (planName === "FREE") {
-      return t("plans.price.free");
+    if (planName === 'FREE') {
+      return t('plans.price.free');
     }
-    return `${price} ₽ / ${t("plans.price.perMonth")}`;
+    return `${price} ₽ / ${t('plans.price.perMonth')}`;
   };
 
   // Получаем преимущества для плана
   const getPlanFeatures = (plan: (typeof plans)[0]) => {
     const features: string[] = [];
 
-    if (plan.name === "FREE") {
-      features.push(t("plans.features.quiz_unlimited"));
+    if (plan.name === 'FREE') {
+      features.push(t('plans.features.quiz_unlimited'));
       features.push(
-        `${t("plans.features.lead_limit")}: ${plan.bidMonthLimit} ${t("plans.perMonth")}`
+        `${t('plans.features.lead_limit')}: ${plan.bidMonthLimit} ${t('plans.perMonth')}`
       );
-      features.push(t("plans.features.lead_delivery.free"));
+      features.push(t('plans.features.lead_delivery.free'));
     } else {
       // Для платных планов
-      features.push(t("plans.features.quiz_unlimited"));
+      features.push(t('plans.features.quiz_unlimited'));
       // Для Pro+ не добавляем "Лимит заявок" в список, т.к. он отображается над Tabs
-      if (plan.name !== "PRO_PLUS") {
+      if (plan.name !== 'PRO_PLUS') {
         features.push(
-          `${t("plans.features.lead_limit")}: ${plan.bidMonthLimit} ${t("plans.perMonth")}`
+          `${t('plans.features.lead_limit')}: ${plan.bidMonthLimit} ${t('plans.perMonth')}`
         );
       }
-      features.push(t("plans.features.lead_delivery.paid"));
-      features.push(t("plans.features.exports_reports.paid"));
-      features.push(t("plans.features.analytics.paid"));
+      features.push(t('plans.features.lead_delivery.paid'));
+      features.push(t('plans.features.exports_reports.paid'));
+      features.push(t('plans.features.analytics.paid'));
     }
 
     return features;
@@ -211,7 +211,7 @@ export const PaymentPage = () => {
 
   // Рассчитываем итоговую цену для Pro+ с учётом выбранного upLimit
   const getTotalPrice = (plan: (typeof plans)[0]) => {
-    if (plan.name === "PRO_PLUS") {
+    if (plan.name === 'PRO_PLUS') {
       // Если выбран базовый вариант (selectedUpLimitId === null), возвращаем базовую цену
       if (selectedUpLimitId === null) {
         return plan.price;
@@ -229,7 +229,7 @@ export const PaymentPage = () => {
 
   // Рассчитываем лимит для конкретного плана с учётом выбранного upLimit
   const getPlanLimit = (plan: (typeof plans)[0], upLimitId: number | null) => {
-    if (plan.name === "PRO_PLUS") {
+    if (plan.name === 'PRO_PLUS') {
       if (upLimitId === null) {
         return plan.bidMonthLimit; // 200
       }
@@ -248,7 +248,7 @@ export const PaymentPage = () => {
     if (!userPlanQuery.data) return false;
 
     // Для Pro+ проверяем и план, и лимит
-    if (plan.name === "PRO_PLUS" && userPlanQuery.data.name === "PRO_PLUS") {
+    if (plan.name === 'PRO_PLUS' && userPlanQuery.data.name === 'PRO_PLUS') {
       const currentLimit = userPlanQuery.data.bidMonthLimit;
       const selectedLimit = getPlanLimit(plan, selectedUpLimitId);
       return userPlanQuery.data.id === plan.id && currentLimit === selectedLimit;
@@ -261,8 +261,8 @@ export const PaymentPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8 max-w-5xl mx-auto">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">{t("payment.title")}</h1>
-        <p className="text-sm text-muted-foreground max-w-xl mx-auto">{t("plans.description")}</p>
+        <h1 className="text-3xl font-semibold tracking-tight">{t('payment.title')}</h1>
+        <p className="text-sm text-muted-foreground max-w-xl mx-auto">{t('plans.description')}</p>
       </div>
 
       {userPlanQuery.data && userPlanQuery.data.price > 0 && (
@@ -271,18 +271,18 @@ export const PaymentPage = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 {userPlanQuery.data.cancelAutoRenew
-                  ? t("payment.subscription_ends")
-                  : t("payment.next_charge")}
-                :{" "}
-                {new Date(userPlanQuery.data.finalDayAt).toLocaleDateString("ru-RU", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
+                  ? t('payment.subscription_ends')
+                  : t('payment.next_charge')}
+                :{' '}
+                {new Date(userPlanQuery.data.finalDayAt).toLocaleDateString('ru-RU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
                 })}
               </p>
               {userPlanQuery.data.cancelAutoRenew && (
                 <p className="text-sm text-orange-600 mt-1">
-                  {t("payment.subscription_cancelled_info")}
+                  {t('payment.subscription_cancelled_info')}
                 </p>
               )}
             </div>
@@ -293,7 +293,7 @@ export const PaymentPage = () => {
               onClick={() => setShowCancelDialog(true)}
               className="text-red-600 hover:text-red-700 hover:border-red-600"
             >
-              {t("payment.cancel_subscription")}
+              {t('payment.cancel_subscription')}
             </Button>
           )}
         </div>
@@ -304,7 +304,7 @@ export const PaymentPage = () => {
           const features = getPlanFeatures(plan);
           const paid = isPaidPlan(plan.name);
           const isCurrentVariantPlan = isCurrentVariant(plan);
-          const isProPlus = plan.name === "PRO_PLUS";
+          const isProPlus = plan.name === 'PRO_PLUS';
           const isLoading = loadingPlanId === plan.id;
           const totalPrice = getTotalPrice(plan);
 
@@ -312,12 +312,12 @@ export const PaymentPage = () => {
             <Card
               key={plan.id}
               className={`flex flex-col border-border/70 transition-all hover:border-primary hover:shadow-md relative ${
-                paid ? "border-primary/50" : ""
-              } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
+                paid ? 'border-primary/50' : ''
+              } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
             >
               {isCurrentVariantPlan && (
                 <div className="absolute -top-4 left-3 z-10">
-                  <Badge variant="secondary">{t("plans.current_plan")}</Badge>
+                  <Badge variant="secondary">{t('plans.current_plan')}</Badge>
                 </div>
               )}
               <CardHeader className="space-y-2">
@@ -325,7 +325,7 @@ export const PaymentPage = () => {
                   <CardTitle className="text-lg">{getDisplayPlanName(plan.name)}</CardTitle>
                   <CardDescription className="text-base text-foreground mt-1">
                     {isProPlus
-                      ? `${totalPrice} ₽ / ${t("plans.price.perMonth")}`
+                      ? `${totalPrice} ₽ / ${t('plans.price.perMonth')}`
                       : formatPrice(plan.price, plan.name)}
                   </CardDescription>
                 </div>
@@ -333,11 +333,11 @@ export const PaymentPage = () => {
               <CardContent className="flex-1 flex flex-col space-y-3">
                 {isProPlus && upLimitsQuery.data && upLimitsQuery.data.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">{t("plans.features.lead_limit")}</p>
+                    <p className="text-sm font-medium">{t('plans.features.lead_limit')}</p>
                     <Tabs
-                      value={selectedUpLimitId === null ? "base" : selectedUpLimitId.toString()}
+                      value={selectedUpLimitId === null ? 'base' : selectedUpLimitId.toString()}
                       onValueChange={(value) => {
-                        if (value === "base") {
+                        if (value === 'base') {
                           setSelectedUpLimitId(null);
                         } else {
                           setSelectedUpLimitId(Number(value));
@@ -378,12 +378,12 @@ export const PaymentPage = () => {
                 )}
                 {paid && !isProPlus && (
                   <p className="text-sm text-muted-foreground">
-                    {plan.name === "BASE" ? t("plans.features.target_audience.paid") : ""}
+                    {plan.name === 'BASE' ? t('plans.features.target_audience.paid') : ''}
                   </p>
                 )}
                 {!paid && (
                   <p className="text-sm text-muted-foreground">
-                    {t("plans.features.target_audience.free")}
+                    {t('plans.features.target_audience.free')}
                   </p>
                 )}
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -402,12 +402,12 @@ export const PaymentPage = () => {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <Loader className="h-4 w-4 mr-2" />
-                      {t("payment.processing")}
+                      {t('payment.processing')}
                     </div>
                   ) : isCurrentVariantPlan ? (
-                    t("plans.current_plan")
+                    t('plans.current_plan')
                   ) : (
-                    t("payment.select_plan")
+                    t('payment.select_plan')
                   )}
                 </button>
               </CardContent>
@@ -431,18 +431,18 @@ export const PaymentPage = () => {
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("payment.cancel_subscription.confirm_title")}</AlertDialogTitle>
+            <AlertDialogTitle>{t('payment.cancel_subscription.confirm_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("payment.cancel_subscription.confirm_description")}
+              {t('payment.cancel_subscription.confirm_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("payment.cancel_subscription.cancel_button")}</AlertDialogCancel>
+            <AlertDialogCancel>{t('payment.cancel_subscription.cancel_button')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelSubscription}
               className="bg-red-600 hover:bg-red-700"
             >
-              {t("payment.cancel_subscription.confirm_button")}
+              {t('payment.cancel_subscription.confirm_button')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

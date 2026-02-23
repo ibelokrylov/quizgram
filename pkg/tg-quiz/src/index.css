@@ -13,29 +13,20 @@
   --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #ffffff);
   --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #007aff);
   --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #ffffff);
-  --tg-theme-section-header-text-color: var(
-    --tg-theme-section-header-text-color,
-    #707579
-  );
+  --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #707579);
   --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #707579);
-  --tg-theme-destructive-text-color: var(
-    --tg-theme-destructive-text-color,
-    #e53935
-  );
+  --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #e53935);
 
   /* Дополнительные цвета (Bot API 7.6+) */
-  --tg-theme-section-separator-color: var(
-    --tg-theme-section-separator-color,
-    #e0e0e0
-  );
+  --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #e0e0e0);
 
   /* Цвета нижней панели (Bot API 7.10+) */
   --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #ffffff);
 
   /* Telegram UI Typography */
   --tgui--font-family:
-    system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Apple Color Emoji",
-    "Helvetica Neue", sans-serif;
+    system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Apple Color Emoji', 'Helvetica Neue',
+    sans-serif;
   --tgui--font_weight--accent1: 700;
   --tgui--font_weight--accent2: 600;
   --tgui--font_weight--accent3: 400;
@@ -73,15 +64,9 @@
   --tgui--header_bg_color: var(--tg-theme-header-bg-color, #fff);
   --tgui--accent_text_color: var(--tg-theme-accent-text-color, #007aff);
   --tgui--section_bg_color: var(--tg-theme-section-bg-color, #fff);
-  --tgui--section_header_text_color: var(
-    --tg-theme-section-header-text-color,
-    #707579
-  );
+  --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #707579);
   --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #707579);
-  --tgui--destructive_text_color: var(
-    --tg-theme-destructive-text-color,
-    #e53935
-  );
+  --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #e53935);
   --tgui--skeleton: rgba(0, 0, 0, 0.08);
   --tgui--divider: rgba(0, 0, 0, 0.15);
   --tgui--outline: rgba(0, 0, 0, 0.05);
@@ -135,30 +120,15 @@
     --tg-theme-header-bg-color: var(--tg-theme-header-bg-color, #212121) Reislin;
     --tg-theme-accent-text-color: var(--tg-theme-accent-text-color, #8774e1);
     --tg-theme-section-bg-color: var(--tg-theme-section-bg-color, #212121);
-    --tg-theme-section-header-text-color: var(
-      --tg-theme-section-header-text-color,
-      #8774e1
-    );
-    --tg-theme-subtitle-text-color: var(
-      --tg-theme-subtitle-text-color,
-      #aaaaaa
-    );
-    --tg-theme-destructive-text-color: var(
-      --tg-theme-destructive-text-color,
-      #ff595a
-    );
+    --tg-theme-section-header-text-color: var(--tg-theme-section-header-text-color, #8774e1);
+    --tg-theme-subtitle-text-color: var(--tg-theme-subtitle-text-color, #aaaaaa);
+    --tg-theme-destructive-text-color: var(--tg-theme-destructive-text-color, #ff595a);
 
     /* Дополнительные цвета (Bot API 7.6+) */
-    --tg-theme-section-separator-color: var(
-      --tg-theme-section-separator-color,
-      #2f2f2f
-    );
+    --tg-theme-section-separator-color: var(--tg-theme-section-separator-color, #2f2f2f);
 
     /* Цвета нижней панели (Bot API 7.10+) */
-    --tg-theme-bottom-bar-bg-color: var(
-      --tg-theme-bottom-bar-bg-color,
-      #212121
-    );
+    --tg-theme-bottom-bar-bg-color: var(--tg-theme-bottom-bar-bg-color, #212121);
 
     /* Telegram UI Colors - Dark Theme */
     --tgui--base--section--box_shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -172,15 +142,9 @@
     --tgui--header_bg_color: var(--tg-theme-header-bg-color, #212121);
     --tgui--accent_text_color: var(--tg-theme-accent-text-color, #8774e1);
     --tgui--section_bg_color: var(--tg-theme-section-bg-color, #212121);
-    --tgui--section_header_text_color: var(
-      --tg-theme-section-header-text-color,
-      #aaa
-    );
+    --tgui--section_header_text_color: var(--tg-theme-section-header-text-color, #aaa);
     --tgui--subtitle_text_color: var(--tg-theme-subtitle-text-color, #aaa);
-    --tgui--destructive_text_color: var(
-      --tg-theme-destructive-text-color,
-      #ff595a
-    );
+    --tgui--destructive_text_color: var(--tg-theme-destructive-text-color, #ff595a);
     --tgui--skeleton: hsla(0, 0%, 100%, 0.03);
     --tgui--divider: rgba(255, 255, 255, 0.12);
     --tgui--outline: rgba(255, 255, 255, 0.08);
@@ -214,8 +178,8 @@ body {
   background-color: var(--tgui--bg_color, #ffffff);
   color: var(--tg-theme-text-color, #000000);
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -774,9 +738,9 @@ body.dark .platform-ios .cards.contact {
 }
 
 /* Когда иконка выбрана (opacity становится выше или fill меняется), скрываем stroke и показываем fill */
-.rating-star-icon[style*="opacity: 1"] path,
-.rating-star-icon[style*="opacity:1"] path,
-.rating-star-icon[style*="fill"] path {
+.rating-star-icon[style*='opacity: 1'] path,
+.rating-star-icon[style*='opacity:1'] path,
+.rating-star-icon[style*='fill'] path {
   fill: currentColor;
   stroke: none;
 }

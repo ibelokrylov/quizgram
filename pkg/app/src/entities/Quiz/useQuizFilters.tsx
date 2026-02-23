@@ -1,5 +1,5 @@
-import http from "@/lib/http";
-import { useQuery } from "@tanstack/react-query";
+import http from '@/lib/http';
+import { useQuery } from '@tanstack/react-query';
 
 export interface QuizFilterItem {
   uid: string;
@@ -12,14 +12,14 @@ interface QuizFiltersData {
 
 async function fetchQuizFilters(): Promise<QuizFilterItem[]> {
   const response = await http<QuizFiltersData>({
-    url: "/v1/quiz/filters",
+    url: '/v1/quiz/filters',
   });
   return response.data.filters;
 }
 
 export const useQuizFilters = () => {
   return useQuery({
-    queryKey: ["quiz-filters"],
+    queryKey: ['quiz-filters'],
     queryFn: fetchQuizFilters,
     staleTime: 20 * 1000, // 20 секунд (соответствует кэшу на сервере)
     retry: false,

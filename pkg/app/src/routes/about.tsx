@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { createFileRoute } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { createFileRoute } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
+import { Link } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/about")({
+export const Route = createFileRoute('/about')({
   component: RouteComponent,
 });
 

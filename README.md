@@ -21,6 +21,7 @@ Hooks устанавливаются автоматически при выпо�
 При каждом `git push` автоматически запускаются тесты из `pkg/api`. Если тесты не проходят, push блокируется.
 
 **Для принудительного push (без тестов):**
+
 ```bash
 git push --no-verify
 ```
@@ -44,6 +45,7 @@ bun run index.ts
    - Создать новый токен с необходимыми правами (репозитории, issues, pull requests и т.д.)
 
 2. Добавить токен в `.env` файл:
+
    ```bash
    GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here
    ```
@@ -65,6 +67,7 @@ bun run index.ts
    - Сохранить токен (показывается только один раз!)
 
 2. Добавить credentials в `.env` файл:
+
    ```bash
    DOCKER_HUB_LOGIN=your_docker_hub_username
    DOCKER_HUB_TOKEN=your_docker_hub_access_token
@@ -84,11 +87,13 @@ bun run index.ts
 ## Docker Compose
 
 ### Первый запуск (все сервисы):
+
 ```bash
 docker compose up -d
 ```
 
 ### Деплой приложений (без перезапуска PostgreSQL):
+
 ```bash
 docker compose up -d --build api app tg-quiz
 ```

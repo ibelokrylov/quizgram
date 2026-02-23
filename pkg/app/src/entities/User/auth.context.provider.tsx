@@ -37,7 +37,11 @@ export const AuthContextProvider = (props: PropsWithChildren) => {
       // Это предотвращает перезапись языка, который пользователь только что выбрал
       if (query.data.language && (query.data.language === 'en' || query.data.language === 'ru')) {
         const currentLang = i18n.language || 'en';
-        const normalizedCurrentLang = currentLang.startsWith('ru') ? 'ru' : currentLang.startsWith('en') ? 'en' : currentLang;
+        const normalizedCurrentLang = currentLang.startsWith('ru')
+          ? 'ru'
+          : currentLang.startsWith('en')
+            ? 'en'
+            : currentLang;
 
         // Устанавливаем язык только если он отличается от текущего
         if (normalizedCurrentLang !== query.data.language) {

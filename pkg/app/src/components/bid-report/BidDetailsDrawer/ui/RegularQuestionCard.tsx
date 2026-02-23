@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import AnswerRenderer from "./AnswerRenderer";
+import { Badge } from '@/components/ui/badge';
+import AnswerRenderer from './AnswerRenderer';
 
 export interface RegularQuestionCardProps {
   item: any;
@@ -38,10 +38,8 @@ const RegularQuestionCard = ({
           {questionUid}
         </Badge>
       )}
-      {title && (
-        <div className="text-xs lg:text-sm font-medium pt-1">{title}</div>
-      )}
-      <div className={title ? "" : "pt-3"}>
+      {title && <div className="text-xs lg:text-sm font-medium pt-1">{title}</div>}
+      <div className={title ? '' : 'pt-3'}>
         <AnswerRenderer
           isNew={isNew}
           answer={item?.answer ?? item}

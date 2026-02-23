@@ -1,33 +1,33 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import type { Quiz, QuizQuestionSelect } from "@/entities/Quiz/quiz.type";
-import { Plus } from "lucide-react";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import type { Quiz, QuizQuestionSelect } from '@/entities/Quiz/quiz.type';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const SelectQuestion = ({
   question,
   setQuestion,
 }: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
 }) => {
   const content = question?.content as QuizQuestionSelect;
   const { t } = useTranslation();
 
   useEffect(() => {
     if (!content?.variants?.length) {
-      setQuestion({ ...question, content: { ...content, variants: [""] } });
+      setQuestion({ ...question, content: { ...content, variants: [''] } });
     }
   }, [content]);
 
   return (
-    <div className={"flex flex-col gap-3"}>
+    <div className={'flex flex-col gap-3'}>
       {content?.variants?.map((variant, idx) => (
         <Input
           key={`${question.uid}-${idx}`}
           value={variant}
-          placeholder={t("edit-quiz.question-page.question.select.placeholder")}
+          placeholder={t('edit-quiz.question-page.question.select.placeholder')}
           onChange={(e) =>
             setQuestion({
               ...question,
@@ -41,12 +41,12 @@ export const SelectQuestion = ({
       ))}
       <div>
         <Button
-          variant={"outline"}
-          size={"icon-sm"}
+          variant={'outline'}
+          size={'icon-sm'}
           onClick={() =>
             setQuestion({
               ...question,
-              content: { ...content, variants: [...content.variants, ""] },
+              content: { ...content, variants: [...content.variants, ''] },
             })
           }
         >

@@ -12,7 +12,10 @@ import {
   UserTable,
 } from '../../db';
 import { logger } from '../../lib/logger';
-import { BaseTelegramBotService, type InlineKeyboardMarkup } from '../../services/base-telegram-bot.service';
+import {
+  BaseTelegramBotService,
+  type InlineKeyboardMarkup,
+} from '../../services/base-telegram-bot.service';
 import { MailService } from '../../services/mail.service';
 import { QuizFileService } from '../../services/quiz-file.service';
 import { TelegramService } from '../../services/telegram.service';
@@ -20,7 +23,14 @@ import { UserService } from '../user/service';
 import { Answer, BodyAnswer, PublicQuiz } from './models';
 
 // Типы для ответов квиза
-type AnswerValue = string | number | boolean | File | Blob | { type: string; [key: string]: unknown } | null;
+type AnswerValue =
+  | string
+  | number
+  | boolean
+  | File
+  | Blob
+  | { type: string; [key: string]: unknown }
+  | null;
 type StoredAnswer = {
   question_uid: string;
   answer: AnswerValue;
@@ -34,13 +44,17 @@ export abstract class PublicService {
     files: Array<{ fileName: string; file: File }>,
     quizId: number,
     userKey: string,
-    questionUid: string,
+    questionUid: string
   ): Promise<Array<{ url: string; fileName: string }>> {
     if (files.length > 10) {
       throw new Error('Maximum 10 files allowed per answer');
     }
 
-    const [question] = await db.select().from(quizQuestionTable).where(eq(quizQuestionTable.uid, questionUid)).limit(1);
+    const [question] = await db
+      .select()
+      .from(quizQuestionTable)
+      .where(eq(quizQuestionTable.uid, questionUid))
+      .limit(1);
 
     if (!question) throw new Error('Question not found');
 
@@ -126,7 +140,9 @@ export abstract class PublicService {
         })
         .from(userPaymentTable)
         .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
-        .where(and(eq(userPaymentTable.userId, quiz[0].userId), eq(userPaymentTable.isActive, true)))
+        .where(
+          and(eq(userPaymentTable.userId, quiz[0].userId), eq(userPaymentTable.isActive, true))
+        )
         .limit(1);
 
       // Платная подписка = план с ценой > 0
@@ -166,10 +182,14 @@ export abstract class PublicService {
       country: string | null;
       city: string | null;
       ip: string | null;
-    } | null,
+    } | null
   ): Promise<PublicQuiz> {
     // Получаем ID квиза
-    const quizRecord = await db.select({ id: quizTable.id }).from(quizTable).where(eq(quizTable.uid, quizUid)).limit(1);
+    const quizRecord = await db
+      .select({ id: quizTable.id })
+      .from(quizTable)
+      .where(eq(quizTable.uid, quizUid))
+      .limit(1);
 
     if (quizRecord.length === 0) {
       throw new Error(`Quiz with uid ${quizUid} not found`);
@@ -182,7 +202,8 @@ export abstract class PublicService {
     const questions = quiz.question || [];
 
     // Извлекаем форму контактов из квиза
-    const contactsForm = quiz.contact && quiz.contact.length > 0 ? quiz.contact[0].form || null : null;
+    const contactsForm =
+      quiz.contact && quiz.contact.length > 0 ? quiz.contact[0].form || null : null;
 
     // Проверяем, существует ли уже запись с таким key
     const existingRecord = await db
@@ -232,7 +253,10 @@ export abstract class PublicService {
           questionsCount: questions.length,
         });
       } catch (error) {
-        logger.error('Failed to verify Telegram initData', error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          'Failed to verify Telegram initData',
+          error instanceof Error ? error : new Error(String(error))
+        );
         // Если верификация не удалась, всё равно сохраняем initData (но без userInfo)
         await db.insert(quizBidTable).values({
           quizId: quizRecord[0].id,
@@ -249,7 +273,10 @@ export abstract class PublicService {
           updatedAt: new Date(),
         });
 
-        logger.warn('Created quiz session with initData but without verified userInfo due to verification error', { quizUid, userKey });
+        logger.warn(
+          'Created quiz session with initData but without verified userInfo due to verification error',
+          { quizUid, userKey }
+        );
       }
     } else {
       // Если initData нет, создаем запись без данных Telegram
@@ -282,7 +309,10 @@ export abstract class PublicService {
    * @param quizUid - UID квиза
    * @param incrementUnique - если true, увеличивает и openedUnique, и opened; если false - только opened
    */
-  static async incrementQuizOpened(quizUid: string, incrementUnique: boolean = false): Promise<void> {
+  static async incrementQuizOpened(
+    quizUid: string,
+    incrementUnique: boolean = false
+  ): Promise<void> {
     try {
       const updateSet: Record<string, ReturnType<typeof sql>> = {
         opened: sql`${quizOpenTable.opened}
@@ -355,7 +385,12 @@ export abstract class PublicService {
    * @param final_question
    * @param traceId - для логирования, опционален
    */
-  static async saveQuizAnswer(quizUid: string, body: BodyAnswer, final_question: boolean, traceId?: string): Promise<void> {
+  static async saveQuizAnswer(
+    quizUid: string,
+    body: BodyAnswer,
+    final_question: boolean,
+    traceId?: string
+  ): Promise<void> {
     // Логируем входящие данные для отладки
     logger.debug(
       'saveQuizAnswer called',
@@ -363,12 +398,16 @@ export abstract class PublicService {
         quizUid,
         answerData: body,
       },
-      traceId,
+      traceId
     );
 
     try {
       // Получаем ID квиза
-      const [quiz] = await db.select({ id: quizTable.id }).from(quizTable).where(eq(quizTable.uid, quizUid)).limit(1);
+      const [quiz] = await db
+        .select({ id: quizTable.id })
+        .from(quizTable)
+        .where(eq(quizTable.uid, quizUid))
+        .limit(1);
 
       if (!quiz) {
         throw new Error(`Quiz with uid ${quizUid} not found`);
@@ -384,7 +423,7 @@ export abstract class PublicService {
           files.map((file) => ({ fileName: file.name, file })),
           quiz.id,
           body.key,
-          body.question_uid,
+          body.question_uid
         );
         urls.push(...uploadFiles);
       }
@@ -416,11 +455,18 @@ export abstract class PublicService {
           quizUid,
           questionUid: body.question_uid,
           answerType: typeof processedAnswer,
-          isFileAnswer: processedAnswer && typeof processedAnswer === 'object' && 'type' in processedAnswer && processedAnswer.type === 'file',
-          answerKeys: processedAnswer && typeof processedAnswer === 'object' ? Object.keys(processedAnswer) : [],
+          isFileAnswer:
+            processedAnswer &&
+            typeof processedAnswer === 'object' &&
+            'type' in processedAnswer &&
+            processedAnswer.type === 'file',
+          answerKeys:
+            processedAnswer && typeof processedAnswer === 'object'
+              ? Object.keys(processedAnswer)
+              : [],
           finalQuestion: final_question,
         },
-        traceId,
+        traceId
       );
 
       if (existingRecord) {
@@ -428,7 +474,9 @@ export abstract class PublicService {
         const existingAnswers = (existingRecord.answer as unknown as StoredAnswerArray) || [];
 
         // Проверяем, есть ли уже ответ на этот вопрос
-        const existingAnswerIndex = existingAnswers.findIndex((ans: any) => ans.question_uid === body.question_uid);
+        const existingAnswerIndex = existingAnswers.findIndex(
+          (ans: any) => ans.question_uid === body.question_uid
+        );
 
         let updatedAnswers: any[];
         if (existingAnswerIndex >= 0) {
@@ -442,7 +490,7 @@ export abstract class PublicService {
               userKey: body.key,
               questionUid: body.question_uid,
             },
-            traceId,
+            traceId
           );
         } else {
           // Добавляем новый ответ в массив
@@ -454,7 +502,7 @@ export abstract class PublicService {
               userKey: body.key,
               questionUid: body.question_uid,
             },
-            traceId,
+            traceId
           );
         }
 
@@ -482,7 +530,7 @@ export abstract class PublicService {
               'type' in updatedAnswers[updatedAnswers.length - 1].answer &&
               updatedAnswers[updatedAnswers.length - 1].answer.type === 'file',
           },
-          traceId,
+          traceId
         );
       } else {
         // Если записи нет, пытаемся создать её (fallback на случай, если квиз был получен без создания сессии)
@@ -493,7 +541,7 @@ export abstract class PublicService {
             userKey: body.key,
             questionUid: body.question_uid,
           },
-          traceId,
+          traceId
         );
 
         // Создаем новую запись
@@ -522,9 +570,12 @@ export abstract class PublicService {
             questionUid: body.question_uid,
             answerType: typeof newAnswer[0]?.answer,
             answerIsFile:
-              newAnswer[0]?.answer && typeof newAnswer[0].answer === 'object' && 'type' in newAnswer[0].answer && newAnswer[0].answer.type === 'file',
+              newAnswer[0]?.answer &&
+              typeof newAnswer[0].answer === 'object' &&
+              'type' in newAnswer[0].answer &&
+              newAnswer[0].answer.type === 'file',
           },
-          traceId,
+          traceId
         );
       }
 
@@ -537,13 +588,18 @@ export abstract class PublicService {
             userKey: body.key,
             questionUid: body.question_uid,
           },
-          traceId,
+          traceId
         );
         // Здесь можно добавить дополнительную логику для обработки последнего вопроса
         // Например, изменение статуса сессии на 'completed' (если контакты не обязательны)
       }
     } catch (error) {
-      logger.error('Failed to save quiz answer', error as Error, { quizUid, answerData: body }, traceId);
+      logger.error(
+        'Failed to save quiz answer',
+        error as Error,
+        { quizUid, answerData: body },
+        traceId
+      );
       throw error;
     }
   }
@@ -555,10 +611,18 @@ export abstract class PublicService {
    * @param contactData - данные контактов (answers и form, но form не сохраняется - он уже в contactsForm)
    * @param sessionToken - токен сессии для идентификации пользователя
    */
-  static async saveQuizContacts(quizUid: string, contactData: { answers: Record<string, string>; form?: any[] }, sessionToken?: string): Promise<void> {
+  static async saveQuizContacts(
+    quizUid: string,
+    contactData: { answers: Record<string, string>; form?: any[] },
+    sessionToken?: string
+  ): Promise<void> {
     try {
       // Получаем ID квиза и userId владельца
-      const quiz = await db.select({ id: quizTable.id, userId: quizTable.userId }).from(quizTable).where(eq(quizTable.uid, quizUid)).limit(1);
+      const quiz = await db
+        .select({ id: quizTable.id, userId: quizTable.userId })
+        .from(quizTable)
+        .where(eq(quizTable.uid, quizUid))
+        .limit(1);
 
       if (!quiz || quiz.length === 0) {
         throw new Error(`Quiz with uid ${quizUid} not found`);
@@ -579,7 +643,11 @@ export abstract class PublicService {
         // form уже сохранен в contactsForm при получении квиза
         const existingAnswers = (existingRecord[0].answer as unknown as StoredAnswerArray) || [];
 
-        const quizOwnerResult = await db.select().from(UserTable).where(eq(UserTable.id, quiz[0].userId)).limit(1);
+        const quizOwnerResult = await db
+          .select()
+          .from(UserTable)
+          .where(eq(UserTable.id, quiz[0].userId))
+          .limit(1);
 
         const owner = quizOwnerResult[0];
         const isOwnerAdmin = owner?.isAdmin ?? false;
@@ -594,7 +662,12 @@ export abstract class PublicService {
             const userPayments = await db
               .select()
               .from(userPaymentTable)
-              .where(and(eq(userPaymentTable.userId, quiz[0].userId), eq(userPaymentTable.isActive, true)))
+              .where(
+                and(
+                  eq(userPaymentTable.userId, quiz[0].userId),
+                  eq(userPaymentTable.isActive, true)
+                )
+              )
               .limit(1);
 
             if (userPayments.length > 0 && userPayments[0]) {
@@ -633,10 +706,14 @@ export abstract class PublicService {
               });
             }
           } catch (paymentError) {
-            logger.error('Ошибка при проверке лимита платежа', paymentError instanceof Error ? paymentError : new Error(String(paymentError)), {
-              userId: quiz[0].userId,
-              quizUid,
-            });
+            logger.error(
+              'Ошибка при проверке лимита платежа',
+              paymentError instanceof Error ? paymentError : new Error(String(paymentError)),
+              {
+                userId: quiz[0].userId,
+                quizUid,
+              }
+            );
             // Не прерываем сохранение контактов, если проверка лимита не удалась
           }
         }
@@ -723,7 +800,7 @@ export abstract class PublicService {
                   logger.error(
                     'Ошибка при отправке email уведомления владельцу квиза',
                     emailError instanceof Error ? emailError : new Error(String(emailError)),
-                    { quizUid, ownerId: owner.id, ownerEmail: owner.login },
+                    { quizUid, ownerId: owner.id, ownerEmail: owner.login }
                   );
                   // Не прерываем выполнение, если email не отправился
                 }
@@ -750,19 +827,26 @@ export abstract class PublicService {
                     // Кодируем путь в base64url (Telegram разрешает только A-Z, a-z, 0-9, _, -)
                     // base64url: заменяем + на -, / на _, убираем =
                     const base64 = Buffer.from(pathWithQuery).toString('base64');
-                    const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const base64url = base64
+                      .replace(/\+/g, '-')
+                      .replace(/\//g, '_')
+                      .replace(/=/g, '');
 
                     // Формируем URL для Telegram Mini App с base64url путем в startapp
                     const tgAppUrl = `https://t.me/${process.env.ENV === 'production' ? 'Quiz_gramm_bot' : 'tg_union_bot'}?startapp=${base64url}`;
 
                     // Проверяем, не localhost ли URL (Telegram не поддерживает localhost в кнопках)
-                    const isLocalhost = reportUrl.includes('localhost') || reportUrl.includes('127.0.0.1');
+                    const isLocalhost =
+                      reportUrl.includes('localhost') || reportUrl.includes('127.0.0.1');
 
                     // Создаем inline keyboard
                     const inlineKeyboardButtons = [
                       [
                         {
-                          text: ownerLanguage === 'en' ? '📱 Open in Telegram App' : '📱 Открыть в Telegram App',
+                          text:
+                            ownerLanguage === 'en'
+                              ? '📱 Open in Telegram App'
+                              : '📱 Открыть в Telegram App',
                           url: tgAppUrl,
                         },
                       ],
@@ -782,7 +866,14 @@ export abstract class PublicService {
                       inline_keyboard: inlineKeyboardButtons,
                     };
 
-                    await BaseTelegramBotService.sendMessage('BOT_CRM_TOKEN', chatId, messageText, 'HTML', true, keyboard);
+                    await BaseTelegramBotService.sendMessage(
+                      'BOT_CRM_TOKEN',
+                      chatId,
+                      messageText,
+                      'HTML',
+                      true,
+                      keyboard
+                    );
 
                     logger.info('Telegram уведомление отправлено владельцу квиза', {
                       quizUid,
@@ -801,12 +892,14 @@ export abstract class PublicService {
                 } catch (telegramError) {
                   logger.error(
                     'Ошибка при отправке Telegram уведомления владельцу квиза',
-                    telegramError instanceof Error ? telegramError : new Error(String(telegramError)),
+                    telegramError instanceof Error
+                      ? telegramError
+                      : new Error(String(telegramError)),
                     {
                       quizUid,
                       ownerId: owner.id,
                       telegramId: owner.telegramId,
-                    },
+                    }
                   );
                   // Не прерываем выполнение, если Telegram не отправился
                 }
@@ -814,8 +907,10 @@ export abstract class PublicService {
             } catch (notificationError) {
               logger.error(
                 'Ошибка при получении настроек уведомлений или отправке уведомления',
-                notificationError instanceof Error ? notificationError : new Error(String(notificationError)),
-                { quizUid, ownerId: owner.id },
+                notificationError instanceof Error
+                  ? notificationError
+                  : new Error(String(notificationError)),
+                { quizUid, ownerId: owner.id }
               );
               // Не прерываем выполнение, если уведомление не отправилось
             }
@@ -824,16 +919,19 @@ export abstract class PublicService {
           logger.error(
             'Ошибка при получении владельца квиза для отправки уведомления',
             ownerError instanceof Error ? ownerError : new Error(String(ownerError)),
-            { quizUid, userId: quiz[0].userId },
+            { quizUid, userId: quiz[0].userId }
           );
           // Не прерываем выполнение, если не удалось отправить уведомление
         }
       } else {
         // Если записи нет, это ошибка - она должна быть создана при получении квиза
-        logger.error('Quiz session not found for contacts - should be created when quiz is loaded', {
-          quizUid,
-          userKey,
-        });
+        logger.error(
+          'Quiz session not found for contacts - should be created when quiz is loaded',
+          {
+            quizUid,
+            userKey,
+          }
+        );
         throw new Error('Session not found. Please reload the quiz.');
       }
     } catch (error) {

@@ -2,11 +2,11 @@
 // Дата создания: 2024
 // Описание: Улучшение производительности запросов в модуле bids
 
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "001-add-bids-indexes",
-  description: "Добавление индексов для оптимизации запросов к quiz_bid",
+  name: '001-add-bids-indexes',
+  description: 'Добавление индексов для оптимизации запросов к quiz_bid',
 
   async up(sql) {
     // Индекс для основных фильтров запросов
@@ -57,4 +57,3 @@ export const migration: MigrationFile = {
     `;
   },
 };
-

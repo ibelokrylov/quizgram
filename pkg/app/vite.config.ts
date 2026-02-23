@@ -1,19 +1,19 @@
-import tailwindcss from "@tailwindcss/vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react from "@vitejs/plugin-react";
-import mkcert from "vite-plugin-mkcert";
-import path from "node:path";
-import { defineConfig } from "vite";
+import tailwindcss from '@tailwindcss/vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import react from '@vitejs/plugin-react';
+import mkcert from 'vite-plugin-mkcert';
+import path from 'node:path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
     tanstackRouter({
-      target: "react",
+      target: 'react',
       autoCodeSplitting: true,
     }),
     react({
       babel: {
-        plugins: [["babel-plugin-react-compiler"]],
+        plugins: [['babel-plugin-react-compiler']],
       },
     }),
     mkcert(),
@@ -21,7 +21,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
@@ -31,7 +31,7 @@ export default defineConfig({
   },
   build: {
     // Используем esbuild вместо terser (быстрее, меньше памяти)
-    minify: "esbuild",
+    minify: 'esbuild',
     // Отключаем sourcemaps для production (экономит память)
     sourcemap: false,
     // Увеличиваем лимит для chunks
@@ -40,9 +40,9 @@ export default defineConfig({
       output: {
         // Ручное разделение chunks для уменьшения потребления памяти
         manualChunks: {
-          vendor: ["react", "react-dom"],
-          router: ["@tanstack/react-router"],
-          query: ["@tanstack/react-query"],
+          vendor: ['react', 'react-dom'],
+          router: ['@tanstack/react-router'],
+          query: ['@tanstack/react-query'],
         },
       },
     },

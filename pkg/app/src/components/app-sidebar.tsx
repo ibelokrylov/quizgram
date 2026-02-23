@@ -4,7 +4,15 @@ import { TbReportMedical } from 'react-icons/tb';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
 import { AuthContext } from '@/entities/User/auth.context';
 import { Link } from '@tanstack/react-router';
 import { useTheme } from 'next-themes';
@@ -98,25 +106,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar
-      collapsible='offcanvas'
-      {...props}
-    >
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className='data-[slot=sidebar-menu-button]:!p-1.5'
-            >
-              <Link to='/app'>
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+              <Link to="/app">
                 <div>
                   <img
-                    className='object-fill w-5 h-5'
+                    className="object-fill w-5 h-5"
                     src={isDark ? '/logo_dark.png' : '/logo_white.png'}
                   />
                 </div>
-                <span className='text-base font-semibold'>{import.meta.env.VITE_PUBLIC_APP_NAME}</span>
+                <span className="text-base font-semibold">
+                  {import.meta.env.VITE_PUBLIC_APP_NAME}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -125,14 +129,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
-        {user?.isAdmin ? (
-          <NavSecondary
-            items={data.navSecondary}
-            className='mt-auto'
-          />
-        ) : null}
+        {user?.isAdmin ? <NavSecondary items={data.navSecondary} className="mt-auto" /> : null}
       </SidebarContent>
-      <SidebarFooter>{user ? <NavUser user={{ name: user.name, email: user.login }} /> : null}</SidebarFooter>
+      <SidebarFooter>
+        {user ? <NavUser user={{ name: user.name, email: user.login }} /> : null}
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -1,7 +1,7 @@
-import http from "@/lib/http";
-import { isTelegramAvailable } from "@/lib/telegram-sdk";
-import { useQuery } from "@tanstack/react-query";
-import type { User } from "./User.type";
+import http from '@/lib/http';
+import { isTelegramAvailable } from '@/lib/telegram-sdk';
+import { useQuery } from '@tanstack/react-query';
+import type { User } from './User.type';
 
 export const useUser = () => {
   async function _fetch(): Promise<User | undefined> {
@@ -13,8 +13,8 @@ export const useUser = () => {
       if (initData) {
         try {
           const res = await http<User>({
-            url: "/v1/auth/telegram/login",
-            method: "POST",
+            url: '/v1/auth/telegram/login',
+            method: 'POST',
             body: { initData },
           });
 
@@ -29,13 +29,13 @@ export const useUser = () => {
 
     // Для обычного окружения или если нет initData - используем стандартный запрос
     const { data } = await http<User>({
-      url: "/v1/user",
+      url: '/v1/user',
     });
     return data;
   }
 
   const query = useQuery({
-    queryKey: ["user"],
+    queryKey: ['user'],
     queryFn: _fetch,
     retry: false,
     refetchOnWindowFocus: false,

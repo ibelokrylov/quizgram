@@ -1,6 +1,6 @@
-import { isTelegramAvailable } from "./telegram-sdk";
+import { isTelegramAvailable } from './telegram-sdk';
 
-const STORAGE_KEY = "telegram_deep_link_target";
+const STORAGE_KEY = 'telegram_deep_link_target';
 
 /**
  * Декодирует base64url строку обратно в обычный base64
@@ -8,11 +8,11 @@ const STORAGE_KEY = "telegram_deep_link_target";
  */
 function base64urlToBase64(base64url: string): string {
   // Заменяем base64url символы обратно на base64
-  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
 
   // Добавляем padding если нужно (base64 требует длину кратной 4)
   while (base64.length % 4 !== 0) {
-    base64 += "=";
+    base64 += '=';
   }
 
   return base64;
@@ -33,13 +33,13 @@ export function decodeStartAppParam(base64url: string): string | null {
     const decoded = atob(base64);
 
     // Проверяем, что это валидный путь (начинается с /)
-    if (decoded.startsWith("/")) {
+    if (decoded.startsWith('/')) {
       return decoded;
     }
 
     return null;
   } catch (error) {
-    console.error("Ошибка декодирования startapp параметра:", error);
+    console.error('Ошибка декодирования startapp параметра:', error);
     return null;
   }
 }
@@ -69,7 +69,7 @@ export function getStartAppParam(): string | null {
 
   // Приоритет 2: из URL параметра tgWebAppStartParam
   const urlParams = new URLSearchParams(window.location.search);
-  const urlStartParam = urlParams.get("tgWebAppStartParam");
+  const urlStartParam = urlParams.get('tgWebAppStartParam');
   if (urlStartParam) {
     return urlStartParam;
   }
@@ -96,29 +96,29 @@ export function processTelegramDeepLink(): string | null {
     // Декодируем base64url в путь
     const decodedPath = decodeStartAppParam(startAppParam);
     if (!decodedPath) {
-      console.warn("Не удалось декодировать startapp параметр:", startAppParam);
+      console.warn('Не удалось декодировать startapp параметр:', startAppParam);
       return null;
     }
 
     // Валидируем путь перед сохранением
     if (!isValidDeepLinkPath(decodedPath)) {
-      console.warn("Невалидный deep link путь:", decodedPath);
+      console.warn('Невалидный deep link путь:', decodedPath);
       return null;
     }
 
     // Сохраняем целевой путь для редиректа после авторизации
     try {
       sessionStorage.setItem(STORAGE_KEY, decodedPath);
-      console.log("Deep link сохранен для редиректа:", decodedPath);
+      console.log('Deep link сохранен для редиректа:', decodedPath);
     } catch (error) {
-      console.error("Ошибка сохранения deep link:", error);
+      console.error('Ошибка сохранения deep link:', error);
       return null;
     }
 
     return decodedPath;
   } catch (error) {
     // Обработка любых неожиданных ошибок
-    console.error("Неожиданная ошибка при обработке deep link:", error);
+    console.error('Неожиданная ошибка при обработке deep link:', error);
     return null;
   }
 }
@@ -131,7 +131,7 @@ export function getSavedDeepLinkTarget(): string | null {
   try {
     return sessionStorage.getItem(STORAGE_KEY);
   } catch (error) {
-    console.error("Ошибка получения сохраненного deep link:", error);
+    console.error('Ошибка получения сохраненного deep link:', error);
     return null;
   }
 }
@@ -143,7 +143,7 @@ export function clearSavedDeepLink(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.error("Ошибка очистки deep link:", error);
+    console.error('Ошибка очистки deep link:', error);
   }
 }
 
@@ -154,7 +154,7 @@ export function clearSavedDeepLink(): void {
  * @returns true если путь валиден, false если нет
  */
 export function isValidDeepLinkPath(path: string): boolean {
-  if (!path || !path.startsWith("/")) {
+  if (!path || !path.startsWith('/')) {
     return false;
   }
 
@@ -167,13 +167,13 @@ export function isValidDeepLinkPath(path: string): boolean {
 
   // Проверяем, что путь начинается с известных маршрутов приложения
   const validRoutes = [
-    "/app",
-    "/app/dashboard",
-    "/app/bid",
-    "/app/quiz",
-    "/app/payment",
-    "/app/notification",
-    "/app/referral",
+    '/app',
+    '/app/dashboard',
+    '/app/bid',
+    '/app/quiz',
+    '/app/payment',
+    '/app/notification',
+    '/app/referral',
   ];
 
   // Проверяем, что путь начинается с одного из валидных маршрутов

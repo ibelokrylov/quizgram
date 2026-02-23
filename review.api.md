@@ -10,21 +10,21 @@
 
 **Всего: ~30+ случаев**
 
-| Файл | Строка | Проблема |
-|------|--------|----------|
-| `src/index.ts` | 27 | `let appInstance: any = null` |
-| `src/lib/logger.ts` | 124, 136 | `data?: any`, `error?: any` в методах logger |
-| `src/services/session.service.ts` | 38, 58, 83, 117 | `payload as unknown as Record<string, unknown>` — двойной каст JWT |
-| `src/services/ip-location.service.ts` | 18, 201 | `server?: any` |
-| `src/services/export.service.ts` | 16, 47 | `info?: any`, `escapeCSV(value: any)` |
-| `src/services/telegram.service.ts` | 163 | `body?: any` |
-| `src/services/mail.service.ts` | 136 | `error as unknown` |
-| `src/modules/user/index.ts` | 321 | `(ctx.body as any).file` |
-| `src/modules/statistics/service.ts` | 399, 405 | `bid.info as any`, `(q: any)` |
-| `src/modules/public/service.ts` | 255, 517, 520, 657 | Множественные `any[]` |
-| `src/modules/scheduler/service.ts` | 193 | `analyzeBidDropout(answer: any, questions: any): any` |
-| `src/modules/quiz/service.ts` | 249, 253, 270-274 | `tx as unknown as typeof database`, `startPage?: any` и др. |
-| `src/modules/bids/service.ts` | 192, 209, 245, 380, 433, 531, 612 | Множественные `as unknown as` для SQL результатов |
+| Файл                                  | Строка                            | Проблема                                                           |
+| ------------------------------------- | --------------------------------- | ------------------------------------------------------------------ |
+| `src/index.ts`                        | 27                                | `let appInstance: any = null`                                      |
+| `src/lib/logger.ts`                   | 124, 136                          | `data?: any`, `error?: any` в методах logger                       |
+| `src/services/session.service.ts`     | 38, 58, 83, 117                   | `payload as unknown as Record<string, unknown>` — двойной каст JWT |
+| `src/services/ip-location.service.ts` | 18, 201                           | `server?: any`                                                     |
+| `src/services/export.service.ts`      | 16, 47                            | `info?: any`, `escapeCSV(value: any)`                              |
+| `src/services/telegram.service.ts`    | 163                               | `body?: any`                                                       |
+| `src/services/mail.service.ts`        | 136                               | `error as unknown`                                                 |
+| `src/modules/user/index.ts`           | 321                               | `(ctx.body as any).file`                                           |
+| `src/modules/statistics/service.ts`   | 399, 405                          | `bid.info as any`, `(q: any)`                                      |
+| `src/modules/public/service.ts`       | 255, 517, 520, 657                | Множественные `any[]`                                              |
+| `src/modules/scheduler/service.ts`    | 193                               | `analyzeBidDropout(answer: any, questions: any): any`              |
+| `src/modules/quiz/service.ts`         | 249, 253, 270-274                 | `tx as unknown as typeof database`, `startPage?: any` и др.        |
+| `src/modules/bids/service.ts`         | 192, 209, 245, 380, 433, 531, 612 | Множественные `as unknown as` для SQL результатов                  |
 
 **Исправление:** определить конкретные интерфейсы для каждого случая. Для SQL — типизировать результаты raw-запросов через generics Drizzle.
 
@@ -32,12 +32,12 @@
 
 ### 2. `console.log/error/warn` в продакшн-коде
 
-| Файл | Строка | Вызов |
-|------|--------|-------|
-| `src/modules/quiz/index.ts` | 115 | `console.log(error)` |
-| `src/modules/quiz/index.ts` | 471 | `console.log(error)` |
-| `src/modules/quiz/service.ts` | 376 | `console.log(err)` |
-| `src/lib/logger.ts` | 109, 116, 118, 120, 179 | `console.error/warn/log` внутри самого логгера |
+| Файл                          | Строка                  | Вызов                                          |
+| ----------------------------- | ----------------------- | ---------------------------------------------- |
+| `src/modules/quiz/index.ts`   | 115                     | `console.log(error)`                           |
+| `src/modules/quiz/index.ts`   | 471                     | `console.log(error)`                           |
+| `src/modules/quiz/service.ts` | 376                     | `console.log(err)`                             |
+| `src/lib/logger.ts`           | 109, 116, 118, 120, 179 | `console.error/warn/log` внутри самого логгера |
 
 **Исправление:** заменить на `logger.error()`/`logger.debug()`. В логгере — сделать console-вывод опциональным через `ENV`.
 
@@ -53,10 +53,10 @@
 
 ### 4. `@ts-ignore` подавление ошибок
 
-| Файл | Строка |
-|------|--------|
-| `src/services/ip-location.service.ts` | 71 |
-| `src/modules/public/service.ts` | 63 |
+| Файл                                  | Строка |
+| ------------------------------------- | ------ |
+| `src/services/ip-location.service.ts` | 71     |
+| `src/modules/public/service.ts`       | 63     |
 
 **Исправление:** заменить на type guards или `@ts-expect-error` с пояснением.
 
@@ -72,17 +72,17 @@
 
 ```typescript
 app.onError(({ code, error, set }) => {
-  if (code === "VALIDATION") {
+  if (code === 'VALIDATION') {
     set.status = 422;
-    return { message: "validation_error", error: error.message };
+    return { message: 'validation_error', error: error.message };
   }
-  if (code === "NOT_FOUND") {
+  if (code === 'NOT_FOUND') {
     set.status = 404;
-    return { message: "not_found" };
+    return { message: 'not_found' };
   }
-  logger.error("Необработанная ошибка", error);
+  logger.error('Необработанная ошибка', error);
   set.status = 500;
-  return { message: "internal_error" };
+  return { message: 'internal_error' };
 });
 ```
 
@@ -138,11 +138,11 @@ Elysia 1.4+ поддерживает `t.File()` и `t.Files()` с встроен
 
 ### 8. Отсутствие response schemas на некоторых endpoints
 
-| Файл | Строка | Endpoint |
-|------|--------|----------|
-| `src/modules/payment/index.ts` | 202-257 | `GET /status/:paymentId` — нет response |
-| `src/modules/payment/index.ts` | 258-286 | `GET /up-limits` — нет response |
-| `src/modules/bids/index.ts` | 260-353 | `GET /export` — нет response schema (возвращает Response напрямую) |
+| Файл                           | Строка  | Endpoint                                                           |
+| ------------------------------ | ------- | ------------------------------------------------------------------ |
+| `src/modules/payment/index.ts` | 202-257 | `GET /status/:paymentId` — нет response                            |
+| `src/modules/payment/index.ts` | 258-286 | `GET /up-limits` — нет response                                    |
+| `src/modules/bids/index.ts`    | 260-353 | `GET /export` — нет response schema (возвращает Response напрямую) |
 
 Без response schema нет валидации ответа и нет описания в OpenAPI.
 
@@ -169,7 +169,7 @@ export const UnauthorizedResponse = t.Object({ message: t.String() });
 ### 10. `session.service.ts:7` — пустая строка как fallback для JWT_SECRET
 
 ```typescript
-const JWT_SECRET = typeof Bun !== "undefined" ? Bun.env.JWT_SECRET : process.env.JWT_SECRET || "";
+const JWT_SECRET = typeof Bun !== 'undefined' ? Bun.env.JWT_SECRET : process.env.JWT_SECRET || '';
 ```
 
 При отсутствии JWT_SECRET используется пустая строка. Хотя `getSecretKey()` бросит ошибку позже, лучше fail-fast.
@@ -180,10 +180,10 @@ const JWT_SECRET = typeof Bun !== "undefined" ? Bun.env.JWT_SECRET : process.env
 
 ### 11. Логирование чувствительных данных
 
-| Файл | Строка | Что логируется |
-|------|--------|----------------|
-| `src/modules/payment/index.ts` | 22-25 | URL webhook-а с параметрами платежа |
-| `src/services/mail.service.ts` | 125-128 | SMTP host, port, user |
+| Файл                           | Строка  | Что логируется                      |
+| ------------------------------ | ------- | ----------------------------------- |
+| `src/modules/payment/index.ts` | 22-25   | URL webhook-а с параметрами платежа |
+| `src/services/mail.service.ts` | 125-128 | SMTP host, port, user               |
 
 **Исправление:** маскировать чувствительные параметры в логах.
 
@@ -194,7 +194,7 @@ const JWT_SECRET = typeof Bun !== "undefined" ? Bun.env.JWT_SECRET : process.env
 `src/modules/quiz/index.ts:82-87`:
 
 ```typescript
-const parseLimit = parseInt(query.limit ?? "10", 10);
+const parseLimit = parseInt(query.limit ?? '10', 10);
 const limit = parseLimit > 10 ? 10 : parseLimit;
 ```
 
@@ -204,16 +204,16 @@ const limit = parseLimit > 10 ? 10 : parseLimit;
 query: t.Object({
   limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10, default: 10 })),
   page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
-})
+});
 ```
 
 ---
 
 ### 13. Hardcoded URL-ы в Telegram-ботах
 
-| Файл | Строка | URL |
-|------|--------|-----|
-| `src/services/crm-bot.service.ts` | 74, 89 | `https://t.me/Quiz_gramm_bot?startapp=...` |
+| Файл                               | Строка | URL                                                                |
+| ---------------------------------- | ------ | ------------------------------------------------------------------ |
+| `src/services/crm-bot.service.ts`  | 74, 89 | `https://t.me/Quiz_gramm_bot?startapp=...`                         |
 | `src/services/quiz-bot.service.ts` | 53, 59 | `https://t.me/Quiz_gram_bot?startapp=...`, `https://quizgram.site` |
 
 **Исправление:** вынести в переменные окружения (`BOT_MAIN_URL`, `WEB_APP_URL`).
@@ -230,12 +230,11 @@ query: t.Object({
 
 ```typescript
 // shared/auth.plugin.ts
-export const authPlugin = new Elysia({ name: "auth" })
-  .derive(async ({ cookie }) => {
-    const token = cookie.token.value;
-    if (!token) return { currentUser: null };
-    return { currentUser: await AuthService.getUserFromToken(token.toString()) };
-  });
+export const authPlugin = new Elysia({ name: 'auth' }).derive(async ({ cookie }) => {
+  const token = cookie.token.value;
+  if (!token) return { currentUser: null };
+  return { currentUser: await AuthService.getUserFromToken(token.toString()) };
+});
 ```
 
 ---
@@ -251,7 +250,7 @@ export const authPlugin = new Elysia({ name: "auth" })
 ### 16. `src/modules/bids/service.ts` — нет валидации enum-значений status
 
 ```typescript
-status: t.Optional(t.String())
+status: t.Optional(t.String());
 ```
 
 Принимает произвольные строки. Должен быть enum: `"new" | "seen" | "processing" | "completed"`.
@@ -277,7 +276,7 @@ status: t.Optional(t.String())
 `src/services/ip-location.service.ts:61`:
 
 ```typescript
-/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/
+/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 ```
 
 Пропускает невалидные IP вроде `999.999.999.999`. Нужна проверка октетов < 256.
@@ -318,7 +317,7 @@ status: t.Optional(t.String())
 
 ```typescript
 app.onRequest(({ request }) => {
-  logger.debug("Входящий запрос", { method: request.method, url: request.url });
+  logger.debug('Входящий запрос', { method: request.method, url: request.url });
 });
 ```
 
@@ -344,8 +343,8 @@ const user: TelegramUser = JSON.parse(decodeURIComponent(userStr));
 
 ## Итого
 
-| Приоритет | Кол-во | Категории |
-|-----------|--------|-----------|
-| Критичные | 4 | `any`/`unknown` типы, `console.log`, rate limiting, `@ts-ignore` |
-| Важные | 9 | Elysia паттерны, безопасность, валидация, дублирование |
-| Средние | 12 | Архитектура, производительность, edge-cases |
+| Приоритет | Кол-во | Категории                                                        |
+| --------- | ------ | ---------------------------------------------------------------- |
+| Критичные | 4      | `any`/`unknown` типы, `console.log`, rate limiting, `@ts-ignore` |
+| Важные    | 9      | Elysia паттерны, безопасность, валидация, дублирование           |
+| Средние   | 12     | Архитектура, производительность, edge-cases                      |

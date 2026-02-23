@@ -1,6 +1,6 @@
-import { LoginForm } from "@/components/login-form";
-import { LanguageToggle } from "@/components/language-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { LoginForm } from '@/components/login-form';
+import { LanguageToggle } from '@/components/language-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const LoginPage = () => {
   return (

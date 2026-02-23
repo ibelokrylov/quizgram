@@ -1,30 +1,30 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { AuthContext } from "@/entities/User/auth.context";
-import { loginUser, type LoginUser } from "@/entities/User/LoginUser.type";
-import type { User } from "@/entities/User/User.type";
-import http from "@/lib/http";
-import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
-import { useContext, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { queryClinet } from "@/app/query-client";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { AuthContext } from '@/entities/User/auth.context';
+import { loginUser, type LoginUser } from '@/entities/User/LoginUser.type';
+import type { User } from '@/entities/User/User.type';
+import http from '@/lib/http';
+import { cn } from '@/lib/utils';
+import { Link } from '@tanstack/react-router';
+import { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { queryClinet } from '@/app/query-client';
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const { t } = useTranslation();
   const [data, setData] = useState<LoginUser>({
-    login: "",
-    password: "",
+    login: '',
+    password: '',
   });
   const [error, setError] = useState<Record<string, boolean> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const ctx = useContext(AuthContext);
 
-  function onChange(v: string, type: "password" | "login") {
+  function onChange(v: string, type: 'password' | 'login') {
     setData({ ...data, [type]: v });
     setError({ ...error, [type]: false });
   }
@@ -47,34 +47,34 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         return;
       }
       const res = await http<User>({
-        url: "/v1/auth/login",
-        method: "POST",
+        url: '/v1/auth/login',
+        method: 'POST',
         body: data,
       });
       if (res.data) {
         ctx.setUser(res.data);
         ctx.setIsAuth(true);
         setLoading(false);
-        queryClinet.invalidateQueries({ queryKey: ["user"] });
-        queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
+        queryClinet.invalidateQueries({ queryKey: ['user'] });
+        queryClinet.invalidateQueries({ queryKey: ['user-plan'] });
       }
     } catch (e) {
-      toast.error("Not auth");
+      toast.error('Not auth');
       console.log(e);
       setLoading(false);
     }
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>{t("login.title")}</CardTitle>
+          <CardTitle>{t('login.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="email">{t("login.email")}</FieldLabel>
+              <FieldLabel htmlFor="email">{t('login.email')}</FieldLabel>
               <Input
                 disabled={loading}
                 id="email"
@@ -82,18 +82,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 placeholder="m@example.com"
                 aria-invalid={error?.login ?? false}
                 value={data.login}
-                onChange={(e) => onChange(e.target.value, "login")}
+                onChange={(e) => onChange(e.target.value, 'login')}
                 required
               />
             </Field>
             <Field>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">{t("login.password")}</FieldLabel>
+                <FieldLabel htmlFor="password">{t('login.password')}</FieldLabel>
                 <Link
                   to="/forgot-password"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
-                  {t("login.forgot")}
+                  {t('login.forgot')}
                 </Link>
               </div>
               <Input
@@ -103,15 +103,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 type="password"
                 required
                 value={data.password}
-                onChange={(e) => onChange(e.target.value, "password")}
+                onChange={(e) => onChange(e.target.value, 'password')}
               />
             </Field>
             <Field>
               <Button disabled={loading || !data.login || !data.password} onClick={login}>
-                {t("login.button")}
+                {t('login.button')}
               </Button>
               <FieldDescription className="text-center">
-                <Link to="/registration">{t("login.registration")}</Link>
+                <Link to="/registration">{t('login.registration')}</Link>
               </FieldDescription>
             </Field>
           </FieldGroup>

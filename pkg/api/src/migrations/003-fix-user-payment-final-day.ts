@@ -2,11 +2,11 @@
 // Дата создания: 2024
 // Описание: Использование +1 месяц вместо +30 дней
 
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "003-fix-user-payment-final-day",
-  description: "Исправление расчета finalDayAt (использование +1 месяц вместо +30 дней)",
+  name: '003-fix-user-payment-final-day',
+  description: 'Исправление расчета finalDayAt (использование +1 месяц вместо +30 дней)',
 
   async up(sql) {
     // Обновляем finalDayAt для всех активных записей
@@ -26,4 +26,3 @@ export const migration: MigrationFile = {
     `;
   },
 };
-

@@ -24,10 +24,10 @@
     "globals": "catalog:frontend",
     "oxfmt": "catalog:frontend",
     "oxlint": "catalog:frontend",
+    "pkg-types": "workspace:*",
     "react-icons": "catalog:frontend",
     "typescript": "catalog:all",
     "vite": "catalog:frontend",
-    "vite-plugin-mkcert": "catalog:frontend",
-    "pkg-types": "workspace:*"
+    "vite-plugin-mkcert": "catalog:frontend"
   }
 }

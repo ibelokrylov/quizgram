@@ -1,13 +1,13 @@
 // Тесты для BackupDbService
 
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { existsSync, unlinkSync } from "fs";
-import { join } from "path";
-import { BackupDbService } from "../src/services/backup-db.service";
-import { S3Service } from "../src/services/s3.service";
+import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { existsSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { BackupDbService } from '../src/services/backup-db.service';
+import { S3Service } from '../src/services/s3.service';
 
 // Переменные окружения для тестов должны быть установлены
-const _TEST_FOLDER = "test-backups-db";
+const _TEST_FOLDER = 'test-backups-db';
 
 // Список файлов, созданных в тестах, для последующего удаления
 const createdFiles: string[] = [];
@@ -32,7 +32,7 @@ async function cleanupTestFiles() {
  */
 function hasPgDump(): boolean {
   try {
-    const result = Bun.spawnSync(["which", "pg_dump"]);
+    const result = Bun.spawnSync(['which', 'pg_dump']);
     return result.exitCode === 0;
   } catch {
     return false;
@@ -44,7 +44,7 @@ function hasPgDump(): boolean {
  */
 function hasGzip(): boolean {
   try {
-    const result = Bun.spawnSync(["which", "gzip"]);
+    const result = Bun.spawnSync(['which', 'gzip']);
     return result.exitCode === 0;
   } catch {
     return false;
@@ -53,32 +53,28 @@ function hasGzip(): boolean {
 
 beforeAll(async () => {
   // Проверяем наличие необходимых переменных окружения
-  const requiredEnvVars = [
-    "S3_ACCESS_KEY",
-    "S3_SECRET_ACCESS_KEY",
-    "S3_BUCKET_NAME",
-  ];
+  const requiredEnvVars = ['S3_ACCESS_KEY', 'S3_SECRET_ACCESS_KEY', 'S3_BUCKET_NAME'];
 
   const missingVars = requiredEnvVars.filter(
-    (varName) => !process.env[varName] && !(typeof Bun !== "undefined" && Bun.env[varName]),
+    (varName) => !process.env[varName] && !(typeof Bun !== 'undefined' && Bun.env[varName])
   );
 
   if (missingVars.length > 0) {
     console.warn(
-      `⚠️  Предупреждение: Отсутствуют переменные окружения для S3: ${missingVars.join(", ")}`,
+      `⚠️  Предупреждение: Отсутствуют переменные окружения для S3: ${missingVars.join(', ')}`
     );
-    console.warn("Тесты BackupDbService будут пропущены, если переменные не установлены");
+    console.warn('Тесты BackupDbService будут пропущены, если переменные не установлены');
   }
 
   // Проверяем наличие pg_dump и gzip
   if (!hasPgDump()) {
-    console.warn("⚠️  Предупреждение: pg_dump не найден в системе");
-    console.warn("Тесты BackupDbService могут быть пропущены");
+    console.warn('⚠️  Предупреждение: pg_dump не найден в системе');
+    console.warn('Тесты BackupDbService могут быть пропущены');
   }
 
   if (!hasGzip()) {
-    console.warn("⚠️  Предупреждение: gzip не найден в системе");
-    console.warn("Тесты BackupDbService могут быть пропущены");
+    console.warn('⚠️  Предупреждение: gzip не найден в системе');
+    console.warn('Тесты BackupDbService могут быть пропущены');
   }
 });
 
@@ -87,16 +83,16 @@ afterAll(async () => {
   await cleanupTestFiles();
 
   // Очищаем временные файлы бэкапов, если они остались
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
-  const tempDir = env.TEMP_DIR || "/tmp";
-  const dbName = env.POSTGRES_DB || "test_db";
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
+  const tempDir = env.TEMP_DIR || '/tmp';
+  const dbName = env.POSTGRES_DB || 'test_db';
 
   // Ищем файлы бэкапов в временной директории
   try {
-    const { readdirSync } = await import("fs");
+    const { readdirSync } = await import('fs');
     const files = readdirSync(tempDir);
-    const backupFiles = files.filter((file) =>
-      file.startsWith(`backup-${dbName}-`) && file.endsWith(".sql.gz")
+    const backupFiles = files.filter(
+      (file) => file.startsWith(`backup-${dbName}-`) && file.endsWith('.sql.gz')
     );
 
     for (const file of backupFiles) {
@@ -112,36 +108,33 @@ afterAll(async () => {
     }
   } catch (error) {
     // Игнорируем ошибки при очистке
-    console.warn("Ошибка при очистке временных файлов:", error);
+    console.warn('Ошибка при очистке временных файлов:', error);
   }
 });
 
-test("1. Бэкап базы данных (требует pg_dump и подключение к БД)", async () => {
+test('1. Бэкап базы данных (требует pg_dump и подключение к БД)', async () => {
   // Пропускаем тест, если нет переменных окружения S3
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   // Пропускаем тест, если нет pg_dump
   if (!hasPgDump()) {
-    console.log("⏭️  Пропущен: pg_dump не найден в системе");
+    console.log('⏭️  Пропущен: pg_dump не найден в системе');
     return;
   }
 
   // Пропускаем тест, если нет gzip
   if (!hasGzip()) {
-    console.log("⏭️  Пропущен: gzip не найден в системе");
+    console.log('⏭️  Пропущен: gzip не найден в системе');
     return;
   }
 
   // Пропускаем тест, если нет переменных окружения для БД
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   if (!env.DATABASE_URL && (!env.POSTGRES_USER || !env.POSTGRES_PASSWORD || !env.POSTGRES_DB)) {
-    console.log("⏭️  Пропущен: нет переменных окружения для подключения к БД");
+    console.log('⏭️  Пропущен: нет переменных окружения для подключения к БД');
     return;
   }
 
@@ -155,23 +148,20 @@ test("1. Бэкап базы данных (требует pg_dump и подкл�
   expect(result.fileKey).toBeDefined();
 });
 
-test("2. Бэкап создает сжатый файл с правильным именем", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('2. Бэкап создает сжатый файл с правильным именем', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   if (!hasPgDump() || !hasGzip()) {
-    console.log("⏭️  Пропущен: pg_dump или gzip не найдены");
+    console.log('⏭️  Пропущен: pg_dump или gzip не найдены');
     return;
   }
 
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   if (!env.DATABASE_URL && (!env.POSTGRES_USER || !env.POSTGRES_PASSWORD || !env.POSTGRES_DB)) {
-    console.log("⏭️  Пропущен: нет переменных окружения для подключения к БД");
+    console.log('⏭️  Пропущен: нет переменных окружения для подключения к БД');
     return;
   }
 
@@ -182,15 +172,15 @@ test("2. Бэкап создает сжатый файл с правильным
   createdFiles.push(result.fileKey);
 
   // Проверяем, что временный файл был удален после загрузки
-  const tempDir = env.TEMP_DIR || "/tmp";
-  const _dbName = env.POSTGRES_DB || "test_db";
+  const tempDir = env.TEMP_DIR || '/tmp';
+  const _dbName = env.POSTGRES_DB || 'test_db';
 
   // Ищем файлы бэкапов в временной директории
   try {
-    const { readdirSync } = await import("fs");
+    const { readdirSync } = await import('fs');
     const files = readdirSync(tempDir);
-    const _backupFiles = files.filter((file) =>
-      file.startsWith(`backup-${_dbName}-`) && file.endsWith(".sql.gz")
+    const _backupFiles = files.filter(
+      (file) => file.startsWith(`backup-${_dbName}-`) && file.endsWith('.sql.gz')
     );
 
     // Файлы должны быть удалены после успешной загрузки
@@ -198,27 +188,24 @@ test("2. Бэкап создает сжатый файл с правильным
     expect(true).toBe(true);
   } catch (error) {
     // Это нормально, если директория не существует или нет прав доступа
-    console.warn("Не удалось проверить временные файлы:", error);
+    console.warn('Не удалось проверить временные файлы:', error);
   }
 });
 
-test("3. Бэкап загружает файл в S3 с правильным путем", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('3. Бэкап загружает файл в S3 с правильным путем', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   if (!hasPgDump() || !hasGzip()) {
-    console.log("⏭️  Пропущен: pg_dump или gzip не найдены");
+    console.log('⏭️  Пропущен: pg_dump или gzip не найдены');
     return;
   }
 
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   if (!env.DATABASE_URL && (!env.POSTGRES_USER || !env.POSTGRES_PASSWORD || !env.POSTGRES_DB)) {
-    console.log("⏭️  Пропущен: нет переменных окружения для подключения к БД");
+    console.log('⏭️  Пропущен: нет переменных окружения для подключения к БД');
     return;
   }
 
@@ -235,22 +222,19 @@ test("3. Бэкап загружает файл в S3 с правильным п
   expect(true).toBe(true);
 });
 
-test("4. Обработка ошибки при отсутствии подключения к БД", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('4. Обработка ошибки при отсутствии подключения к БД', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   if (!hasPgDump() || !hasGzip()) {
-    console.log("⏭️  Пропущен: pg_dump или gzip не найдены");
+    console.log('⏭️  Пропущен: pg_dump или gzip не найдены');
     return;
   }
 
   // Сохраняем оригинальные переменные окружения
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const originalDatabaseUrl = env.DATABASE_URL;
   const originalPostgresUser = env.POSTGRES_USER;
   const originalPostgresPassword = env.POSTGRES_PASSWORD;
@@ -258,13 +242,13 @@ test("4. Обработка ошибки при отсутствии подкл�
 
   try {
     // Устанавливаем неверные параметры подключения
-    if (typeof Bun !== "undefined") {
-      Bun.env.DATABASE_URL = "postgres://invalid:invalid@localhost:5432/invalid_db";
+    if (typeof Bun !== 'undefined') {
+      Bun.env.DATABASE_URL = 'postgres://invalid:invalid@localhost:5432/invalid_db';
       delete Bun.env.POSTGRES_USER;
       delete Bun.env.POSTGRES_PASSWORD;
       delete Bun.env.POSTGRES_DB;
     } else {
-      process.env.DATABASE_URL = "postgres://invalid:invalid@localhost:5432/invalid_db";
+      process.env.DATABASE_URL = 'postgres://invalid:invalid@localhost:5432/invalid_db';
       delete process.env.POSTGRES_USER;
       delete process.env.POSTGRES_PASSWORD;
       delete process.env.POSTGRES_DB;
@@ -274,7 +258,7 @@ test("4. Обработка ошибки при отсутствии подкл�
     await expect(BackupDbService.backupDatabase()).rejects.toThrow();
   } finally {
     // Восстанавливаем оригинальные переменные окружения
-    if (typeof Bun !== "undefined") {
+    if (typeof Bun !== 'undefined') {
       if (originalDatabaseUrl) {
         Bun.env.DATABASE_URL = originalDatabaseUrl;
       } else {
@@ -296,23 +280,20 @@ test("4. Обработка ошибки при отсутствии подкл�
   }
 });
 
-test("5. Бэкап использует правильные параметры pg_dump", async () => {
-  if (
-    !process.env.S3_ACCESS_KEY &&
-    !(typeof Bun !== "undefined" && Bun.env.S3_ACCESS_KEY)
-  ) {
-    console.log("⏭️  Пропущен: нет переменных окружения S3");
+test('5. Бэкап использует правильные параметры pg_dump', async () => {
+  if (!process.env.S3_ACCESS_KEY && !(typeof Bun !== 'undefined' && Bun.env.S3_ACCESS_KEY)) {
+    console.log('⏭️  Пропущен: нет переменных окружения S3');
     return;
   }
 
   if (!hasPgDump() || !hasGzip()) {
-    console.log("⏭️  Пропущен: pg_dump или gzip не найдены");
+    console.log('⏭️  Пропущен: pg_dump или gzip не найдены');
     return;
   }
 
-  const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+  const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   if (!env.DATABASE_URL && (!env.POSTGRES_USER || !env.POSTGRES_PASSWORD || !env.POSTGRES_DB)) {
-    console.log("⏭️  Пропущен: нет переменных окружения для подключения к БД");
+    console.log('⏭️  Пропущен: нет переменных окружения для подключения к БД');
     return;
   }
 

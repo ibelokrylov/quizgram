@@ -1,10 +1,24 @@
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
 import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
 import { IconCirclePlusFilled } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { GalleryVerticalEnd, LaptopMinimalCheck, List, PanelTop, Settings2, UserSearch } from 'lucide-react';
+import {
+  GalleryVerticalEnd,
+  LaptopMinimalCheck,
+  List,
+  PanelTop,
+  Settings2,
+  UserSearch,
+} from 'lucide-react';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -55,12 +69,12 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t('nav.quiz.title')}</SidebarGroupLabel>
-      <SidebarGroupContent className='flex flex-col gap-2'>
+      <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          <SidebarMenuItem className='flex items-center gap-2'>
+          <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               onClick={createQuiz}
-              tooltip='Quick Create'
+              tooltip="Quick Create"
               className={
                 isQuizEditor
                   ? 'border border-accent hover:bg-accent/90 hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear'
@@ -76,14 +90,11 @@ export function NavMain({
           <>
             <Separator />
             {[...currentStages].map((stage) => (
-              <Link
-                key={stage}
-                to={'/app/quiz/' + quizUid + '#' + stage}
-              >
+              <Link key={stage} to={'/app/quiz/' + quizUid + '#' + stage}>
                 <SidebarMenu>
-                  <SidebarMenuItem className='flex items-center gap-2'>
+                  <SidebarMenuItem className="flex items-center gap-2">
                     <SidebarMenuButton
-                      tooltip='Quick Create'
+                      tooltip="Quick Create"
                       className={
                         hash === stage
                           ? 'bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear'
@@ -108,10 +119,7 @@ export function NavMain({
             return (
               <SidebarMenuItem key={item.title}>
                 <Link to={item.url}>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    isActive={isActive}
-                  >
+                  <SidebarMenuButton tooltip={item.title} isActive={isActive}>
                     {item.icon}
                     <span>{item.title}</span>
                   </SidebarMenuButton>

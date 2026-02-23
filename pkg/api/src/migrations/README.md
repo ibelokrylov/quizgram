@@ -30,11 +30,11 @@ bun run db:push
 
 ```typescript
 // src/migrations/004-add-user-avatar.ts
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "004-add-user-avatar",
-  description: "Добавление поля avatar в таблицу user",
+  name: '004-add-user-avatar',
+  description: 'Добавление поля avatar в таблицу user',
 
   async up(sql) {
     // Добавление нового поля
@@ -57,7 +57,7 @@ export const migration: MigrationFile = {
 Отредактируй `src/migrations/index.ts`:
 
 ```typescript
-import { migration as migration004 } from "./004-add-user-avatar";
+import { migration as migration004 } from './004-add-user-avatar';
 
 export const migrations: MigrationFile[] = [
   migration001,
@@ -96,6 +96,7 @@ bun run db:migrate:status
 ```
 
 Вывод:
+
 ```
 📋 Статус миграций:
 
@@ -115,8 +116,8 @@ bun run db:migrate:status
 
 ```typescript
 interface MigrationFile {
-  name: string;              // Уникальное имя миграции
-  description: string;       // Описание того, что делает миграция
+  name: string; // Уникальное имя миграции
+  description: string; // Описание того, что делает миграция
   up: (sql: postgres.Sql) => Promise<void>; // Функция выполнения
 }
 ```
@@ -129,11 +130,11 @@ interface MigrationFile {
 async up(sql) {
   // Выполнение SQL запроса
   await sql`SELECT * FROM users`;
-  
+
   // Параметризованные запросы
   const userId = 123;
   await sql`SELECT * FROM users WHERE id = ${userId}`;
-  
+
   // Транзакции
   await sql.begin(async (sql) => {
     await sql`UPDATE users SET name = 'New' WHERE id = 1`;
@@ -148,4 +149,3 @@ async up(sql) {
 - `src/migrations/types.ts` - TypeScript типы
 - `src/migrations/runner.ts` - Логика выполнения миграций
 - `scripts/migrate.ts` - CLI команда для запуска
-

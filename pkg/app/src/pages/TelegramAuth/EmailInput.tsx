@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { Link } from "@tanstack/react-router";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Link } from '@tanstack/react-router';
 
 const emailSchema = z.object({
-  email: z.string().email("Неверный формат email"),
+  email: z.string().email('Неверный формат email'),
 });
 
 type EmailInputProps = {
@@ -18,8 +18,8 @@ type EmailInputProps = {
 };
 
 export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
-  const { t } = useTranslation("common");
-  const [email, setEmail] = useState("");
+  const { t } = useTranslation('common');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -30,7 +30,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     // Валидация email
     const validation = emailSchema.safeParse({ email });
     if (!validation.success) {
-      const errorMessage = validation.error.issues[0]?.message || t("telegram.auth.email.invalid");
+      const errorMessage = validation.error.issues[0]?.message || t('telegram.auth.email.invalid');
       setError(errorMessage);
       return;
     }
@@ -38,7 +38,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
     try {
       await onSubmit(email);
     } catch (err: any) {
-      const errorMessage = err?.message || err?.error || t("telegram.auth.email.error");
+      const errorMessage = err?.message || err?.error || t('telegram.auth.email.error');
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -47,17 +47,17 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("telegram.auth.email.title")}</CardTitle>
-        <CardDescription>{t("telegram.auth.email.description")}</CardDescription>
+        <CardTitle>{t('telegram.auth.email.title')}</CardTitle>
+        <CardDescription>{t('telegram.auth.email.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email">{t("telegram.auth.email.label")}</FieldLabel>
+            <FieldLabel htmlFor="email">{t('telegram.auth.email.label')}</FieldLabel>
             <Input
               id="email"
               type="email"
-              placeholder={t("telegram.auth.email.placeholder")}
+              placeholder={t('telegram.auth.email.placeholder')}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -66,7 +66,7 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
               aria-invalid={!!error}
               disabled={loading}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !loading && email) {
+                if (e.key === 'Enter' && !loading && email) {
                   handleSubmit();
                 }
               }}
@@ -80,12 +80,12 @@ export function EmailInput({ onSubmit, loading = false }: EmailInputProps) {
               loading={loading}
               className="w-full"
             >
-              {t("telegram.auth.email.button")}
+              {t('telegram.auth.email.button')}
             </Button>
           </Field>
           <Field>
             <Link to="/" className="flex justify-center items-center">
-              <Button variant="ghost">{t("login.button")}</Button>
+              <Button variant="ghost">{t('login.button')}</Button>
             </Link>
           </Field>
         </FieldGroup>

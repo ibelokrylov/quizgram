@@ -26,7 +26,13 @@ import { ImSwitch } from 'react-icons/im';
 import { IoCopySharp, IoNotificationsOutline } from 'react-icons/io5';
 import { toast } from 'sonner';
 
-export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onDeleteQuiz: () => void }) => {
+export const DashboardQuiz = ({
+  quiz,
+  onDeleteQuiz,
+}: {
+  quiz: QuizDashboard;
+  onDeleteQuiz: () => void;
+}) => {
   const { t } = useTranslation();
   const [title, setTitle] = useState(quiz?.name);
   const [active, setActive] = useState(quiz?.isActive ?? false);
@@ -80,19 +86,16 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
   }
 
   return (
-    <Card
-      className='p-2'
-      key={quiz.uid}
-    >
+    <Card className="p-2" key={quiz.uid}>
       <div className={'flex flex-col gap-3'}>
         <div>
           <Button
-            className='hover:text-blue-400'
+            className="hover:text-blue-400"
             variant={'link'}
             onClick={() => copy(import.meta.env.VITE_PUBLIC_QUIZ_URL + quiz.uid)}
           >
             <IoCopySharp size={28} />
-            <div className='truncate w-48'>
+            <div className="truncate w-48">
               {import.meta.env.VITE_PUBLIC_QUIZ_URL?.replace('https://', '')}
               {quiz.uid}
             </div>
@@ -112,12 +115,12 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           />
         </div>
         <Separator />
-        <div className='grid grid-cols-4 gap-4 items-start'>
+        <div className="grid grid-cols-4 gap-4 items-start">
           <Tooltip>
             <TooltipTrigger>
-              <div className='flex flex-col text-left'>
-                <div className='text-xl font-bold'>{quiz.opened}</div>
-                <div className='text-xs text-muted-foreground'>{t('quiz.dashboard.opened')}</div>
+              <div className="flex flex-col text-left">
+                <div className="text-xl font-bold">{quiz.opened}</div>
+                <div className="text-xs text-muted-foreground">{t('quiz.dashboard.opened')}</div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -126,9 +129,11 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           </Tooltip>
           <Tooltip>
             <TooltipTrigger>
-              <div className='flex flex-col text-left'>
-                <div className='text-xl font-bold'>{quiz.openedUnique}</div>
-                <div className='text-xs text-muted-foreground'>{t('quiz.dashboard.openedUnique')}</div>
+              <div className="flex flex-col text-left">
+                <div className="text-xl font-bold">{quiz.openedUnique}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t('quiz.dashboard.openedUnique')}
+                </div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -137,9 +142,9 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           </Tooltip>
           <Tooltip>
             <TooltipTrigger>
-              <div className='flex flex-col text-left'>
-                <div className='text-xl font-bold'>{quiz.full}</div>
-                <div className='text-xs text-muted-foreground'>{t('quiz.dashboard.full')}</div>
+              <div className="flex flex-col text-left">
+                <div className="text-xl font-bold">{quiz.full}</div>
+                <div className="text-xs text-muted-foreground">{t('quiz.dashboard.full')}</div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -149,9 +154,13 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
           {quiz.opened && quiz.full ? (
             <Tooltip>
               <TooltipTrigger>
-                <div className='flex flex-col text-left'>
-                  <div className='text-xl font-bold'>{((quiz.full / quiz.opened) * 100).toFixed(1)}%</div>
-                  <div className='text-xs text-muted-foreground'>{t('quiz.dashboard.conversion')}</div>
+                <div className="flex flex-col text-left">
+                  <div className="text-xl font-bold">
+                    {((quiz.full / quiz.opened) * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('quiz.dashboard.conversion')}
+                  </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -160,8 +169,8 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
             </Tooltip>
           ) : null}
         </div>
-        <div className='flex justify-between items-center'>
-          <div className='flex flex-wrap gap-3'>
+        <div className="flex justify-between items-center">
+          <div className="flex flex-wrap gap-3">
             <div>
               <Link to={'/app/quiz/' + quiz.uid}>
                 <Button variant={'secondary'}>
@@ -172,7 +181,7 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
             </div>
             <div>
               <Link
-                to='/app/bid/report'
+                to="/app/bid/report"
                 search={{
                   limit: 10,
                   quiz_uid: quiz.uid,
@@ -184,11 +193,8 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
             <div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to='/app/notification'>
-                    <Button
-                      variant={'secondary'}
-                      size={'icon'}
-                    >
+                  <Link to="/app/notification">
+                    <Button variant={'secondary'} size={'icon'}>
                       <IoNotificationsOutline />
                     </Button>
                   </Link>
@@ -204,11 +210,11 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
               <TooltipTrigger asChild>
                 <Toggle
                   defaultPressed={active}
-                  aria-label='Toggle bookmark'
+                  aria-label="Toggle bookmark"
                   variant={active ? 'default' : 'outline'}
                   onClick={toggleActive}
                 >
-                  <ImSwitch className='group-data-[state=on]/toggle:color-red' />
+                  <ImSwitch className="group-data-[state=on]/toggle:color-red" />
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent>
@@ -219,10 +225,7 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
               <AlertDialogTrigger asChild>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setAlertDialogOpen(true)}
-                      variant={'ghost'}
-                    >
+                    <Button onClick={() => setAlertDialogOpen(true)} variant={'ghost'}>
                       <FaTrash />
                     </Button>
                   </TooltipTrigger>
@@ -234,14 +237,15 @@ export const DashboardQuiz = ({ quiz, onDeleteQuiz }: { quiz: QuizDashboard; onD
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('quiz.dashboard.delete.title')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('quiz.dashboard.delete.description')}</AlertDialogDescription>
+                  <AlertDialogDescription>
+                    {t('quiz.dashboard.delete.description')}
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setAlertDialogOpen(false)}>{t('quiz.dashboard.delete.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant={'destructive'}
-                    onClick={deleteQuiz}
-                  >
+                  <AlertDialogCancel onClick={() => setAlertDialogOpen(false)}>
+                    {t('quiz.dashboard.delete.cancel')}
+                  </AlertDialogCancel>
+                  <AlertDialogAction variant={'destructive'} onClick={deleteQuiz}>
                     {t('quiz.dashboard.delete.yes')}
                   </AlertDialogAction>
                 </AlertDialogFooter>

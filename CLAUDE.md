@@ -13,18 +13,21 @@ Quizgram - монорепозиторий для платформы создан
 ## Формат ответа и коммуникация
 
 ### Структура ответа (обязательно)
+
 Всегда соблюдай порядок:
 
 1. **План** (до 5 пунктов) - что будет сделано
 2. **Отчёт** (что сделано) - с указанием `path/to/file:line` для всех изменений
 
 ### Стиль общения
+
 - Отвечай кратко и по делу
 - Не вставляй большие фрагменты кода в ответ (только дифф/минимальные куски)
 - Сообщения об ошибках/логи в коде - на русском языке
 - Если нужно добавить что-то в `.env` - укажи это явно в результате
 
 ### Если заблокирован
+
 - 1 строка: чего не хватает
 - Точный список: файл(ы)/команда(ы), которые нужны
 - 1 вариант обходного решения
@@ -32,16 +35,20 @@ Quizgram - монорепозиторий для платформы создан
 ## Critical Rules
 
 ### Language
+
 **Все ответы, комментарии и документация ТОЛЬКО на русском языке**. Код (переменные, функции) может быть на английском.
 
 ### Runtime
+
 **Используй только Bun** вместо Node.js. Команды:
+
 - `bun install` - установка зависимостей
 - `bun run <script>` - запуск скриптов
 - `bun test` - запуск тестов
 - **ЗАПРЕЩЕНО запускать dev-серверы** (`bun run dev`, `vite`) - серверы уже запущены на портах 5173/5174
 
 ### TypeScript
+
 - **ЗАПРЕЩЕНО использовать `any`, `never`, `unknown`** - всегда используй конкретные типы
 - **Используй `satisfies` вместо `as`** для type assertions
   - **Минимальные исключения для `as`:** `catch (e)`, namespace imports, SQL алиасы, FormData в Elysia
@@ -51,6 +58,7 @@ Quizgram - монорепозиторий для платформы создан
 - Типы импортируй как `import type { ... }` (Frontend)
 
 ### Базовые ограничения безопасности
+
 - **DELETE операции в БД ЗАПРЕЩЕНЫ** без явного согласия пользователя
 - Не выполняй разрушительные команды (`rm -rf`, `git reset --hard`, force-push) без запроса
 - Не меняй конфиги/версии линтинга без явной просьбы
@@ -59,6 +67,7 @@ Quizgram - монорепозиторий для платформы создан
 - **Файлы НИКОГДА не хранить в БД/на сервере** - только загрузка в S3 → в БД метаданные/URL
 
 ### Telegram Bot API
+
 - **ВСЕГДА используй polling режим** (и в dev, и в production)
 - Используй `node-telegram-bot-api` для всех операций с Telegram Bot API
 - Боты создаются с `polling: true` в любом окружении
@@ -66,12 +75,14 @@ Quizgram - монорепозиторий для платформы создан
 ## Экономия контекста (критично)
 
 ### Стратегия чтения файлов
+
 1. Сначала используй `grep` или `rg -n "<ключ>"` для поиска
 2. Потом открывай только нужные места
 3. Не читай файлы целиком без причины
 4. Если нужен большой файл - запрашивай конкретный диапазон строк
 
 ### Минимизация изменений
+
 - Меньше файлов, меньше строк
 - Если требуется >3 файлов или >150 LOC - предложи этапы и сделай только Step 1
 - Запрашивай подтверждение перед масштабными изменениями
@@ -81,11 +92,13 @@ Quizgram - монорепозиторий для платформы создан
 Для упрощения работы используй доступные MCP-серверы (конфиг в `.mcp.json`):
 
 ### Доступные серверы
+
 - **postgres** - прямые запросы к БД, проверка структуры данных, тесты миграций
 - **browser** - тестирование React UI flows, проверка визуального поведения
 - **context7** - поиск документации по TypeScript, React, Elysia, Drizzle
 
 ### Когда использовать
+
 - Нужен прямой SQL запрос → используй `postgres` MCP
 - Нужно проверить UI/React поведение → используй `browser` MCP
 - Нужна документация по фреймворкам → используй `context7` MCP
@@ -94,12 +107,14 @@ Quizgram - монорепозиторий для платформы создан
 ## Commands
 
 ### Root Commands
+
 ```bash
 bun install                          # Установка зависимостей для всех пакетов
 git push                             # Автоматически запускает тесты API (husky pre-push hook)
 ```
 
 ### API (pkg/api)
+
 ```bash
 cd pkg/api
 
@@ -126,6 +141,7 @@ bun run recalculate:stats            # Пересчет статистики к�
 ```
 
 ### Frontend App (pkg/app)
+
 ```bash
 cd pkg/app
 
@@ -136,6 +152,7 @@ bun run preview                      # Preview production build
 ```
 
 ### Telegram Mini App (pkg/tg-quiz)
+
 ```bash
 cd pkg/tg-quiz
 
@@ -146,6 +163,7 @@ bun run preview                      # Preview production build
 ```
 
 ### Docker Commands
+
 ```bash
 # Первый запуск всех сервисов
 docker compose up -d
@@ -169,6 +187,7 @@ docker compose logs -f postgres      # Логи PostgreSQL
 **Stack:** Bun + Elysia + Drizzle ORM + PostgreSQL
 
 **Structure:**
+
 ```
 src/
 ├── modules/              # 9 feature-based modules (MVC pattern)
@@ -188,11 +207,13 @@ src/
 ```
 
 **Module Pattern (каждый модуль):**
+
 - `index.ts` - HTTP routes и валидация (Elysia controller)
 - `service.ts` - Бизнес-логика (abstract class со static методами)
 - `model.ts` - Validation schemas (TypeBox для Elysia.t)
 
 **Key Services:**
+
 - `mail.service.ts` - Email рассылка (Nodemailer + SMTP)
 - `s3.service.ts` - S3-совместимое хранилище (файлы, бэкапы)
 - `backup-db.service.ts` - Автоматический бэкап PostgreSQL в S3 (pg_dump + gzip)
@@ -203,11 +224,13 @@ src/
 - `ffmpeg.service.ts` - Обработка видео/аудио
 
 **Authentication:**
+
 - JWT-based tokens в httpOnly secure cookies
 - Методы: Email/Password, Telegram OAuth
 - Token expiration: 30 дней (default), до 1 года (remember), 2 часа (short)
 
 **Database:**
+
 - PostgreSQL 16.1 с Drizzle ORM
 - 15+ таблиц: user, plan, quiz, quiz_bid, payment, user_file и др.
 - Relations API через `src/db/relations.ts`
@@ -215,6 +238,7 @@ src/
 - Drizzle Kit для миграций: `bun run db:push`
 
 **Scheduler (Cron Jobs):**
+
 - Development: `setInterval()` для надежности
 - Production: Elysia cron plugin
 - Tasks:
@@ -224,6 +248,7 @@ src/
   - `backupDatabase` - каждые 2 часа (pg_dump → S3)
 
 **API Routes:**
+
 ```
 GET  /                    # Health check
 POST /v1/auth/*          # Аутентификация
@@ -237,6 +262,7 @@ POST /telegram/*         # Telegram webhooks (без /v1)
 ```
 
 **Graceful Shutdown:**
+
 - Останавливает cron jobs / intervals
 - Отключает Telegram ботов
 - Закрывает HTTP сервер
@@ -247,6 +273,7 @@ POST /telegram/*         # Telegram webhooks (без /v1)
 **Stack:** React 19 + TanStack Router + TanStack Query + Tailwind v4 + shadcn/ui
 
 **Key Libraries:**
+
 - TanStack Router - File-based routing
 - TanStack Query - Server state management
 - Zod - Runtime validation
@@ -255,6 +282,7 @@ POST /telegram/*         # Telegram webhooks (без /v1)
 - Tailwind CSS v4 - Стилизация
 
 **Structure:**
+
 ```
 src/
 ├── app/                 # Global configuration (ContextHole, QueryClient, Auth)
@@ -269,6 +297,7 @@ src/
 ```
 
 **Architecture:**
+
 - Entity-based structure (по доменным сущностям)
 - Feature-first организация компонентов
 - Type-safe routing с TypeScript
@@ -281,11 +310,13 @@ src/
 **Stack:** React + @telegram-apps/sdk-react v3 + Telegram UI
 
 **Features:**
+
 - Работает внутри Telegram WebView
 - Telegram-native UI компоненты
 - Интеграция с Telegram API
 
 **Обязательная инициализация (main.tsx):**
+
 ```typescript
 import { init, backButton } from '@telegram-apps/sdk-react';
 
@@ -294,6 +325,7 @@ backButton.mount();
 ```
 
 **Правила:**
+
 - Используй компоненты из `@telegram-apps/telegram-ui`
 - Обязательно импортируй стили Telegram UI
 - Навигация через `backButton` из SDK
@@ -301,6 +333,7 @@ backButton.mount();
 ## Database Schema (Key Tables)
 
 **Core Tables:**
+
 - `user` - Пользователи (email, password, plan_id, verified)
 - `plan` - Тарифные планы (free, pro и др.)
 - `quiz` - Квизы пользователей
@@ -314,6 +347,7 @@ backButton.mount();
 - `migration` - Tracking миграций
 
 **Relations:**
+
 - User → Plan (many-to-one)
 - Quiz → User (many-to-one)
 - QuizBid → Quiz (many-to-one)
@@ -322,34 +356,39 @@ backButton.mount();
 ## Docker Setup
 
 **Services:**
+
 - `postgres` - PostgreSQL 16.1 (Alpine) с оптимизированными настройками
 - `api` - Backend API (host network mode, порт 5001)
 - `app` - Frontend приложение (host network mode, порт 5173)
 - `tg-quiz` - Telegram Mini App (host network mode, порт 5174)
 
 **PostgreSQL Configuration:**
+
 ```yaml
 max_connections: 50
 shared_buffers: 1GB
 effective_cache_size: 4GB
 work_mem: 16MB
-log_min_duration_statement: 200ms  # Slow query logging
+log_min_duration_statement: 200ms # Slow query logging
 idle_in_transaction_session_timeout: 10s
 lock_timeout: 1s
 statement_timeout: 60s
 ```
 
 **Volumes:**
+
 - `postgres-data` - Persistent PostgreSQL data
 - `./logs/api` - API logs (bind mount на хост)
 
 **Network:**
+
 - API, App, TG-Quiz используют `host` network mode (прямой доступ к портам хоста)
 - PostgreSQL в bridge network `quizgram-network`
 
 ## Environment Variables
 
 **Required for API (.env / pkg/api/.env):**
+
 ```bash
 # Database
 POSTGRES_HOST=localhost
@@ -397,6 +436,7 @@ HTTPS_PORT=5001
 ## Git Workflow
 
 ### Коммиты
+
 - Делай `git commit` **только по явному запросу**
 - Формат сообщения: `[feat] ...`, `[fix] ...`, `[update] ...` - кратко, в стиле репозитория
 - **НЕ предлагай `git push --no-verify`** - хуки обязательны
@@ -404,20 +444,24 @@ HTTPS_PORT=5001
 ### Git Hooks (Husky)
 
 **Pre-push Hook:**
+
 - Автоматически запускает `bun test` в `pkg/api`
 - Блокирует push при падении тестов
 - Bypass: `git push --no-verify` (использовать КРАЙНЕ осторожно!)
 
 **Installation:**
+
 - Hooks устанавливаются автоматически при `bun install` (скрипт `prepare`)
 
 ## Testing
 
 ### Когда запускать тесты/линтеры
+
 - **По умолчанию НЕ запускай автоматически** - сначала перечисли команды, попроси подтверждение
 - Исключение: пользователь прямо попросил "прогони тесты/линт"
 
 ### API Tests
+
 ```bash
 cd pkg/api
 bun test                    # Запуск всех тестов
@@ -427,16 +471,18 @@ bun test src/modules/auth/  # Запуск всех тестов в директ
 ```
 
 ### Test Pattern (Bun Test)
-```typescript
-import { test, expect } from "bun:test";
 
-test("описание теста", async () => {
+```typescript
+import { test, expect } from 'bun:test';
+
+test('описание теста', async () => {
   const result = await someFunction();
   expect(result).toBe(expectedValue);
 });
 ```
 
 ### Важно
+
 - **Тесты пишутся только для pkg/api**
 - **ЗАПРЕЩЕНО удалять тесты или подгонять их под ответы**
 - Git pre-push hook автоматически запускает тесты перед push
@@ -447,34 +493,39 @@ test("описание теста", async () => {
 **Logger Location:** `pkg/api/src/lib/logger.ts`
 
 **Features:**
+
 - File-based logging в `pkg/api/logs/`
 - 30-дневная ротация логов
 - Автоматический бэкап в S3 (ежедневно в 23:59)
 - Levels: DEBUG, INFO, WARN, ERROR
 
 **КРИТИЧНО:**
+
 - **ВСЕГДА используй `logger` из `../lib/logger`** вместо `console.log/error/warn`
 - Сообщения об ошибках на русском языке
 
 **Usage:**
-```typescript
-import { logger } from "../lib/logger";
 
-logger.info("Сообщение", { data: "context" });
-logger.error("Ошибка", error, { context: "additional" });
-logger.debug("Debug информация", { details: "..." });
-logger.warn("Предупреждение", { context: "..." });
+```typescript
+import { logger } from '../lib/logger';
+
+logger.info('Сообщение', { data: 'context' });
+logger.error('Ошибка', error, { context: 'additional' });
+logger.debug('Debug информация', { details: '...' });
+logger.warn('Предупреждение', { context: '...' });
 ```
 
 ## Backup System
 
 **Database Backups:**
+
 - Автоматический бэкап каждые 2 часа
 - Method: `pg_dump` → gzip compression → S3 upload
 - Service: `BackupDbService.backupDatabase()`
 - Logs: Подробное логирование успеха/ошибок загрузки в S3
 
 **Log Backups:**
+
 - Ежедневный архив в 23:59
 - Архивирование вчерашних логов в S3
 - Service: `BackupLogService.backupYesterdayLog()`
@@ -482,6 +533,7 @@ logger.warn("Предупреждение", { context: "..." });
 ## Common Patterns
 
 ### Service Pattern (Backend)
+
 ```typescript
 export abstract class ServiceName {
   static async methodName(params: ParamsType): Promise<ReturnType> {
@@ -493,26 +545,31 @@ export abstract class ServiceName {
 ```
 
 ### Controller Pattern (Backend)
-```typescript
-import { Elysia } from "elysia";
-import { ServiceName } from "./service";
-import { ModelName } from "./model";
 
-export const moduleName = new Elysia({ prefix: "/path" })
-  .post("/endpoint", async ({ body, cookie }) => {
+```typescript
+import { Elysia } from 'elysia';
+import { ServiceName } from './service';
+import { ModelName } from './model';
+
+export const moduleName = new Elysia({ prefix: '/path' }).post(
+  '/endpoint',
+  async ({ body, cookie }) => {
     const result = await ServiceName.businessLogic(body);
     return result;
-  }, {
+  },
+  {
     body: ModelName.requestSchema,
-    response: { 200: ModelName.responseSchema }
-  });
+    response: { 200: ModelName.responseSchema },
+  }
+);
 ```
 
 ### Database Query Pattern (Drizzle)
+
 ```typescript
-import { db } from "../db";
-import { tableName } from "../db/table-name";
-import { eq, and, or } from "drizzle-orm";
+import { db } from '../db';
+import { tableName } from '../db/table-name';
+import { eq, and, or } from 'drizzle-orm';
 
 // Select with relations
 const results = await db
@@ -526,17 +583,14 @@ const results = await db
 await db.insert(tableName).values({ field: value });
 
 // Update
-await db.update(tableName)
-  .set({ field: newValue })
-  .where(eq(tableName.id, id));
+await db.update(tableName).set({ field: newValue }).where(eq(tableName.id, id));
 
 // Delete (soft delete если есть deleted_at)
-await db.update(tableName)
-  .set({ deleted_at: new Date() })
-  .where(eq(tableName.id, id));
+await db.update(tableName).set({ deleted_at: new Date() }).where(eq(tableName.id, id));
 ```
 
 ### React Component Pattern (Frontend)
+
 ```typescript
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
@@ -557,11 +611,13 @@ export function ComponentName({ className, ...props }: Props) {
 ```
 
 **Правила для React компонентов:**
+
 - Компоненты должны принимать `className` и объединять через `cn()` из `@/lib/utils`
 - Условный рендеринг: `{condition ? <Component /> : null}` вместо `{condition && <Component />}`
 - Повторяющиеся элементы выносить в переиспользуемые компоненты
 
 ### i18n Pattern (Frontend)
+
 ```typescript
 import { useTranslation } from "react-i18next";
 
@@ -574,6 +630,7 @@ export function Component() {
 ```
 
 **Правила i18n:**
+
 - НЕ хардкодь строки в компонентах
 - Используй `useTranslation()` и `t()` для всех пользовательских строк
 - Ключи перевода в `src/locales/*/common.json`
@@ -581,18 +638,21 @@ export function Component() {
 ## Important Notes
 
 ### Backend Architecture
+
 - **НЕ передавай целиком `ctx` в сервис** - передавай только нужные данные через деструктуризацию
 - Используй `ctx.store` через `.state()` + `.guard()` для user/session
 - Сервисы: `abstract class` со `static` методами без состояния
 - `console.*` ЗАПРЕЩЕН - используй только `logger` из `src/lib/logger`
 
 ### Frontend Architecture
+
 - Алиас `@/` для импортов из `src/`
 - Предпочитай именованные экспорты (без default export)
 - UI-компоненты в `src/components/ui/`, feature-компоненты в `src/components/`
 - Используй ContextHole pattern для providers
 
 ### Database Operations
+
 - **ВСЕГДА используй Drizzle ORM** для работы с БД (не raw SQL)
 - После изменений схемы: `bun run db:push` для применения
 - Проверяй подключение к БД через `postgres` MCP перед операциями
@@ -600,24 +660,28 @@ export function Component() {
 - **DELETE операции ЗАПРЕЩЕНЫ** без явного согласия
 
 ### File Operations
+
 - **Файлы НИКОГДА не хранить в БД/на сервере**
 - Всегда загружай в S3 → в БД сохраняй только метаданные/URL
 - Предпочитай `Bun.file()` над `node:fs` API
 - Для процессов используй `Bun.spawn()` (как в backup-db.service.ts)
 
 ### Error Handling
+
 - Всегда логируй ошибки через `logger.error()`
 - Используй try-catch в async функциях
 - Возвращай понятные error messages на русском
 - Frontend: для уведомлений используй `toast.error()` (sonner)
 
 ### Security
+
 - Никогда не логируй sensitive data (пароли, токены)
 - Используй httpOnly secure cookies для JWT
 - Валидируй все input через Elysia.t или Zod
 - Проверяй права доступа на уровне routes
 
 ### Performance
+
 - Connection pooling уже настроен (max 10 для PostgreSQL)
 - Используй `limit()` в database queries
 - Включен slow query logging (> 200ms)
@@ -626,6 +690,7 @@ export function Component() {
 ## Troubleshooting
 
 ### TypeScript Errors
+
 ```bash
 cd pkg/api && bunx tsc --noEmit    # Проверка типов в API
 cd pkg/app && bunx tsc --noEmit    # Проверка типов в App
@@ -633,12 +698,14 @@ cd pkg/tg-quiz && bunx tsc --noEmit # Проверка типов в TG-Quiz
 ```
 
 ### Database Connection Issues
+
 - Проверь переменные окружения: `POSTGRES_*`
 - Проверь что PostgreSQL запущен: `docker compose ps`
 - Проверь healthcheck: `docker compose logs postgres`
 - Проверь через `postgres` MCP
 
 ### Docker Issues
+
 ```bash
 docker compose down              # Остановить все
 docker compose up -d postgres    # Запустить только БД
@@ -647,6 +714,7 @@ docker compose restart api       # Перезапустить API
 ```
 
 ### Test Failures
+
 - Убедись что БД доступна
 - Проверь что тестовые данные очищены: `bun run test:cleanup`
 - Запусти тесты с verbose: `bun test --verbose`
@@ -679,9 +747,11 @@ cd pkg/tg-quiz && bunx tsc --noEmit
 ## Additional Resources
 
 **Package-specific Documentation:**
+
 - `/pkg/app/.cursor/rules/` - Детальные правила для Frontend
 - `/pkg/api/.cursor/rules/` - Детальные правила для Backend API
 - `/pkg/tg-quiz/.cursor/rules/` - Детальные правила для Telegram Mini App
 
 **Bun Documentation:**
+
 - `node_modules/bun-types/docs/` - Официальная документация Bun API

@@ -86,18 +86,14 @@ export const EditQuiz = () => {
           {t('edit-quiz.updated-at', {
             date: format(quiz?.updatedAt ?? new Date(), 'dd.MM.yyyy HH:mm:ss'),
           })}
-        </div>,
+        </div>
       );
     } else {
       setHeaderContent(
-        <Button
-          onClick={saveToServer}
-          color={'primary'}
-          className='w-auto'
-        >
+        <Button onClick={saveToServer} color={'primary'} className="w-auto">
           <CiSaveUp1 />
           {t('edit-quiz.publish')}
-        </Button>,
+        </Button>
       );
     }
 
@@ -132,8 +128,8 @@ export const EditQuiz = () => {
   }
 
   return (
-    <div className='flex flex-col gap-4 max-w-[1000px] w-full'>
-      <div className='px-4 lg:px-0 pt-3'>
+    <div className="flex flex-col gap-4 max-w-[1000px] w-full">
+      <div className="px-4 lg:px-0 pt-3">
         <Input
           key={quiz?.name}
           value={name}

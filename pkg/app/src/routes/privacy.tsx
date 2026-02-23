@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { createFileRoute } from "@tanstack/react-router";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/privacy")({
+export const Route = createFileRoute('/privacy')({
   component: RouteComponent,
 });
 

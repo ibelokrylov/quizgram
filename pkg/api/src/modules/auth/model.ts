@@ -1,13 +1,13 @@
 // Модели валидации и типы для модуля аутентификации
 // Используем Elysia.t как единый источник правды для типов и валидации
 
-import { t } from "elysia";
+import { t } from 'elysia';
 
 export namespace AuthModel {
   // Тело запроса для входа пользователя
   export const loginBody = t.Object({
     login: t.String({
-      format: "email", // эквивалент validate:"email"
+      format: 'email', // эквивалент validate:"email"
     }),
     password: t.String({
       minLength: 8,
@@ -52,7 +52,7 @@ export namespace AuthModel {
   // Тело запроса для регистрации пользователя
   export const registrationBody = t.Object({
     login: t.String({
-      format: "email", // эквивалент validate:"email"
+      format: 'email', // эквивалент validate:"email"
     }),
     password: t.String({
       minLength: 8,
@@ -64,16 +64,16 @@ export namespace AuthModel {
     name: t.Optional(t.String()),
     language: t.Optional(
       t.String({
-        pattern: "^(en|ru)$",
+        pattern: '^(en|ru)$',
         description: "Язык интерфейса: 'en' или 'ru'",
-      }),
+      })
     ),
     referralCode: t.Optional(
       t.String({
         minLength: 1,
         maxLength: 20,
-        description: "Реферальный код",
-      }),
+        description: 'Реферальный код',
+      })
     ),
   });
 
@@ -85,8 +85,7 @@ export namespace AuthModel {
     data: user,
   });
 
-  export type registrationSuccessResponse =
-    typeof registrationSuccessResponse.static;
+  export type registrationSuccessResponse = typeof registrationSuccessResponse.static;
 
   // Ответ при ошибке регистрации или валидации
   export const registrationErrorResponse = t.Object({
@@ -94,13 +93,12 @@ export namespace AuthModel {
     error: t.Optional(t.String()),
   });
 
-  export type registrationErrorResponse =
-    typeof registrationErrorResponse.static;
+  export type registrationErrorResponse = typeof registrationErrorResponse.static;
 
   // Тело запроса для восстановления пароля (начало процесса)
   export const forgotPasswordBody = t.Object({
     login: t.String({
-      format: "email",
+      format: 'email',
     }),
   });
 
@@ -111,22 +109,20 @@ export namespace AuthModel {
     message: t.String(), // "ok"
   });
 
-  export type forgotPasswordSuccessResponse =
-    typeof forgotPasswordSuccessResponse.static;
+  export type forgotPasswordSuccessResponse = typeof forgotPasswordSuccessResponse.static;
 
   // Тело запроса для проверки кода восстановления пароля (начало)
   export const verifyResetPasswordStartBody = t.Object({
     code: t.String({
-      pattern: "^\\d{6}$", // 6-значный цифровой код
-      description: "Код должен содержать 6 цифр",
+      pattern: '^\\d{6}$', // 6-значный цифровой код
+      description: 'Код должен содержать 6 цифр',
     }),
     email: t.String({
-      format: "email",
+      format: 'email',
     }),
   });
 
-  export type verifyResetPasswordStartBody =
-    typeof verifyResetPasswordStartBody.static;
+  export type verifyResetPasswordStartBody = typeof verifyResetPasswordStartBody.static;
 
   // Успешный ответ при проверке кода восстановления пароля
   export const verifyResetPasswordStartSuccessResponse = t.Object({
@@ -148,11 +144,11 @@ export namespace AuthModel {
   // Тело запроса для завершения восстановления пароля
   export const forgotPasswordEndBody = t.Object({
     code: t.String({
-      pattern: "^\\d{6}$", // 6-значный цифровой код
-      description: "Код должен содержать 6 цифр",
+      pattern: '^\\d{6}$', // 6-значный цифровой код
+      description: 'Код должен содержать 6 цифр',
     }),
     email: t.String({
-      format: "email",
+      format: 'email',
     }),
     password: t.String({
       minLength: 8,
@@ -167,8 +163,7 @@ export namespace AuthModel {
     message: t.String(), // "ok"
   });
 
-  export type forgotPasswordEndSuccessResponse =
-    typeof forgotPasswordEndSuccessResponse.static;
+  export type forgotPasswordEndSuccessResponse = typeof forgotPasswordEndSuccessResponse.static;
 
   // Ответ при ошибке завершения восстановления пароля
   export const forgotPasswordEndErrorResponse = t.Object({
@@ -176,8 +171,7 @@ export namespace AuthModel {
     error: t.Optional(t.String()),
   });
 
-  export type forgotPasswordEndErrorResponse =
-    typeof forgotPasswordEndErrorResponse.static;
+  export type forgotPasswordEndErrorResponse = typeof forgotPasswordEndErrorResponse.static;
 
   // Успешный ответ при выходе из системы
   export const logoutSuccessResponse = t.Object({
@@ -190,7 +184,7 @@ export namespace AuthModel {
   export const telegramLoginBody = t.Object({
     initData: t.String({
       minLength: 1,
-      description: "InitData от Telegram WebApp",
+      description: 'InitData от Telegram WebApp',
     }),
   });
 
@@ -202,8 +196,7 @@ export namespace AuthModel {
     data: user,
   });
 
-  export type telegramLoginSuccessResponse =
-    typeof telegramLoginSuccessResponse.static;
+  export type telegramLoginSuccessResponse = typeof telegramLoginSuccessResponse.static;
 
   // Ответ при ошибке авторизации через Telegram или необходимости регистрации
   export const telegramLoginErrorResponse = t.Object({
@@ -212,32 +205,31 @@ export namespace AuthModel {
     requiresRegistration: t.Optional(t.Boolean()),
   });
 
-  export type telegramLoginErrorResponse =
-    typeof telegramLoginErrorResponse.static;
+  export type telegramLoginErrorResponse = typeof telegramLoginErrorResponse.static;
 
   // Тело запроса для регистрации через Telegram
   export const telegramRegisterBody = t.Object({
     initData: t.String({
       minLength: 1,
-      description: "InitData от Telegram WebApp",
+      description: 'InitData от Telegram WebApp',
     }),
     email: t.String({
-      format: "email",
-      description: "Email пользователя",
+      format: 'email',
+      description: 'Email пользователя',
     }),
     name: t.Optional(t.String()),
     language: t.Optional(
       t.String({
-        pattern: "^(en|ru)$",
+        pattern: '^(en|ru)$',
         description: "Язык интерфейса: 'en' или 'ru'",
-      }),
+      })
     ),
     referralCode: t.Optional(
       t.String({
         minLength: 1,
         maxLength: 20,
-        description: "Реферальный код",
-      }),
+        description: 'Реферальный код',
+      })
     ),
   });
 
@@ -249,8 +241,7 @@ export namespace AuthModel {
     data: user,
   });
 
-  export type telegramRegisterSuccessResponse =
-    typeof telegramRegisterSuccessResponse.static;
+  export type telegramRegisterSuccessResponse = typeof telegramRegisterSuccessResponse.static;
 
   // Ответ при ошибке регистрации через Telegram
   export const telegramRegisterErrorResponse = t.Object({
@@ -258,8 +249,5 @@ export namespace AuthModel {
     error: t.Optional(t.String()),
   });
 
-  export type telegramRegisterErrorResponse =
-    typeof telegramRegisterErrorResponse.static;
+  export type telegramRegisterErrorResponse = typeof telegramRegisterErrorResponse.static;
 }
-
-

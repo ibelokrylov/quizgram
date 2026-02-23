@@ -53,7 +53,11 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при получении профиля пользователя', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при получении профиля пользователя',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             throw error;
           }
         },
@@ -65,7 +69,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/plan',
@@ -92,7 +96,11 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при получении плана пользователя', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при получении плана пользователя',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             ctx.set.status = 400;
             const response: UserModel.getUserPlanErrorResponse = {
               message: 'get-user-plan@error',
@@ -109,7 +117,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/plans',
@@ -129,7 +137,10 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при получении всех планов', error instanceof Error ? error : new Error(String(error)));
+            logger.error(
+              'Ошибка при получении всех планов',
+              error instanceof Error ? error : new Error(String(error))
+            );
             ctx.set.status = 400;
             return {
               message: 'get-all-plans@error',
@@ -145,7 +156,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               error: t.Optional(t.String()),
             }),
           },
-        },
+        }
       )
       .post(
         '/verification-email',
@@ -194,7 +205,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/resend-verification',
@@ -238,7 +249,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .post(
         '/upload-file',
@@ -354,10 +365,14 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
                   newSize: fileSize,
                 });
               } catch (error) {
-                logger.error('Ошибка при изменении размера изображения', error instanceof Error ? error : new Error(String(error)), {
-                  fileName,
-                  resizeOptions,
-                });
+                logger.error(
+                  'Ошибка при изменении размера изображения',
+                  error instanceof Error ? error : new Error(String(error)),
+                  {
+                    fileName,
+                    resizeOptions,
+                  }
+                );
                 set.status = 400;
                 const response: UserModel.uploadFileErrorResponse = {
                   message: 'upload-file@resize-error',
@@ -368,7 +383,13 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
             }
 
             // Загружаем файл через FileService
-            const uploadResult = await FileService.uploadFile(file as File, contentType, fileName, fileSize, user.id);
+            const uploadResult = await FileService.uploadFile(
+              file as File,
+              contentType,
+              fileName,
+              fileSize,
+              user.id
+            );
 
             const response: UserModel.uploadFileSuccessResponse = {
               message: 'File uploaded successfully',
@@ -381,7 +402,11 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при загрузке файла', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при загрузке файла',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             set.status = 400;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -408,7 +433,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
             }),
           },
           parser: 'multipart/form-data',
-        },
+        }
       )
       .delete(
         '/delete-file',
@@ -455,7 +480,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .put(
         '/language',
@@ -475,10 +500,14 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при обновлении языка пользователя', error instanceof Error ? error : new Error(String(error)), {
-              userId: user.id,
-              language: body.language,
-            });
+            logger.error(
+              'Ошибка при обновлении языка пользователя',
+              error instanceof Error ? error : new Error(String(error)),
+              {
+                userId: user.id,
+                language: body.language,
+              }
+            );
             set.status = 400;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -499,7 +528,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .get(
         '/notification',
@@ -522,7 +551,11 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при получении настроек уведомлений', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при получении настроек уведомлений',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             ctx.set.status = 400;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -542,7 +575,7 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
+        }
       )
       .put(
         '/notification',
@@ -569,7 +602,11 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
 
             return response;
           } catch (error) {
-            logger.error('Ошибка при обновлении настроек уведомлений', error instanceof Error ? error : new Error(String(error)), { userId: user.id });
+            logger.error(
+              'Ошибка при обновлении настроек уведомлений',
+              error instanceof Error ? error : new Error(String(error)),
+              { userId: user.id }
+            );
             set.status = 400;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -590,6 +627,6 @@ export const user = new Elysia({ prefix: '/user' }).state('user', null as User |
               message: t.String(),
             }),
           },
-        },
-      ),
+        }
+      )
 );

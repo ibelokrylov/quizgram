@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { verificationEmailZod } from "@/entities/User/Verification.email.type";
-import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import http from "@/lib/http";
-import { queryClinet } from "@/app/query-client";
+} from '@/components/ui/input-otp';
+import { verificationEmailZod } from '@/entities/User/Verification.email.type';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import http from '@/lib/http';
+import { queryClinet } from '@/app/query-client';
 
 type EmailVerificationProps = {
   onSuccess: () => void;
@@ -21,8 +21,8 @@ type EmailVerificationProps = {
 };
 
 export function EmailVerification({ onSuccess, onResend }: EmailVerificationProps) {
-  const { t } = useTranslation("common");
-  const [code, setCode] = useState("");
+  const { t } = useTranslation('common');
+  const [code, setCode] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -50,21 +50,21 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
 
       // Отправка запроса на верификацию
       await http({
-        url: "/v1/user/verification-email",
-        method: "POST",
+        url: '/v1/user/verification-email',
+        method: 'POST',
         body: { code: codeToSubmit },
       });
 
       // Инвалидируем кэш пользователя
-      queryClinet.invalidateQueries({ queryKey: ["user"] });
-      queryClinet.invalidateQueries({ queryKey: ["user-plan"] });
+      queryClinet.invalidateQueries({ queryKey: ['user'] });
+      queryClinet.invalidateQueries({ queryKey: ['user-plan'] });
 
-      toast.success(t("verification.email.success"));
+      toast.success(t('verification.email.success'));
       onSuccess();
     } catch (err: any) {
       setError(true);
       setLoading(false);
-      const errorMessage = err?.message || err?.error || t("telegram.auth.verification.error");
+      const errorMessage = err?.message || err?.error || t('telegram.auth.verification.error');
       toast.error(errorMessage);
     }
   };
@@ -73,7 +73,7 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
     if (resendLoading || loading) return; // Предотвращаем отправку во время загрузки
 
     setResendLoading(true);
-    setCode("");
+    setCode('');
     setError(false);
 
     try {
@@ -82,14 +82,14 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
       } else {
         // Запрос на повторную отправку кода
         await http({
-          url: "/v1/user/resend-verification",
-          method: "GET",
+          url: '/v1/user/resend-verification',
+          method: 'GET',
         });
       }
-      toast.success(t("verification.email.resendSuccess"));
+      toast.success(t('verification.email.resendSuccess'));
     } catch (err: any) {
       const errorMessage =
-        err?.message || err?.error || t("telegram.auth.verification.resendError");
+        err?.message || err?.error || t('telegram.auth.verification.resendError');
       toast.error(errorMessage);
     } finally {
       setResendLoading(false);
@@ -99,13 +99,13 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("telegram.auth.verification.title")}</CardTitle>
-        <CardDescription>{t("telegram.auth.verification.description")}</CardDescription>
+        <CardTitle>{t('telegram.auth.verification.title')}</CardTitle>
+        <CardDescription>{t('telegram.auth.verification.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel>{t("telegram.auth.verification.code")}</FieldLabel>
+            <FieldLabel>{t('telegram.auth.verification.code')}</FieldLabel>
             <InputOTP
               maxLength={6}
               value={code}
@@ -134,7 +134,7 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
               loading={loading}
               className="w-full"
             >
-              {t("telegram.auth.verification.button")}
+              {t('telegram.auth.verification.button')}
             </Button>
             <FieldDescription className="text-center">
               <Button
@@ -143,7 +143,7 @@ export function EmailVerification({ onSuccess, onResend }: EmailVerificationProp
                 disabled={resendLoading}
                 loading={resendLoading}
               >
-                {t("telegram.auth.verification.resend")}
+                {t('telegram.auth.verification.resend')}
               </Button>
             </FieldDescription>
           </FieldGroup>

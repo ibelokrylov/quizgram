@@ -68,7 +68,10 @@ export abstract class AuthService {
    * @param plan - если true, подгружает план пользователя (по умолчанию false)
    * @returns User | UserWithPlan | null в зависимости от параметра plan
    */
-  static async getUserFromToken(token: string, plan: boolean = false): Promise<User | UserWithPlan | null> {
+  static async getUserFromToken(
+    token: string,
+    plan: boolean = false
+  ): Promise<User | UserWithPlan | null> {
     if (!token) {
       return null;
     }
@@ -100,7 +103,11 @@ export abstract class AuthService {
         } satisfies UserWithPlan;
       } else {
         // Обычный запрос без плана
-        const users = await db.select().from(UserTable).where(eq(UserTable.id, session.ID)).limit(1);
+        const users = await db
+          .select()
+          .from(UserTable)
+          .where(eq(UserTable.id, session.ID))
+          .limit(1);
 
         return users[0] ?? null;
       }
@@ -166,7 +173,11 @@ export abstract class AuthService {
       }
 
       // Проверяем уникальность
-      const existingUsers = await db.select().from(UserTable).where(eq(UserTable.referralCode, code)).limit(1);
+      const existingUsers = await db
+        .select()
+        .from(UserTable)
+        .where(eq(UserTable.referralCode, code))
+        .limit(1);
 
       if (existingUsers.length === 0) {
         isUnique = true;
@@ -185,7 +196,11 @@ export abstract class AuthService {
    * Поиск пользователя по реферальному коду
    */
   static async findByReferralCode(referralCode: string): Promise<User | null> {
-    const users = await db.select().from(UserTable).where(eq(UserTable.referralCode, referralCode)).limit(1);
+    const users = await db
+      .select()
+      .from(UserTable)
+      .where(eq(UserTable.referralCode, referralCode))
+      .limit(1);
 
     return users[0] ?? null;
   }
@@ -199,7 +214,9 @@ export abstract class AuthService {
    * - отправка email с кодом
    * - генерация токена сессии
    */
-  static async registration(payload: AuthModel.registrationBody): Promise<{ user: User; token: string }> {
+  static async registration(
+    payload: AuthModel.registrationBody
+  ): Promise<{ user: User; token: string }> {
     // Приводим email к нижнему регистру
     const normalizedLogin = payload.login.toLowerCase();
     // Проверяем, не существует ли уже пользователь с таким email
@@ -276,9 +293,13 @@ export abstract class AuthService {
         });
       }
     } catch (paymentError) {
-      logger.error('Ошибка при создании user_payment при регистрации', paymentError instanceof Error ? paymentError : new Error(String(paymentError)), {
-        userId: createdUser.id,
-      });
+      logger.error(
+        'Ошибка при создании user_payment при регистрации',
+        paymentError instanceof Error ? paymentError : new Error(String(paymentError)),
+        {
+          userId: createdUser.id,
+        }
+      );
       // Не прерываем регистрацию, если не удалось создать user_payment
     }
 
@@ -298,8 +319,10 @@ export abstract class AuthService {
     } catch (notificationError) {
       logger.error(
         'Ошибка при создании user_notification при регистрации',
-        notificationError instanceof Error ? notificationError : new Error(String(notificationError)),
-        { userId: createdUser.id },
+        notificationError instanceof Error
+          ? notificationError
+          : new Error(String(notificationError)),
+        { userId: createdUser.id }
       );
       // Не прерываем регистрацию, если не удалось создать user_notification
     }
@@ -321,13 +344,21 @@ export abstract class AuthService {
           })
           .where(eq(codeTable.id, code.id));
       } catch (mailError) {
-        logger.error('Ошибка при отправке email при регистрации', mailError instanceof Error ? mailError : new Error(String(mailError)), {
-          userId: createdUser.id,
-        });
+        logger.error(
+          'Ошибка при отправке email при регистрации',
+          mailError instanceof Error ? mailError : new Error(String(mailError)),
+          {
+            userId: createdUser.id,
+          }
+        );
         // Не прерываем регистрацию, если не удалось отправить email
       }
     } catch (codeError) {
-      logger.error('Ошибка при создании кода при регистрации', codeError instanceof Error ? codeError : new Error(String(codeError)), { login: payload.login });
+      logger.error(
+        'Ошибка при создании кода при регистрации',
+        codeError instanceof Error ? codeError : new Error(String(codeError)),
+        { login: payload.login }
+      );
       // Не прерываем регистрацию, если не удалось создать код
     }
 
@@ -382,9 +413,13 @@ export abstract class AuthService {
         login: user.login,
       });
     } catch (mailError) {
-      logger.error('Ошибка при отправке email для восстановления пароля', mailError instanceof Error ? mailError : new Error(String(mailError)), {
-        login: user.login,
-      });
+      logger.error(
+        'Ошибка при отправке email для восстановления пароля',
+        mailError instanceof Error ? mailError : new Error(String(mailError)),
+        {
+          login: user.login,
+        }
+      );
       // Не прерываем процесс, если не удалось отправить email
     }
   }
@@ -457,16 +492,23 @@ export abstract class AuthService {
     const hashedPassword = await this.hashPassword(payload.password);
 
     // Обновляем пароль пользователя
-    await db.update(UserTable).set({ password: hashedPassword, isVerification: true }).where(eq(UserTable.id, user.id));
+    await db
+      .update(UserTable)
+      .set({ password: hashedPassword, isVerification: true })
+      .where(eq(UserTable.id, user.id));
 
     // Отправляем уведомление об успешном изменении пароля
     try {
       const userLanguage = user.language || 'en';
       await MailService.sendInformationOfResetPassword(normalizedEmail, userLanguage);
     } catch (mailError) {
-      logger.error('Ошибка при отправке уведомления об изменении пароля', mailError instanceof Error ? mailError : new Error(String(mailError)), {
-        email: payload.email,
-      });
+      logger.error(
+        'Ошибка при отправке уведомления об изменении пароля',
+        mailError instanceof Error ? mailError : new Error(String(mailError)),
+        {
+          email: payload.email,
+        }
+      );
       // Не прерываем процесс, если не удалось отправить email
     }
   }
@@ -475,7 +517,11 @@ export abstract class AuthService {
    * Поиск пользователя по Telegram ID
    */
   static async findByTelegramId(telegramId: string): Promise<User | null> {
-    const users = await db.select().from(UserTable).where(eq(UserTable.telegramId, telegramId)).limit(1);
+    const users = await db
+      .select()
+      .from(UserTable)
+      .where(eq(UserTable.telegramId, telegramId))
+      .limit(1);
 
     return users[0] ?? null;
   }
@@ -486,7 +532,9 @@ export abstract class AuthService {
    * - поиск пользователя по telegramId
    * - генерация токена сессии
    */
-  static async telegramLogin(payload: AuthModel.telegramLoginBody): Promise<{ user: User; token: string } | null> {
+  static async telegramLogin(
+    payload: AuthModel.telegramLoginBody
+  ): Promise<{ user: User; token: string } | null> {
     // Валидируем initData от Telegram
     const telegramUserInfo = await TelegramService.validateInitData(payload.initData, 'crm');
 
@@ -518,7 +566,9 @@ export abstract class AuthService {
    * - отправка кода верификации на email
    * - генерация токена сессии
    */
-  static async telegramRegister(payload: AuthModel.telegramRegisterBody): Promise<{ user: User; token: string }> {
+  static async telegramRegister(
+    payload: AuthModel.telegramRegisterBody
+  ): Promise<{ user: User; token: string }> {
     // Валидируем initData от Telegram
     const telegramUserInfo = await TelegramService.validateInitData(payload.initData, 'crm');
 
@@ -566,7 +616,10 @@ export abstract class AuthService {
     const normalizedLanguage = language === 'ru' ? 'ru' : 'en';
 
     // Формируем имя из данных Telegram, если не указано
-    const name = payload.name || [telegramUserInfo.firstName, telegramUserInfo.lastName].filter(Boolean).join(' ') || null;
+    const name =
+      payload.name ||
+      [telegramUserInfo.firstName, telegramUserInfo.lastName].filter(Boolean).join(' ') ||
+      null;
 
     // Создаём нового пользователя
     const newUser: NewUser = {
@@ -612,7 +665,7 @@ export abstract class AuthService {
       logger.error(
         'Ошибка при создании user_payment при регистрации через Telegram',
         paymentError instanceof Error ? paymentError : new Error(String(paymentError)),
-        { userId: createdUser.id },
+        { userId: createdUser.id }
       );
     }
 
@@ -632,8 +685,10 @@ export abstract class AuthService {
     } catch (notificationError) {
       logger.error(
         'Ошибка при создании user_notification при регистрации через Telegram',
-        notificationError instanceof Error ? notificationError : new Error(String(notificationError)),
-        { userId: createdUser.id },
+        notificationError instanceof Error
+          ? notificationError
+          : new Error(String(notificationError)),
+        { userId: createdUser.id }
       );
     }
 
@@ -643,7 +698,11 @@ export abstract class AuthService {
 
       // Отправляем email с кодом верификации
       try {
-        await MailService.sendVerificationEmailCode(createdUser.login, code.value, normalizedLanguage);
+        await MailService.sendVerificationEmailCode(
+          createdUser.login,
+          code.value,
+          normalizedLanguage
+        );
 
         await db
           .update(codeTable)
@@ -652,14 +711,22 @@ export abstract class AuthService {
           })
           .where(eq(codeTable.id, code.id));
       } catch (mailError) {
-        logger.error('Ошибка при отправке email при регистрации через Telegram', mailError instanceof Error ? mailError : new Error(String(mailError)), {
-          userId: createdUser.id,
-        });
+        logger.error(
+          'Ошибка при отправке email при регистрации через Telegram',
+          mailError instanceof Error ? mailError : new Error(String(mailError)),
+          {
+            userId: createdUser.id,
+          }
+        );
       }
     } catch (codeError) {
-      logger.error('Ошибка при создании кода при регистрации через Telegram', codeError instanceof Error ? codeError : new Error(String(codeError)), {
-        login: payload.email,
-      });
+      logger.error(
+        'Ошибка при создании кода при регистрации через Telegram',
+        codeError instanceof Error ? codeError : new Error(String(codeError)),
+        {
+          login: payload.email,
+        }
+      );
     }
 
     // Генерируем токен сессии

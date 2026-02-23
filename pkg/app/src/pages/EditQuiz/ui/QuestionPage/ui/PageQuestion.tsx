@@ -1,62 +1,62 @@
-import { DownloadDrawer } from "@/components/dwonload-drawer";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Quiz, QuizQuestionPage } from "@/entities/Quiz/quiz.type";
-import { AuthContext } from "@/entities/User/auth.context";
-import { hasAccessToPaidContent } from "@/entities/User/access-control";
-import { CircleX, Image, Video } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { DownloadDrawer } from '@/components/dwonload-drawer';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Quiz, QuizQuestionPage } from '@/entities/Quiz/quiz.type';
+import { AuthContext } from '@/entities/User/auth.context';
+import { hasAccessToPaidContent } from '@/entities/User/access-control';
+import { CircleX, Image, Video } from 'lucide-react';
+import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const PageQuestion = ({
   question,
   setQuestion,
 }: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
 }) => {
   const content = question?.content as QuizQuestionPage;
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<"image" | "video">("image");
+  const [type, setType] = useState<'image' | 'video'>('image');
   const { user } = useContext(AuthContext);
-  const [value, setValue] = useState<string>(content?.text ?? "");
+  const [value, setValue] = useState<string>(content?.text ?? '');
 
   useEffect(() => {
     if (!content) {
-      setQuestion({ ...question, content: { type: "img", url: "", text: "" } });
+      setQuestion({ ...question, content: { type: 'img', url: '', text: '' } });
     }
   }, [content]);
 
   const hasAccess = hasAccessToPaidContent(user);
 
   return (
-    <div className={"flex flex-col gap-3"}>
+    <div className={'flex flex-col gap-3'}>
       <Textarea
-        placeholder={t("edit-quiz.question-page.question.page.text.placeholder")}
+        placeholder={t('edit-quiz.question-page.question.page.text.placeholder')}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => setQuestion({ ...question, content: { ...content, text: value } })}
       />
       <div>
         {content?.url ? (
-          <div className={"flex flex-col gap-2"}>
-            {content.type === "img" ? (
+          <div className={'flex flex-col gap-2'}>
+            {content.type === 'img' ? (
               <img src={content.url} alt="image" width={820} height={820} />
             ) : (
               <a href={content.url} target="_blank">
-                <Button variant={"link"}>{content.url}</Button>
+                <Button variant={'link'}>{content.url}</Button>
               </a>
             )}
             <div>
               <Button
-                variant={"outline"}
-                size={"icon-sm"}
+                variant={'outline'}
+                size={'icon-sm'}
                 onClick={() => {
                   setQuestion({
                     ...question,
-                    content: { ...content, url: "", type: "img" },
+                    content: { ...content, url: '', type: 'img' },
                   });
                 }}
               >
@@ -69,10 +69,10 @@ export const PageQuestion = ({
             <Tooltip>
               <TooltipTrigger>
                 <Button
-                  variant={"outline"}
-                  size={"icon-sm"}
+                  variant={'outline'}
+                  size={'icon-sm'}
                   onClick={() => {
-                    setType("image");
+                    setType('image');
                     setOpen(true);
                   }}
                 >
@@ -80,17 +80,17 @@ export const PageQuestion = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{t("tooltip.add-image", { size: "820x820" })}</p>
+                <p>{t('tooltip.add-image', { size: '820x820' })}</p>
               </TooltipContent>
             </Tooltip>
-            <div>{t("edit-quiz.question-page.question.page.type.or")}</div>
+            <div>{t('edit-quiz.question-page.question.page.type.or')}</div>
             <Tooltip>
               <TooltipTrigger>
                 <Button
-                  variant={"outline"}
-                  size={"icon-sm"}
+                  variant={'outline'}
+                  size={'icon-sm'}
                   onClick={() => {
-                    setType("video");
+                    setType('video');
                     setOpen(true);
                   }}
                 >
@@ -98,7 +98,7 @@ export const PageQuestion = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{t("tooltip.add-video")}</p>
+                <p>{t('tooltip.add-video')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -117,7 +117,7 @@ export const PageQuestion = ({
               content: {
                 ...content,
                 url,
-                type: type === "image" ? "img" : "video",
+                type: type === 'image' ? 'img' : 'video',
               },
             })
           }

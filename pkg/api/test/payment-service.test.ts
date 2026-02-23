@@ -3,7 +3,14 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { PaymentService } from '../src/modules/payment/service';
-import { cleanupTestUser, createTestPayment, createTestUpLimit, createTestUser, createTestUserPayment, ensureTestPlan } from './utils/test-db';
+import {
+  cleanupTestUser,
+  createTestPayment,
+  createTestUpLimit,
+  createTestUser,
+  createTestUserPayment,
+  ensureTestPlan,
+} from './utils/test-db';
 import { TestLogger } from './utils/test-logger';
 
 const logger = new TestLogger('payment-service');
@@ -214,7 +221,9 @@ test('6. handleUnitpayCheck обрабатывает проверку плате
       const result = await PaymentService.handleUnitpayCheck(params);
 
       expect(result).toHaveProperty('result');
-      expect((result as { result: { message: string } }).result.message).toBe('Запрос успешно обработан');
+      expect((result as { result: { message: string } }).result.message).toBe(
+        'Запрос успешно обработан'
+      );
     } finally {
       await cleanupTestUser(userId);
     }
@@ -291,10 +300,16 @@ test('8. handleUnitpayPay обрабатывает успешный платеж
       const result = await PaymentService.handleUnitpayPay(params);
 
       expect(result).toHaveProperty('result');
-      expect((result as { result: { message: string } }).result.message).toBe('Запрос успешно обработан');
+      expect((result as { result: { message: string } }).result.message).toBe(
+        'Запрос успешно обработан'
+      );
 
       const { db, paymentTable } = await import('../src/db');
-      const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+      const payments = await db
+        .select()
+        .from(paymentTable)
+        .where(eq(paymentTable.id, paymentId))
+        .limit(1);
 
       expect(payments[0]?.status).toBe('paid');
     } finally {
@@ -391,10 +406,16 @@ test('10. handleUnitpayError обрабатывает ошибку платеж�
       const result = await PaymentService.handleUnitpayError(params);
 
       expect(result).toHaveProperty('result');
-      expect((result as { result: { message: string } }).result.message).toBe('Запрос успешно обработан');
+      expect((result as { result: { message: string } }).result.message).toBe(
+        'Запрос успешно обработан'
+      );
 
       const { db, paymentTable } = await import('../src/db');
-      const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+      const payments = await db
+        .select()
+        .from(paymentTable)
+        .where(eq(paymentTable.id, paymentId))
+        .limit(1);
 
       expect(payments[0]?.status).toBe('failed');
     } finally {
@@ -519,7 +540,11 @@ test('14. activateScheduledPlan активирует отсроченный пл
       expect(users[0]?.planId).toBe(proPlusPlanId);
 
       const { userPaymentTable } = await import('../src/db');
-      const activePayments = await db.select().from(userPaymentTable).where(eq(userPaymentTable.id, scheduledUserPaymentId)).limit(1);
+      const activePayments = await db
+        .select()
+        .from(userPaymentTable)
+        .where(eq(userPaymentTable.id, scheduledUserPaymentId))
+        .limit(1);
 
       expect(activePayments[0]?.isActive).toBe(true);
       expect(activePayments[0]?.startsAt).toBeNull();

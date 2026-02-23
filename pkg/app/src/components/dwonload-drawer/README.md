@@ -17,7 +17,7 @@
 ### Базовая загрузка изображения
 
 ```tsx
-import { DownloadDrawer } from "@/components/dwonload-drawer";
+import { DownloadDrawer } from '@/components/dwonload-drawer';
 
 function MyComponent() {
   const [open, setOpen] = useState(false);
@@ -27,7 +27,7 @@ function MyComponent() {
       type="image"
       open={open}
       setOpen={setOpen}
-      onFinal={(url) => console.log("Uploaded:", url)}
+      onFinal={(url) => console.log('Uploaded:', url)}
     />
   );
 }
@@ -36,7 +36,7 @@ function MyComponent() {
 ### Загрузка с изменением размера
 
 ```tsx
-import { DownloadDrawer } from "@/components/dwonload-drawer";
+import { DownloadDrawer } from '@/components/dwonload-drawer';
 
 function MyComponent() {
   const [open, setOpen] = useState(false);
@@ -49,7 +49,7 @@ function MyComponent() {
       resize={true}
       targetWidth={1920}
       targetHeight={1080}
-      onFinal={(url) => console.log("Uploaded resized image:", url)}
+      onFinal={(url) => console.log('Uploaded resized image:', url)}
     />
   );
 }
@@ -63,7 +63,7 @@ function MyComponent() {
   open={open}
   setOpen={setOpen}
   defaultUrl="https://example.com/video.mp4"
-  onFinal={(url) => console.log("Video uploaded:", url)}
+  onFinal={(url) => console.log('Video uploaded:', url)}
 />
 ```
 
@@ -155,7 +155,7 @@ function MyComponent() {
 ```tsx
 function LogoUpload() {
   const [open, setOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState('');
 
   return (
     <>
@@ -170,7 +170,7 @@ function LogoUpload() {
         targetHeight={200}
         onFinal={(url) => {
           setLogoUrl(url);
-          console.log("Logo uploaded:", url);
+          console.log('Logo uploaded:', url);
         }}
       />
 
@@ -197,7 +197,7 @@ function BannerUpload() {
         resize={true}
         targetWidth={1080}
         targetHeight={1920}
-        onFinal={(url) => console.log("Mobile banner:", url)}
+        onFinal={(url) => console.log('Mobile banner:', url)}
       />
 
       {/* Веб баннер 3:2 */}
@@ -208,7 +208,7 @@ function BannerUpload() {
         resize={true}
         targetWidth={1792}
         targetHeight={1509}
-        onFinal={(url) => console.log("Web banner:", url)}
+        onFinal={(url) => console.log('Web banner:', url)}
       />
     </>
   );
@@ -266,7 +266,7 @@ function BannerUpload() {
       resize={true}
       targetWidth={1920}
       targetHeight={1080}
-      onFinal={(url) => console.log("Banner uploaded:", url)}
+      onFinal={(url) => console.log('Banner uploaded:', url)}
     />
   );
 }

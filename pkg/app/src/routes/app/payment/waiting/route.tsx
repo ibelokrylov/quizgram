@@ -1,7 +1,7 @@
-import { PaymentWaitingPage } from "@/pages/Payment/Waiting";
-import { createFileRoute } from "@tanstack/react-router";
+import { PaymentWaitingPage } from '@/pages/Payment/Waiting';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/app/payment/waiting")({
+export const Route = createFileRoute('/app/payment/waiting')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
     return {

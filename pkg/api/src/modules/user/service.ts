@@ -93,7 +93,11 @@ export abstract class UserService {
    * Получение настроек уведомлений пользователя
    */
   static async getNotificationSettings(userId: number): Promise<UserNotification> {
-    const notifications = await db.select().from(userNotificationTable).where(eq(userNotificationTable.userId, userId)).limit(1);
+    const notifications = await db
+      .select()
+      .from(userNotificationTable)
+      .where(eq(userNotificationTable.userId, userId))
+      .limit(1);
 
     if (!notifications[0]) {
       const error = new Error('Notification settings not found');
@@ -107,8 +111,15 @@ export abstract class UserService {
   /**
    * Обновление настроек уведомлений пользователя
    */
-  static async updateNotificationSettings(userId: number, settings: { telegram?: boolean; email?: boolean }): Promise<UserNotification> {
-    const existing = await db.select().from(userNotificationTable).where(eq(userNotificationTable.userId, userId)).limit(1);
+  static async updateNotificationSettings(
+    userId: number,
+    settings: { telegram?: boolean; email?: boolean }
+  ): Promise<UserNotification> {
+    const existing = await db
+      .select()
+      .from(userNotificationTable)
+      .where(eq(userNotificationTable.userId, userId))
+      .limit(1);
 
     if (!existing[0]) {
       const error = new Error('Notification settings not found');
@@ -128,7 +139,11 @@ export abstract class UserService {
       updateData.email = settings.email;
     }
 
-    const [updated] = await db.update(userNotificationTable).set(updateData).where(eq(userNotificationTable.userId, userId)).returning();
+    const [updated] = await db
+      .update(userNotificationTable)
+      .set(updateData)
+      .where(eq(userNotificationTable.userId, userId))
+      .returning();
 
     if (!updated) {
       const error = new Error('Failed to update notification settings');
@@ -180,9 +195,13 @@ export abstract class UserService {
         login: user.login,
       });
     } catch (mailError) {
-      logger.error('Ошибка при повторной отправке email с кодом верификации', mailError instanceof Error ? mailError : new Error(String(mailError)), {
-        login: user.login,
-      });
+      logger.error(
+        'Ошибка при повторной отправке email с кодом верификации',
+        mailError instanceof Error ? mailError : new Error(String(mailError)),
+        {
+          login: user.login,
+        }
+      );
       const error = new Error('Failed to send verification email');
       error.name = 'MailError';
       throw error;
@@ -194,7 +213,9 @@ export abstract class UserService {
    * Для Pro+ учитывает дополнительные заявки из user_payment_pro
    * Возвращает дату окончания подписки из user_payment
    */
-  static async getUserPlan(userId: number): Promise<Plan & { finalDayAt?: string; cancelAutoRenew?: boolean }> {
+  static async getUserPlan(
+    userId: number
+  ): Promise<Plan & { finalDayAt?: string; cancelAutoRenew?: boolean }> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -224,9 +245,11 @@ export abstract class UserService {
       .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
       .limit(1);
 
-    const finalDayAt = activeUserPayments.length > 0 ? activeUserPayments[0].finalDayAt?.toISOString() : undefined;
+    const finalDayAt =
+      activeUserPayments.length > 0 ? activeUserPayments[0].finalDayAt?.toISOString() : undefined;
 
-    const cancelAutoRenew = activeUserPayments.length > 0 ? activeUserPayments[0].cancelAutoRenew : undefined;
+    const cancelAutoRenew =
+      activeUserPayments.length > 0 ? activeUserPayments[0].cancelAutoRenew : undefined;
 
     // Для Pro+ проверяем дополнительные заявки
     let updatedPlan: Plan & { finalDayAt?: string; cancelAutoRenew?: boolean } = { ...plan };
@@ -241,7 +264,11 @@ export abstract class UserService {
         .limit(1);
 
       if (userPaymentPro.length > 0 && userPaymentPro[0].upLimitId) {
-        const upLimit = await db.select().from(upLimitTable).where(eq(upLimitTable.id, userPaymentPro[0].upLimitId)).limit(1);
+        const upLimit = await db
+          .select()
+          .from(upLimitTable)
+          .where(eq(upLimitTable.id, userPaymentPro[0].upLimitId))
+          .limit(1);
 
         if (upLimit.length > 0) {
           // Возвращаем план с обновленным лимитом (базовый + дополнительный)

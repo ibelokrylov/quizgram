@@ -1,6 +1,6 @@
-const DB_NAME = "quizgram-db";
+const DB_NAME = 'quizgram-db';
 const DB_VERSION = 1;
-const STORE_NAME = "key-value-store";
+const STORE_NAME = 'key-value-store';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -16,7 +16,7 @@ async function initDB(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      reject(new Error("Failed to open IndexedDB"));
+      reject(new Error('Failed to open IndexedDB'));
     };
 
     request.onsuccess = () => {
@@ -30,9 +30,9 @@ async function initDB(): Promise<IDBDatabase> {
       // Создаем хранилище объектов, если его еще нет
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const objectStore = db.createObjectStore(STORE_NAME, {
-          keyPath: "key",
+          keyPath: 'key',
         });
-        objectStore.createIndex("key", "key", { unique: true });
+        objectStore.createIndex('key', 'key', { unique: true });
       }
     };
   });
@@ -48,7 +48,7 @@ export async function set(key: string, value: unknown): Promise<void> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
 
     const item = {
@@ -78,7 +78,7 @@ export async function get<T = unknown>(key: string): Promise<T | null> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
+    const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.get(key);
 
@@ -112,7 +112,7 @@ export async function remove(key: string): Promise<void> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.delete(key);
 
@@ -135,7 +135,7 @@ export async function has(key: string): Promise<boolean> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
+    const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.count(IDBKeyRange.only(key));
 
@@ -157,7 +157,7 @@ export async function keys(): Promise<string[]> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
+    const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.getAllKeys();
 
@@ -166,7 +166,7 @@ export async function keys(): Promise<string[]> {
     };
 
     request.onerror = () => {
-      reject(new Error("Failed to get all keys"));
+      reject(new Error('Failed to get all keys'));
     };
   });
 }
@@ -179,7 +179,7 @@ export async function clear(): Promise<void> {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.clear();
 
@@ -188,7 +188,7 @@ export async function clear(): Promise<void> {
     };
 
     request.onerror = () => {
-      reject(new Error("Failed to clear IndexedDB"));
+      reject(new Error('Failed to clear IndexedDB'));
     };
   });
 }

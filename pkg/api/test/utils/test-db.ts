@@ -1,5 +1,3 @@
-// Утилита для работы с тестовой БД
-
 import { and, eq, inArray, like, sql } from 'drizzle-orm';
 import type { NewPayment, UserCreate as NewUser, NewUserPayment } from '../../src/db';
 import {
@@ -65,7 +63,11 @@ export async function setUserAdminStatus(userId: number, isAdmin: boolean): Prom
 /**
  * Создает тестовый план (если не существует)
  */
-export async function ensureTestPlan(name: 'FREE' | 'BASE' | 'PRO_PLUS', price: number, bidMonthLimit: number): Promise<number> {
+export async function ensureTestPlan(
+  name: 'FREE' | 'BASE' | 'PRO_PLUS',
+  price: number,
+  bidMonthLimit: number
+): Promise<number> {
   const existing = await db.select().from(planTable).where(eq(planTable.name, name)).limit(1);
 
   if (existing.length > 0) {
@@ -118,7 +120,11 @@ export async function createTestUpLimit(bid: number, price: number): Promise<num
 /**
  * Создает тестовый user_payment
  */
-export async function createTestUserPayment(userId: number, planId: number, data?: Partial<NewUserPayment>): Promise<number> {
+export async function createTestUserPayment(
+  userId: number,
+  planId: number,
+  data?: Partial<NewUserPayment>
+): Promise<number> {
   const finalDayAt = new Date();
   finalDayAt.setMonth(finalDayAt.getMonth() + 1);
   finalDayAt.setHours(23, 59, 0, 0);
@@ -143,7 +149,11 @@ export async function createTestUserPayment(userId: number, planId: number, data
 /**
  * Создает тестовый payment
  */
-export async function createTestPayment(userId: number, planId: number, data?: Partial<NewPayment>): Promise<number> {
+export async function createTestPayment(
+  userId: number,
+  planId: number,
+  data?: Partial<NewPayment>
+): Promise<number> {
   const testPayment: NewPayment = {
     userId,
     planId,
@@ -183,7 +193,10 @@ export async function createTestUserPaymentPro(userId: number, upLimitId: number
 export async function cleanupTestUser(userId: number): Promise<void> {
   try {
     // 1. Удаляем quiz и связанные таблицы
-    const userQuizzes = await db.select({ id: quizTable.id, uid: quizTable.uid }).from(quizTable).where(eq(quizTable.userId, userId));
+    const userQuizzes = await db
+      .select({ id: quizTable.id, uid: quizTable.uid })
+      .from(quizTable)
+      .where(eq(quizTable.userId, userId));
 
     if (userQuizzes.length > 0) {
       const quizIds = userQuizzes.map((q) => q.id);
@@ -240,7 +253,10 @@ export async function cleanupTestUser(userId: number): Promise<void> {
 export async function cleanupAllTestUsers(): Promise<void> {
   try {
     // Находим всех тестовых пользователей по паттерну login
-    const testUsers = await db.select({ id: UserTable.id }).from(UserTable).where(like(UserTable.login, 'test-%'));
+    const testUsers = await db
+      .select({ id: UserTable.id })
+      .from(UserTable)
+      .where(like(UserTable.login, 'test-%'));
 
     if (testUsers.length > 0) {
       console.log(`Найдено ${testUsers.length} тестовых пользователей для очистки`);
@@ -263,7 +279,7 @@ export async function cleanupAllTestUsers(): Promise<void> {
             OR ${paymentTable.trackId} LIKE 'dev-%' 
             OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%dev_bypass%')
             OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%"dev":%')
-            OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%test%')`,
+            OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%test%')`
       );
 
     if (devPayments.length > 0) {
@@ -339,7 +355,7 @@ export async function createTestQuiz(
     name: string;
     isActive: boolean;
     isShowLogo: boolean;
-  }>,
+  }>
 ): Promise<{ id: number; uid: string }> {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
@@ -372,7 +388,7 @@ export async function createTestBid(
     isEqualPaymentLimit: boolean;
     info: Record<string, unknown>;
     contacts: Record<string, string>;
-  }>,
+  }>
 ): Promise<{ id: number; key: string }> {
   const [bid] = await db
     .insert(quizBidTable)

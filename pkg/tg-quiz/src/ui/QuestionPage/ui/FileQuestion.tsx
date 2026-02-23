@@ -5,16 +5,16 @@ import { QuestionContext } from '../Question.context';
 
 const label = {
   single: {
-    all: "Загрузите файл",
-    image: "Загрузите изображение",
-    video: "Загрузите видео",
-    docs: "Загрузите документ",
+    all: 'Загрузите файл',
+    image: 'Загрузите изображение',
+    video: 'Загрузите видео',
+    docs: 'Загрузите документ',
   },
   many: {
-    all: "Загрузите файлы",
-    image: "Загрузите изображения",
-    video: "Загрузите видео",
-    docs: "Загрузите документы",
+    all: 'Загрузите файлы',
+    image: 'Загрузите изображения',
+    video: 'Загрузите видео',
+    docs: 'Загрузите документы',
   },
 };
 
@@ -26,15 +26,15 @@ function formatFileSize(size: number) {
 
 const allowedMimeTypes = {
   all: null, // разрешены все типы
-  image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
-  video: ["video/mp4", "video/webm", "video/ogg", "video/quicktime"],
+  image: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+  video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
   docs: [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ],
 };
 
@@ -51,9 +51,9 @@ export const FileQuestion = () => {
   function fileCheck(file: File, e: ChangeEvent<HTMLInputElement>) {
     if (file.size > maxFileSize) {
       setError(
-        `Файл "${file.name}" слишком большой (${formatFileSize(file.size)}). Максимальный размер: ${formatFileSize(maxFileSize)}`,
+        `Файл "${file.name}" слишком большой (${formatFileSize(file.size)}). Максимальный размер: ${formatFileSize(maxFileSize)}`
       );
-      e.target.value = ""; // Сбросить выбор файла
+      e.target.value = ''; // Сбросить выбор файла
       return;
     }
 
@@ -61,9 +61,9 @@ export const FileQuestion = () => {
     const allowedTypes = allowedMimeTypes[type];
     if (allowedTypes && !allowedTypes.includes(file.type)) {
       setError(
-        `Файл "${file.name}" имеет недопустимый тип (${file.type}). Пожалуйста, выберите файл правильного типа.`,
+        `Файл "${file.name}" имеет недопустимый тип (${file.type}). Пожалуйста, выберите файл правильного типа.`
       );
-      e.target.value = ""; // Сбросить выбор файла
+      e.target.value = ''; // Сбросить выбор файла
       return;
     }
   }
@@ -74,7 +74,7 @@ export const FileQuestion = () => {
 
     if (question?.content?.manyFiles === true) {
       if (files.length > 10) {
-        setError("Кол-во файлов не должно быть больше 10 штук");
+        setError('Кол-во файлов не должно быть больше 10 штук');
       }
       for (const file of files) {
         fileCheck(file, e);
@@ -95,11 +95,11 @@ export const FileQuestion = () => {
         answer: question.content?.manyFiles === true ? files : files[0],
       });
     } catch (err) {
-      console.error("Failed to upload file:", err);
+      console.error('Failed to upload file:', err);
       setError(
-        `Ошибка при загрузке файла: ${err instanceof Error ? err.message : "Неизвестная ошибка"}`,
+        `Ошибка при загрузке файла: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`
       );
-      e.target.value = ""; // Сбросить выбор файла
+      e.target.value = ''; // Сбросить выбор файла
     } finally {
       setUploading(false);
     }

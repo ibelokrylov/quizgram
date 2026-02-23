@@ -1,8 +1,9 @@
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "005-add-up-limit-bid-unique",
-  description: "Добавляет UNIQUE constraint на поле bid в таблице up_limit, предварительно удалив дубликаты",
+  name: '005-add-up-limit-bid-unique',
+  description:
+    'Добавляет UNIQUE constraint на поле bid в таблице up_limit, предварительно удалив дубликаты',
   async up(sql) {
     // Сначала удаляем дубликаты, оставляя записи с минимальным id для каждого bid
     await sql`
@@ -32,4 +33,3 @@ export const migration: MigrationFile = {
     }
   },
 };
-

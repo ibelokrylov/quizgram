@@ -13,14 +13,10 @@ const VariantImageTextAnswerNew = ({
         <div className="space-y-2 md:flex md:flex-col md:items-center md:justify-center">
           <img
             src={imageUrl}
-            alt={t("bids.details.answer")}
+            alt={t('bids.details.answer')}
             className="rounded-lg max-w-95 max-h-76.75 w-full h-auto object-contain md:mx-auto"
           />
-          {text && (
-            <p className="text-xs lg:text-sm font-medium md:text-center">
-              {text}
-            </p>
-          )}
+          {text && <p className="text-xs lg:text-sm font-medium md:text-center">{text}</p>}
         </div>
       </div>
     );

@@ -1,35 +1,33 @@
 // Контроллер статистики — обрабатывает HTTP-запросы для получения статистики по квизам
 
-import { Elysia, t } from "elysia";
-import type { User } from "../../db";
-import { logger } from "../../lib/logger";
-import { AuthService } from "../auth/service";
-import { StatisticsModel } from "./model";
-import { StatisticsService } from "./service";
+import { Elysia, t } from 'elysia';
+import type { User } from '../../db';
+import { logger } from '../../lib/logger';
+import { AuthService } from '../auth/service';
+import { StatisticsModel } from './model';
+import { StatisticsService } from './service';
 
-export const statistics = new Elysia({ prefix: "/statistics" })
-  .state("user", null as User | null)
+export const statistics = new Elysia({ prefix: '/statistics' })
+  .state('user', null as User | null)
   .guard(
     {
       async beforeHandle(ctx) {
         // Проверяем авторизацию
         if (!ctx.cookie.token.value) {
           ctx.set.status = 401;
-          return { message: "Unauthorized" };
+          return { message: 'Unauthorized' };
         }
 
         // Получаем пользователя из токена
-        const user = await AuthService.getUserFromToken(
-          ctx.cookie.token.value.toString()
-        );
+        const user = await AuthService.getUserFromToken(ctx.cookie.token.value.toString());
         ctx.store.user = (user || null) as User | null;
 
         // Проверяем, что пользователь платный (planId > 1) или админ
         if (!user || (user.planId <= 1 && !user.isAdmin)) {
           ctx.set.status = 403;
           return {
-            message: "Forbidden",
-            error: "This feature is only available for paid users",
+            message: 'Forbidden',
+            error: 'This feature is only available for paid users',
           };
         }
       },
@@ -38,12 +36,12 @@ export const statistics = new Elysia({ prefix: "/statistics" })
       app
         // Получить общую статистику по дням
         .get(
-          "/daily",
+          '/daily',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             const { query, set } = ctx;
@@ -51,21 +49,20 @@ export const statistics = new Elysia({ prefix: "/statistics" })
             try {
               const response = await StatisticsService.getDailyStats(query);
               return {
-                message: "ok",
+                message: 'ok',
                 data: response,
               };
             } catch (error) {
               logger.error(
-                "Ошибка при получении общей статистики",
+                'Ошибка при получении общей статистики',
                 error instanceof Error ? error : new Error(String(error)),
                 { userId: user.id, quiz_uid: query.quiz_uid }
               );
 
               set.status = 400;
               return {
-                message: "get-daily-stats@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'get-daily-stats@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
             }
           },
@@ -92,35 +89,33 @@ export const statistics = new Elysia({ prefix: "/statistics" })
         )
         // Получить статистику по незавершенным квизам
         .get(
-          "/abandonment",
+          '/abandonment',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             const { query, set } = ctx;
 
             try {
-              const response =
-                await StatisticsService.getAbandonmentStats(query);
+              const response = await StatisticsService.getAbandonmentStats(query);
               return {
-                message: "ok",
+                message: 'ok',
                 data: response,
               };
             } catch (error) {
               logger.error(
-                "Ошибка при получении статистики по незавершенным квизам",
+                'Ошибка при получении статистики по незавершенным квизам',
                 error instanceof Error ? error : new Error(String(error)),
                 { userId: user.id, quiz_uid: query.quiz_uid }
               );
 
               set.status = 400;
               return {
-                message: "get-abandonment-stats@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'get-abandonment-stats@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
             }
           },
@@ -147,12 +142,12 @@ export const statistics = new Elysia({ prefix: "/statistics" })
         )
         // Очистить кеш статистики (опционально, для администрирования)
         .delete(
-          "/cache",
+          '/cache',
           async (ctx) => {
             const user: User | null = ctx.store.user;
             if (!user) {
               ctx.set.status = 401;
-              return { message: "Unauthorized" };
+              return { message: 'Unauthorized' };
             }
 
             const { query } = ctx;
@@ -161,23 +156,22 @@ export const statistics = new Elysia({ prefix: "/statistics" })
               StatisticsService.clearCache(query.quiz_uid);
 
               return {
-                message: "ok",
+                message: 'ok',
                 data: {
-                  cleared: query.quiz_uid ? "specific" : "all",
+                  cleared: query.quiz_uid ? 'specific' : 'all',
                 },
               };
             } catch (error) {
               logger.error(
-                "Ошибка при очистке кеша статистики",
+                'Ошибка при очистке кеша статистики',
                 error instanceof Error ? error : new Error(String(error)),
                 { userId: user.id, quiz_uid: query.quiz_uid }
               );
 
               ctx.set.status = 400;
               return {
-                message: "clear-cache@error",
-                error:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: 'clear-cache@error',
+                error: error instanceof Error ? error.message : 'Unknown error',
               };
             }
           },
@@ -207,4 +201,3 @@ export const statistics = new Elysia({ prefix: "/statistics" })
           }
         )
   );
-

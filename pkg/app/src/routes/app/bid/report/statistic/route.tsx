@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/app/bid/report/statistic")({
+export const Route = createFileRoute('/app/bid/report/statistic')({
   component: RouteComponent,
 });
 

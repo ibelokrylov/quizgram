@@ -161,7 +161,7 @@ export namespace UserModel {
       t.String({
         pattern: '^\\d+x\\d+$', // Формат: 300x312
         description: 'Размер изображения в формате WIDTHxHEIGHT (например, 300x312)',
-      }),
+      })
     ),
   });
 

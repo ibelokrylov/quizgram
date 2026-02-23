@@ -1,8 +1,8 @@
 // Сервис для обработки изображений с помощью FFmpeg
 // Изменяет размер изображений до указанных параметров
 
-import { unlink } from "fs/promises";
-import { logger } from "../lib/logger";
+import { unlink } from 'fs/promises';
+import { logger } from '../lib/logger';
 
 export interface ResizeOptions {
   width: number;
@@ -18,22 +18,22 @@ export abstract class FFmpegService {
    */
   static async resizeImage(
     image: Buffer | Blob | File | string,
-    options: ResizeOptions,
+    options: ResizeOptions
   ): Promise<Buffer> {
     const { width, height } = options;
 
     if (width <= 0 || height <= 0) {
-      throw new Error("Width and height must be positive numbers");
+      throw new Error('Width and height must be positive numbers');
     }
 
     try {
       // Конвертируем входные данные в Buffer
       let inputBuffer: Buffer;
-      if (typeof image === "string") {
+      if (typeof image === 'string') {
         // Если это путь к файлу, читаем его
-        inputBuffer = await Bun.file(image).arrayBuffer().then(
-          (ab) => Buffer.from(ab),
-        );
+        inputBuffer = await Bun.file(image)
+          .arrayBuffer()
+          .then((ab) => Buffer.from(ab));
       } else if (image instanceof Blob || image instanceof File) {
         inputBuffer = Buffer.from(await image.arrayBuffer());
       } else {
@@ -41,23 +41,23 @@ export abstract class FFmpegService {
       }
 
       // Определяем расширение исходного файла для сохранения формата
-      let fileExtension = "png"; // По умолчанию PNG для максимального качества
-      if (typeof image === "string") {
-        const ext = image.split(".").pop()?.toLowerCase();
-        if (ext && ["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
-          fileExtension = ext === "jpeg" ? "jpg" : ext;
+      let fileExtension = 'png'; // По умолчанию PNG для максимального качества
+      if (typeof image === 'string') {
+        const ext = image.split('.').pop()?.toLowerCase();
+        if (ext && ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+          fileExtension = ext === 'jpeg' ? 'jpg' : ext;
         }
       } else if (image instanceof Blob || image instanceof File) {
         // Определяем формат из MIME типа
         const mimeType = image.type.toLowerCase();
-        if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
-          fileExtension = "jpg";
-        } else if (mimeType.includes("png")) {
-          fileExtension = "png";
-        } else if (mimeType.includes("webp")) {
-          fileExtension = "webp";
-        } else if (mimeType.includes("gif")) {
-          fileExtension = "gif";
+        if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+          fileExtension = 'jpg';
+        } else if (mimeType.includes('png')) {
+          fileExtension = 'png';
+        } else if (mimeType.includes('webp')) {
+          fileExtension = 'webp';
+        } else if (mimeType.includes('gif')) {
+          fileExtension = 'gif';
         }
       }
 
@@ -71,58 +71,56 @@ export abstract class FFmpegService {
       try {
         // Формируем параметры команды для максимального качества
         const ffmpegArgs = [
-          "ffmpeg",
-          "-i",
+          'ffmpeg',
+          '-i',
           inputTempFile,
-          "-vf",
+          '-vf',
           `scale=${width}:${height}:flags=lanczos`, // lanczos - высококачественный алгоритм масштабирования
-          "-sws_flags",
-          "lanczos", // Дополнительная настройка для качества
+          '-sws_flags',
+          'lanczos', // Дополнительная настройка для качества
         ];
 
         // Добавляем параметры качества в зависимости от формата
-        if (fileExtension === "jpg" || fileExtension === "jpeg") {
+        if (fileExtension === 'jpg' || fileExtension === 'jpeg') {
           ffmpegArgs.push(
-            "-q:v",
-            "2", // Высокое качество JPEG (1-31, где 1 - наилучшее качество)
+            '-q:v',
+            '2' // Высокое качество JPEG (1-31, где 1 - наилучшее качество)
           );
-        } else if (fileExtension === "png") {
+        } else if (fileExtension === 'png') {
           ffmpegArgs.push(
-            "-compression_level",
-            "1", // Минимальное сжатие PNG для максимального качества
+            '-compression_level',
+            '1' // Минимальное сжатие PNG для максимального качества
           );
-        } else if (fileExtension === "webp") {
+        } else if (fileExtension === 'webp') {
           ffmpegArgs.push(
-            "-quality",
-            "100", // Максимальное качество WebP (0-100)
+            '-quality',
+            '100' // Максимальное качество WebP (0-100)
           );
         }
 
         ffmpegArgs.push(
-          "-y", // Перезаписывать выходной файл, если он существует
-          outputTempFile,
+          '-y', // Перезаписывать выходной файл, если он существует
+          outputTempFile
         );
 
         // Выполняем команду ffmpeg для изменения размера
         const process = Bun.spawn(ffmpegArgs, {
-          stdout: "pipe",
-          stderr: "pipe",
+          stdout: 'pipe',
+          stderr: 'pipe',
         });
 
         const exitCode = await process.exited;
 
         if (exitCode !== 0) {
           const errorOutput = await new Response(process.stderr).text();
-          throw new Error(
-            `FFmpeg failed with exit code ${exitCode}: ${errorOutput}`,
-          );
+          throw new Error(`FFmpeg failed with exit code ${exitCode}: ${errorOutput}`);
         }
 
         // Читаем обработанное изображение
         const outputFile = Bun.file(outputTempFile);
         const outputBuffer = Buffer.from(await outputFile.arrayBuffer());
 
-        logger.info("Изображение успешно обработано", {
+        logger.info('Изображение успешно обработано', {
           width,
           height,
           inputSize: inputBuffer.length,
@@ -135,7 +133,7 @@ export abstract class FFmpegService {
         try {
           await unlink(inputTempFile);
         } catch (error) {
-          logger.warn("Не удалось удалить временный входной файл", {
+          logger.warn('Не удалось удалить временный входной файл', {
             file: inputTempFile,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -144,7 +142,7 @@ export abstract class FFmpegService {
         try {
           await unlink(outputTempFile);
         } catch (error) {
-          logger.warn("Не удалось удалить временный выходной файл", {
+          logger.warn('Не удалось удалить временный выходной файл', {
             file: outputTempFile,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -152,12 +150,11 @@ export abstract class FFmpegService {
       }
     } catch (error) {
       logger.error(
-        "Ошибка при изменении размера изображения",
+        'Ошибка при изменении размера изображения',
         error instanceof Error ? error : new Error(String(error)),
-        { width, height },
+        { width, height }
       );
       throw error;
     }
   }
 }
-

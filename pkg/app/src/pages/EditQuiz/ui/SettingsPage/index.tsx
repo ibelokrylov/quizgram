@@ -69,7 +69,11 @@ export const SettingsPage = () => {
       return;
     }
     try {
-      await http({ url: '/v1/quiz/is-shared/' + quiz?.uid, method: 'PUT', body: { isShared: value } });
+      await http({
+        url: '/v1/quiz/is-shared/' + quiz?.uid,
+        method: 'PUT',
+        body: { isShared: value },
+      });
       toast.success(t('edit-quiz.public.toast.success'));
       if (quiz) {
         setQuiz({ ...quiz, isShared: value });
@@ -79,34 +83,30 @@ export const SettingsPage = () => {
     }
   }
   return (
-    <div className='flex flex-col lg:flex-row gap-3 lg:gap-5 px-4 lg:px-0 lg:items-center'>
-      <div className='flex flex-col lg:flex-row gap-3 lg:gap-5 items-start lg:items-center justify-between lg:justify-start pt-2 pb-2 lg:pt-0 lg:pb-0'>
-        <div className='flex flex-row gap-3 lg:gap-5 items-center'>
+    <div className="flex flex-col lg:flex-row gap-3 lg:gap-5 px-4 lg:px-0 lg:items-center">
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-5 items-start lg:items-center justify-between lg:justify-start pt-2 pb-2 lg:pt-0 lg:pb-0">
+        <div className="flex flex-row gap-3 lg:gap-5 items-center">
           <div
             onClick={() => toggleActive(!quiz?.isActive)}
             className={'flex flex-row gap-2 items-center cursor-pointer'}
           >
-            <Switch
-              id={'active-switch'}
-              checked={quiz?.isActive}
-            />
-            <Label htmlFor={'active-switch'}>{t(`edit-quiz.active.${quiz?.isActive?.toString() ?? 'false'}`)}</Label>
+            <Switch id={'active-switch'} checked={quiz?.isActive} />
+            <Label htmlFor={'active-switch'}>
+              {t(`edit-quiz.active.${quiz?.isActive?.toString() ?? 'false'}`)}
+            </Label>
           </div>
-          <div className='hidden lg:block'>
-            <Separator orientation='vertical' />
+          <div className="hidden lg:block">
+            <Separator orientation="vertical" />
           </div>
           <div
             onClick={toggleIsShowLogo}
             className={'hidden lg:flex flex-row gap-2 items-center cursor-pointer'}
           >
-            <Switch
-              id={'is-show-logo-switch'}
-              checked={quiz?.isShowLogo ?? true}
-            />
+            <Switch id={'is-show-logo-switch'} checked={quiz?.isShowLogo ?? true} />
             <Label htmlFor={'is-show-logo-switch'}>{t('edit-quiz.is-show-logo.label')}</Label>
           </div>
-          <div className='hidden lg:block'>
-            <Separator orientation='vertical' />
+          <div className="hidden lg:block">
+            <Separator orientation="vertical" />
           </div>
         </div>
         <div className={'flex gap-4'}>
@@ -114,19 +114,13 @@ export const SettingsPage = () => {
             onClick={() => onSharedQuizSwitch(!quiz?.isShared)}
             className={'flex gap-2 items-center'}
           >
-            <Switch
-              id={'is-shared'}
-              checked={quiz?.isShared ?? false}
-            />
+            <Switch id={'is-shared'} checked={quiz?.isShared ?? false} />
             <Label htmlFor={'is-shared'}>{t('edit-quiz.public.label')}</Label>
           </div>
           {quiz?.isShared ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant={'link'}
-                  onClick={copySharedQuizUrl}
-                >
+                <Button variant={'link'} onClick={copySharedQuizUrl}>
                   <Copy />
                 </Button>
               </TooltipTrigger>
@@ -141,10 +135,7 @@ export const SettingsPage = () => {
         onClick={toggleIsShowLogo}
         className={'flex lg:hidden flex-row gap-2 items-center cursor-pointer pt-2 pb-2'}
       >
-        <Switch
-          id={'is-show-logo-switch'}
-          checked={quiz?.isShowLogo ?? true}
-        />
+        <Switch id={'is-show-logo-switch'} checked={quiz?.isShowLogo ?? true} />
         <Label htmlFor={'is-show-logo-switch'}>{t('edit-quiz.is-show-logo.label')}</Label>
       </div>
     </div>

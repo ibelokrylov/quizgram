@@ -1,17 +1,17 @@
-import type { DownloadFile } from "@/entities/DownloadFile/download-file.type";
-import http from "@/lib/http";
-import { cn } from "@/lib/utils";
-import { Download } from "lucide-react";
-import { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { Drawer, DrawerContent } from "../ui/drawer";
-import { ResizeImg } from "./ui/resize-img";
-import { Video } from "./ui/video";
+import type { DownloadFile } from '@/entities/DownloadFile/download-file.type';
+import http from '@/lib/http';
+import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Drawer, DrawerContent } from '../ui/drawer';
+import { ResizeImg } from './ui/resize-img';
+import { Video } from './ui/video';
 
 export const DownloadDrawer = ({
   disableDownload = false,
-  type = "image",
+  type = 'image',
   open,
   setOpen,
   onFinal,
@@ -22,7 +22,7 @@ export const DownloadDrawer = ({
   targetWidth,
   targetHeight,
 }: {
-  type: "image" | "video" | "doc" | "all";
+  type: 'image' | 'video' | 'doc' | 'all';
   open: boolean;
   setOpen: (open: boolean) => void;
   onFinal?: (value: string) => void;
@@ -39,25 +39,25 @@ export const DownloadDrawer = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showResize, setShowResize] = useState(false);
 
-  function getFileTypeFromMime(mimeType: string): "image" | "video" | "doc" | null {
-    if (mimeType.startsWith("image/")) {
-      return "image";
+  function getFileTypeFromMime(mimeType: string): 'image' | 'video' | 'doc' | null {
+    if (mimeType.startsWith('image/')) {
+      return 'image';
     }
-    if (mimeType.startsWith("video/")) {
-      return "video";
+    if (mimeType.startsWith('video/')) {
+      return 'video';
     }
     if (
-      mimeType === "application/pdf" ||
-      mimeType === "application/msword" ||
-      mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      mimeType === "text/plain"
+      mimeType === 'application/pdf' ||
+      mimeType === 'application/msword' ||
+      mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      mimeType === 'text/plain'
     ) {
-      return "doc";
+      return 'doc';
     }
     return null;
   }
 
-  function validateFileSize(file: File, fileType: "image" | "video" | "doc"): boolean {
+  function validateFileSize(file: File, fileType: 'image' | 'video' | 'doc'): boolean {
     const maxSizes = {
       image: 5 * 1024 * 1024, // 5MB
       video: 150 * 1024 * 1024, // 150MB
@@ -76,46 +76,46 @@ export const DownloadDrawer = ({
     const fileType = file.type;
     const detectedType = getFileTypeFromMime(fileType);
 
-    if (type === "all") {
+    if (type === 'all') {
       if (!detectedType) {
-        toast.error(t("fileUpload.error.invalidFormat"));
+        toast.error(t('fileUpload.error.invalidFormat'));
         return false;
       }
       return validateFileSize(file, detectedType);
     }
 
-    if (type === "image") {
-      const validImageTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    if (type === 'image') {
+      const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
       if (!validImageTypes.includes(fileType)) {
-        toast.error(t("fileUpload.error.invalidImageFormat"));
+        toast.error(t('fileUpload.error.invalidImageFormat'));
         return false;
       }
-      return validateFileSize(file, "image");
-    } else if (type === "video") {
+      return validateFileSize(file, 'image');
+    } else if (type === 'video') {
       const validVideoTypes = [
-        "video/mp4",
-        "video/webm",
-        "video/ogg",
-        "video/quicktime",
-        "video/x-msvideo",
+        'video/mp4',
+        'video/webm',
+        'video/ogg',
+        'video/quicktime',
+        'video/x-msvideo',
       ];
       if (!validVideoTypes.includes(fileType)) {
-        toast.error(t("fileUpload.error.invalidVideoFormat"));
+        toast.error(t('fileUpload.error.invalidVideoFormat'));
         return false;
       }
-      return validateFileSize(file, "video");
-    } else if (type === "doc") {
+      return validateFileSize(file, 'video');
+    } else if (type === 'doc') {
       const validDocTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/plain",
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
       ];
       if (!validDocTypes.includes(fileType)) {
-        toast.error(t("fileUpload.error.invalidDocFormat"));
+        toast.error(t('fileUpload.error.invalidDocFormat'));
         return false;
       }
-      return validateFileSize(file, "doc");
+      return validateFileSize(file, 'doc');
     }
 
     return true;
@@ -129,11 +129,11 @@ export const DownloadDrawer = ({
     onChangeLoading?.(true);
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append('file', file);
 
       const res = await http<DownloadFile>({
-        url: "/v1/user/upload-file",
-        method: "POST",
+        url: '/v1/user/upload-file',
+        method: 'POST',
         formData,
       });
       if (res.data) {
@@ -142,7 +142,7 @@ export const DownloadDrawer = ({
       }
     } catch (err) {
       console.log(err);
-      toast.error(t("fileUpload.error.invalidFormat"));
+      toast.error(t('fileUpload.error.invalidFormat'));
     } finally {
       onChangeLoading?.(false);
     }
@@ -160,7 +160,7 @@ export const DownloadDrawer = ({
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) {
-      if (resize && type === "image" && targetWidth && targetHeight) {
+      if (resize && type === 'image' && targetWidth && targetHeight) {
         if (!validateFileType(file)) {
           return;
         }
@@ -170,7 +170,7 @@ export const DownloadDrawer = ({
         uploadFile(file);
       }
     }
-    e.target.value = "";
+    e.target.value = '';
   }
 
   async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -182,7 +182,7 @@ export const DownloadDrawer = ({
       return;
     }
 
-    if (resize && type === "image" && targetWidth && targetHeight) {
+    if (resize && type === 'image' && targetWidth && targetHeight) {
       if (!validateFileType(file)) {
         return;
       }
@@ -195,29 +195,29 @@ export const DownloadDrawer = ({
 
   function getAcceptAttribute(): string {
     switch (type) {
-      case "image":
-        return "image/png,image/jpeg,image/jpg,image/gif,image/webp";
-      case "video":
-        return "video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo";
-      case "doc":
-        return "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
-      case "all":
-        return "*/*";
+      case 'image':
+        return 'image/png,image/jpeg,image/jpg,image/gif,image/webp';
+      case 'video':
+        return 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo';
+      case 'doc':
+        return 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
+      case 'all':
+        return '*/*';
       default:
-        return "*/*";
+        return '*/*';
     }
   }
 
   const renderContent = {
     image: (
       <div className="w-full px-4 py-2 flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">{t("downloadImage.title")}</h1>
+        <h1 className="text-2xl font-bold">{t('downloadImage.title')}</h1>
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={handleClick}
           className={
-            "flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer"
+            'flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer'
           }
         >
           <div>
@@ -225,10 +225,10 @@ export const DownloadDrawer = ({
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-neutral-400">
-              {t("downloadImage.dragAndDrop")}
+              {t('downloadImage.dragAndDrop')}
             </p>
             <p className="text-xs text-gray-500 dark:text-neutral-400">
-              {t("downloadImage.dragAndDropDescription")}
+              {t('downloadImage.dragAndDropDescription')}
             </p>
           </div>
         </div>
@@ -247,13 +247,13 @@ export const DownloadDrawer = ({
     ),
     doc: (
       <div className="w-full px-4 py-2 flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">{t("downloadDoc.title")}</h1>
+        <h1 className="text-2xl font-bold">{t('downloadDoc.title')}</h1>
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={handleClick}
           className={
-            "flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer"
+            'flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer'
           }
         >
           <div>
@@ -261,10 +261,10 @@ export const DownloadDrawer = ({
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-neutral-400">
-              {t("downloadDoc.dragAndDrop")}
+              {t('downloadDoc.dragAndDrop')}
             </p>
             <p className="text-xs text-gray-500 dark:text-neutral-400">
-              {t("downloadDoc.dragAndDropDescription")}
+              {t('downloadDoc.dragAndDropDescription')}
             </p>
           </div>
         </div>
@@ -272,13 +272,13 @@ export const DownloadDrawer = ({
     ),
     all: (
       <div className="w-full px-4 py-2 flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">{t("downloadAll.title")}</h1>
+        <h1 className="text-2xl font-bold">{t('downloadAll.title')}</h1>
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={handleClick}
           className={
-            "flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer"
+            'flex gap-3 items-center px-4 py-2 rounded-md border border-gray-200 dark:border-neutral-800 border-dashed cursor-pointer'
           }
         >
           <div>
@@ -286,10 +286,10 @@ export const DownloadDrawer = ({
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-neutral-400">
-              {t("downloadAll.dragAndDrop")}
+              {t('downloadAll.dragAndDrop')}
             </p>
             <p className="text-xs text-gray-500 dark:text-neutral-400">
-              {t("downloadAll.dragAndDropDescription")}
+              {t('downloadAll.dragAndDropDescription')}
             </p>
           </div>
         </div>
@@ -308,11 +308,11 @@ export const DownloadDrawer = ({
         }
       }}
     >
-      <DrawerContent className={showResize ? "max-h-[95vh]" : ""}>
+      <DrawerContent className={showResize ? 'max-h-[95vh]' : ''}>
         <div
           className={cn(
-            "w-full p-3 mx-auto",
-            showResize ? "max-w-[800px] overflow-y-auto max-h-[90vh]" : "max-w-[600px]",
+            'w-full p-3 mx-auto',
+            showResize ? 'max-w-[800px] overflow-y-auto max-h-[90vh]' : 'max-w-[600px]',
             className
           )}
         >

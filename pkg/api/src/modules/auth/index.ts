@@ -2,14 +2,14 @@
 // Используем Elysia instance как контроллер согласно best practices:
 // https://elysiajs.com/essential/best-practice.html#folder-structure
 
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 import { logger } from '../../lib/logger';
-import { AuthModel } from "./model";
-import { AuthService } from "./service";
+import { AuthModel } from './model';
+import { AuthService } from './service';
 
-export const auth = new Elysia({ prefix: "/auth" })
+export const auth = new Elysia({ prefix: '/auth' })
   .post(
-    "/login",
+    '/login',
     async ({ body, cookie, set }) => {
       try {
         // Оптимизация: проверяем наличие валидного токена в cookie
@@ -20,7 +20,7 @@ export const auth = new Elysia({ prefix: "/auth" })
           if (checkToken) {
             set.status = 200;
             return {
-              message: "notification.user.authenticated",
+              message: 'notification.user.authenticated',
             };
           }
         }
@@ -40,13 +40,13 @@ export const auth = new Elysia({ prefix: "/auth" })
           value: token,
           httpOnly: true,
           secure: true,
-          sameSite: "none",
+          sameSite: 'none',
           maxAge,
-          path: "/",
+          path: '/',
         });
 
         const response: AuthModel.loginSuccessResponse = {
-          message: "notification.user.authenticated",
+          message: 'notification.user.authenticated',
           data: {
             uid: user.uid,
             login: user.login,
@@ -64,9 +64,8 @@ export const auth = new Elysia({ prefix: "/auth" })
       } catch (error) {
         set.status = 400;
 
-        const message = "notification.user.no-authenticated";
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+        const message = 'notification.user.no-authenticated';
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
         const response: AuthModel.loginErrorResponse = {
           message,
@@ -84,10 +83,10 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.loginSuccessResponse,
         400: AuthModel.loginErrorResponse,
       },
-    },
+    }
   )
   .post(
-    "/registration",
+    '/registration',
     async ({ body, cookie, set }) => {
       try {
         const { user, token } = await AuthService.registration(body);
@@ -104,13 +103,13 @@ export const auth = new Elysia({ prefix: "/auth" })
           value: token,
           httpOnly: true,
           secure: true,
-          sameSite: "none",
+          sameSite: 'none',
           maxAge,
-          path: "/",
+          path: '/',
         });
 
         const response: AuthModel.registrationSuccessResponse = {
-          message: "notification.user.authenticated",
+          message: 'notification.user.authenticated',
           data: {
             uid: user.uid,
             login: user.login,
@@ -126,23 +125,16 @@ export const auth = new Elysia({ prefix: "/auth" })
       } catch (error) {
         set.status = 400;
 
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
         // Определяем тип ошибки для сообщения
-        let message = "registration@error";
-        if (error instanceof Error && error.name === "RegistrationError") {
-          message = "registration@error";
-        } else if (
-          error instanceof Error &&
-          error.message.includes("body-parse")
-        ) {
-          message = "registration@error-body-parse";
-        } else if (
-          error instanceof Error &&
-          error.message.includes("validate")
-        ) {
-          message = "registration@error-validate";
+        let message = 'registration@error';
+        if (error instanceof Error && error.name === 'RegistrationError') {
+          message = 'registration@error';
+        } else if (error instanceof Error && error.message.includes('body-parse')) {
+          message = 'registration@error-body-parse';
+        } else if (error instanceof Error && error.message.includes('validate')) {
+          message = 'registration@error-validate';
         }
 
         const response: AuthModel.registrationErrorResponse = {
@@ -159,22 +151,22 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.registrationSuccessResponse,
         400: AuthModel.registrationErrorResponse,
       },
-    },
+    }
   )
   .post(
-    "/forgot-password",
+    '/forgot-password',
     async ({ body }) => {
       try {
         await AuthService.forgotPassword(body);
         const response: AuthModel.forgotPasswordSuccessResponse = {
-          message: "ok",
+          message: 'ok',
         };
         return response;
       } catch {
         // В Go коде всегда возвращается успех, даже при ошибке
         // Это сделано для безопасности (не раскрывать существование email)
         const response: AuthModel.forgotPasswordSuccessResponse = {
-          message: "ok",
+          message: 'ok',
         };
         return response;
       }
@@ -184,23 +176,22 @@ export const auth = new Elysia({ prefix: "/auth" })
       response: {
         200: AuthModel.forgotPasswordSuccessResponse,
       },
-    },
+    }
   )
   .post(
-    "/forgot-password/start",
+    '/forgot-password/start',
     async ({ body, set }) => {
       try {
         await AuthService.startResetPassword(body);
         const response: AuthModel.verifyResetPasswordStartSuccessResponse = {
-          message: "ok",
+          message: 'ok',
         };
         return response;
       } catch (error) {
         set.status = 400;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const response: AuthModel.verifyResetPasswordStartErrorResponse = {
-          message: "verify-reset-password@error",
+          message: 'verify-reset-password@error',
           error: errorMessage,
         };
         return response;
@@ -212,33 +203,30 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.verifyResetPasswordStartSuccessResponse,
         400: AuthModel.verifyResetPasswordStartErrorResponse,
       },
-    },
+    }
   )
   .post(
-    "/forgot-password/end",
+    '/forgot-password/end',
     async ({ body, set }) => {
       try {
         await AuthService.endResetPassword(body);
         const response: AuthModel.forgotPasswordEndSuccessResponse = {
-          message: "ok",
+          message: 'ok',
         };
         return response;
       } catch (error) {
-        logger.error("Ошибка при сбросе пароля", error instanceof Error ? error : new Error(String(error)), { body });
+        logger.error(
+          'Ошибка при сбросе пароля',
+          error instanceof Error ? error : new Error(String(error)),
+          { body }
+        );
         set.status = 400;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        let message = "verify-reset-password-end@error";
-        if (
-          error instanceof Error &&
-          error.message.includes("body-parse")
-        ) {
-          message = "verify-reset-password-end@error-body";
-        } else if (
-          error instanceof Error &&
-          error.message.includes("validate")
-        ) {
-          message = "verify-reset-password-end@error-validate";
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        let message = 'verify-reset-password-end@error';
+        if (error instanceof Error && error.message.includes('body-parse')) {
+          message = 'verify-reset-password-end@error-body';
+        } else if (error instanceof Error && error.message.includes('validate')) {
+          message = 'verify-reset-password-end@error-validate';
         }
         const response: AuthModel.forgotPasswordEndErrorResponse = {
           message,
@@ -253,24 +241,24 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.forgotPasswordEndSuccessResponse,
         400: AuthModel.forgotPasswordEndErrorResponse,
       },
-    },
+    }
   )
   .post(
-    "/logout",
+    '/logout',
     async ({ cookie }) => {
       // Удаляем cookie с токеном, устанавливая его в пустое значение
       // с коротким сроком жизни (аналогично Go коду: Expires через 2 секунды)
       cookie.token.set({
-        value: "",
+        value: '',
         httpOnly: true,
         secure: true,
-        sameSite: "none",
+        sameSite: 'none',
         maxAge: 2, // 2 секунды
-        path: "/",
+        path: '/',
       });
 
       const response: AuthModel.logoutSuccessResponse = {
-        message: "ok",
+        message: 'ok',
       };
 
       return response;
@@ -279,10 +267,10 @@ export const auth = new Elysia({ prefix: "/auth" })
       response: {
         200: AuthModel.logoutSuccessResponse,
       },
-    },
+    }
   )
   .post(
-    "/telegram/login",
+    '/telegram/login',
     async ({ body, cookie, set }) => {
       try {
         const result = await AuthService.telegramLogin(body);
@@ -291,7 +279,7 @@ export const auth = new Elysia({ prefix: "/auth" })
           // Пользователь не найден - требуется регистрация
           set.status = 404;
           const response: AuthModel.telegramLoginErrorResponse = {
-            message: "registration_required",
+            message: 'registration_required',
             requiresRegistration: true,
           };
           return response;
@@ -305,13 +293,13 @@ export const auth = new Elysia({ prefix: "/auth" })
           value: token,
           httpOnly: true,
           secure: true,
-          sameSite: "none",
+          sameSite: 'none',
           maxAge,
-          path: "/",
+          path: '/',
         });
 
         const response: AuthModel.telegramLoginSuccessResponse = {
-          message: "notification.user.authenticated",
+          message: 'notification.user.authenticated',
           data: {
             uid: user.uid,
             login: user.login,
@@ -329,11 +317,10 @@ export const auth = new Elysia({ prefix: "/auth" })
         return response;
       } catch (error) {
         set.status = 400;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
         const response: AuthModel.telegramLoginErrorResponse = {
-          message: "notification.user.no-authenticated",
+          message: 'notification.user.no-authenticated',
           error: errorMessage,
           requiresRegistration: false,
         };
@@ -348,10 +335,10 @@ export const auth = new Elysia({ prefix: "/auth" })
         400: AuthModel.telegramLoginErrorResponse,
         404: AuthModel.telegramLoginErrorResponse,
       },
-    },
+    }
   )
   .post(
-    "/telegram/register",
+    '/telegram/register',
     async ({ body, cookie, set }) => {
       try {
         const { user, token } = await AuthService.telegramRegister(body);
@@ -362,13 +349,13 @@ export const auth = new Elysia({ prefix: "/auth" })
           value: token,
           httpOnly: true,
           secure: true,
-          sameSite: "none",
+          sameSite: 'none',
           maxAge,
-          path: "/",
+          path: '/',
         });
 
         const response: AuthModel.telegramRegisterSuccessResponse = {
-          message: "notification.user.authenticated",
+          message: 'notification.user.authenticated',
           data: {
             uid: user.uid,
             login: user.login,
@@ -386,22 +373,15 @@ export const auth = new Elysia({ prefix: "/auth" })
         return response;
       } catch (error) {
         set.status = 400;
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-        let message = "registration@error";
-        if (error instanceof Error && error.name === "RegistrationError") {
-          message = "registration@error";
-        } else if (
-          error instanceof Error &&
-          error.message.includes("body-parse")
-        ) {
-          message = "registration@error-body-parse";
-        } else if (
-          error instanceof Error &&
-          error.message.includes("validate")
-        ) {
-          message = "registration@error-validate";
+        let message = 'registration@error';
+        if (error instanceof Error && error.name === 'RegistrationError') {
+          message = 'registration@error';
+        } else if (error instanceof Error && error.message.includes('body-parse')) {
+          message = 'registration@error-body-parse';
+        } else if (error instanceof Error && error.message.includes('validate')) {
+          message = 'registration@error-validate';
         }
 
         const response: AuthModel.telegramRegisterErrorResponse = {
@@ -418,5 +398,5 @@ export const auth = new Elysia({ prefix: "/auth" })
         200: AuthModel.telegramRegisterSuccessResponse,
         400: AuthModel.telegramRegisterErrorResponse,
       },
-    },
+    }
   );

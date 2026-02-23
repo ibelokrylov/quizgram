@@ -2,11 +2,11 @@
 // Дата создания: 2024
 // Описание: Переход на новую схему хранения истории платежей
 
-import type { MigrationFile } from "./types";
+import type { MigrationFile } from './types';
 
 export const migration: MigrationFile = {
-  name: "002-add-user-payment-is-active",
-  description: "Добавление поля is_active в таблицу user_payment для хранения истории",
+  name: '002-add-user-payment-is-active',
+  description: 'Добавление поля is_active в таблицу user_payment для хранения истории',
 
   async up(sql) {
     // Добавляем поле is_active
@@ -29,4 +29,3 @@ export const migration: MigrationFile = {
     `;
   },
 };
-

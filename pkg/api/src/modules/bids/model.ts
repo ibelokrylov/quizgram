@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { t } from 'elysia';
 
 // Модель для фильтров при получении списка заявок
 export const bidsListFilters = t.Object({
@@ -35,11 +35,15 @@ export const bidListItem = t.Object({
   adminUpdatedAt: t.Optional(t.Nullable(t.String())), // Дата обновления администратором
   quizName: t.String(), // Добавляем имя квиза для отображения
   contacts: t.Optional(t.Nullable(t.Any())), // Контакты из info.contacts
-  ipLocation: t.Optional(t.Nullable(t.Object({
-    country: t.Nullable(t.String()),
-    city: t.Nullable(t.String()),
-    ip: t.Nullable(t.String()),
-  }))), // Геолокация по IP
+  ipLocation: t.Optional(
+    t.Nullable(
+      t.Object({
+        country: t.Nullable(t.String()),
+        city: t.Nullable(t.String()),
+        ip: t.Nullable(t.String()),
+      })
+    )
+  ), // Геолокация по IP
   info: t.Optional(t.Nullable(t.Any())), // Дополнительная информация из таблицы quiz_bid (только для planId != 1)
 });
 
@@ -93,7 +97,6 @@ export const bidDetails = t.Object({
   contactsForm: t.Optional(t.Nullable(t.Any())), // Форма контактов из квиза
   userInfo: t.Optional(t.Nullable(t.Any())), // Информация о пользователе из Telegram
 });
-
 
 export type BidDetails = typeof bidDetails.static;
 

@@ -1,14 +1,14 @@
-import { FileAnswer } from "./FilewAnswer";
-import JsonAnswer from "./JsonAnswer";
-import TextAnswerNew from "./new/TextAnswerNew";
-import PageAnswer from "./PageAnswer";
-import TextAnswer from "./TextAnswer";
-import { VariantImageAnswer } from "./VariantImageAnswer";
-import { VariantImageTextAnswer } from "./VariantImageTextAnswer";
-import FileAnswerNew from "@/components/bid-report/BidDetailsDrawer/ui/new/FileAnswerNew.tsx";
-import { DateAnswer } from "@/components/bid-report/BidDetailsDrawer/ui/DateAnswer.tsx";
-import { Star } from "lucide-react";
-import { format } from "date-fns";
+import { FileAnswer } from './FilewAnswer';
+import JsonAnswer from './JsonAnswer';
+import TextAnswerNew from './new/TextAnswerNew';
+import PageAnswer from './PageAnswer';
+import TextAnswer from './TextAnswer';
+import { VariantImageAnswer } from './VariantImageAnswer';
+import { VariantImageTextAnswer } from './VariantImageTextAnswer';
+import FileAnswerNew from '@/components/bid-report/BidDetailsDrawer/ui/new/FileAnswerNew.tsx';
+import { DateAnswer } from '@/components/bid-report/BidDetailsDrawer/ui/DateAnswer.tsx';
+import { Star } from 'lucide-react';
+import { format } from 'date-fns';
 
 const extractImageUrl = (answer: any): string | null => {
   return (
@@ -36,7 +36,7 @@ const extractText = (answer: any): string | null => {
 
 const extractDateValue = (answer: any): string | null => {
   const str = answer?.date || answer?.value || answer?.selected || answer || null;
-  return format(new Date(str), "dd.MM.yyyy");
+  return format(new Date(str), 'dd.MM.yyyy');
 };
 
 const AnswerRenderer = ({
@@ -58,30 +58,30 @@ const AnswerRenderer = ({
 }) => {
   console.log(answer);
   switch (type) {
-    case "variant_image": {
+    case 'variant_image': {
       const imageUrl = extractImageUrl(isNew ? answer.answer : answer);
       return imageUrl ? <VariantImageAnswer imageUrl={imageUrl} t={t} /> : null;
     }
 
-    case "variant_image_text": {
+    case 'variant_image_text': {
       const imageUrl = extractImageUrl(isNew ? answer.answer : answer);
       const text = extractText(isNew ? answer.answer : answer);
       return <VariantImageTextAnswer imageUrl={imageUrl} text={text} t={t} />;
     }
 
-    case "answer_option": {
+    case 'answer_option': {
       if (isNew) {
         return <TextAnswerNew text={answer.answer} />;
       }
-      if (typeof answer.answer === "string") {
+      if (typeof answer.answer === 'string') {
         return <TextAnswer text={answer} />;
       }
       // Если ответ - объект, извлекаем текст
       const text = extractText(answer) || answer;
-      return text ? <TextAnswer text={typeof text === "string" ? text : String(text)} /> : null;
+      return text ? <TextAnswer text={typeof text === 'string' ? text : String(text)} /> : null;
     }
 
-    case "date": {
+    case 'date': {
       if (isNew) {
         const v = extractDateValue(answer.answer);
         return v ? <DateAnswer dateValue={v} /> : null;
@@ -90,22 +90,22 @@ const AnswerRenderer = ({
       return dateValue ? <DateAnswer dateValue={dateValue} /> : null;
     }
 
-    case "file":
+    case 'file':
       if (isNew) {
         return <FileAnswerNew answer={answer} />;
       }
-      if (answer?.type === "file") {
+      if (answer?.type === 'file') {
         const fileUrl = answer?.url;
-        const fileName = answer?.fileName || t("bids.details.file");
+        const fileName = answer?.fileName || t('bids.details.file');
         return fileUrl ? <FileAnswer fileUrl={fileUrl} fileName={fileName} /> : null;
       }
       return <JsonAnswer answer={answer} />;
 
-    case "page":
+    case 'page':
       if (isNew) {
-        return <TextAnswer text={"Просмотрена"} />;
+        return <TextAnswer text={'Просмотрена'} />;
       }
-      if (answer?.type === "page" || answer?.content) {
+      if (answer?.type === 'page' || answer?.content) {
         const pageContent = answer?.content || answer;
         const text = pageContent?.text;
         const url = pageContent?.url;
@@ -113,10 +113,10 @@ const AnswerRenderer = ({
         return <PageAnswer text={text} url={url} contentType={contentType} t={t} />;
       }
       return <JsonAnswer answer={answer} />;
-    case "rating":
+    case 'rating':
       if (isNew) {
         return (
-          <div className={"flex gap-2 items-center"}>
+          <div className={'flex gap-2 items-center'}>
             <Star />
             <div>{answer.answer}</div>
           </div>
@@ -127,16 +127,16 @@ const AnswerRenderer = ({
 
     default:
       // Проверяем, если это файл по структуре (answer.type === 'file')
-      if (answer?.type === "file") {
+      if (answer?.type === 'file') {
         const fileUrl = answer?.url;
-        const fileName = answer?.fileName || t("bids.details.file");
+        const fileName = answer?.fileName || t('bids.details.file');
         return fileUrl ? <FileAnswer fileUrl={fileUrl} fileName={fileName} /> : null;
       }
       if (isNew) {
-        if (typeof answer.answer === "string" || typeof answer.answer === "number")
+        if (typeof answer.answer === 'string' || typeof answer.answer === 'number')
           return <TextAnswer text={answer.answer} />;
       } else {
-        if (typeof answer === "string" || typeof answer === "number")
+        if (typeof answer === 'string' || typeof answer === 'number')
           return <TextAnswer text={String(answer)} />;
       }
       return <JsonAnswer answer={answer} />;

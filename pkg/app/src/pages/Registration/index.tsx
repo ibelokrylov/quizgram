@@ -1,6 +1,6 @@
-import { SignupForm } from "@/components/signup-form";
-import { LanguageToggle } from "@/components/language-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { SignupForm } from '@/components/signup-form';
+import { LanguageToggle } from '@/components/language-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const RegistrationPage = () => {
   return (

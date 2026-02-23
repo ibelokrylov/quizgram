@@ -1,4 +1,4 @@
-import type { QuizQuestionType } from "@/entities/Quiz/quiz.type";
+import type { QuizQuestionType } from '@/entities/Quiz/quiz.type';
 import {
   Calendar,
   ClipboardList,
@@ -11,7 +11,7 @@ import {
   StarHalf,
   Tally4,
   TextCursorInput,
-} from "lucide-react";
+} from 'lucide-react';
 
 export const questionTypes: {
   type: QuizQuestionType;
@@ -19,18 +19,18 @@ export const questionTypes: {
   icon: React.ReactNode;
 }[] = [
   {
-    type: "answer_option",
-    title: "question_types.answer_option",
+    type: 'answer_option',
+    title: 'question_types.answer_option',
     icon: <ClipboardList />,
   },
   {
-    type: "variant_image",
-    title: "question_types.variant_image",
+    type: 'variant_image',
+    title: 'question_types.variant_image',
     icon: <GalleryVerticalEnd />,
   },
   {
-    type: "variant_image_text",
-    title: "question_types.variant_image_text",
+    type: 'variant_image_text',
+    title: 'question_types.variant_image_text',
     icon: <LayoutList />,
   },
   // {
@@ -39,43 +39,43 @@ export const questionTypes: {
   //   icon: <Sticker />,
   // },
   {
-    type: "input",
-    title: "question_types.input",
+    type: 'input',
+    title: 'question_types.input',
     icon: <TextCursorInput />,
   },
   {
-    type: "select",
-    title: "question_types.select",
+    type: 'select',
+    title: 'question_types.select',
     icon: <SquareMousePointer />,
   },
   {
-    type: "date",
-    title: "question_types.date",
+    type: 'date',
+    title: 'question_types.date',
     icon: <Calendar />,
   },
   {
-    type: "slide",
-    title: "question_types.slide",
+    type: 'slide',
+    title: 'question_types.slide',
     icon: <PanelRightOpen />,
   },
   {
-    type: "file",
-    title: "question_types.file",
+    type: 'file',
+    title: 'question_types.file',
     icon: <File />,
   },
   {
-    type: "page",
-    title: "question_types.page",
+    type: 'page',
+    title: 'question_types.page',
     icon: <Layers2 />,
   },
   {
-    type: "rating",
-    title: "question_types.rating",
+    type: 'rating',
+    title: 'question_types.rating',
     icon: <StarHalf />,
   },
   {
-    type: "question_group",
-    title: "question_types.question_group",
+    type: 'question_group',
+    title: 'question_types.question_group',
     icon: <Tally4 />,
   },
 ];

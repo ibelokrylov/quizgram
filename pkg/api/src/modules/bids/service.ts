@@ -64,10 +64,7 @@ export abstract class BidsService {
     includeFullFilter: boolean = true,
     includePaymentLimit: boolean = false
   ): SQL[] {
-    const conditions: SQL[] = [
-      sql`q.user_id = ${userId}`,
-      sql`b.deleted_at IS NULL`,
-    ];
+    const conditions: SQL[] = [sql`q.user_id = ${userId}`, sql`b.deleted_at IS NULL`];
 
     if (filters.quiz_uid) {
       conditions.push(sql`q.uid = ${filters.quiz_uid}`);
@@ -121,7 +118,7 @@ export abstract class BidsService {
     filters: BidsListFilters,
     userCreatedAt: Date,
     bidMonthLimit: number,
-    planName: string = "FREE",
+    planName: string = 'FREE',
     planId: number = 1,
     isAdmin: boolean = false
   ) {
@@ -154,23 +151,18 @@ export abstract class BidsService {
           const activeUserPayment = await db
             .select({ limit: userPaymentTable.limit })
             .from(userPaymentTable)
-            .where(
-              and(
-                eq(userPaymentTable.userId, userId),
-                eq(userPaymentTable.isActive, true)
-              )
-            )
+            .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
             .limit(1);
 
           if (activeUserPayment.length > 0 && activeUserPayment[0]) {
             userPaymentLimit = activeUserPayment[0].limit;
-            logger.debug("Получен лимит из активной записи user_payment", {
+            logger.debug('Получен лимит из активной записи user_payment', {
               userId,
               limit: userPaymentLimit,
             });
           }
         } catch (paymentError) {
-          logger.warn("Не удалось получить лимит из user_payment, используется лимит из плана", {
+          logger.warn('Не удалось получить лимит из user_payment, используется лимит из плана', {
             userId,
             planLimit: bidMonthLimit,
             error: paymentError instanceof Error ? paymentError.message : String(paymentError),
@@ -255,25 +247,27 @@ export abstract class BidsService {
       const deletedInLimitFull = 0;
 
       // Трансформируем данные для ответа
-      const transformedBids = bids.map(bid => {
-        const createdAt = bid.createdAt instanceof Date
-          ? bid.createdAt.toISOString()
-          : typeof bid.createdAt === 'string'
-            ? new Date(bid.createdAt).toISOString()
-            : new Date(String(bid.createdAt)).toISOString();
-        
-        const updatedAt = bid.updatedAt instanceof Date
-          ? bid.updatedAt.toISOString()
-          : typeof bid.updatedAt === 'string'
-            ? new Date(bid.updatedAt).toISOString()
-            : new Date(String(bid.updatedAt)).toISOString();
-        
+      const transformedBids = bids.map((bid) => {
+        const createdAt =
+          bid.createdAt instanceof Date
+            ? bid.createdAt.toISOString()
+            : typeof bid.createdAt === 'string'
+              ? new Date(bid.createdAt).toISOString()
+              : new Date(String(bid.createdAt)).toISOString();
+
+        const updatedAt =
+          bid.updatedAt instanceof Date
+            ? bid.updatedAt.toISOString()
+            : typeof bid.updatedAt === 'string'
+              ? new Date(bid.updatedAt).toISOString()
+              : new Date(String(bid.updatedAt)).toISOString();
+
         const adminUpdatedAt = bid.adminUpdatedAt
-          ? (bid.adminUpdatedAt instanceof Date
+          ? bid.adminUpdatedAt instanceof Date
             ? bid.adminUpdatedAt.toISOString()
             : typeof bid.adminUpdatedAt === 'string'
               ? new Date(bid.adminUpdatedAt).toISOString()
-              : new Date(String(bid.adminUpdatedAt)).toISOString())
+              : new Date(String(bid.adminUpdatedAt)).toISOString()
           : null;
 
         return {
@@ -301,7 +295,7 @@ export abstract class BidsService {
       // Проверяем, есть ли заявки сверх лимита тарифного плана
       const hasMoreBeyondLimit = beyondLimitCount > 0;
 
-      logger.debug("Bids list retrieved", {
+      logger.debug('Bids list retrieved', {
         userId,
         filters: effectiveFilters,
         planName,
@@ -338,18 +332,18 @@ export abstract class BidsService {
       };
 
       // Для FREE плана не возвращаем totalNotFull
-      if (planName !== "FREE") {
+      if (planName !== 'FREE') {
         response.totalNotFull = totalNotFull; // Количество isFull = false
       }
 
       return response;
     } catch (error) {
-      logger.error("Failed to get bids list", error as Error, {
+      logger.error('Failed to get bids list', error as Error, {
         userId,
         filters,
         planName,
         errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
       throw error;
     }
@@ -380,10 +374,10 @@ export abstract class BidsService {
       const result = (updateResult as unknown as UpdateResult) || [];
 
       if (!result.length) {
-        throw new Error("Bid not found or access denied");
+        throw new Error('Bid not found or access denied');
       }
 
-      logger.debug("Bid status updated", {
+      logger.debug('Bid status updated', {
         userId,
         key: updateData.key,
         newStatus: updateData.status,
@@ -391,7 +385,7 @@ export abstract class BidsService {
 
       return { success: true };
     } catch (error) {
-      logger.error("Failed to update bid status", error as Error, { userId, updateData });
+      logger.error('Failed to update bid status', error as Error, { userId, updateData });
       throw error;
     }
   }
@@ -433,14 +427,14 @@ export abstract class BidsService {
       const bids = (bidResult as unknown as BidDetail[]) || [];
 
       if (!bids.length) {
-        throw new Error("Bid not found or access denied");
+        throw new Error('Bid not found or access denied');
       }
 
       const bidData = bids[0];
 
       // Проверяем, что uid и quizName не null (заявка должна быть связана с квизом)
       if (!bidData.uid || !bidData.quizName) {
-        throw new Error("Bid data is invalid: missing quiz information");
+        throw new Error('Bid data is invalid: missing quiz information');
       }
 
       // ОПТИМИЗАЦИЯ: Обновляем isRead в том же запросе через CTE или отдельным запросом
@@ -457,30 +451,32 @@ export abstract class BidsService {
           AND b.deleted_at IS NULL
       `);
 
-      logger.debug("Bid details retrieved and marked as read", {
+      logger.debug('Bid details retrieved and marked as read', {
         userId,
         key,
         status: bidData.status,
       });
 
-      const createdAt = bidData.createdAt instanceof Date
-        ? bidData.createdAt.toISOString()
-        : typeof bidData.createdAt === 'string'
-          ? new Date(bidData.createdAt).toISOString()
-          : new Date(String(bidData.createdAt)).toISOString();
-      
-      const updatedAt = bidData.updatedAt instanceof Date
-        ? bidData.updatedAt.toISOString()
-        : typeof bidData.updatedAt === 'string'
-          ? new Date(bidData.updatedAt).toISOString()
-          : new Date(String(bidData.updatedAt)).toISOString();
-      
+      const createdAt =
+        bidData.createdAt instanceof Date
+          ? bidData.createdAt.toISOString()
+          : typeof bidData.createdAt === 'string'
+            ? new Date(bidData.createdAt).toISOString()
+            : new Date(String(bidData.createdAt)).toISOString();
+
+      const updatedAt =
+        bidData.updatedAt instanceof Date
+          ? bidData.updatedAt.toISOString()
+          : typeof bidData.updatedAt === 'string'
+            ? new Date(bidData.updatedAt).toISOString()
+            : new Date(String(bidData.updatedAt)).toISOString();
+
       const adminUpdatedAt = bidData.adminUpdatedAt
-        ? (bidData.adminUpdatedAt instanceof Date
+        ? bidData.adminUpdatedAt instanceof Date
           ? bidData.adminUpdatedAt.toISOString()
           : typeof bidData.adminUpdatedAt === 'string'
             ? new Date(bidData.adminUpdatedAt).toISOString()
-            : new Date(String(bidData.adminUpdatedAt)).toISOString())
+            : new Date(String(bidData.adminUpdatedAt)).toISOString()
         : null;
 
       return {
@@ -501,7 +497,7 @@ export abstract class BidsService {
         userInfo: bidData.userInfo,
       };
     } catch (error) {
-      logger.error("Failed to get bid details", error as Error, { userId, key });
+      logger.error('Failed to get bid details', error as Error, { userId, key });
       throw error;
     }
   }
@@ -531,16 +527,16 @@ export abstract class BidsService {
       const result = (deleteResult as unknown as UpdateResult) || [];
 
       if (!result.length) {
-        throw new Error("Bid not found or access denied");
+        throw new Error('Bid not found or access denied');
       }
 
-      logger.debug("Bid deleted", {
+      logger.debug('Bid deleted', {
         userId,
         key,
         bidId: result[0].id,
       });
     } catch (error) {
-      logger.error("Failed to delete bid", error as Error, { userId, key });
+      logger.error('Failed to delete bid', error as Error, { userId, key });
       throw error;
     }
   }
@@ -566,7 +562,7 @@ export abstract class BidsService {
         effectiveFilters.isFull = true;
       }
 
-      logger.debug("Bids export filters", {
+      logger.debug('Bids export filters', {
         userId,
         planId,
         originalFilters: filters,
@@ -612,25 +608,27 @@ export abstract class BidsService {
       const bids = (bidsResult as unknown as BidListItem[]) || [];
 
       // Трансформируем данные для экспорта
-      const transformedBids = bids.map(bid => {
-        const createdAt = bid.createdAt instanceof Date
-          ? bid.createdAt.toISOString()
-          : typeof bid.createdAt === 'string'
-            ? new Date(bid.createdAt).toISOString()
-            : new Date(String(bid.createdAt)).toISOString();
-        
-        const updatedAt = bid.updatedAt instanceof Date
-          ? bid.updatedAt.toISOString()
-          : typeof bid.updatedAt === 'string'
-            ? new Date(bid.updatedAt).toISOString()
-            : new Date(String(bid.updatedAt)).toISOString();
-        
+      const transformedBids = bids.map((bid) => {
+        const createdAt =
+          bid.createdAt instanceof Date
+            ? bid.createdAt.toISOString()
+            : typeof bid.createdAt === 'string'
+              ? new Date(bid.createdAt).toISOString()
+              : new Date(String(bid.createdAt)).toISOString();
+
+        const updatedAt =
+          bid.updatedAt instanceof Date
+            ? bid.updatedAt.toISOString()
+            : typeof bid.updatedAt === 'string'
+              ? new Date(bid.updatedAt).toISOString()
+              : new Date(String(bid.updatedAt)).toISOString();
+
         const adminUpdatedAt = bid.adminUpdatedAt
-          ? (bid.adminUpdatedAt instanceof Date
+          ? bid.adminUpdatedAt instanceof Date
             ? bid.adminUpdatedAt.toISOString()
             : typeof bid.adminUpdatedAt === 'string'
               ? new Date(bid.adminUpdatedAt).toISOString()
-              : new Date(String(bid.adminUpdatedAt)).toISOString())
+              : new Date(String(bid.adminUpdatedAt)).toISOString()
           : null;
 
         return {
@@ -651,7 +649,7 @@ export abstract class BidsService {
         };
       });
 
-      logger.debug("Bids for export retrieved", {
+      logger.debug('Bids for export retrieved', {
         userId,
         filters: effectiveFilters,
         count: transformedBids.length,
@@ -659,14 +657,13 @@ export abstract class BidsService {
 
       return transformedBids;
     } catch (error) {
-      logger.error("Failed to get bids for export", error as Error, {
+      logger.error('Failed to get bids for export', error as Error, {
         userId,
         filters,
         errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
       throw error;
     }
   }
-
 }

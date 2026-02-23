@@ -1,16 +1,16 @@
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   quizContactFormType,
   type QuizContactForm,
   type QuizContactFormType,
-} from "@/entities/Quiz/quiz.type";
-import { CaseUpper, Mail, Phone, UserPen } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { Email } from "./ui/Email";
-import { Name } from "./ui/Name";
-import { PhoneUi } from "./ui/Phone";
-import { TextUi } from "./ui/Text";
+} from '@/entities/Quiz/quiz.type';
+import { CaseUpper, Mail, Phone, UserPen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Email } from './ui/Email';
+import { Name } from './ui/Name';
+import { PhoneUi } from './ui/Phone';
+import { TextUi } from './ui/Text';
 
 export const ContactDrawer = ({
   open,
@@ -37,36 +37,36 @@ export const ContactDrawer = ({
     name: {
       content: <Name onChange={changeForm} />,
       label: (
-        <div className={"flex items-center gap-2"}>
+        <div className={'flex items-center gap-2'}>
           <UserPen />
-          <div>{t("edit-quiz.contacts-page.contact.form.name.label")}</div>
+          <div>{t('edit-quiz.contacts-page.contact.form.name.label')}</div>
         </div>
       ),
     },
     email: {
       content: <Email onChange={changeForm} />,
       label: (
-        <div className={"flex items-center gap-2"}>
+        <div className={'flex items-center gap-2'}>
           <Mail />
-          <div>{t("edit-quiz.contacts-page.contact.form.email.label")}</div>
+          <div>{t('edit-quiz.contacts-page.contact.form.email.label')}</div>
         </div>
       ),
     },
     phone: {
       content: <PhoneUi onChange={changeForm} />,
       label: (
-        <div className={"flex items-center gap-2"}>
+        <div className={'flex items-center gap-2'}>
           <Phone />
-          <div>{t("edit-quiz.contacts-page.contact.form.phone.label")}</div>
+          <div>{t('edit-quiz.contacts-page.contact.form.phone.label')}</div>
         </div>
       ),
     },
     text: {
       content: <TextUi onChange={changeForm} />,
       label: (
-        <div className={"flex items-center gap-2"}>
+        <div className={'flex items-center gap-2'}>
           <CaseUpper />
-          <div>{t("edit-quiz.contacts-page.contact.form.text.label")}</div>
+          <div>{t('edit-quiz.contacts-page.contact.form.text.label')}</div>
         </div>
       ),
     },
@@ -74,7 +74,7 @@ export const ContactDrawer = ({
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerContent className={"flex flex-col items-center justify-center"}>
+      <DrawerContent className={'flex flex-col items-center justify-center'}>
         <Tabs defaultValue={firstNotAddedField ?? keys[0]} className="w-[400px] pt-3 pb-3">
           <TabsList>
             {keys.map((i) => (

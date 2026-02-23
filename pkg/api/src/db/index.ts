@@ -33,10 +33,19 @@ function getDb() {
   // Читаем настройки подключения из переменных окружения
   // Используем универсальный подход: process.env работает и в Bun, и в Node.js
   const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
-  const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST = 'localhost', POSTGRES_PORT = '5432', DATABASE_URL } = env;
+  const {
+    POSTGRES_USER,
+    POSTGRES_PASSWORD,
+    POSTGRES_DB,
+    POSTGRES_HOST = 'localhost',
+    POSTGRES_PORT = '5432',
+    DATABASE_URL,
+  } = env;
 
   // Формируем connection string, если явно не задан DATABASE_URL
-  const connectionString = DATABASE_URL ?? `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
+  const connectionString =
+    DATABASE_URL ??
+    `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
 
   // Инициализируем клиент postgres.js
   const client = postgres(connectionString, {

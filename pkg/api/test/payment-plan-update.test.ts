@@ -1,9 +1,9 @@
 // Тесты для обновления тарифных планов пользователей
 
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { and, eq } from "drizzle-orm";
-import { db, userPaymentTable } from "../src/db";
-import { PaymentService } from "../src/modules/payment/service";
+import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { and, eq } from 'drizzle-orm';
+import { db, userPaymentTable } from '../src/db';
+import { PaymentService } from '../src/modules/payment/service';
 import {
   cleanupTestUser,
   createTestPayment,
@@ -14,23 +14,20 @@ import {
   getActiveUserPayment,
   getAllUserPayments,
   getUserPlan,
-} from "./utils/test-db";
-import { TestLogger } from "./utils/test-logger";
+} from './utils/test-db';
+import { TestLogger } from './utils/test-logger';
 
-const logger = new TestLogger("payment-plan-update");
+const logger = new TestLogger('payment-plan-update');
 
 // Вспомогательная функция для измерения времени выполнения теста
-async function measureTest<T>(
-  testName: string,
-  testFn: () => Promise<T>
-): Promise<T> {
+async function measureTest<T>(testName: string, testFn: () => Promise<T>): Promise<T> {
   const startTime = Date.now();
   try {
     const result = await testFn();
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "passed",
+      status: 'passed',
       duration,
     });
     return result;
@@ -38,7 +35,7 @@ async function measureTest<T>(
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "failed",
+      status: 'failed',
       duration,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -46,11 +43,11 @@ async function measureTest<T>(
   }
 }
 
-  beforeAll(async () => {
-    await ensureTestPlan("FREE", 0, 10);
-    await ensureTestPlan("BASE", 899, 100);
-    await ensureTestPlan("PRO_PLUS", 1490, 200);
-  });
+beforeAll(async () => {
+  await ensureTestPlan('FREE', 0, 10);
+  await ensureTestPlan('BASE', 899, 100);
+  await ensureTestPlan('PRO_PLUS', 1490, 200);
+});
 
 afterAll(async () => {
   // Сохраняем результаты тестов
@@ -58,15 +55,15 @@ afterAll(async () => {
   console.log(`\n📊 Результаты тестов сохранены в: ${filepath}`);
 
   // Очищаем всех тестовых пользователей
-  const { cleanupAllTestUsers } = await import("./utils/test-db");
+  const { cleanupAllTestUsers } = await import('./utils/test-db');
   await cleanupAllTestUsers();
 });
 
-test("1. Обновление с бесплатного на платный план (сразу)", async () => {
-  await measureTest("1. Обновление с FREE на BASE", async () => {
+test('1. Обновление с бесплатного на платный план (сразу)', async () => {
+  await measureTest('1. Обновление с FREE на BASE', async () => {
     const userId = await createTestUser();
-    await ensureTestPlan("FREE", 0, 50);
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
+    await ensureTestPlan('FREE', 0, 50);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
 
     try {
       // Обновляем план
@@ -80,7 +77,7 @@ test("1. Обновление с бесплатного на платный пл
 
       // Проверяем результат
       expect(updatedPlan.id).toBe(basePlanId);
-      expect(updatedPlan.name).toBe("BASE");
+      expect(updatedPlan.name).toBe('BASE');
 
       const userPlan = await getUserPlan(userId);
       expect(userPlan?.id).toBe(basePlanId);
@@ -93,13 +90,13 @@ test("1. Обновление с бесплатного на платный пл
       expect(activePayment?.startsAt).toBeNull();
 
       logger.logResult({
-        testName: "1. Обновление с FREE на BASE",
-        status: "passed",
+        testName: '1. Обновление с FREE на BASE',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
-          fromPlan: "FREE",
-          toPlan: "BASE",
+          fromPlan: 'FREE',
+          toPlan: 'BASE',
           planId: basePlanId,
           userPaymentId: activePayment?.id,
         },
@@ -110,11 +107,11 @@ test("1. Обновление с бесплатного на платный пл
   });
 });
 
-test("2. Обновление с платного на более дорогой план (сразу)", async () => {
-  await measureTest("2. Обновление с BASE на PRO_PLUS", async () => {
+test('2. Обновление с платного на более дорогой план (сразу)', async () => {
+  await measureTest('2. Обновление с BASE на PRO_PLUS', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Создаем активный платный план
     const paymentId = await createTestPayment(userId, basePlanId);
@@ -136,7 +133,7 @@ test("2. Обновление с платного на более дорогой
 
       // Проверяем результат
       expect(updatedPlan.id).toBe(proPlusPlanId);
-      expect(updatedPlan.name).toBe("PRO_PLUS");
+      expect(updatedPlan.name).toBe('PRO_PLUS');
 
       const userPlan = await getUserPlan(userId);
       expect(userPlan?.id).toBe(proPlusPlanId);
@@ -153,13 +150,13 @@ test("2. Обновление с платного на более дорогой
       expect(oldPayment?.isActive).toBe(false);
 
       logger.logResult({
-        testName: "2. Обновление с BASE на PRO_PLUS",
-        status: "passed",
+        testName: '2. Обновление с BASE на PRO_PLUS',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
-          fromPlan: "BASE",
-          toPlan: "PRO_PLUS",
+          fromPlan: 'BASE',
+          toPlan: 'PRO_PLUS',
           planId: proPlusPlanId,
           oldPaymentId: oldPayment?.id,
           newPaymentId: activePayment?.id,
@@ -171,11 +168,11 @@ test("2. Обновление с платного на более дорогой
   });
 });
 
-test("3. Обновление с платного на более дешевый план (отсроченное)", async () => {
-  await measureTest("3. Обновление с PRO_PLUS на BASE (отсроченное)", async () => {
+test('3. Обновление с платного на более дешевый план (отсроченное)', async () => {
+  await measureTest('3. Обновление с PRO_PLUS на BASE (отсроченное)', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Создаем активный платный план с будущей датой окончания
     const finalDayAt = new Date();
@@ -192,19 +189,11 @@ test("3. Обновление с платного на более дешевый
 
     try {
       // Обновляем план (понижение)
-      await PaymentService.updateUserPlan(
-        userId,
-        basePlanId,
-        null,
-        undefined,
-        true
-      );
+      await PaymentService.updateUserPlan(userId, basePlanId, null, undefined, true);
 
       // Проверяем, что создана отсроченная запись
       const allPayments = await getAllUserPayments(userId);
-      const scheduledPayment = allPayments.find(
-        (p) => p.planId === basePlanId && !p.isActive
-      );
+      const scheduledPayment = allPayments.find((p) => p.planId === basePlanId && !p.isActive);
 
       expect(scheduledPayment).not.toBeNull();
       expect(scheduledPayment?.isActive).toBe(false);
@@ -220,13 +209,13 @@ test("3. Обновление с платного на более дешевый
       // Но в текущей реализации может обновляться, поэтому главное - проверить отсроченную запись
 
       logger.logResult({
-        testName: "3. Обновление с PRO_PLUS на BASE (отсроченное)",
-        status: "passed",
+        testName: '3. Обновление с PRO_PLUS на BASE (отсроченное)',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
-          fromPlan: "PRO_PLUS",
-          toPlan: "BASE",
+          fromPlan: 'PRO_PLUS',
+          toPlan: 'BASE',
           currentPlanId: proPlusPlanId,
           scheduledPlanId: basePlanId,
           scheduledPaymentId: scheduledPayment?.id,
@@ -239,11 +228,11 @@ test("3. Обновление с платного на более дешевый
   });
 });
 
-test("4. Обновление плана с оплатой сейчас (payNow=true)", async () => {
-  await measureTest("4. Обновление с оплатой сейчас", async () => {
+test('4. Обновление плана с оплатой сейчас (payNow=true)', async () => {
+  await measureTest('4. Обновление с оплатой сейчас', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     const paymentId = await createTestPayment(userId, basePlanId);
     await createTestUserPayment(userId, basePlanId, {
@@ -267,8 +256,8 @@ test("4. Обновление плана с оплатой сейчас (payNow=
       expect(activePayment?.startsAt).toBeNull();
 
       logger.logResult({
-        testName: "4. Обновление с оплатой сейчас",
-        status: "passed",
+        testName: '4. Обновление с оплатой сейчас',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -283,11 +272,11 @@ test("4. Обновление плана с оплатой сейчас (payNow=
   });
 });
 
-test("5. Обновление плана с оплатой в день начала (payNow=false, отсроченное)", async () => {
-  await measureTest("5. Обновление с оплатой в день начала", async () => {
+test('5. Обновление плана с оплатой в день начала (payNow=false, отсроченное)', async () => {
+  await measureTest('5. Обновление с оплатой в день начала', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Создаем активный платный план с будущей датой окончания
     const finalDayAt = new Date();
@@ -322,8 +311,8 @@ test("5. Обновление плана с оплатой в день нача�
       }
 
       logger.logResult({
-        testName: "5. Обновление с оплатой в день начала",
-        status: "passed",
+        testName: '5. Обновление с оплатой в день начала',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -338,10 +327,10 @@ test("5. Обновление плана с оплатой в день нача�
   });
 });
 
-test("6. Обновление Pro+ с дополнительными лимитами", async () => {
-  await measureTest("6. Обновление Pro+ с upLimit", async () => {
+test('6. Обновление Pro+ с дополнительными лимитами', async () => {
+  await measureTest('6. Обновление Pro+ с upLimit', async () => {
     const userId = await createTestUser();
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Создаем upLimit
     const upLimitId = await createTestUpLimit(300, 600); // +300 заявок за 600 руб
@@ -359,15 +348,15 @@ test("6. Обновление Pro+ с дополнительными лимит�
       );
 
       expect(updatedPlan.id).toBe(proPlusPlanId);
-      expect(updatedPlan.name).toBe("PRO_PLUS");
+      expect(updatedPlan.name).toBe('PRO_PLUS');
 
       const activePayment = await getActiveUserPayment(userId);
       expect(activePayment).not.toBeNull();
       expect(activePayment?.limit).toBe(500); // 200 (базовый) + 300 (дополнительный)
 
       logger.logResult({
-        testName: "6. Обновление Pro+ с upLimit",
-        status: "passed",
+        testName: '6. Обновление Pro+ с upLimit',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -384,11 +373,11 @@ test("6. Обновление Pro+ с дополнительными лимит�
   });
 });
 
-test("7. Отсроченный план с оплатой в день начала (isPaid=false)", async () => {
-  await measureTest("7. Отсроченный план с isPaid=false", async () => {
+test('7. Отсроченный план с оплатой в день начала (isPaid=false)', async () => {
+  await measureTest('7. Отсроченный план с isPaid=false', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Создаем активный платный план с будущей датой окончания
     const finalDayAt = new Date();
@@ -415,9 +404,7 @@ test("7. Отсроченный план с оплатой в день нача�
 
       // Проверяем отсроченную запись
       const allPayments = await getAllUserPayments(userId);
-      const scheduledPayment = allPayments.find(
-        (p) => p.planId === basePlanId && !p.isActive
-      );
+      const scheduledPayment = allPayments.find((p) => p.planId === basePlanId && !p.isActive);
 
       expect(scheduledPayment).not.toBeNull();
       expect(scheduledPayment?.isPaid).toBe(false); // Оплата в день начала
@@ -425,8 +412,8 @@ test("7. Отсроченный план с оплатой в день нача�
       expect(scheduledPayment?.startsAt).not.toBeNull();
 
       logger.logResult({
-        testName: "7. Отсроченный план с isPaid=false",
-        status: "passed",
+        testName: '7. Отсроченный план с isPaid=false',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -442,12 +429,12 @@ test("7. Отсроченный план с оплатой в день нача�
   });
 });
 
-test("8. Множественные обновления плана", async () => {
-  await measureTest("8. Множественные обновления плана", async () => {
+test('8. Множественные обновления плана', async () => {
+  await measureTest('8. Множественные обновления плана', async () => {
     const userId = await createTestUser();
-    await ensureTestPlan("FREE", 0, 50);
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    await ensureTestPlan('FREE', 0, 50);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     try {
       // 1. FREE -> BASE
@@ -471,12 +458,7 @@ test("8. Множественные обновления плана", async () =
       await db
         .update(userPaymentTable)
         .set({ isActive: false })
-        .where(
-          and(
-            eq(userPaymentTable.userId, userId),
-            eq(userPaymentTable.isActive, true),
-          ),
-        );
+        .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)));
 
       await createTestUserPayment(userId, proPlusPlanId, {
         paymentId,
@@ -501,8 +483,8 @@ test("8. Множественные обновления плана", async () =
       expect(scheduledPayments.length).toBeGreaterThanOrEqual(1); // Отсроченный план
 
       logger.logResult({
-        testName: "8. Множественные обновления плана",
-        status: "passed",
+        testName: '8. Множественные обновления плана',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -517,4 +499,3 @@ test("8. Множественные обновления плана", async () =
     }
   });
 });
-

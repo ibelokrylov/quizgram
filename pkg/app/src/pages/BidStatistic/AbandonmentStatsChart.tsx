@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Card } from "@/components/ui/card";
+import { Card } from '@/components/ui/card';
 import {
   ChartContainer,
   ChartLegend,
@@ -8,10 +8,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
-import type { AbandonmentStats } from "@/entities/Bid/statistics.type";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { useMemo } from "react";
+} from '@/components/ui/chart';
+import type { AbandonmentStats } from '@/entities/Bid/statistics.type';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { useMemo } from 'react';
 
 interface AbandonmentStatsChartProps {
   data: AbandonmentStats;
@@ -39,12 +39,12 @@ export function AbandonmentStatsChart({ data }: AbandonmentStatsChartProps) {
   const dropoffChartConfig = useMemo(() => {
     const config: ChartConfig = {
       no_answers: {
-        label: "Без ответов",
-        color: "#ef4444",
+        label: 'Без ответов',
+        color: '#ef4444',
       },
       completed_no_contacts: {
-        label: "Без контактов",
-        color: "#8b5cf6",
+        label: 'Без контактов',
+        color: '#8b5cf6',
       },
     };
 
@@ -52,7 +52,7 @@ export function AbandonmentStatsChart({ data }: AbandonmentStatsChartProps) {
     for (let i = 1; i <= maxQuestionNumber; i++) {
       const questionKey = `question_${i}`;
       config[questionKey] = {
-        label: `${i} ${i === 1 ? "вопрос" : i < 5 ? "вопроса" : "вопросов"}`,
+        label: `${i} ${i === 1 ? 'вопрос' : i < 5 ? 'вопроса' : 'вопросов'}`,
         color: generateColor(i - 1, maxQuestionNumber),
       };
     }
@@ -97,10 +97,10 @@ export function AbandonmentStatsChart({ data }: AbandonmentStatsChartProps) {
           Период: {data.period.start} - {data.period.end}
         </p>
         <p className="text-xs text-muted-foreground">
-          Обновлено:{" "}
-          {new Date(data.generated_at).toLocaleString("ru-RU", {
-            dateStyle: "short",
-            timeStyle: "short",
+          Обновлено:{' '}
+          {new Date(data.generated_at).toLocaleString('ru-RU', {
+            dateStyle: 'short',
+            timeStyle: 'short',
           })}
         </p>
       </div>
@@ -169,9 +169,9 @@ export function AbandonmentStatsChart({ data }: AbandonmentStatsChartProps) {
                 dataKey="date"
                 tickFormatter={formatDate}
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
-              <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
               <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area

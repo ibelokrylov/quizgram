@@ -6,27 +6,27 @@ import {
   Progress,
   Snackbar,
   Text,
-} from "@telegram-apps/telegram-ui";
-import { useContext, useEffect, useState } from "react";
-import { AppContext } from "../../App.context";
-import { QuestionContext } from "./Question.context";
-import { renderQuestion } from "./render";
+} from '@telegram-apps/telegram-ui';
+import { useContext, useEffect, useState } from 'react';
+import { AppContext } from '../../App.context';
+import { QuestionContext } from './Question.context';
+import { renderQuestion } from './render';
 
 const showNextButton = new Set([
-  "variant_image_text",
-  "input",
-  "select",
-  "date",
-  "slide",
-  "page",
-  "question_group",
+  'variant_image_text',
+  'input',
+  'select',
+  'date',
+  'slide',
+  'page',
+  'question_group',
 ]);
 
 const errorMessage = {
-  input: "Введите текст ответа",
-  date: "Выберите дату",
-  default: "Выберите вариант ответа",
-  question_group: "Выберите все варианты ответа",
+  input: 'Введите текст ответа',
+  date: 'Выберите дату',
+  default: 'Выберите вариант ответа',
+  question_group: 'Выберите все варианты ответа',
 };
 
 export const QuestionPage = () => {
@@ -36,10 +36,7 @@ export const QuestionPage = () => {
   const question = questions[currentQuestion];
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
 
-  const [currentAnswer, setCurrentAnswer] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (questions.length === 0) {
@@ -60,7 +57,7 @@ export const QuestionPage = () => {
     if (question?.content?.required !== undefined) {
       if (question.content.required) {
         if (
-          question.type === "question_group" &&
+          question.type === 'question_group' &&
           question?.content?.questions?.length !==
             (answer.answer as Record<string, unknown>[])?.length
         ) {
@@ -87,14 +84,14 @@ export const QuestionPage = () => {
           answer.answer === undefined
         ) {
           answer = {
-            answer: "SKIP",
-            key: sessionStorage.getItem("quizKey"),
+            answer: 'SKIP',
+            key: sessionStorage.getItem('quizKey'),
             question_uid: question.uid,
           };
         }
       }
     } else {
-      if (question.type === "question_group") {
+      if (question.type === 'question_group') {
         try {
           let ok = true;
           const answers = answer.answer as {
@@ -117,7 +114,7 @@ export const QuestionPage = () => {
               default:
                 if (!find) {
                   answers.push({
-                    answer: "SKIP",
+                    answer: 'SKIP',
                     question_uid: quest.uid,
                   });
                 }
@@ -183,7 +180,7 @@ export const QuestionPage = () => {
             description={question?.content?.description}
           />
         ) : null}
-        <div className={question?.content?.title ? "question__padding" : ""}>
+        <div className={question?.content?.title ? 'question__padding' : ''}>
           <QuestionContext.Provider
             value={{
               current: currentQuestion,
@@ -205,10 +202,7 @@ export const QuestionPage = () => {
         <div className="progress__buttons">
           <div>
             {currentQuestion > 0 ? (
-              <Button
-                mode={"bezeled"}
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-              >
+              <Button mode={'bezeled'} onClick={() => setCurrentQuestion(currentQuestion - 1)}>
                 Назад
               </Button>
             ) : null}
@@ -216,18 +210,13 @@ export const QuestionPage = () => {
           <div className="question-button-left">
             {question?.content?.required !== undefined ? (
               question.content.required ? null : (
-                <Button
-                  onClick={() => sendQuestion(currentAnswer ?? {})}
-                  mode="plain"
-                >
+                <Button onClick={() => sendQuestion(currentAnswer ?? {})} mode="plain">
                   Пропустить
                 </Button>
               )
             ) : null}
             {showNextButton.has(question.type) ? (
-              <Button onClick={() => sendQuestion(currentAnswer ?? {})}>
-                Далее
-              </Button>
+              <Button onClick={() => sendQuestion(currentAnswer ?? {})}>Далее</Button>
             ) : null}
           </div>
         </div>
@@ -235,8 +224,7 @@ export const QuestionPage = () => {
       {showSnackbar ? (
         <Snackbar onClose={() => setShowSnackbar(false)}>
           <Text>
-            {errorMessage[question.type as keyof typeof errorMessage] ??
-              errorMessage.default}
+            {errorMessage[question.type as keyof typeof errorMessage] ?? errorMessage.default}
           </Text>
         </Snackbar>
       ) : null}

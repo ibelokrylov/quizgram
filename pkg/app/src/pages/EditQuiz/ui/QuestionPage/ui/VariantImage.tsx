@@ -1,23 +1,23 @@
-import { DownloadDrawer } from "@/components/dwonload-drawer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Quiz, QuizQuestionVariantImage } from "@/entities/Quiz/quiz.type";
-import http from "@/lib/http";
-import { cn } from "@/lib/utils";
-import { CircleX, Plus, Trash, Upload } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { DownloadDrawer } from '@/components/dwonload-drawer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Quiz, QuizQuestionVariantImage } from '@/entities/Quiz/quiz.type';
+import http from '@/lib/http';
+import { cn } from '@/lib/utils';
+import { CircleX, Plus, Trash, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const VariantImage = ({
   question,
   setQuestion,
-  type = "variant_image",
+  type = 'variant_image',
 }: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
-  type?: "variant_image" | "variant_image_text";
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
+  type?: 'variant_image' | 'variant_image_text';
 }) => {
   const content = question?.content as QuizQuestionVariantImage;
   const { t } = useTranslation();
@@ -28,7 +28,7 @@ export const VariantImage = ({
     if (!content?.variants?.length) {
       setQuestion({
         ...question,
-        content: { ...content, variants: [{ url: "", value: "" }] },
+        content: { ...content, variants: [{ url: '', value: '' }] },
       });
     }
   }, [content]);
@@ -55,19 +55,19 @@ export const VariantImage = ({
   async function onDeleteImage(idx: number) {
     try {
       await http({
-        url: "/v1/user/delete-file",
-        method: "DELETE",
+        url: '/v1/user/delete-file',
+        method: 'DELETE',
         body: { file_url: content.variants[idx].url },
       });
       const newVariants = [...content.variants];
-      newVariants[idx] = { url: "", value: content.variants[idx].value };
+      newVariants[idx] = { url: '', value: content.variants[idx].value };
       setQuestion({
         ...question,
         content: { ...content, variants: newVariants },
       });
     } catch (err) {
       console.log(err);
-      toast.error(t("tooltip.delete-error"));
+      toast.error(t('tooltip.delete-error'));
     }
   }
 
@@ -75,8 +75,8 @@ export const VariantImage = ({
     try {
       if (content.variants[idx].url) {
         await http({
-          url: "/v1/user/delete-file",
-          method: "DELETE",
+          url: '/v1/user/delete-file',
+          method: 'DELETE',
           body: { file_url: content.variants[idx].url },
         });
       }
@@ -88,22 +88,22 @@ export const VariantImage = ({
       });
     } catch (err) {
       console.log(err);
-      toast.error(t("tooltip.delete-error"));
+      toast.error(t('tooltip.delete-error'));
     } finally {
       setCurrentIdx(null);
     }
   }
 
   return (
-    <div className={"flex flex-col gap-2"}>
+    <div className={'flex flex-col gap-2'}>
       {content?.variants?.map((i, idx) => (
-        <div key={`${question.uid}-${idx}`} className={"flex items-center gap-2"}>
+        <div key={`${question.uid}-${idx}`} className={'flex items-center gap-2'}>
           {i.url ? (
-            <div className={"flex gap-1 items-center"}>
+            <div className={'flex gap-1 items-center'}>
               <div
                 className={cn(
-                  "rounded-md overflow-hidden shrink-0",
-                  type === "variant_image" ? "w-10 h-10" : "w-12 h-10"
+                  'rounded-md overflow-hidden shrink-0',
+                  type === 'variant_image' ? 'w-10 h-10' : 'w-12 h-10'
                 )}
               >
                 <img src={i.url} alt="image" className="w-full h-full object-cover" />
@@ -111,12 +111,12 @@ export const VariantImage = ({
               <div>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size={"icon-sm"} variant={"outline"} onClick={() => onDeleteImage(idx)}>
+                    <Button size={'icon-sm'} variant={'outline'} onClick={() => onDeleteImage(idx)}>
                       <CircleX />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{t("tooltip.delete")}</p>
+                    <p>{t('tooltip.delete')}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -125,14 +125,14 @@ export const VariantImage = ({
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size={"icon-sm"} variant={"outline"} onClick={() => onOpen(idx)}>
+                  <Button size={'icon-sm'} variant={'outline'} onClick={() => onOpen(idx)}>
                     <Upload />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    {t("tooltip.add-image", {
-                      size: type === "variant_image" ? "820x820" : "1012x818",
+                    {t('tooltip.add-image', {
+                      size: type === 'variant_image' ? '820x820' : '1012x818',
                     })}
                   </p>
                 </TooltipContent>
@@ -152,9 +152,9 @@ export const VariantImage = ({
                 },
               })
             }
-            placeholder={t("edit-quiz.question-page.question.new-answer")}
+            placeholder={t('edit-quiz.question-page.question.new-answer')}
           />
-          <Button size={"icon-sm"} variant={"outline"} onClick={() => onDelete(idx)}>
+          <Button size={'icon-sm'} variant={'outline'} onClick={() => onDelete(idx)}>
             <Trash />
           </Button>
         </div>
@@ -162,15 +162,15 @@ export const VariantImage = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            className={"mt-4"}
-            size={"icon-sm"}
-            variant={"outline"}
+            className={'mt-4'}
+            size={'icon-sm'}
+            variant={'outline'}
             onClick={() =>
               setQuestion({
                 ...question,
                 content: {
                   ...content,
-                  variants: [...content.variants, { url: "", value: "" }],
+                  variants: [...content.variants, { url: '', value: '' }],
                 },
               })
             }
@@ -179,15 +179,15 @@ export const VariantImage = ({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{t("tooltip.add-answer")}</p>
+          <p>{t('tooltip.add-answer')}</p>
         </TooltipContent>
       </Tooltip>
       <DownloadDrawer
         type="image"
         open={open}
         resize={true}
-        targetWidth={type === "variant_image" ? 820 : 1012}
-        targetHeight={type === "variant_image" ? 820 : 818}
+        targetWidth={type === 'variant_image' ? 820 : 1012}
+        targetHeight={type === 'variant_image' ? 820 : 818}
         setOpen={setOpen}
         onFinal={onFinal}
       />

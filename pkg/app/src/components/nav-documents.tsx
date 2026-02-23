@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
 import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Link, useLocation } from "@tanstack/react-router";
+} from '@/components/ui/sidebar';
+import { Link, useLocation } from '@tanstack/react-router';
 
 export function NavDocuments({
   items,

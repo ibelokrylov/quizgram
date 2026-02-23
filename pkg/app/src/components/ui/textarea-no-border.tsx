@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { motion, type HTMLMotionProps } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import * as React from "react";
+import { cn } from '@/lib/utils';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import * as React from 'react';
 
-interface TextAreaNoBorderProps extends Omit<HTMLMotionProps<"textarea">, "type"> {
+interface TextAreaNoBorderProps extends Omit<HTMLMotionProps<'textarea'>, 'type'> {
   initialWidth?: number;
   initialHeight?: number;
   minHeight?: number;
@@ -39,29 +39,29 @@ function TextAreaNoBorder({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isTypingRef = React.useRef(false);
 
-  const currentValue = value ?? defaultValue ?? "";
+  const currentValue = value ?? defaultValue ?? '';
   const currentLength = String(currentValue).length;
   const showCounter = maxLength !== undefined && isFocused;
 
   const fontSizeStyle = fontSize
-    ? { fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize }
+    ? { fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize }
     : undefined;
 
   // Вычисляет числовое значение maxWidth из числа или CSS-выражения
   const getMaxWidthValue = React.useCallback(
     (maxWidthValue: number | string | undefined, containerWidth: number): number | undefined => {
       if (maxWidthValue === undefined) return undefined;
-      if (typeof maxWidthValue === "number") return maxWidthValue;
+      if (typeof maxWidthValue === 'number') return maxWidthValue;
 
       // Для строковых значений (CSS calc) используем временный элемент для вычисления
       // Создаем родительский контейнер с нужной шириной для корректного вычисления 100%
-      const parentElement = document.createElement("div");
-      parentElement.style.position = "absolute";
-      parentElement.style.visibility = "hidden";
+      const parentElement = document.createElement('div');
+      parentElement.style.position = 'absolute';
+      parentElement.style.visibility = 'hidden';
       parentElement.style.width = `${containerWidth}px`;
-      parentElement.style.left = "0";
+      parentElement.style.left = '0';
 
-      const tempElement = document.createElement("div");
+      const tempElement = document.createElement('div');
       tempElement.style.width = maxWidthValue;
       parentElement.appendChild(tempElement);
       document.body.appendChild(parentElement);
@@ -76,7 +76,7 @@ function TextAreaNoBorder({
 
   // Состояние для числового значения maxWidth (для использования в className)
   const [maxWidthNumeric, setMaxWidthNumeric] = React.useState<number | undefined>(
-    typeof maxWidth === "number" ? maxWidth : undefined
+    typeof maxWidth === 'number' ? maxWidth : undefined
   );
 
   // Копирует стили из textarea в элемент измерения
@@ -91,7 +91,7 @@ function TextAreaNoBorder({
       measureElement.style.letterSpacing = textareaStyles.letterSpacing;
       measureElement.style.textTransform = textareaStyles.textTransform;
       measureElement.style.lineHeight = textareaStyles.lineHeight;
-      measureElement.style.whiteSpace = "pre-wrap";
+      measureElement.style.whiteSpace = 'pre-wrap';
     },
     [textareaRef]
   );
@@ -99,8 +99,8 @@ function TextAreaNoBorder({
   // Вычисляет минимальную высоту одной строки
   const calculateMinHeight = React.useCallback(
     (measureElement: HTMLDivElement): number => {
-      measureElement.textContent = "M";
-      measureElement.style.width = "auto";
+      measureElement.textContent = 'M';
+      measureElement.style.width = 'auto';
       const singleLineHeight = measureElement.scrollHeight;
       return Math.max(minHeight, singleLineHeight);
     },
@@ -111,9 +111,9 @@ function TextAreaNoBorder({
 
   const normalizeMeasurementValue = React.useCallback((value?: MeasurementValue): string => {
     if (Array.isArray(value)) {
-      return value.join("\n");
+      return value.join('\n');
     }
-    return value !== undefined ? String(value) : "";
+    return value !== undefined ? String(value) : '';
   }, []);
 
   // Вычисляет ширину на основе содержимого
@@ -135,13 +135,13 @@ function TextAreaNoBorder({
       const measurementValue = normalizeMeasurementValue(
         valueToMeasure ?? currentValue ?? restProps.placeholder
       );
-      const textLines = measurementValue.split("\n");
+      const textLines = measurementValue.split('\n');
       const longestLine = textLines.reduce(
         (a: string, b: string) => (a.length > b.length ? a : b),
-        ""
+        ''
       );
-      measureElement.style.width = "auto";
-      measureElement.textContent = longestLine || (restProps.placeholder ?? "");
+      measureElement.style.width = 'auto';
+      measureElement.textContent = longestLine || (restProps.placeholder ?? '');
       const measuredWidth = measureElement.offsetWidth + 24;
 
       return Math.max(initialWidth, Math.min(measuredWidth, limitWidth));
@@ -167,11 +167,11 @@ function TextAreaNoBorder({
       const maxWidthValue = getMaxWidthValue(maxWidth, availableWidth);
 
       if (maxWidthValue && currentWidth >= maxWidthValue) {
-        measureElement.style.wordBreak = "break-all";
-        measureElement.style.wordWrap = "break-word";
+        measureElement.style.wordBreak = 'break-all';
+        measureElement.style.wordWrap = 'break-word';
       } else {
-        measureElement.style.wordBreak = "normal";
-        measureElement.style.wordWrap = "break-word";
+        measureElement.style.wordBreak = 'normal';
+        measureElement.style.wordWrap = 'break-word';
       }
 
       const measurementValue = normalizeMeasurementValue(
@@ -199,7 +199,7 @@ function TextAreaNoBorder({
 
       // Обновляем числовое значение maxWidth для className
       if (maxWidth) {
-        if (typeof maxWidth === "number") {
+        if (typeof maxWidth === 'number') {
           setMaxWidthNumeric(maxWidth);
         } else if (containerRef.current) {
           const containerRect = containerRef.current.getBoundingClientRect();
@@ -211,7 +211,7 @@ function TextAreaNoBorder({
         setMaxWidthNumeric(undefined);
       }
 
-      const valueForMeasurement = valueOverride ?? currentValue ?? restProps.placeholder ?? "";
+      const valueForMeasurement = valueOverride ?? currentValue ?? restProps.placeholder ?? '';
       const effectiveMinHeight = calculateMinHeight(measureElement);
       const newWidth = calculateWidth(measureElement, valueForMeasurement);
       const newHeight = calculateHeight(
@@ -255,7 +255,7 @@ function TextAreaNoBorder({
         className="invisible absolute whitespace-pre-wrap px-3 py-2 wrap-break-word"
         aria-hidden="true"
       >
-        {currentValue || (restProps.placeholder ?? "")}
+        {currentValue || (restProps.placeholder ?? '')}
       </div>
       <motion.textarea
         ref={textareaRef}
@@ -280,22 +280,22 @@ function TextAreaNoBorder({
           height: `${height}px`,
         }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 300,
           damping: 30,
         }}
         style={fontSizeStyle}
         className={cn(
-          "placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none rounded-md bg-transparent px-3 py-2 text-base transition-colors outline-none resize-none overflow-hidden disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-          maxWidthNumeric && width >= maxWidthNumeric && "break-all",
+          'placeholder:text-muted-foreground selection:bg-accent selection:text-accent-foreground dark:bg-transparent border-none rounded-md bg-transparent px-3 py-2 text-base transition-colors outline-none resize-none overflow-hidden disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+          maxWidthNumeric && width >= maxWidthNumeric && 'break-all',
           className
         )}
         {...restProps}
       />
-      <div className="absolute right-0 pointer-events-none" style={{ bottom: "-5px" }}>
-        <span className="text-xs text-muted-foreground">{t("input.edit")}</span>
+      <div className="absolute right-0 pointer-events-none" style={{ bottom: '-5px' }}>
+        <span className="text-xs text-muted-foreground">{t('input.edit')}</span>
       </div>
       {maxLength !== undefined && (
         <motion.div
@@ -305,15 +305,15 @@ function TextAreaNoBorder({
           }}
           transition={{
             duration: 0.2,
-            ease: "easeOut",
+            ease: 'easeOut',
           }}
           className="absolute left-0 pointer-events-none"
-          style={{ bottom: "100%", marginBottom: "4px" }}
+          style={{ bottom: '100%', marginBottom: '4px' }}
         >
           <span
             className={cn(
-              "text-xs text-muted-foreground",
-              currentLength >= maxLength && "text-destructive"
+              'text-xs text-muted-foreground',
+              currentLength >= maxLength && 'text-destructive'
             )}
           >
             {currentLength}/{maxLength}

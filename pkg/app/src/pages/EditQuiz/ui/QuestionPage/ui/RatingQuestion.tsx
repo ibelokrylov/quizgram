@@ -1,15 +1,15 @@
-import { Input } from "@/components/ui/input";
-import type { Quiz, QuizQuestionRating } from "@/entities/Quiz/quiz.type";
-import { Star } from "lucide-react";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { Input } from '@/components/ui/input';
+import type { Quiz, QuizQuestionRating } from '@/entities/Quiz/quiz.type';
+import { Star } from 'lucide-react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const RatingQuestion = ({
   question,
   setQuestion,
 }: {
-  question: Quiz["question"][0];
-  setQuestion: (question: Quiz["question"][0]) => void;
+  question: Quiz['question'][0];
+  setQuestion: (question: Quiz['question'][0]) => void;
 }) => {
   const content = question?.content as QuizQuestionRating;
   const { t } = useTranslation();
@@ -19,8 +19,8 @@ export const RatingQuestion = ({
       setQuestion({
         ...question,
         content: {
-          left_placeholder: t("edit-quiz.question-page.question.rating.left_placeholder"),
-          right_placeholder: t("edit-quiz.question-page.question.rating.right_placeholder"),
+          left_placeholder: t('edit-quiz.question-page.question.rating.left_placeholder'),
+          right_placeholder: t('edit-quiz.question-page.question.rating.right_placeholder'),
         },
       });
     }
@@ -28,14 +28,14 @@ export const RatingQuestion = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className={"flex items-center gap-4"}>
-        <Star className={"text-yellow-500"} size={50} />
-        <Star className={"text-yellow-500"} size={50} />
+      <div className={'flex items-center gap-4'}>
+        <Star className={'text-yellow-500'} size={50} />
+        <Star className={'text-yellow-500'} size={50} />
         <Star size={50} />
         <Star size={50} />
         <Star size={50} />
       </div>
-      <div className={"flex items-center gap-2"}>
+      <div className={'flex items-center gap-2'}>
         <Input
           className="w-[150px]"
           value={content?.left_placeholder}

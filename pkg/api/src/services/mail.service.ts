@@ -1,17 +1,17 @@
 // Сервис для отправки email через SMTP используя nodemailer
 // Использует переменные окружения для конфигурации
 
-import { existsSync, readFileSync } from "fs";
-import nodemailer from "nodemailer";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { logger } from "../lib/logger";
+import { existsSync, readFileSync } from 'fs';
+import nodemailer from 'nodemailer';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { logger } from '../lib/logger';
 
 const MAIL_HOST = process.env.MAIL_HOST;
 const MAIL_USER = process.env.MAIL_USER;
 const MAIL_PASS = process.env.MAIL_PASS;
 const MAIL_PORT = process.env.MAIL_PORT ? parseInt(process.env.MAIL_PORT) : 465;
-const APP_NAME = process.env.APP_NAME || "TGMApp";
+const APP_NAME = process.env.APP_NAME || 'TGMApp';
 
 function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,26 +22,26 @@ function validateMailConfig(): void {
   const errors: string[] = [];
 
   if (!MAIL_HOST) {
-    errors.push("MAIL_HOST environment variable is not set");
+    errors.push('MAIL_HOST environment variable is not set');
   }
   if (!MAIL_USER) {
-    errors.push("MAIL_USER environment variable is not set");
+    errors.push('MAIL_USER environment variable is not set');
   }
   if (!MAIL_PASS) {
-    errors.push("MAIL_PASS environment variable is not set");
+    errors.push('MAIL_PASS environment variable is not set');
   }
 
   if (errors.length > 0) {
     const errorMessage = [
-      "SMTP configuration is incomplete:",
+      'SMTP configuration is incomplete:',
       ...errors,
-      "",
-      "Пожалуйста, настройте переменные окружения для отправки email.",
-      "Документация: pkg/api/docs/SMTP_SETUP.md",
-      "",
-      "Для Yandex используйте пароль приложения, а не обычный пароль!",
-      "Создайте пароль приложения: https://passport.yandex.ru/profile",
-    ].join("\n");
+      '',
+      'Пожалуйста, настройте переменные окружения для отправки email.',
+      'Документация: pkg/api/docs/SMTP_SETUP.md',
+      '',
+      'Для Yandex используйте пароль приложения, а не обычный пароль!',
+      'Создайте пароль приложения: https://passport.yandex.ru/profile',
+    ].join('\n');
 
     throw new Error(errorMessage);
   }
@@ -60,7 +60,7 @@ function getTransporter(): nodemailer.Transporter {
   // Определяем, используется ли SSL/TLS (порт 465) или STARTTLS (порт 587)
   const isSecure = MAIL_PORT === 465;
 
-  logger.debug("Инициализация SMTP транспортера", {
+  logger.debug('Инициализация SMTP транспортера', {
     host: MAIL_HOST,
     port: MAIL_PORT,
     user: MAIL_USER,
@@ -83,7 +83,7 @@ function getTransporter(): nodemailer.Transporter {
     connectionTimeout: 10000, // 10 секунд
     greetingTimeout: 10000,
     socketTimeout: 30000,
-    debug: true
+    debug: true,
   });
 
   return transporter;
@@ -92,11 +92,7 @@ function getTransporter(): nodemailer.Transporter {
 /**
  * Отправка email через SMTP используя nodemailer
  */
-async function sendMail(
-  subject: string,
-  body: string,
-  to: string,
-): Promise<void> {
+async function sendMail(subject: string, body: string, to: string): Promise<void> {
   validateMailConfig();
 
   if (!validateEmail(to)) {
@@ -114,7 +110,7 @@ async function sendMail(
 
   try {
     const info = await mailTransporter.sendMail(mailOptions);
-    logger.info("Email отправлен успешно", {
+    logger.info('Email отправлен успешно', {
       to,
       messageId: info.messageId,
     });
@@ -151,9 +147,9 @@ async function sendMail(
     }
 
     logger.error(
-      "Ошибка при отправке email",
+      'Ошибка при отправке email',
       error instanceof Error ? error : new Error(String(error)),
-      errorDetails,
+      errorDetails
     );
     throw error;
   }
@@ -163,26 +159,26 @@ async function sendMail(
 // Определяем путь относительно текущего файла
 const getTemplatesDir = (): string => {
   // В Bun используем import.meta.dirname
-  if (typeof import.meta !== "undefined" && import.meta.dirname) {
-    return join(import.meta.dirname, "templates");
+  if (typeof import.meta !== 'undefined' && import.meta.dirname) {
+    return join(import.meta.dirname, 'templates');
   }
 
   // В Node.js с ES modules используем import.meta.url
-  if (typeof import.meta !== "undefined" && import.meta.url) {
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    return join(__dirname, "templates");
+    return join(__dirname, 'templates');
   }
 
   // В Node.js с CommonJS используем __dirname
-  if (typeof __dirname !== "undefined") {
-    return join(__dirname, "templates");
+  if (typeof __dirname !== 'undefined') {
+    return join(__dirname, 'templates');
   }
 
   // Fallback: пробуем разные варианты путей
   const possiblePaths = [
-    join(process.cwd(), "src", "services", "templates"),
-    join(process.cwd(), "bapi", "src", "services", "templates"),
+    join(process.cwd(), 'src', 'services', 'templates'),
+    join(process.cwd(), 'bapi', 'src', 'services', 'templates'),
   ];
 
   for (const path of possiblePaths) {
@@ -206,8 +202,8 @@ const templateCache: Map<string, string> = new Map();
  */
 function loadTemplate(templateName: string, language?: string): string {
   // Определяем имя шаблона с учетом языка
-  const templateKey = language === "en" ? `${templateName}_en` : templateName;
-  const templateFile = language === "en" ? `${templateName}_en.html` : `${templateName}.html`;
+  const templateKey = language === 'en' ? `${templateName}_en` : templateName;
+  const templateFile = language === 'en' ? `${templateName}_en.html` : `${templateName}.html`;
 
   if (templateCache.has(templateKey)) {
     return templateCache.get(templateKey)!;
@@ -215,17 +211,17 @@ function loadTemplate(templateName: string, language?: string): string {
 
   try {
     const templatePath = join(templatesDir, templateFile);
-    const template = readFileSync(templatePath, "utf-8");
+    const template = readFileSync(templatePath, 'utf-8');
     templateCache.set(templateKey, template);
     return template;
   } catch (error) {
     // Если не найден шаблон с языком, пробуем базовый шаблон
-    if (language === "en") {
+    if (language === 'en') {
       try {
         const fallbackPath = join(templatesDir, `${templateName}.html`);
-        const template = readFileSync(fallbackPath, "utf-8");
+        const template = readFileSync(fallbackPath, 'utf-8');
         templateCache.set(templateKey, template);
-        logger.warn("Английский шаблон не найден, используется базовый", { templateName });
+        logger.warn('Английский шаблон не найден, используется базовый', { templateName });
         return template;
       } catch {
         // Продолжаем с основной ошибкой
@@ -233,9 +229,9 @@ function loadTemplate(templateName: string, language?: string): string {
     }
 
     logger.error(
-      "Ошибка при загрузке шаблона",
+      'Ошибка при загрузке шаблона',
       error instanceof Error ? error : new Error(String(error)),
-      { templateName, language, templateFile },
+      { templateName, language, templateFile }
     );
     throw new Error(`Template ${templateName} not found`);
   }
@@ -247,7 +243,7 @@ function loadTemplate(templateName: string, language?: string): string {
 function renderTemplate(template: string, data: Record<string, string>): string {
   let rendered = template;
   for (const [key, value] of Object.entries(data)) {
-    rendered = rendered.replace(new RegExp(`{{${key}}}`, "g"), value);
+    rendered = rendered.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
   return rendered;
 }
@@ -262,11 +258,11 @@ export abstract class MailService {
   static async sendVerificationEmailCode(
     email: string,
     code: string,
-    language: string = "ru",
+    language: string = 'ru'
   ): Promise<void> {
-    const template = loadTemplate("verification_code", language);
+    const template = loadTemplate('verification_code', language);
     const html = renderTemplate(template, { CODE: code });
-    const subject = language === "en" ? "Verification Code" : "Код верификации";
+    const subject = language === 'en' ? 'Verification Code' : 'Код верификации';
     await sendMail(subject, html, email);
   }
 
@@ -279,11 +275,11 @@ export abstract class MailService {
   static async sendForgotPasswordEmailCode(
     email: string,
     code: string,
-    language: string = "ru",
+    language: string = 'ru'
   ): Promise<void> {
-    const template = loadTemplate("forgot_password_code", language);
+    const template = loadTemplate('forgot_password_code', language);
     const html = renderTemplate(template, { CODE: code });
-    const subject = language === "en" ? "Password Recovery" : "Восстановление пароля";
+    const subject = language === 'en' ? 'Password Recovery' : 'Восстановление пароля';
     await sendMail(subject, html, email);
   }
 
@@ -294,11 +290,11 @@ export abstract class MailService {
    */
   static async sendInformationOfResetPassword(
     email: string,
-    language: string = "ru",
+    language: string = 'ru'
   ): Promise<void> {
-    const template = loadTemplate("password_reset_notification", language);
+    const template = loadTemplate('password_reset_notification', language);
     const html = renderTemplate(template, {});
-    const subject = language === "en" ? "Password Successfully Changed" : "Пароль успешно изменен";
+    const subject = language === 'en' ? 'Password Successfully Changed' : 'Пароль успешно изменен';
     await sendMail(subject, html, email);
   }
 
@@ -309,17 +305,19 @@ export abstract class MailService {
    */
   static async sendPaymentReminder(
     email: string,
-    language: string = "ru",
-    paymentUrl?: string,
+    language: string = 'ru',
+    paymentUrl?: string
   ): Promise<void> {
     // Если есть ссылка на оплату, отправляем другой вариант письма
     if (paymentUrl) {
-      const subject = language === "en"
-        ? "Payment Required: Your Subscription Has Expired"
-        : "Требуется оплата: Ваша подписка истекла";
+      const subject =
+        language === 'en'
+          ? 'Payment Required: Your Subscription Has Expired'
+          : 'Требуется оплата: Ваша подписка истекла';
 
-      const html = language === "en"
-        ? `
+      const html =
+        language === 'en'
+          ? `
           <html>
             <body>
               <h2>Payment Required</h2>
@@ -333,7 +331,7 @@ export abstract class MailService {
             </body>
           </html>
         `
-        : `
+          : `
           <html>
             <body>
               <h2>Требуется оплата</h2>
@@ -351,12 +349,14 @@ export abstract class MailService {
       await sendMail(subject, html, email);
     } else {
       // Если нет ссылки на оплату, отправляем стандартное напоминание
-      const subject = language === "en"
-        ? "Payment will be charged in 2 days"
-        : "Списание средств произойдет через 2 дня";
+      const subject =
+        language === 'en'
+          ? 'Payment will be charged in 2 days'
+          : 'Списание средств произойдет через 2 дня';
 
-      const html = language === "en"
-        ? `
+      const html =
+        language === 'en'
+          ? `
           <html>
             <body>
               <h2>Payment Reminder</h2>
@@ -366,7 +366,7 @@ export abstract class MailService {
             </body>
           </html>
         `
-        : `
+          : `
           <html>
             <body>
               <h2>Напоминание об оплате</h2>
@@ -391,35 +391,36 @@ export abstract class MailService {
   static async sendPlanExpirationNotice(
     email: string,
     expirationDate: string | Date,
-    language: string = "ru",
-    currentPlanName?: string,
+    language: string = 'ru',
+    currentPlanName?: string
   ): Promise<void> {
     // Функция для получения отображаемого имени плана
     const getDisplayPlanName = (planName?: string): string => {
-      if (!planName) return "платный";
-      if (planName === "BASE") return "Pro";
-      if (planName === "PRO_PLUS") return "Pro+";
+      if (!planName) return 'платный';
+      if (planName === 'BASE') return 'Pro';
+      if (planName === 'PRO_PLUS') return 'Pro+';
       return planName;
     };
 
     const displayPlanName = getDisplayPlanName(currentPlanName);
 
     // Форматируем дату окончания
-    const dateObj = typeof expirationDate === "string"
-      ? new Date(expirationDate)
-      : expirationDate;
+    const dateObj = typeof expirationDate === 'string' ? new Date(expirationDate) : expirationDate;
 
-    const formattedDate = dateObj.toLocaleDateString(
-      language === "en" ? "en-US" : "ru-RU",
-      { year: "numeric", month: "long", day: "numeric" }
-    );
+    const formattedDate = dateObj.toLocaleDateString(language === 'en' ? 'en-US' : 'ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-    const subject = language === "en"
-      ? `Your ${displayPlanName} plan will expire soon`
-      : `Ваш тарифный план ${displayPlanName} скоро закончится`;
+    const subject =
+      language === 'en'
+        ? `Your ${displayPlanName} plan will expire soon`
+        : `Ваш тарифный план ${displayPlanName} скоро закончится`;
 
-    const html = language === "en"
-      ? `
+    const html =
+      language === 'en'
+        ? `
         <html>
           <body>
             <h2>Plan Expiration Notice</h2>
@@ -431,7 +432,7 @@ export abstract class MailService {
           </body>
         </html>
       `
-      : `
+        : `
         <html>
           <body>
             <h2>Уведомление об окончании тарифного плана</h2>
@@ -456,13 +457,12 @@ export abstract class MailService {
   static async sendNewBidNotification(
     email: string,
     reportUrl: string,
-    language: string = "ru",
+    language: string = 'ru'
   ): Promise<void> {
-    const template = loadTemplate("new_bid_notification", language);
+    const template = loadTemplate('new_bid_notification', language);
     const html = renderTemplate(template, { REPORT_URL: reportUrl });
-    const subject = language === "en"
-      ? "New quiz response received"
-      : "Получен новый ответ на квиз";
+    const subject =
+      language === 'en' ? 'New quiz response received' : 'Получен новый ответ на квиз';
 
     await sendMail(subject, html, email);
   }

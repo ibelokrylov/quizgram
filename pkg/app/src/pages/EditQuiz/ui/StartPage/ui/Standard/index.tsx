@@ -1,20 +1,16 @@
-import { DownloadFiles } from "@/components/download-files";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CreateQuizContext } from "@/entities/Quiz/CreateQuiz.context";
-import type { Quiz, QuizStartPageStandard } from "@/entities/Quiz/quiz.type";
-import http from "@/lib/http";
-import { ArrowDownFromLine, Trash } from "lucide-react";
-import { useContext, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { DownloadFiles } from '@/components/download-files';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
+import type { Quiz, QuizStartPageStandard } from '@/entities/Quiz/quiz.type';
+import http from '@/lib/http';
+import { ArrowDownFromLine, Trash } from 'lucide-react';
+import { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // export const quizStartPageStandardZod = z.object({
 //   logo_url: z.string().optional(),
@@ -42,10 +38,10 @@ const defaultPage: QuizStartPageStandard = {
   company_name: undefined,
   company_description: undefined,
   background: undefined,
-  background_type: "image",
+  background_type: 'image',
   background_mobile: undefined,
-  type: "standard",
-  content_align: "left",
+  type: 'standard',
+  content_align: 'left',
   show_logo: true,
   disclamer: undefined,
 };
@@ -62,22 +58,19 @@ export const Standard = () => {
 
   function changePage(page: QuizStartPageStandard) {
     setPage(page);
-    console.log("123", page);
+    console.log('123', page);
     setQuiz({
       ...quiz,
       startPage: { ...quiz?.startPage, content: page },
     } as Quiz);
   }
 
-  async function deleteFile(
-    url: string,
-    changeLoading?: (loading: boolean) => void,
-  ) {
+  async function deleteFile(url: string, changeLoading?: (loading: boolean) => void) {
     try {
       changeLoading?.(true);
       await http({
-        url: "/v1/user/delete-file",
-        method: "DELETE",
+        url: '/v1/user/delete-file',
+        method: 'DELETE',
         body: { file_url: url },
       });
     } catch (err) {
@@ -103,7 +96,7 @@ export const Standard = () => {
 
   return (
     <div className="flex flex-col gap-4 px-2 lg:px-0">
-      <Card className={"p-2 max-w-[400px] w-full"}>
+      <Card className={'p-2 max-w-[400px] w-full'}>
         <div className="col-span-2 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <Tooltip>
@@ -117,8 +110,8 @@ export const Standard = () => {
                     />
                     <Button
                       className="absolute top-2 left-2 size-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      variant={"destructive"}
-                      size={"icon"}
+                      variant={'destructive'}
+                      size={'icon'}
                       onClick={deleteLogo}
                     >
                       <Trash />
@@ -131,36 +124,25 @@ export const Standard = () => {
                     className="w-[40px] h-[40px] relative"
                     showDownloadMobile={false}
                     classNamePreview="w-[40px] h-[40px] relative"
-                    onFinal={(value) =>
-                      changePage({ ...page, logo_url: value })
-                    }
-                    icon={
-                      <ArrowDownFromLine
-                        size={20}
-                        className={"ml-[-2px] mt-[-1px]"}
-                      />
-                    }
-                    tooltipMobile={t("downloadImage.standard.logo_info")}
+                    onFinal={(value) => changePage({ ...page, logo_url: value })}
+                    icon={<ArrowDownFromLine size={20} className={'ml-[-2px] mt-[-1px]'} />}
+                    tooltipMobile={t('downloadImage.standard.logo_info')}
                   />
                 )}
               </TooltipTrigger>
-              <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.logo_info")}
-              </TooltipContent>
+              <TooltipContent>{t('edit-quiz.start-page.standard.edit.logo_info')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Input
                   className="w-[calc(100%-60px)]"
                   value={page?.name}
-                  onChange={(e) =>
-                    changePage({ ...page, name: e.target.value })
-                  }
-                  placeholder={t("edit-quiz.start-page.standard.companyName")}
+                  onChange={(e) => changePage({ ...page, name: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.companyName')}
                 />
               </TooltipTrigger>
               <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.company_name_info")}
+                {t('edit-quiz.start-page.standard.edit.company_name_info')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -170,15 +152,11 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Input
                   value={page?.title}
-                  onChange={(e) =>
-                    changePage({ ...page, title: e.target.value })
-                  }
-                  placeholder={t("edit-quiz.start-page.standard.edit.title")}
+                  onChange={(e) => changePage({ ...page, title: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.title')}
                 />
               </TooltipTrigger>
-              <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.title_info")}
-              </TooltipContent>
+              <TooltipContent>{t('edit-quiz.start-page.standard.edit.title_info')}</TooltipContent>
             </Tooltip>
           </div>
           <div>
@@ -186,16 +164,12 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Textarea
                   value={page?.description}
-                  onChange={(e) =>
-                    changePage({ ...page, description: e.target.value })
-                  }
-                  placeholder={t(
-                    "edit-quiz.start-page.standard.edit.description",
-                  )}
+                  onChange={(e) => changePage({ ...page, description: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.description')}
                 />
               </TooltipTrigger>
               <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.description_info")}
+                {t('edit-quiz.start-page.standard.edit.description_info')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -205,15 +179,11 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Input
                   value={page?.button}
-                  onChange={(e) =>
-                    changePage({ ...page, button: e.target.value })
-                  }
-                  placeholder={t("edit-quiz.start-page.standard.edit.button")}
+                  onChange={(e) => changePage({ ...page, button: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.button')}
                 />
               </TooltipTrigger>
-              <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.button_info")}
-              </TooltipContent>
+              <TooltipContent>{t('edit-quiz.start-page.standard.edit.button_info')}</TooltipContent>
             </Tooltip>
           </div>
           <Separator />
@@ -222,15 +192,11 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Input
                   value={page?.phone}
-                  onChange={(e) =>
-                    changePage({ ...page, phone: e.target.value })
-                  }
-                  placeholder={t("edit-quiz.start-page.standard.edit.phone")}
+                  onChange={(e) => changePage({ ...page, phone: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.phone')}
                 />
               </TooltipTrigger>
-              <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.phone_info")}
-              </TooltipContent>
+              <TooltipContent>{t('edit-quiz.start-page.standard.edit.phone_info')}</TooltipContent>
             </Tooltip>
           </div>
           <div>
@@ -238,16 +204,12 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Input
                   value={page?.company_name}
-                  onChange={(e) =>
-                    changePage({ ...page, company_name: e.target.value })
-                  }
-                  placeholder={t(
-                    "edit-quiz.start-page.standard.edit.company_name",
-                  )}
+                  onChange={(e) => changePage({ ...page, company_name: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.company_name')}
                 />
               </TooltipTrigger>
               <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.company_name_info")}
+                {t('edit-quiz.start-page.standard.edit.company_name_info')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -257,16 +219,12 @@ export const Standard = () => {
               <TooltipTrigger asChild>
                 <Input
                   value={page?.disclamer}
-                  onChange={(e) =>
-                    changePage({ ...page, disclamer: e.target.value })
-                  }
-                  placeholder={t(
-                    "edit-quiz.start-page.standard.edit.disclamer",
-                  )}
+                  onChange={(e) => changePage({ ...page, disclamer: e.target.value })}
+                  placeholder={t('edit-quiz.start-page.standard.edit.disclamer')}
                 />
               </TooltipTrigger>
               <TooltipContent>
-                {t("edit-quiz.start-page.standard.edit.disclamer_info")}
+                {t('edit-quiz.start-page.standard.edit.disclamer_info')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -274,8 +232,8 @@ export const Standard = () => {
       </Card>
       <Separator />
       <div>
-        <Button variant={"destructive"} onClick={deletePage}>
-          {t("edit-quiz.start-page.standard.edit.delete")}
+        <Button variant={'destructive'} onClick={deletePage}>
+          {t('edit-quiz.start-page.standard.edit.delete')}
           <Trash />
         </Button>
       </div>

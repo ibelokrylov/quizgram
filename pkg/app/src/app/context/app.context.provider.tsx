@@ -1,5 +1,5 @@
-import { useState, type PropsWithChildren } from "react";
-import { AppContext } from "./app.context";
+import { useState, type PropsWithChildren } from 'react';
+import { AppContext } from './app.context';
 
 export const AppContextProvider = (props: PropsWithChildren) => {
   const [loading, setLoading] = useState(true);

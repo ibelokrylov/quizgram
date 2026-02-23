@@ -84,7 +84,7 @@ test('1. Админ на FREE плане видит незавершенные �
         10, // bidMonthLimit для FREE
         'FREE',
         1, // planId для FREE
-        true, // isAdmin = true
+        true // isAdmin = true
       );
 
       // Должны быть видны обе заявки (isFull=true и isFull=false)
@@ -132,7 +132,7 @@ test('2. Обычный пользователь на FREE плане НЕ ви�
         10, // bidMonthLimit для FREE
         'FREE',
         1, // planId для FREE
-        false, // isAdmin = false
+        false // isAdmin = false
       );
 
       // Должна быть видна только 1 заявка (isFull=true)
@@ -179,7 +179,7 @@ test('3. Админ на FREE плане видит поле info в заявк�
         10,
         'FREE',
         1,
-        true, // isAdmin = true
+        true // isAdmin = true
       );
 
       expect(result.data.length).toBe(1);
@@ -225,7 +225,7 @@ test('4. Обычный пользователь на FREE плане НЕ ви�
         10,
         'FREE',
         1,
-        false, // isAdmin = false
+        false // isAdmin = false
       );
 
       expect(result.data.length).toBe(1);
@@ -263,7 +263,7 @@ test('5. Админ на FREE плане может экспортировать
         adminId,
         {}, // без фильтров
         1, // planId для FREE
-        true, // isAdmin = true
+        true // isAdmin = true
       );
 
       // Должны экспортироваться обе заявки
@@ -300,7 +300,7 @@ test('6. Обычный пользователь на FREE плане экспо
         userId,
         {}, // без фильтров
         1, // planId для FREE
-        false, // isAdmin = false
+        false // isAdmin = false
       );
 
       // Должна экспортироваться только 1 заявка (isFull=true)
@@ -407,7 +407,15 @@ test('9. Изменение статуса админа влияет на дос
 
     try {
       // Сначала как обычный пользователь - видит только 1 заявку
-      const resultBefore = await BidsService.getBidsList(userId, { limit: 10, offset: 0 }, user!.createdAt, 10, 'FREE', 1, false);
+      const resultBefore = await BidsService.getBidsList(
+        userId,
+        { limit: 10, offset: 0 },
+        user!.createdAt,
+        10,
+        'FREE',
+        1,
+        false
+      );
       expect(resultBefore.data.length).toBe(1);
 
       // Делаем пользователя админом
@@ -421,7 +429,7 @@ test('9. Изменение статуса админа влияет на дос
         10,
         'FREE',
         1,
-        true, // теперь isAdmin = true
+        true // теперь isAdmin = true
       );
       expect(resultAfter.data.length).toBe(2);
 
@@ -461,7 +469,7 @@ test('10. Админ на FREE плане видит info в экспорте', 
         adminId,
         {},
         1, // planId для FREE
-        true, // isAdmin = true
+        true // isAdmin = true
       );
 
       expect(result.length).toBe(1);

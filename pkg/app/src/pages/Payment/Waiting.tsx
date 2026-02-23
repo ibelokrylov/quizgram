@@ -1,23 +1,23 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader } from "@/components/loader";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader } from '@/components/loader';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const PaymentWaitingPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const search = useSearch({ from: "/app/payment/waiting" }) as {
+  const search = useSearch({ from: '/app/payment/waiting' }) as {
     paymentId?: number;
   };
 
-  const [status] = useState<"waiting" | "success" | "failed">("waiting");
+  const [status] = useState<'waiting' | 'success' | 'failed'>('waiting');
   const [checking, setChecking] = useState(false);
 
   // Проверяем статус оплаты периодически
   useEffect(() => {
-    if (!search.paymentId || status !== "waiting") {
+    if (!search.paymentId || status !== 'waiting') {
       return;
     }
 
@@ -29,7 +29,7 @@ export const PaymentWaitingPage = () => {
         // В реальности можно сделать polling или websocket
         await new Promise((resolve) => setTimeout(resolve, 3000));
       } catch (error) {
-        console.error("Ошибка при проверке статуса платежа", error);
+        console.error('Ошибка при проверке статуса платежа', error);
       } finally {
         setChecking(false);
       }
@@ -40,27 +40,27 @@ export const PaymentWaitingPage = () => {
   }, [search.paymentId, status]);
 
   const handleBack = () => {
-    navigate({ to: "/app/payment" });
+    navigate({ to: '/app/payment' });
   };
 
   return (
     <div className="flex items-center justify-center min-h-[60vh] p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle>{t("payment.waiting.title")}</CardTitle>
-          <CardDescription>{t("payment.waiting.description")}</CardDescription>
+          <CardTitle>{t('payment.waiting.title')}</CardTitle>
+          <CardDescription>{t('payment.waiting.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {status === "waiting" && (
+          {status === 'waiting' && (
             <div className="flex flex-col items-center space-y-4">
               <Loader />
               <p className="text-sm text-muted-foreground text-center">
-                {checking ? t("payment.waiting.checking") : t("payment.waiting.description")}
+                {checking ? t('payment.waiting.checking') : t('payment.waiting.description')}
               </p>
             </div>
           )}
 
-          {status === "success" && (
+          {status === 'success' && (
             <div className="flex flex-col items-center space-y-4">
               <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
                 <svg
@@ -77,11 +77,11 @@ export const PaymentWaitingPage = () => {
                   />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-center">{t("payment.waiting.success")}</p>
+              <p className="text-sm font-medium text-center">{t('payment.waiting.success')}</p>
             </div>
           )}
 
-          {status === "failed" && (
+          {status === 'failed' && (
             <div className="flex flex-col items-center space-y-4">
               <div className="h-12 w-12 rounded-full bg-red-500 flex items-center justify-center">
                 <svg
@@ -99,13 +99,13 @@ export const PaymentWaitingPage = () => {
                 </svg>
               </div>
               <p className="text-sm font-medium text-center text-red-500">
-                {t("payment.waiting.failed")}
+                {t('payment.waiting.failed')}
               </p>
             </div>
           )}
 
           <Button onClick={handleBack} variant="outline" className="w-full">
-            {t("payment.waiting.back")}
+            {t('payment.waiting.back')}
           </Button>
         </CardContent>
       </Card>

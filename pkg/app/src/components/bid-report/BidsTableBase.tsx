@@ -1,10 +1,10 @@
-import { Card } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableHead, TableRow } from "@/components/ui/table";
-import type { BidListItem } from "@/entities/Bid/bid.type";
-import { useTranslation } from "react-i18next";
-import { BidsTableRow } from "./BidsTableRow";
-import { BidsTableCard } from "./BidsTableCard";
-import { BidsTablePagination } from "./BidsTablePagination";
+import { Card } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableHead, TableRow } from '@/components/ui/table';
+import type { BidListItem } from '@/entities/Bid/bid.type';
+import { useTranslation } from 'react-i18next';
+import { BidsTableRow } from './BidsTableRow';
+import { BidsTableCard } from './BidsTableCard';
+import { BidsTablePagination } from './BidsTablePagination';
 
 interface BidsTableBaseProps {
   bids: BidListItem[];
@@ -21,12 +21,12 @@ export function BidsTableBase({
   fetchNextPage,
   observerTarget,
 }: BidsTableBaseProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
 
   if (bids.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground">{t("bids.table.empty")}</p>
+        <p className="text-muted-foreground">{t('bids.table.empty')}</p>
       </Card>
     );
   }
@@ -38,11 +38,11 @@ export function BidsTableBase({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="p-3">{t("bids.table.status")}</TableHead>
-              <TableHead className="p-3">{t("bids.table.date")}</TableHead>
-              <TableHead className="p-3">{t("bids.table.quiz")}</TableHead>
-              <TableHead className="p-3">{t("bids.table.contacts")}</TableHead>
-              <TableHead className="p-3">{t("bids.table.actions")}</TableHead>
+              <TableHead className="p-3">{t('bids.table.status')}</TableHead>
+              <TableHead className="p-3">{t('bids.table.date')}</TableHead>
+              <TableHead className="p-3">{t('bids.table.quiz')}</TableHead>
+              <TableHead className="p-3">{t('bids.table.contacts')}</TableHead>
+              <TableHead className="p-3">{t('bids.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Схема для общей статистики по дням
 export const dailyStatsZod = z.object({

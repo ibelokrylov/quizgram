@@ -1,6 +1,6 @@
 // Модели валидации для модуля payment
 
-import { t } from "elysia";
+import { t } from 'elysia';
 
 export namespace PaymentModel {
   // Успешный ответ при создании платежа
@@ -29,8 +29,7 @@ export namespace PaymentModel {
     }),
   });
 
-  export type createPaymentSuccessResponse =
-    typeof createPaymentSuccessResponse.static;
+  export type createPaymentSuccessResponse = typeof createPaymentSuccessResponse.static;
 
   // Успешный ответ при обновлении плана
   export const updatePlanSuccessResponse = t.Object({
@@ -41,8 +40,7 @@ export namespace PaymentModel {
     }),
   });
 
-  export type updatePlanSuccessResponse =
-    typeof updatePlanSuccessResponse.static;
+  export type updatePlanSuccessResponse = typeof updatePlanSuccessResponse.static;
 
   // Ошибка при обновлении плана
   export const updatePlanErrorResponse = t.Object({
@@ -50,8 +48,7 @@ export namespace PaymentModel {
     error: t.Optional(t.String()),
   });
 
-  export type updatePlanErrorResponse =
-    typeof updatePlanErrorResponse.static;
+  export type updatePlanErrorResponse = typeof updatePlanErrorResponse.static;
 
   // Успешный ответ при отмене подписки
   export const cancelSubscriptionSuccessResponse = t.Object({
@@ -63,8 +60,7 @@ export namespace PaymentModel {
     }),
   });
 
-  export type cancelSubscriptionSuccessResponse =
-    typeof cancelSubscriptionSuccessResponse.static;
+  export type cancelSubscriptionSuccessResponse = typeof cancelSubscriptionSuccessResponse.static;
 
   // Ошибка при отмене подписки
   export const cancelSubscriptionErrorResponse = t.Object({
@@ -72,6 +68,5 @@ export namespace PaymentModel {
     error: t.Optional(t.String()),
   });
 
-  export type cancelSubscriptionErrorResponse =
-    typeof cancelSubscriptionErrorResponse.static;
+  export type cancelSubscriptionErrorResponse = typeof cancelSubscriptionErrorResponse.static;
 }

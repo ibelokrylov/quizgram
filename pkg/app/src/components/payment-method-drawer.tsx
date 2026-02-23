@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
-import { useUpLimits } from "@/entities/User/useUpLimits";
-import { useUserPlan } from "@/entities/User/useUserPlan";
-import http from "@/lib/http";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import React from "react";
+} from '@/components/ui/drawer';
+import { useUpLimits } from '@/entities/User/useUpLimits';
+import { useUserPlan } from '@/entities/User/useUserPlan';
+import http from '@/lib/http';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 
 interface PaymentMethodDrawerProps {
   open: boolean;
@@ -42,7 +42,7 @@ export const PaymentMethodDrawer = ({
   const { query: upLimitsQuery } = useUpLimits();
   const { query: userPlanQuery } = useUserPlan();
 
-  const isProPlus = planNameRaw === "PRO_PLUS";
+  const isProPlus = planNameRaw === 'PRO_PLUS';
   const isFreePlan = planPrice === 0;
 
   const totalPrice = React.useMemo(() => {
@@ -86,16 +86,16 @@ export const PaymentMethodDrawer = ({
     if (isProPlus && selectedUpLimitId && upLimitsQuery.data) {
       const selectedUpLimit = upLimitsQuery.data.find((ul) => ul.id === selectedUpLimitId);
       if (selectedUpLimit) {
-        return t("payment.drawer.service_name.pro_plus", { limit: bidLimit });
+        return t('payment.drawer.service_name.pro_plus', { limit: bidLimit });
       }
     }
     if (isProPlus) {
-      return t("payment.drawer.service_name.pro_plus", { limit: 200 });
+      return t('payment.drawer.service_name.pro_plus', { limit: 200 });
     }
     if (!isFreePlan) {
-      return t("payment.drawer.service_name.pro");
+      return t('payment.drawer.service_name.pro');
     }
-    return "";
+    return '';
   }, [isProPlus, selectedUpLimitId, upLimitsQuery.data, bidLimit, isFreePlan, t]);
 
   const handleFreePlan = async () => {
@@ -103,21 +103,21 @@ export const PaymentMethodDrawer = ({
     try {
       const response = await http<{ planId: number; planName: string }>({
         url: `/v1/payment/${planId}`,
-        method: "POST",
+        method: 'POST',
       });
 
       if (response.data) {
         onOpenChange(false);
 
-        queryClient.invalidateQueries({ queryKey: ["user-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-        queryClient.invalidateQueries({ queryKey: ["plans"] });
+        queryClient.invalidateQueries({ queryKey: ['user-plan'] });
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['plans'] });
 
         const displayPlanName = planName;
-        toast.success(t("payment.success", { plan: displayPlanName }));
+        toast.success(t('payment.success', { plan: displayPlanName }));
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("payment.error"));
+      toast.error(error instanceof Error ? error.message : t('payment.error'));
     } finally {
       setIsCreating(false);
     }
@@ -130,8 +130,8 @@ export const PaymentMethodDrawer = ({
         paymentId: number;
         paymentUrl: string;
       }>({
-        url: "/v1/payment/create",
-        method: "POST",
+        url: '/v1/payment/create',
+        method: 'POST',
         body: {
           planId,
           upLimitId: selectedUpLimitId ?? undefined,
@@ -141,12 +141,12 @@ export const PaymentMethodDrawer = ({
       if (response.data) {
         const { paymentId, paymentUrl } = response.data;
 
-        localStorage.setItem("pendingPaymentId", paymentId.toString());
+        localStorage.setItem('pendingPaymentId', paymentId.toString());
 
         window.location.href = paymentUrl;
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("payment.create.error"));
+      toast.error(error instanceof Error ? error.message : t('payment.create.error'));
       setIsCreating(false);
     }
   };
@@ -156,19 +156,19 @@ export const PaymentMethodDrawer = ({
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>
-            {isFreePlan ? t("payment.confirm.title") : t("payment.method.select")}
+            {isFreePlan ? t('payment.confirm.title') : t('payment.method.select')}
           </DrawerTitle>
           <DrawerDescription>
             {isFreePlan
-              ? t("payment.confirm.description", { plan: planName })
-              : `${t("payment.method.select")} для тарифа ${planName}`}
+              ? t('payment.confirm.description', { plan: planName })
+              : `${t('payment.method.select')} для тарифа ${planName}`}
           </DrawerDescription>
         </DrawerHeader>
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto max-w-[800px] mx-auto">
           {isDowngrade && (
             <div className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                {t("payment.downgrade.warning")}
+                {t('payment.downgrade.warning')}
               </p>
             </div>
           )}
@@ -177,17 +177,17 @@ export const PaymentMethodDrawer = ({
             <>
               <div className="border rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{t("payment.drawer.info.plan")}</span>
+                  <span className="text-sm font-medium">{t('payment.drawer.info.plan')}</span>
                   <span className="text-sm font-semibold">{planName}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{t("payment.drawer.info.price")}</span>
+                  <span className="text-sm font-medium">{t('payment.drawer.info.price')}</span>
                   <span className="text-sm font-semibold">
-                    {totalPrice} ₽ / {t("payment.drawer.info.per_month")}
+                    {totalPrice} ₽ / {t('payment.drawer.info.per_month')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{t("payment.drawer.info.limit")}</span>
+                  <span className="text-sm font-medium">{t('payment.drawer.info.limit')}</span>
                   <span className="text-sm font-semibold">{bidLimit}</span>
                 </div>
               </div>
@@ -200,23 +200,23 @@ export const PaymentMethodDrawer = ({
                     onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
                   />
                   <label htmlFor="terms-agreement" className="text-sm leading-tight cursor-pointer">
-                    {t("payment.drawer.agreement.checkbox1")}{" "}
+                    {t('payment.drawer.agreement.checkbox1')}{' '}
                     <a
                       href="/offer"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline hover:text-primary/80"
                     >
-                      {t("payment.drawer.agreement.offer")}
-                    </a>{" "}
-                    и{" "}
+                      {t('payment.drawer.agreement.offer')}
+                    </a>{' '}
+                    и{' '}
                     <a
                       href="/privacy"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline hover:text-primary/80"
                     >
-                      {t("payment.drawer.agreement.privacy")}
+                      {t('payment.drawer.agreement.privacy')}
                     </a>
                   </label>
                 </div>
@@ -231,7 +231,7 @@ export const PaymentMethodDrawer = ({
                     htmlFor="payment-agreement"
                     className="text-sm leading-tight cursor-pointer"
                   >
-                    {t("payment.drawer.agreement.checkbox2", {
+                    {t('payment.drawer.agreement.checkbox2', {
                       price: totalPrice,
                       serviceName,
                     })}
@@ -240,7 +240,7 @@ export const PaymentMethodDrawer = ({
 
                 {!canPay && (agreedToTerms || agreedToPayment) && (
                   <p className="text-sm text-red-600 dark:text-red-400">
-                    {t("payment.drawer.agreement.required")}
+                    {t('payment.drawer.agreement.required')}
                   </p>
                 )}
               </div>
@@ -253,7 +253,7 @@ export const PaymentMethodDrawer = ({
                   className="w-full max-w-md"
                   size="lg"
                 >
-                  {t("payment.drawer.pay_button")}
+                  {t('payment.drawer.pay_button')}
                 </Button>
               </div>
             </>
@@ -261,8 +261,14 @@ export const PaymentMethodDrawer = ({
 
           {isFreePlan && (
             <div className="flex justify-center">
-              <Button onClick={handleFreePlan} disabled={isCreating} loading={isCreating} className="w-full" size="lg">
-                {t("payment.confirm.button")}
+              <Button
+                onClick={handleFreePlan}
+                disabled={isCreating}
+                loading={isCreating}
+                className="w-full"
+                size="lg"
+              >
+                {t('payment.confirm.button')}
               </Button>
             </div>
           )}

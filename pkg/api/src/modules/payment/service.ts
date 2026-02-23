@@ -37,7 +37,11 @@ export abstract class PaymentService {
   static async getPaymentStatus(paymentId: number, userId: number) {
     logger.debug('Payment: Запрос статуса платежа', { paymentId, userId });
 
-    const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.id, paymentId))
+      .limit(1);
 
     if (payments.length === 0) {
       logger.error('Payment: Платёж не найден', { paymentId, userId });
@@ -213,7 +217,11 @@ export abstract class PaymentService {
       return { error: { message: 'Невалидный идентификатор платежа' } };
     }
 
-    const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.id, paymentId))
+      .limit(1);
 
     if (payments.length === 0) {
       logger.error('UnitPay CHECK: Платёж не найден в БД', {
@@ -340,7 +348,11 @@ export abstract class PaymentService {
       return { error: { message: 'Невалидный идентификатор платежа' } };
     }
 
-    const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.id, paymentId))
+      .limit(1);
 
     if (payments.length === 0) {
       logger.error('UnitPay PAY: Платёж не найден в БД', {
@@ -414,7 +426,12 @@ export abstract class PaymentService {
           subscriptionId,
         });
 
-        await this.renewSubscription(payment.userId, originalUserPaymentId, payment.id, subscriptionId);
+        await this.renewSubscription(
+          payment.userId,
+          originalUserPaymentId,
+          payment.id,
+          subscriptionId
+        );
 
         logger.info('UnitPay PAY: Автопродление завершено', {
           unitpayPaymentId,
@@ -441,7 +458,14 @@ export abstract class PaymentService {
           return { error: { message: 'planId отсутствует в metadata' } };
         }
 
-        await this.updateUserPlan(payment.userId, planId, payment.id, upLimitId, true, subscriptionId);
+        await this.updateUserPlan(
+          payment.userId,
+          planId,
+          payment.id,
+          upLimitId,
+          true,
+          subscriptionId
+        );
 
         logger.info('UnitPay PAY: План пользователя обновлён', {
           unitpayPaymentId,
@@ -461,11 +485,15 @@ export abstract class PaymentService {
 
       return { result: { message: 'Запрос успешно обработан' } };
     } catch (error) {
-      logger.error('UnitPay PAY: Ошибка при обработке', error instanceof Error ? error : new Error(String(error)), {
-        unitpayPaymentId,
-        paymentId: payment.id,
-        userId: payment.userId,
-      });
+      logger.error(
+        'UnitPay PAY: Ошибка при обработке',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        }
+      );
       return { error: { message: 'Ошибка обработки платежа' } };
     }
   }
@@ -516,7 +544,11 @@ export abstract class PaymentService {
         return { result: { message: 'Запрос успешно обработан' } };
       }
 
-      const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+      const payments = await db
+        .select()
+        .from(paymentTable)
+        .where(eq(paymentTable.id, paymentId))
+        .limit(1);
 
       if (payments.length === 0) {
         logger.warn('UnitPay ERROR: Платёж не найден в БД', {
@@ -537,7 +569,10 @@ export abstract class PaymentService {
         errorMessage,
       });
 
-      await db.update(paymentTable).set({ status: 'failed' }).where(eq(paymentTable.id, payment.id));
+      await db
+        .update(paymentTable)
+        .set({ status: 'failed' })
+        .where(eq(paymentTable.id, payment.id));
 
       logger.info('UnitPay ERROR: Успешно завершён', {
         unitpayPaymentId,
@@ -547,7 +582,11 @@ export abstract class PaymentService {
 
       return { result: { message: 'Запрос успешно обработан' } };
     } catch (error) {
-      logger.error('UnitPay ERROR: Ошибка при обработке', error instanceof Error ? error : new Error(String(error)), { unitpayPaymentId });
+      logger.error(
+        'UnitPay ERROR: Ошибка при обработке',
+        error instanceof Error ? error : new Error(String(error)),
+        { unitpayPaymentId }
+      );
       return { error: { message: 'Ошибка обновления статуса' } };
     }
   }
@@ -593,7 +632,11 @@ export abstract class PaymentService {
       return { error: { message: 'Невалидный идентификатор платежа' } };
     }
 
-    const payments = await db.select().from(paymentTable).where(eq(paymentTable.id, paymentId)).limit(1);
+    const payments = await db
+      .select()
+      .from(paymentTable)
+      .where(eq(paymentTable.id, paymentId))
+      .limit(1);
 
     if (payments.length === 0) {
       logger.error('UnitPay REFUND: Платёж не найден в БД', {
@@ -633,7 +676,11 @@ export abstract class PaymentService {
         .where(eq(paymentTable.id, payment.id));
 
       // Откатываем план пользователя на FREE
-      const freePlans = await db.select().from(planTable).where(eq(planTable.name, 'FREE')).limit(1);
+      const freePlans = await db
+        .select()
+        .from(planTable)
+        .where(eq(planTable.name, 'FREE'))
+        .limit(1);
 
       if (freePlans.length > 0) {
         const freePlan = freePlans[0];
@@ -649,7 +696,9 @@ export abstract class PaymentService {
         await db
           .update(userPaymentTable)
           .set({ isActive: false })
-          .where(and(eq(userPaymentTable.userId, payment.userId), eq(userPaymentTable.isActive, true)));
+          .where(
+            and(eq(userPaymentTable.userId, payment.userId), eq(userPaymentTable.isActive, true))
+          );
 
         // Обновляем план пользователя на FREE
         await db
@@ -680,11 +729,15 @@ export abstract class PaymentService {
 
       return { result: { message: 'Запрос успешно обработан' } };
     } catch (error) {
-      logger.error('UnitPay REFUND: Ошибка при обработке', error instanceof Error ? error : new Error(String(error)), {
-        unitpayPaymentId,
-        paymentId: payment.id,
-        userId: payment.userId,
-      });
+      logger.error(
+        'UnitPay REFUND: Ошибка при обработке',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          unitpayPaymentId,
+          paymentId: payment.id,
+          userId: payment.userId,
+        }
+      );
       return { error: { message: 'Ошибка обработки возврата' } };
     }
   }
@@ -699,7 +752,7 @@ export abstract class PaymentService {
   static async createPayment(
     userId: number,
     planId: number,
-    upLimitId?: number,
+    upLimitId?: number
   ): Promise<{
     paymentId: number;
     paymentUrl: string;
@@ -769,7 +822,11 @@ export abstract class PaymentService {
     let upLimit = undefined;
 
     if (plan.name === 'PRO_PLUS' && upLimitId) {
-      const upLimits = await db.select().from(upLimitTable).where(eq(upLimitTable.id, upLimitId)).limit(1);
+      const upLimits = await db
+        .select()
+        .from(upLimitTable)
+        .where(eq(upLimitTable.id, upLimitId))
+        .limit(1);
 
       if (upLimits.length > 0) {
         additionalBid = upLimits[0].bid;
@@ -790,7 +847,10 @@ export abstract class PaymentService {
       totalAmount,
     });
 
-    const description = additionalBid > 0 ? `План ${plan.name} с лимитом ${plan.bidMonthLimit + additionalBid} заявок` : `План ${plan.name}`;
+    const description =
+      additionalBid > 0
+        ? `План ${plan.name} с лимитом ${plan.bidMonthLimit + additionalBid} заявок`
+        : `План ${plan.name}`;
 
     const paymentData = {
       userId,
@@ -975,7 +1035,13 @@ export abstract class PaymentService {
    * @param userPaymentId - ID записи user_payment
    * @returns true если списание инициировано, false если ошибка
    */
-  static async chargeSubscription(userId: number, planId: number, subscriptionId: string, amount: number, userPaymentId: number): Promise<boolean> {
+  static async chargeSubscription(
+    userId: number,
+    planId: number,
+    subscriptionId: string,
+    amount: number,
+    userPaymentId: number
+  ): Promise<boolean> {
     logger.info('UnitPay: Попытка автосписания по подписке', {
       userId,
       planId,
@@ -1111,7 +1177,11 @@ export abstract class PaymentService {
 
       return false;
     } catch (error) {
-      logger.error('UnitPay: Исключение при автосписании', error instanceof Error ? error : new Error(String(error)), { userId, subscriptionId, amount });
+      logger.error(
+        'UnitPay: Исключение при автосписании',
+        error instanceof Error ? error : new Error(String(error)),
+        { userId, subscriptionId, amount }
+      );
 
       // Обновляем счетчики даже при исключении
       try {
@@ -1123,7 +1193,11 @@ export abstract class PaymentService {
           })
           .where(eq(userPaymentTable.id, userPaymentId));
       } catch (updateError) {
-        logger.error('UnitPay: Не удалось обновить счетчик', updateError instanceof Error ? updateError : new Error(String(updateError)), { userPaymentId });
+        logger.error(
+          'UnitPay: Не удалось обновить счетчик',
+          updateError instanceof Error ? updateError : new Error(String(updateError)),
+          { userPaymentId }
+        );
       }
 
       return false;
@@ -1145,7 +1219,7 @@ export abstract class PaymentService {
     paymentId: number | null = null,
     upLimitId?: number,
     payNow: boolean = true,
-    subscriptionId?: string | null,
+    subscriptionId?: string | null
   ): Promise<Plan> {
     // Проверяем, существует ли план
     const plans = await db.select().from(planTable).where(eq(planTable.id, planId)).limit(1);
@@ -1158,7 +1232,11 @@ export abstract class PaymentService {
       throw error;
     }
 
-    const userResult = await db.select({ isAdmin: UserTable.isAdmin }).from(UserTable).where(eq(UserTable.id, userId)).limit(1);
+    const userResult = await db
+      .select({ isAdmin: UserTable.isAdmin })
+      .from(UserTable)
+      .where(eq(UserTable.id, userId))
+      .limit(1);
 
     const isAdmin = userResult[0]?.isAdmin ?? false;
 
@@ -1173,7 +1251,8 @@ export abstract class PaymentService {
       .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
       .limit(1);
 
-    const hasActivePaidPlan = currentUserPayment.length > 0 && currentUserPayment[0].currentPlan.price > 0;
+    const hasActivePaidPlan =
+      currentUserPayment.length > 0 && currentUserPayment[0].currentPlan.price > 0;
     const currentPlan = currentUserPayment[0]?.currentPlan;
     const currentUserPaymentRecord = currentUserPayment[0]?.userPayment;
     const isDowngrade = hasActivePaidPlan && currentPlan && plan.price < currentPlan.price;
@@ -1194,7 +1273,11 @@ export abstract class PaymentService {
       // Для Pro+ получаем дополнительный лимит
       let additionalLimit = 0;
       if (plan.name === 'PRO_PLUS' && upLimitId) {
-        const upLimits = await db.select().from(upLimitTable).where(eq(upLimitTable.id, upLimitId)).limit(1);
+        const upLimits = await db
+          .select()
+          .from(upLimitTable)
+          .where(eq(upLimitTable.id, upLimitId))
+          .limit(1);
 
         if (upLimits.length > 0) {
           additionalLimit = upLimits[0].bid;
@@ -1267,7 +1350,11 @@ export abstract class PaymentService {
       // Для Pro+ получаем дополнительный лимит
       let additionalLimit = 0;
       if (plan.name === 'PRO_PLUS' && upLimitId) {
-        const upLimits = await db.select().from(upLimitTable).where(eq(upLimitTable.id, upLimitId)).limit(1);
+        const upLimits = await db
+          .select()
+          .from(upLimitTable)
+          .where(eq(upLimitTable.id, upLimitId))
+          .limit(1);
 
         if (upLimits.length > 0) {
           additionalLimit = upLimits[0].bid;
@@ -1285,7 +1372,13 @@ export abstract class PaymentService {
         const activeQuizzes = await db
           .select({ id: quizTable.id })
           .from(quizTable)
-          .where(and(eq(quizTable.userId, userId), eq(quizTable.isActive, true), isNull(quizTable.deletedAt)));
+          .where(
+            and(
+              eq(quizTable.userId, userId),
+              eq(quizTable.isActive, true),
+              isNull(quizTable.deletedAt)
+            )
+          );
 
         const quizIds = activeQuizzes.map((q) => q.id);
 
@@ -1307,8 +1400,8 @@ export abstract class PaymentService {
                 eq(quizTable.isActive, true),
                 isNull(quizTable.deletedAt),
                 eq(quizBidTable.isFull, true),
-                eq(quizBidTable.isEqualPaymentLimit, false),
-              ),
+                eq(quizBidTable.isEqualPaymentLimit, false)
+              )
             );
 
           currentLimit = bidsToUpdate.length;
@@ -1324,7 +1417,10 @@ export abstract class PaymentService {
 
             // Обновляем каждую ставку
             for (const bidId of bidIds) {
-              await db.update(quizBidTable).set({ isEqualPaymentLimit: true }).where(eq(quizBidTable.id, bidId));
+              await db
+                .update(quizBidTable)
+                .set({ isEqualPaymentLimit: true })
+                .where(eq(quizBidTable.id, bidId));
             }
 
             logger.info('Ставки обновлены: isEqualPaymentLimit = true', {
@@ -1367,7 +1463,7 @@ export abstract class PaymentService {
       logger.error(
         'Ошибка при создании/обновлении user_payment при изменении плана',
         paymentError instanceof Error ? paymentError : new Error(String(paymentError)),
-        { userId, planId: plan.id },
+        { userId, planId: plan.id }
       );
       throw paymentError; // Прерываем выполнение, т.к. это критическая ошибка
     }
@@ -1388,7 +1484,12 @@ export abstract class PaymentService {
    * @param newPaymentId - ID нового платежа
    * @param newSubscriptionId - Новый subscriptionId (может быть null)
    */
-  static async renewSubscription(userId: number, userPaymentId: number, newPaymentId: number, newSubscriptionId?: string | null): Promise<void> {
+  static async renewSubscription(
+    userId: number,
+    userPaymentId: number,
+    newPaymentId: number,
+    newSubscriptionId?: string | null
+  ): Promise<void> {
     logger.info('Payment: Начало продления подписки', {
       userId,
       userPaymentId,
@@ -1398,7 +1499,11 @@ export abstract class PaymentService {
 
     try {
       // Получаем текущую запись user_payment
-      const currentPayments = await db.select().from(userPaymentTable).where(eq(userPaymentTable.id, userPaymentId)).limit(1);
+      const currentPayments = await db
+        .select()
+        .from(userPaymentTable)
+        .where(eq(userPaymentTable.id, userPaymentId))
+        .limit(1);
 
       if (currentPayments.length === 0) {
         logger.error('Payment: Запись user_payment не найдена', { userPaymentId });
@@ -1437,11 +1542,15 @@ export abstract class PaymentService {
         newMonth: currentPayment.month + 1,
       });
     } catch (error) {
-      logger.error('Payment: Ошибка при продлении подписки', error instanceof Error ? error : new Error(String(error)), {
-        userId,
-        userPaymentId,
-        newPaymentId,
-      });
+      logger.error(
+        'Payment: Ошибка при продлении подписки',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          userId,
+          userPaymentId,
+          newPaymentId,
+        }
+      );
       throw error;
     }
   }
@@ -1478,7 +1587,9 @@ export abstract class PaymentService {
     await db
       .update(userPaymentTable)
       .set({ isActive: false })
-      .where(and(eq(userPaymentTable.userId, userPayment.userId), eq(userPaymentTable.isActive, true)));
+      .where(
+        and(eq(userPaymentTable.userId, userPayment.userId), eq(userPaymentTable.isActive, true))
+      );
 
     logger.info('Старые активные планы деактивированы', {
       userId: userPayment.userId,
@@ -1535,7 +1646,10 @@ export abstract class PaymentService {
     }
 
     // Обновляем флаг отмены автопродления
-    await db.update(userPaymentTable).set({ cancelAutoRenew: true }).where(eq(userPaymentTable.id, currentUserPayment[0].id));
+    await db
+      .update(userPaymentTable)
+      .set({ cancelAutoRenew: true })
+      .where(eq(userPaymentTable.id, currentUserPayment[0].id));
 
     logger.info('Payment: Автопродление отменено', {
       userId,

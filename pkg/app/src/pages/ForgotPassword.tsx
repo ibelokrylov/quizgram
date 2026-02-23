@@ -1,53 +1,53 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp";
+} from '@/components/ui/input-otp';
 import {
   finalForgotPassword,
   firstStepForgotPassword,
   startForgotPassword,
-} from "@/entities/ForgotPassword/forgot-password.type";
-import { AuthContext } from "@/entities/User/auth.context";
-import http from "@/lib/http";
-import { getTranslatedError } from "@/lib/error-mapper";
-import { cn } from "@/lib/utils";
-import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useContext, useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+} from '@/entities/ForgotPassword/forgot-password.type';
+import { AuthContext } from '@/entities/User/auth.context';
+import http from '@/lib/http';
+import { getTranslatedError } from '@/lib/error-mapper';
+import { cn } from '@/lib/utils';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useContext, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 const st = {
-  login: "login",
-  code: "code",
-  password: "password",
+  login: 'login',
+  code: 'code',
+  password: 'password',
 };
 
-type Data = "login" | "code" | "password" | "confirmPassword";
+type Data = 'login' | 'code' | 'password' | 'confirmPassword';
 
-export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"div">) => {
+export const ForgotPassword = ({ className, ...props }: React.ComponentProps<'div'>) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { user } = useContext(AuthContext);
 
   if (user) {
-    navigate({ to: "/" });
+    navigate({ to: '/' });
   }
 
-  const [stage, setStage] = useState<keyof typeof st>("login");
+  const [stage, setStage] = useState<keyof typeof st>('login');
   const [data, setData] = useState<{
     login: string;
     code?: string;
     password?: string;
     confirmPassword?: string;
-  }>({ login: "" });
+  }>({ login: '' });
   const [error, setError] = useState<Record<string, boolean> | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const autoSubmitRef = useRef(false);
@@ -59,31 +59,31 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
     try {
       let body = {};
       let err = {};
-      let url = "/v1/auth/forgot-password";
+      let url = '/v1/auth/forgot-password';
       let nextStage: keyof typeof st | null = null;
       switch (stage) {
-        case "login": {
+        case 'login': {
           body = { login: data.login };
-          nextStage = "code";
+          nextStage = 'code';
           const { success } = firstStepForgotPassword.safeParse(body);
           if (!success) err = { ...(error ?? {}), login: true };
           break;
         }
-        case "code": {
+        case 'code': {
           body = { email: data.login, code: data.code };
-          url = "/v1/auth/forgot-password/start";
-          nextStage = "password";
+          url = '/v1/auth/forgot-password/start';
+          nextStage = 'password';
           const { success } = startForgotPassword.safeParse(body);
           if (!success) err = { ...(error ?? {}), code: true };
           break;
         }
-        case "password": {
+        case 'password': {
           body = {
             email: data.login,
             code: data.code,
             password: data.password,
           };
-          url = "/v1/auth/forgot-password/end";
+          url = '/v1/auth/forgot-password/end';
           const { success } = finalForgotPassword.safeParse(body);
           if (!success) err = { ...(error ?? {}), password: true };
           else {
@@ -105,25 +105,25 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
         return;
       }
       console.log(err);
-      await http({ url, method: "POST", body });
+      await http({ url, method: 'POST', body });
       setLoading(false);
       if (nextStage) setStage(nextStage);
       else {
-        toast.success(t("forgot-password.success"));
-        navigate({ to: "/" });
+        toast.success(t('forgot-password.success'));
+        navigate({ to: '/' });
       }
     } catch (err: any) {
       setLoading(false);
-      const errorMessage = err?.error || err?.message || "error.unknown";
+      const errorMessage = err?.error || err?.message || 'error.unknown';
       const translatedError = getTranslatedError(errorMessage, t);
 
       // Устанавливаем ошибку для текущего поля
       const fieldError: Record<string, boolean> = {};
-      if (stage === "login") {
+      if (stage === 'login') {
         fieldError.login = true;
-      } else if (stage === "code") {
+      } else if (stage === 'code') {
         fieldError.code = true;
-      } else if (stage === "password") {
+      } else if (stage === 'password') {
         fieldError.password = true;
       }
       setError(fieldError);
@@ -135,10 +135,10 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
     // Сбрасываем ошибку при изменении поля
     if (error && Object.keys(error).length) {
       const oldErr = { ...error };
-      if (type === "confirmPassword") {
+      if (type === 'confirmPassword') {
         delete oldErr.password;
       }
-      if (type === "password") {
+      if (type === 'password') {
         delete oldErr.confirmPassword;
       }
       delete oldErr[type];
@@ -150,7 +150,7 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
     setData({ ...data, [type]: value });
 
     // Сбрасываем флаг автоматической отправки при изменении кода
-    if (type === "code" && value.length < 6) {
+    if (type === 'code' && value.length < 6) {
       autoSubmitRef.current = false;
     }
   }
@@ -158,7 +158,7 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
   // Автоматическая отправка при вводе всех 6 цифр кода
   useEffect(() => {
     if (
-      stage === "code" &&
+      stage === 'code' &&
       data.code?.length === 6 &&
       !loading &&
       !error?.code &&
@@ -173,37 +173,37 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
     setData({ login: data.login });
     setError(undefined);
     setLoading(false);
-    setStage("login");
+    setStage('login');
   }
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className={cn('flex flex-col gap-6', className)} {...props}>
           <Card>
-            <CardHeader>{t("forgot-password.title")}</CardHeader>
+            <CardHeader>{t('forgot-password.title')}</CardHeader>
             <CardContent>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="email">{t("forgot-password.login.label")}</FieldLabel>
+                  <FieldLabel htmlFor="email">{t('forgot-password.login.label')}</FieldLabel>
                   <Input
                     id="email"
                     type="email"
-                    placeholder={t("forgot-password.login.placeholder")}
-                    onChange={(e) => change(e.target.value, "login")}
+                    placeholder={t('forgot-password.login.placeholder')}
+                    onChange={(e) => change(e.target.value, 'login')}
                     aria-invalid={error?.login}
-                    disabled={stage !== "login"}
+                    disabled={stage !== 'login'}
                   />
                 </Field>
-                {stage === "code" || stage === "password" ? (
+                {stage === 'code' || stage === 'password' ? (
                   <Field>
-                    <FieldLabel>{t("forgot-password.code.label")}</FieldLabel>
+                    <FieldLabel>{t('forgot-password.code.label')}</FieldLabel>
                     <InputOTP
                       maxLength={6}
-                      value={data.code || ""}
-                      onChange={(value) => change(value, "code")}
+                      value={data.code || ''}
+                      onChange={(value) => change(value, 'code')}
                       pattern={REGEXP_ONLY_DIGITS}
-                      disabled={stage !== "code"}
+                      disabled={stage !== 'code'}
                       aria-invalid={!!error?.code}
                     >
                       <InputOTPGroup>
@@ -220,28 +220,28 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
                     </InputOTP>
                   </Field>
                 ) : null}
-                {stage === "password" ? (
+                {stage === 'password' ? (
                   <>
                     <Field>
                       <FieldLabel htmlFor="password">
-                        {t("forgot-password.password.label")}
+                        {t('forgot-password.password.label')}
                       </FieldLabel>
                       <Input
                         id="password"
                         type="password"
-                        onChange={(e) => change(e.target.value, "password")}
+                        onChange={(e) => change(e.target.value, 'password')}
                         aria-invalid={error?.password}
                       />
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="password-confirm">
-                        {t("forgot-password.password-confirm.label")}
+                        {t('forgot-password.password-confirm.label')}
                       </FieldLabel>
                       <Input
                         id="password-confirm"
                         type="password"
                         aria-invalid={error?.confirmPassword}
-                        onChange={(e) => change(e.target.value, "confirmPassword")}
+                        onChange={(e) => change(e.target.value, 'confirmPassword')}
                       />
                     </Field>
                   </>
@@ -252,7 +252,7 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
                     onClick={sendData}
                     loading={loading}
                   >
-                    {t("forgot-password.button")}
+                    {t('forgot-password.button')}
                   </Button>
                 </Field>
               </FieldGroup>
@@ -260,13 +260,13 @@ export const ForgotPassword = ({ className, ...props }: React.ComponentProps<"di
             <CardFooter>
               <div className="flex flex-col gap-2 justify-center items-center w-full">
                 <div className="text-xs text-gray-400 text-center">
-                  {t("forgot-password.description")}
+                  {t('forgot-password.description')}
                 </div>
                 <Link to="/">
-                  <Button variant={"link"}>{t("forgot-password.goto")}</Button>
+                  <Button variant={'link'}>{t('forgot-password.goto')}</Button>
                 </Link>
-                <Button onClick={reset} variant={"ghost"}>
-                  {t("forgot-password.start-now")}
+                <Button onClick={reset} variant={'ghost'}>
+                  {t('forgot-password.start-now')}
                 </Button>
               </div>
             </CardFooter>

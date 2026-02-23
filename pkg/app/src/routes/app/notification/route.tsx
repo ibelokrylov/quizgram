@@ -1,7 +1,7 @@
-import { NotificationPage } from "@/pages/Notification";
-import { createFileRoute } from "@tanstack/react-router";
+import { NotificationPage } from '@/pages/Notification';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/app/notification")({
+export const Route = createFileRoute('/app/notification')({
   component: RouteComponent,
 });
 

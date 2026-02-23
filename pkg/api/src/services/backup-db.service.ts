@@ -1,14 +1,14 @@
 // Сервис для бэкапа PostgreSQL базы данных в S3
 // Выполняет ленивый бэкап (pg_dump) и загружает его в S3
 
-import { existsSync, readFileSync, unlinkSync } from "fs";
-import { join } from "path";
-import { logger } from "../lib/logger";
-import { S3Service, UploadResult } from "./s3.service";
+import { existsSync, readFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { logger } from '../lib/logger';
+import { S3Service, UploadResult } from './s3.service';
 
 // Временная директория для хранения бэкапов перед загрузкой в S3
 const TEMP_DIR =
-  typeof Bun !== "undefined" ? Bun.env.TEMP_DIR || "/tmp" : process.env.TEMP_DIR || "/tmp";
+  typeof Bun !== 'undefined' ? Bun.env.TEMP_DIR || '/tmp' : process.env.TEMP_DIR || '/tmp';
 
 export abstract class BackupDbService {
   /**
@@ -17,22 +17,22 @@ export abstract class BackupDbService {
    * @returns Результат загрузки в S3 (fileKey для последующего удаления)
    */
   static async backupDatabase(): Promise<UploadResult> {
-    const env = typeof Bun !== "undefined" ? Bun.env : process.env;
+    const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
     const {
       POSTGRES_USER,
       POSTGRES_PASSWORD,
       POSTGRES_DB,
-      POSTGRES_HOST = "localhost",
-      POSTGRES_PORT = "5432",
+      POSTGRES_HOST = 'localhost',
+      POSTGRES_PORT = '5432',
       DATABASE_URL,
     } = env;
 
     // Генерируем имя файла с меткой времени
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupFileName = `backup-${POSTGRES_DB}-${timestamp}.sql.gz`;
     const backupFilePath = join(TEMP_DIR, backupFileName);
 
-    logger.info("Начало бэкапа базы данных", {
+    logger.info('Начало бэкапа базы данных', {
       database: POSTGRES_DB,
       backupFilePath,
     });
@@ -40,10 +40,10 @@ export abstract class BackupDbService {
     try {
       // Формируем параметры для pg_dump
       const pgDumpArgs = [
-        "--no-owner", // Не включать команды OWNER
-        "--no-acl", // Не включать команды ACL
-        "--clean", // Включать команды DROP перед CREATE
-        "--if-exists", // Использовать IF EXISTS в DROP командах
+        '--no-owner', // Не включать команды OWNER
+        '--no-acl', // Не включать команды ACL
+        '--clean', // Включать команды DROP перед CREATE
+        '--if-exists', // Использовать IF EXISTS в DROP командах
       ];
 
       // Если есть DATABASE_URL, используем его, иначе отдельные параметры
@@ -58,7 +58,7 @@ export abstract class BackupDbService {
         );
       }
 
-      logger.debug("Подготовка к запуску pg_dump", {
+      logger.debug('Подготовка к запуску pg_dump', {
         database: POSTGRES_DB,
         host: POSTGRES_HOST,
         port: POSTGRES_PORT,
@@ -66,7 +66,7 @@ export abstract class BackupDbService {
       });
 
       // Настраиваем переменные окружения для pg_dump
-      const currentEnv = typeof Bun !== "undefined" ? Bun.env : process.env;
+      const currentEnv = typeof Bun !== 'undefined' ? Bun.env : process.env;
       const pgDumpEnv: Record<string, string> = {};
 
       // Копируем переменные окружения, фильтруя undefined
@@ -83,35 +83,35 @@ export abstract class BackupDbService {
 
       // Выполняем pg_dump с сжатием через gzip
       // Используем Bun.spawn для выполнения команды
-      logger.debug("Запуск процесса pg_dump");
-      const pgDumpProcess = Bun.spawn(["pg_dump", ...pgDumpArgs], {
-        stdout: "pipe",
-        stderr: "pipe",
+      logger.debug('Запуск процесса pg_dump');
+      const pgDumpProcess = Bun.spawn(['pg_dump', ...pgDumpArgs], {
+        stdout: 'pipe',
+        stderr: 'pipe',
         env: pgDumpEnv,
       });
 
       // Сжимаем вывод через gzip
-      logger.debug("Запуск процесса gzip");
-      const gzipProcess = Bun.spawn(["gzip", "-c"], {
+      logger.debug('Запуск процесса gzip');
+      const gzipProcess = Bun.spawn(['gzip', '-c'], {
         stdin: pgDumpProcess.stdout,
-        stdout: "pipe",
-        stderr: "pipe",
+        stdout: 'pipe',
+        stderr: 'pipe',
       });
 
       // Преобразуем поток в Buffer и записываем в файл
-      logger.debug("Чтение данных из gzip и запись в файл", { backupFilePath });
+      logger.debug('Чтение данных из gzip и запись в файл', { backupFilePath });
       const backupBuffer = Buffer.from(await new Response(gzipProcess.stdout).arrayBuffer());
       await Bun.write(backupFilePath, backupBuffer);
-      logger.debug("Файл записан на диск", {
+      logger.debug('Файл записан на диск', {
         backupFilePath,
-        bufferSize: backupBuffer.length
+        bufferSize: backupBuffer.length,
       });
 
       // Ждем завершения процессов
-      logger.debug("Ожидание завершения процессов");
+      logger.debug('Ожидание завершения процессов');
       await pgDumpProcess.exited;
       await gzipProcess.exited;
-      logger.debug("Процессы завершены", {
+      logger.debug('Процессы завершены', {
         pgDumpExitCode: pgDumpProcess.exitCode,
         gzipExitCode: gzipProcess.exitCode,
       });
@@ -130,28 +130,32 @@ export abstract class BackupDbService {
 
       // Проверяем, что файл создан
       if (!existsSync(backupFilePath)) {
-        throw new Error("Файл бэкапа не был создан");
+        throw new Error('Файл бэкапа не был создан');
       }
 
       // Читаем файл для загрузки в S3
       const backupFileContent = readFileSync(backupFilePath);
       const fileSize = backupFileContent.length;
 
-      logger.info("Бэкап базы данных создан", {
+      logger.info('Бэкап базы данных создан', {
         database: POSTGRES_DB,
         backupFilePath,
         fileSize,
       });
 
       // Загружаем в S3
-      logger.debug("Начало загрузки бэкапа в S3", {
+      logger.debug('Начало загрузки бэкапа в S3', {
         fileName: backupFileName,
         fileSize,
-        destination: "backups/db"
+        destination: 'backups/db',
       });
-      const uploadResult = await S3Service.uploadFile(backupFileContent, backupFileName, "backups/db");
+      const uploadResult = await S3Service.uploadFile(
+        backupFileContent,
+        backupFileName,
+        'backups/db'
+      );
 
-      logger.info("Бэкап базы данных успешно загружен в S3", {
+      logger.info('Бэкап базы данных успешно загружен в S3', {
         database: POSTGRES_DB,
         s3Key: uploadResult.fileKey,
         fileSize,
@@ -161,9 +165,9 @@ export abstract class BackupDbService {
       // Удаляем временный файл после успешной загрузки
       try {
         unlinkSync(backupFilePath);
-        logger.debug("Временный файл бэкапа удален", { backupFilePath });
+        logger.debug('Временный файл бэкапа удален', { backupFilePath });
       } catch (error) {
-        logger.warn("Не удалось удалить временный файл бэкапа", {
+        logger.warn('Не удалось удалить временный файл бэкапа', {
           backupFilePath,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -175,7 +179,7 @@ export abstract class BackupDbService {
       const errorStack = error instanceof Error ? error.stack : undefined;
 
       logger.error(
-        "Ошибка при бэкапе базы данных",
+        'Ошибка при бэкапе базы данных',
         error instanceof Error ? error : new Error(String(error)),
         {
           database: POSTGRES_DB,
@@ -190,9 +194,9 @@ export abstract class BackupDbService {
       if (existsSync(backupFilePath)) {
         try {
           unlinkSync(backupFilePath);
-          logger.debug("Временный файл бэкапа удален после ошибки", { backupFilePath });
+          logger.debug('Временный файл бэкапа удален после ошибки', { backupFilePath });
         } catch (cleanupError) {
-          logger.warn("Не удалось удалить временный файл бэкапа после ошибки", {
+          logger.warn('Не удалось удалить временный файл бэкапа после ошибки', {
             backupFilePath,
             error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
           });

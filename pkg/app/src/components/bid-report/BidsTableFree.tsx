@@ -1,9 +1,9 @@
-import { Card } from "@/components/ui/card";
-import type { BidListItem } from "@/entities/Bid/bid.type";
-import { useTranslation } from "react-i18next";
-import { BidsTableRow } from "./BidsTableRow";
-import { BidsTableCard } from "./BidsTableCard";
-import { BidsTablePagination } from "./BidsTablePagination";
+import { Card } from '@/components/ui/card';
+import type { BidListItem } from '@/entities/Bid/bid.type';
+import { useTranslation } from 'react-i18next';
+import { BidsTableRow } from './BidsTableRow';
+import { BidsTableCard } from './BidsTableCard';
+import { BidsTablePagination } from './BidsTablePagination';
 
 interface BidsTableFreeProps {
   bids: BidListItem[];
@@ -20,12 +20,12 @@ export function BidsTableFree({
   fetchNextPage,
   observerTarget,
 }: BidsTableFreeProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
 
   if (bids.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground">{t("bids.table.empty")}</p>
+        <p className="text-muted-foreground">{t('bids.table.empty')}</p>
       </Card>
     );
   }
@@ -38,11 +38,11 @@ export function BidsTableFree({
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-3 text-sm font-semibold">{t("bids.table.status")}</th>
-                <th className="text-left p-3 text-sm font-semibold">{t("bids.table.date")}</th>
-                <th className="text-left p-3 text-sm font-semibold">{t("bids.table.quiz")}</th>
-                <th className="text-left p-3 text-sm font-semibold">{t("bids.table.contacts")}</th>
-                <th className="text-left p-3 text-sm font-semibold">{t("bids.table.actions")}</th>
+                <th className="text-left p-3 text-sm font-semibold">{t('bids.table.status')}</th>
+                <th className="text-left p-3 text-sm font-semibold">{t('bids.table.date')}</th>
+                <th className="text-left p-3 text-sm font-semibold">{t('bids.table.quiz')}</th>
+                <th className="text-left p-3 text-sm font-semibold">{t('bids.table.contacts')}</th>
+                <th className="text-left p-3 text-sm font-semibold">{t('bids.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
