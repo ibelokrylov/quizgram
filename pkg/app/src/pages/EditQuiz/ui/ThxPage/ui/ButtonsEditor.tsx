@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import type { QuizThxPage } from '@/entities/Quiz/quiz.type';
 import { Plus } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
@@ -16,49 +15,22 @@ type Props = {
 };
 export const ButtonsEditor = (props: Props) => {
   const { t } = useTranslation();
-  const [buttons, setButtons] = useState<QuizThxPage['buttons']>(
-    props.buttons?.length ? props.buttons : [{ title: '', link: '' }]
-  );
+  const buttons = props.buttons?.length ? props.buttons : [{ title: '', link: '' }];
 
-  const changeButton = useCallback((idx: number, type: 'title' | 'link', value: string) => {
-    setButtons((prev) => {
-      if (type === 'title') {
-        if (value.length > 60) {
-          return prev;
+  function onChangeButton(idx: number, value: { title: string; link: string }) {
+    props.setButtons(
+      buttons.map((item, i) => {
+        if (i === idx) {
+          return value;
         }
-      }
-      const newButtons = [...(prev ?? [])];
-      newButtons[idx] = { ...newButtons[idx], [type]: value };
-      return newButtons;
-    });
-  }, []);
-
-  const addButton = useCallback(() => {
-    setButtons((prev) => [...(prev ?? []), { title: '', link: '' }]);
-  }, []);
-
-  const isValidUrl = useCallback((url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, []);
-
-  const validatedButtons = useMemo(() => {
-    return (
-      buttons?.filter((button) => button.title && button.link && isValidUrl(button.link)) ?? []
+        return item;
+      })
     );
-  }, [buttons, isValidUrl]);
+  }
 
-  useEffect(() => {
-    if (validatedButtons?.length) {
-      props.setButtons(validatedButtons);
-    } else {
-      props.setButtons(undefined);
-    }
-  }, [validatedButtons]);
+  function addButton() {
+    props.setButtons([...buttons, { title: '', link: '' }]);
+  }
 
   return (
     <Drawer open={props.open} onOpenChange={props.setOpen}>
@@ -77,7 +49,7 @@ export const ButtonsEditor = (props: Props) => {
                     id={titleId}
                     value={button.title}
                     placeholder={t('edit-quiz.thx-page.button.label.placeholder')}
-                    onChange={(e) => changeButton(idx, 'title', e.target.value)}
+                    onChange={(e) => onChangeButton(idx, { ...button, title: e.target.value })}
                   />
                 </div>
                 <div className={'flex flex-col gap-1'}>
@@ -86,7 +58,7 @@ export const ButtonsEditor = (props: Props) => {
                     id={linkId}
                     value={button.link}
                     placeholder={t('edit-quiz.thx-page.button.link.placeholder')}
-                    onChange={(e) => changeButton(idx, 'link', e.target.value)}
+                    onChange={(e) => onChangeButton(idx, { ...button, link: e.target.value })}
                   />
                 </div>
                 <Separator />

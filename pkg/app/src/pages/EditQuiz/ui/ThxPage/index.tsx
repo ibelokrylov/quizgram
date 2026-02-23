@@ -25,7 +25,6 @@ import { v7 } from 'uuid';
 import { ButtonsEditor } from './ui/ButtonsEditor';
 import { SocialEditor } from './ui/SocialEditor';
 
-// const socialList = ['Instagram', 'Vk', 'Youtube', 'Facebook', 'X', 'Telegram', 'Tiktok', 'Wechat', 'WhatsApp', 'LinkedIn', 'E-mail'];
 const socialIcons = {
   Instagram: <FaInstagram />,
   Vk: <IoLogoVk />,

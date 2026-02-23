@@ -31,6 +31,7 @@ export const CreateQuizContextProvider = (
   }
 
   function onChangeQuiz(q: Quiz | undefined): void {
+    console.log(q);
     if (!q) {
       return;
     }

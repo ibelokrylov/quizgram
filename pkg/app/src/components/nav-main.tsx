@@ -49,7 +49,6 @@ export function NavMain({
   const isQuizEditor = location.pathname.startsWith('/app/quiz/');
   const quizUid = isQuizEditor ? location.pathname.split('/app/quiz/')[1] : null;
   const hash = location.hash || 'start';
-  console.log(hash);
 
   const { setQuiz } = useContext(CreateQuizContext);
 

@@ -2,6 +2,7 @@ import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
 import {
   db,
   planTable,
+  Quiz,
   quizBidTable,
   quizContactTable,
   quizOpenTable,
@@ -88,9 +89,8 @@ export abstract class PublicService {
     return uploadedFiles;
   }
 
-  static async getQuizByUid(uid: string): Promise<PublicQuiz> {
-    const quiz = await db.select().from(quizTable).where(eq(quizTable.uid, uid)).limit(1);
-    if (!quiz || quiz.length === 0 || !quiz[0]) {
+  static async getQuizByUid(quiz: Quiz): Promise<PublicQuiz> {
+    if (!quiz) {
       throw new Error('Quiz not found');
     }
 
@@ -103,7 +103,7 @@ export abstract class PublicService {
         background: quizContactTable.background,
       })
       .from(quizContactTable)
-      .where(eq(quizContactTable.quizId, quiz[0].id));
+      .where(eq(quizContactTable.quizId, quiz.id));
 
     const questions = await db
       .select({
@@ -113,10 +113,10 @@ export abstract class PublicService {
         content: quizQuestionTable.content,
       })
       .from(quizQuestionTable)
-      .where(and(eq(quizQuestionTable.quizId, quiz[0].id), isNotNull(quizQuestionTable.type)))
+      .where(and(eq(quizQuestionTable.quizId, quiz.id), isNotNull(quizQuestionTable.type)))
       .orderBy(asc(quizQuestionTable.order));
 
-    const thxPage = await db
+    const [thxPage] = await db
       .select({
         uid: quizThxPageTable.uid,
         title: quizThxPageTable.title,
@@ -125,12 +125,34 @@ export abstract class PublicService {
         social: quizThxPageTable.social,
       })
       .from(quizThxPageTable)
-      .where(eq(quizThxPageTable.quizId, quiz[0].id))
+      .where(eq(quizThxPageTable.quizId, quiz.id))
       .limit(1);
+
+    if (thxPage) {
+      if (Array.isArray(thxPage.buttons) && thxPage.buttons.length > 0) {
+        logger.debug('BUTTON', { b: thxPage });
+        thxPage.buttons = thxPage.buttons
+          .map((i) => {
+            if (i.link?.startsWith('http')) {
+              return i;
+            }
+          })
+          .filter(Boolean);
+      }
+      if (Array.isArray(thxPage.social) && thxPage.social.length > 0) {
+        thxPage.social = thxPage.social
+          .map((i) => {
+            if (i.link.startsWith('http')) {
+              return i;
+            }
+          })
+          .filter(Boolean);
+      }
+    }
 
     // Проверяем, есть ли у владельца квиза активная платная подписка
     let hasPaidSubscription = false;
-    const isShowLogoFromDb = quiz[0].isShowLogo ?? true;
+    const isShowLogoFromDb = quiz.isShowLogo ?? true;
 
     // Если is_show_logo=false, проверяем платную подписку
     if (isShowLogoFromDb === false) {
@@ -140,9 +162,7 @@ export abstract class PublicService {
         })
         .from(userPaymentTable)
         .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
-        .where(
-          and(eq(userPaymentTable.userId, quiz[0].userId), eq(userPaymentTable.isActive, true))
-        )
+        .where(and(eq(userPaymentTable.userId, quiz.userId), eq(userPaymentTable.isActive, true)))
         .limit(1);
 
       // Платная подписка = план с ценой > 0
@@ -153,14 +173,14 @@ export abstract class PublicService {
     const isShowLogo = isShowLogoFromDb === false && !hasPaidSubscription ? true : isShowLogoFromDb;
 
     return {
-      uid: quiz[0].uid,
-      name: quiz[0].name,
+      uid: quiz.uid,
+      name: quiz.name,
       isShowLogo,
-      startPage: quiz[0].startPage,
-      questionTitle: quiz[0].questionTitle ?? undefined,
+      startPage: quiz.startPage,
+      questionTitle: quiz.questionTitle ?? undefined,
       question: questions.length > 0 ? questions : undefined,
       contact: contacts.length > 0 ? contacts : undefined,
-      thxPage: thxPage.length > 0 ? thxPage[0] : undefined,
+      thxPage: thxPage,
     };
   }
 
@@ -185,18 +205,18 @@ export abstract class PublicService {
     } | null
   ): Promise<PublicQuiz> {
     // Получаем ID квиза
-    const quizRecord = await db
-      .select({ id: quizTable.id })
+    const [quizRecord] = await db
+      .select()
       .from(quizTable)
       .where(eq(quizTable.uid, quizUid))
       .limit(1);
 
-    if (quizRecord.length === 0) {
+    if (!quizRecord) {
       throw new Error(`Quiz with uid ${quizUid} not found`);
     }
 
     // Получаем квиз (включая вопросы)
-    const quiz = await this.getQuizByUid(quizUid);
+    const quiz = await this.getQuizByUid(quizRecord);
 
     // Извлекаем вопросы из полученного квиза
     const questions = quiz.question || [];
@@ -209,7 +229,7 @@ export abstract class PublicService {
     const existingRecord = await db
       .select()
       .from(quizBidTable)
-      .where(and(eq(quizBidTable.quizId, quizRecord[0].id), eq(quizBidTable.key, userKey)))
+      .where(and(eq(quizBidTable.quizId, quizRecord.id), eq(quizBidTable.key, userKey)))
       .limit(1);
 
     // Если запись уже существует, не создаем новую
@@ -232,7 +252,7 @@ export abstract class PublicService {
         });
 
         await db.insert(quizBidTable).values({
-          quizId: quizRecord[0].id,
+          quizId: quizRecord.id,
           key: userKey,
           answer: initialAnswer,
           questions: questions.length > 0 ? questions : null,
@@ -259,7 +279,7 @@ export abstract class PublicService {
         );
         // Если верификация не удалась, всё равно сохраняем initData (но без userInfo)
         await db.insert(quizBidTable).values({
-          quizId: quizRecord[0].id,
+          quizId: quizRecord.id,
           key: userKey,
           answer: initialAnswer,
           questions: questions.length > 0 ? questions : null,
@@ -281,7 +301,7 @@ export abstract class PublicService {
     } else {
       // Если initData нет, создаем запись без данных Telegram
       await db.insert(quizBidTable).values({
-        quizId: quizRecord[0].id,
+        quizId: quizRecord.id,
         key: userKey,
         answer: initialAnswer,
         questions: questions.length > 0 ? questions : null,

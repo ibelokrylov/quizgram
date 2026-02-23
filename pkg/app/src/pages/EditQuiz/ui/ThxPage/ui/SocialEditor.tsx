@@ -3,7 +3,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { QuizThxPageSocial } from '@/entities/Quiz/quiz.type';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
@@ -30,32 +30,11 @@ const meta = new Set(['Instagram', 'WhatsApp', 'Facebook']);
 
 export const SocialEditor = (props: Props) => {
   const { t } = useTranslation();
-  const [social, setSocial] = useState<QuizThxPageSocial[]>(props.social ?? []);
+  const social = props.social ?? [];
 
   const selectedSocial = useMemo(() => {
     return new Set(social.map((i) => i.type));
   }, [social]);
-
-  const isValidUrl = useCallback((url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, []);
-
-  const validatedSocial = useMemo(() => {
-    return social.filter((i) => i.type && i.link && isValidUrl(i.link));
-  }, [social, isValidUrl]);
-
-  useEffect(() => {
-    if (validatedSocial.length) {
-      props.setSocial(validatedSocial);
-    } else {
-      props.setSocial([]);
-    }
-  }, [validatedSocial]);
 
   return (
     <Drawer open={props.open} onOpenChange={props.setOpen}>
@@ -70,9 +49,9 @@ export const SocialEditor = (props: Props) => {
                 <Checkbox
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSocial([...social, { type: item, link: '' }]);
+                      props.setSocial([...social, { type: item, link: '' }]);
                     } else {
-                      setSocial(social.filter((i) => i.type !== item));
+                      props.setSocial(social.filter((i) => i.type !== item));
                     }
                   }}
                   id={item}
@@ -88,7 +67,7 @@ export const SocialEditor = (props: Props) => {
                   <Input
                     value={social.find((i) => i.type === item)?.link ?? ''}
                     onChange={(e) =>
-                      setSocial(
+                      props.setSocial(
                         social.map((i) => (i.type === item ? { ...i, link: e.target.value } : i))
                       )
                     }

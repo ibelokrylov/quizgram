@@ -13,8 +13,6 @@ export const ContactsPage = () => {
     setQuiz({ ...quiz, contact: newContacts } as Quiz);
   }
 
-  console.log(contacts);
-
   return (
     <div className="flex flex-col gap-10">
       {contacts?.map((contact) => (
