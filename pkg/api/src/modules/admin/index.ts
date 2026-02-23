@@ -21,16 +21,25 @@ export const adminRoute = new Elysia({ prefix: '/admin' }).guard(
       '/users',
       async (ctx) => {
         const { limit, offset } = ctx.query;
-        const user = await AdminService.getAllUsers(limit ? +limit : 10, offset ? +offset - 1 : 0);
+        const { user, count } = await AdminService.getAllUsers(
+          limit ? +limit : 10,
+          offset ? +offset - 1 : 0
+        );
 
         return {
           message: 'ok',
-          data: user,
+          data: { user, count },
         };
       },
       {
         response: {
-          200: t.Object({ message: t.String(), data: t.Array(t.Omit(User, ['password'])) }),
+          200: t.Object({
+            message: t.String(),
+            data: t.Object({
+              user: t.Array(t.Omit(User, ['password'])),
+              count: t.Number(),
+            }),
+          }),
           401: ErrorType,
           500: ErrorType,
           404: ErrorType,

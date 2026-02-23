@@ -611,5 +611,6 @@
   "table.head.createdAt": "Создан",
   "table.head.updatedAt": "Обновлён",
   "table.head.telegramId": "Telegram ID",
-  "table.head.quizCount": "Кол-во квизов"
+  "table.head.quizCount": "Кол-во квизов",
+  "admin.user.total": "Всего пользователей: {{total}}"
 }

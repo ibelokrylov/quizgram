@@ -607,5 +607,6 @@
   "table.head.createdAt": "Created",
   "table.head.updatedAt": "Updated",
   "table.head.telegramId": "Telegram ID",
-  "table.head.quizCount": "Quiz Count"
+  "table.head.quizCount": "Quiz Count",
+  "admin.user.total": "Total users: {{total}}"
 }

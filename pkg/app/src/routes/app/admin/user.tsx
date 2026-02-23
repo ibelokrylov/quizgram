@@ -33,15 +33,15 @@ export const Route = createFileRoute('/app/admin/user')({
   validateSearch: validateSearch,
   loaderDeps: ({ search: { offset } }) => ({ offset: offset || 1 }),
   loader: async (ctx) => {
-    const response = await http<Omit<User, 'password'>[]>({
+    const response = await http<{ users: Omit<User, 'password'>[]; count: number }>({
       url: `/v1/admin/users?limit=10&offset=${ctx.deps.offset || 1}`,
     });
-    return { users: response.data, offset: ctx.deps.offset || 1 };
+    return { data: response.data, offset: ctx.deps.offset || 1 };
   },
 });
 
 function RouteComponent() {
-  const { users, offset } = Route.useLoaderData();
+  const { data, offset } = Route.useLoaderData();
   const navigate = useNavigate();
   const plans = usePlans();
 
@@ -74,7 +74,7 @@ function RouteComponent() {
           <TableHead>{t('table.head.telegramId')}</TableHead>
         </TableHeader>
         <TableBody>
-          {users?.map((user) => (
+          {data.users?.map((user) => (
             <TableRow key={user.uid}>
               <TableCell>{user.id}</TableCell>
               <TableCell>{user.login}</TableCell>
@@ -120,6 +120,7 @@ function RouteComponent() {
           </PaginationItem>
         </PaginationContent>
       </Pagination>
+      <div className={'text-sm text-gray-500'}>{t('admin.user.total', { total: data.count })}</div>
     </div>
   );
 }
