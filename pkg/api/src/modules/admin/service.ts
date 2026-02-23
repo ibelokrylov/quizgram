@@ -19,7 +19,7 @@ export abstract class AdminService {
       const { password, ...rest } = user;
       return rest;
     });
-    const count = await db.select().from(UserTable);
+    const count = await db.select().from(UserTable).where(eq(UserTable.isAdmin, false));
 
     return { user: u, count: count?.length ?? 0 };
   }
