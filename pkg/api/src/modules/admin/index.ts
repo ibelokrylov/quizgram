@@ -28,7 +28,7 @@ export const adminRoute = new Elysia({ prefix: '/admin' }).guard(
 
         return {
           message: 'ok',
-          data: { user, count },
+          data: { users: user, count },
         };
       },
       {
@@ -36,7 +36,7 @@ export const adminRoute = new Elysia({ prefix: '/admin' }).guard(
           200: t.Object({
             message: t.String(),
             data: t.Object({
-              user: t.Array(t.Omit(User, ['password'])),
+              users: t.Array(t.Omit(User, ['password'])),
               count: t.Number(),
             }),
           }),
