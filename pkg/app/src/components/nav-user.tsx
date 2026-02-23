@@ -1,16 +1,9 @@
-import {
-  IconCreditCard,
-  IconDotsVertical,
-  IconGift,
-  IconLogout,
-  IconMessage,
-  IconNotification,
-} from "@tabler/icons-react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useContext } from "react";
-import { useTranslation } from "react-i18next";
+import { IconCreditCard, IconDotsVertical, IconGift, IconLogout, IconMessage, IconNotification } from '@tabler/icons-react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,16 +12,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { AuthContext } from "@/entities/User/auth.context";
-import { useUserPlan } from "@/entities/User/useUserPlan";
-import http from "@/lib/http";
+} from '@/components/ui/dropdown-menu';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { AuthContext } from '@/entities/User/auth.context';
+import { useUserPlan } from '@/entities/User/useUserPlan';
+import http from '@/lib/http';
 
 export function NavUser({
   user,
@@ -41,40 +29,41 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const { query: planQuery } = useUserPlan();
   const navigate = useNavigate();
-  const { setIsAuth, setUser } = useContext(AuthContext);
-  const { t } = useTranslation("common");
+  const { setIsAuth, setUser, user: userCtx } = useContext(AuthContext);
+  const { t } = useTranslation('common');
 
   const n = user.name
-    .split(" ")
+    .split(' ')
     .map((i) => i[0])
-    .join("");
+    .join('');
 
   const planName = planQuery.data?.name;
 
   // Форматируем название плана для отображения
-  const getDisplayPlanName = (name: string | undefined) => {
+  const getDisplayPlanName = (name: string | undefined, isAdmin = false) => {
+    if (isAdmin) return 'ADMIN';
     if (!name) return undefined;
-    if (name === "FREE") return t("plans.price.free");
-    if (name === "BASE") return "Pro";
-    if (name === "PRO_PLUS") return "Pro+";
+    if (name === 'FREE') return t('plans.price.free');
+    if (name === 'BASE') return 'Pro';
+    if (name === 'PRO_PLUS') return 'Pro+';
     return name;
   };
 
-  const displayPlanName = getDisplayPlanName(planName);
+  const displayPlanName = getDisplayPlanName(planName, userCtx?.isAdmin);
 
   const handleBilling = () => {
-    navigate({ to: "/app/payment" });
+    navigate({ to: '/app/payment' });
   };
 
   const handleNotifications = () => {
-    navigate({ to: "/app/notification" });
+    navigate({ to: '/app/notification' });
   };
 
   const handleLogout = async () => {
     try {
       await http({
-        url: "/v1/auth/logout",
-        method: "POST",
+        url: '/v1/auth/logout',
+        method: 'POST',
       });
 
       // Очищаем состояние аутентификации
@@ -82,35 +71,39 @@ export function NavUser({
       setUser(undefined);
 
       // Очищаем sessionStorage
-      sessionStorage.removeItem("userPlan");
+      sessionStorage.removeItem('userPlan');
 
       // Редирект на страницу входа
       window.location.reload();
     } catch (error) {
-      console.error("Ошибка при выходе:", error);
+      console.error('Ошибка при выходе:', error);
       // Даже при ошибке очищаем состояние и делаем редирект
       setIsAuth(false);
       setUser(undefined);
-      sessionStorage.removeItem("userPlan");
-      navigate({ to: "/" });
+      sessionStorage.removeItem('userPlan');
+      navigate({ to: '/' });
     }
   };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <Link to="/app/referral">
-          <SidebarMenuButton tooltip={t("nav.user.referral")}>
-            <IconGift className="size-4" />
-            <span>{t("nav.user.referral")}</span>
+        <Link to='/app/referral'>
+          <SidebarMenuButton tooltip={t('nav.user.referral')}>
+            <IconGift className='size-4' />
+            <span>{t('nav.user.referral')}</span>
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <a href="https://t.me/quizgram_support_bot" target="_blank" rel="noopener noreferrer">
-          <SidebarMenuButton tooltip={t("nav.user.support")}>
-            <IconMessage className="size-4" />
-            <span>{t("nav.user.support")}</span>
+        <a
+          href='https://t.me/quizgram_support_bot'
+          target='_blank'
+          rel='noopener noreferrer'
+        >
+          <SidebarMenuButton tooltip={t('nav.user.support')}>
+            <IconMessage className='size-4' />
+            <span>{t('nav.user.support')}</span>
           </SidebarMenuButton>
         </a>
       </SidebarMenuItem>
@@ -118,43 +111,35 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size='lg'
+              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarFallback className="rounded-lg">{n}</AvatarFallback>
+              <Avatar className='h-8 w-8 rounded-lg grayscale'>
+                <AvatarFallback className='rounded-lg'>{n}</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
-                {displayPlanName ? (
-                  <span className="text-muted-foreground truncate text-[10px]">
-                    {displayPlanName}
-                  </span>
-                ) : null}
+              <div className='grid flex-1 text-left text-sm leading-tight'>
+                <span className='truncate font-medium'>{user.name}</span>
+                <span className='text-muted-foreground truncate text-xs'>{user.email}</span>
+                {displayPlanName ? <span className='text-muted-foreground truncate text-[10px]'>{displayPlanName}</span> : null}
               </div>
-              <IconDotsVertical className="ml-auto size-4" />
+              <IconDotsVertical className='ml-auto size-4' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
+            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
+            side={isMobile ? 'bottom' : 'right'}
+            align='end'
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">{n}</AvatarFallback>
+            <DropdownMenuLabel className='p-0 font-normal'>
+              <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
+                <Avatar className='h-8 w-8 rounded-lg'>
+                  <AvatarFallback className='rounded-lg'>{n}</AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{user.email}</span>
-                  {displayPlanName ? (
-                    <span className="text-muted-foreground truncate text-[10px]">
-                      {displayPlanName}
-                    </span>
-                  ) : null}
+                <div className='grid flex-1 text-left text-sm leading-tight'>
+                  <span className='truncate font-medium'>{user.name}</span>
+                  <span className='text-muted-foreground truncate text-xs'>{user.email}</span>
+                  {displayPlanName ? <span className='text-muted-foreground truncate text-[10px]'>{displayPlanName}</span> : null}
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -166,17 +151,17 @@ export function NavUser({
               {/* </DropdownMenuItem> */}
               <DropdownMenuItem onClick={handleBilling}>
                 <IconCreditCard />
-                {t("nav.user.billing")}
+                {t('nav.user.billing')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleNotifications}>
                 <IconNotification />
-                {t("nav.user.notifications")}
+                {t('nav.user.notifications')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
-              {t("nav.user.logout")}
+              {t('nav.user.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

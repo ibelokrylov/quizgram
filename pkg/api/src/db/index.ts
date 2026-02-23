@@ -7,6 +7,7 @@ import postgres from 'postgres';
 import { logger } from '../lib/logger';
 
 // Импортируем таблицы, чтобы было удобно использовать их вместе с db
+export * from 'pkg-types/src/db/user';
 export * from './code';
 export * from './mail';
 export * from './migration';
@@ -15,14 +16,10 @@ export * from './plan';
 export * from './quiz';
 export * from './quiz/quiz-open';
 export * from './up-limit';
-export * from './user';
 export * from './user-file';
 export * from './user-notification';
 export * from './user-payment';
 export * from './user-payment-pro';
-
-// Импортируем relations для передачи в drizzle
-import { relations } from './relations';
 
 // Ленивая инициализация подключения к БД
 // Это нужно, чтобы drizzle-kit мог импортировать схемы без создания реального подключения
@@ -59,7 +56,6 @@ function getDb() {
   dbInstance = drizzle({
     client,
     logger: drizzleLogger,
-    relations,
   });
   return dbInstance;
 }

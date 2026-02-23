@@ -1,10 +1,10 @@
 // Тесты для функционала is_admin
 // Админы имеют расширенные права даже на FREE плане
 
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { sql } from "drizzle-orm";
-import { db, userTable } from "../src/db";
-import { BidsService } from "../src/modules/bids/service";
+import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { sql } from 'drizzle-orm';
+import { db, UserTable } from '../src/db';
+import { BidsService } from '../src/modules/bids/service';
 import {
   cleanupTestUser,
   createTestAdminUser,
@@ -14,23 +14,20 @@ import {
   ensureTestPlan,
   getTestUser,
   setUserAdminStatus,
-} from "./utils/test-db";
-import { TestLogger } from "./utils/test-logger";
+} from './utils/test-db';
+import { TestLogger } from './utils/test-logger';
 
-const logger = new TestLogger("is-admin");
+const logger = new TestLogger('is-admin');
 
 // Вспомогательная функция для измерения времени выполнения теста
-async function measureTest<T>(
-  testName: string,
-  testFn: () => Promise<T>
-): Promise<T> {
+async function measureTest<T>(testName: string, testFn: () => Promise<T>): Promise<T> {
   const startTime = Date.now();
   try {
     const result = await testFn();
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "passed",
+      status: 'passed',
       duration,
     });
     return result;
@@ -38,7 +35,7 @@ async function measureTest<T>(
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "failed",
+      status: 'failed',
       duration,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -48,9 +45,9 @@ async function measureTest<T>(
 
 beforeAll(async () => {
   // Убеждаемся, что планы существуют
-  await ensureTestPlan("FREE", 0, 10);
-  await ensureTestPlan("BASE", 900, 100);
-  await ensureTestPlan("PRO_PLUS", 1600, 200);
+  await ensureTestPlan('FREE', 0, 10);
+  await ensureTestPlan('BASE', 900, 100);
+  await ensureTestPlan('PRO_PLUS', 1600, 200);
 });
 
 afterAll(async () => {
@@ -59,12 +56,12 @@ afterAll(async () => {
   console.log(`\n📊 Результаты тестов сохранены в: ${filepath}`);
 
   // Очищаем всех оставшихся тестовых пользователей
-  const { cleanupAllTestUsers } = await import("./utils/test-db");
+  const { cleanupAllTestUsers } = await import('./utils/test-db');
   await cleanupAllTestUsers();
 });
 
-test("1. Админ на FREE плане видит незавершенные заявки (isFull=false)", async () => {
-  await measureTest("1. Админ видит незавершенные заявки", async () => {
+test('1. Админ на FREE плане видит незавершенные заявки (isFull=false)', async () => {
+  await measureTest('1. Админ видит незавершенные заявки', async () => {
     // Создаём админа на FREE плане
     const adminId = await createTestAdminUser();
     const admin = await getTestUser(adminId);
@@ -85,9 +82,9 @@ test("1. Админ на FREE плане видит незавершенные �
         { limit: 10, offset: 0 },
         admin!.createdAt,
         10, // bidMonthLimit для FREE
-        "FREE",
+        'FREE',
         1, // planId для FREE
-        true // isAdmin = true
+        true, // isAdmin = true
       );
 
       // Должны быть видны обе заявки (isFull=true и isFull=false)
@@ -96,8 +93,8 @@ test("1. Админ на FREE плане видит незавершенные �
       expect(result.total).toBe(1);
 
       logger.logResult({
-        testName: "1. Админ видит незавершенные заявки",
-        status: "passed",
+        testName: '1. Админ видит незавершенные заявки',
+        status: 'passed',
         duration: 0,
         data: {
           adminId,
@@ -111,8 +108,8 @@ test("1. Админ на FREE плане видит незавершенные �
   });
 });
 
-test("2. Обычный пользователь на FREE плане НЕ видит незавершенные заявки", async () => {
-  await measureTest("2. Обычный пользователь не видит незавершенные заявки", async () => {
+test('2. Обычный пользователь на FREE плане НЕ видит незавершенные заявки', async () => {
+  await measureTest('2. Обычный пользователь не видит незавершенные заявки', async () => {
     // Создаём обычного пользователя на FREE плане
     const userId = await createTestUser();
     const user = await getTestUser(userId);
@@ -133,9 +130,9 @@ test("2. Обычный пользователь на FREE плане НЕ ви�
         { limit: 10, offset: 0 },
         user!.createdAt,
         10, // bidMonthLimit для FREE
-        "FREE",
+        'FREE',
         1, // planId для FREE
-        false // isAdmin = false
+        false, // isAdmin = false
       );
 
       // Должна быть видна только 1 заявка (isFull=true)
@@ -143,8 +140,8 @@ test("2. Обычный пользователь на FREE плане НЕ ви�
       expect(result.data[0].isFull).toBe(true);
 
       logger.logResult({
-        testName: "2. Обычный пользователь не видит незавершенные заявки",
-        status: "passed",
+        testName: '2. Обычный пользователь не видит незавершенные заявки',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -158,15 +155,15 @@ test("2. Обычный пользователь на FREE плане НЕ ви�
   });
 });
 
-test("3. Админ на FREE плане видит поле info в заявках", async () => {
-  await measureTest("3. Админ видит поле info", async () => {
+test('3. Админ на FREE плане видит поле info в заявках', async () => {
+  await measureTest('3. Админ видит поле info', async () => {
     // Создаём админа на FREE плане
     const adminId = await createTestAdminUser();
     const admin = await getTestUser(adminId);
 
     // Создаём квиз и заявку с info
     const quiz = await createTestQuiz(adminId);
-    const testInfo = { telegram_id: "123456", username: "testuser" };
+    const testInfo = { telegram_id: '123456', username: 'testuser' };
     await createTestBid(quiz.id, {
       isFull: true,
       isEqualPaymentLimit: true,
@@ -180,22 +177,22 @@ test("3. Админ на FREE плане видит поле info в заявк�
         { limit: 10, offset: 0 },
         admin!.createdAt,
         10,
-        "FREE",
+        'FREE',
         1,
-        true // isAdmin = true
+        true, // isAdmin = true
       );
 
       expect(result.data.length).toBe(1);
       // Проверяем что поле info присутствует в объекте (для админа оно должно быть включено)
-      expect("info" in result.data[0]).toBe(true);
+      expect('info' in result.data[0]).toBe(true);
 
       logger.logResult({
-        testName: "3. Админ видит поле info",
-        status: "passed",
+        testName: '3. Админ видит поле info',
+        status: 'passed',
         duration: 0,
         data: {
           adminId,
-          hasInfoField: "info" in result.data[0],
+          hasInfoField: 'info' in result.data[0],
         },
       });
     } finally {
@@ -204,15 +201,15 @@ test("3. Админ на FREE плане видит поле info в заявк�
   });
 });
 
-test("4. Обычный пользователь на FREE плане НЕ видит поле info", async () => {
-  await measureTest("4. Обычный пользователь не видит поле info", async () => {
+test('4. Обычный пользователь на FREE плане НЕ видит поле info', async () => {
+  await measureTest('4. Обычный пользователь не видит поле info', async () => {
     // Создаём обычного пользователя на FREE плане
     const userId = await createTestUser();
     const user = await getTestUser(userId);
 
     // Создаём квиз и заявку с info
     const quiz = await createTestQuiz(userId);
-    const testInfo = { telegram_id: "123456", username: "testuser" };
+    const testInfo = { telegram_id: '123456', username: 'testuser' };
     await createTestBid(quiz.id, {
       isFull: true,
       isEqualPaymentLimit: true,
@@ -226,22 +223,22 @@ test("4. Обычный пользователь на FREE плане НЕ ви�
         { limit: 10, offset: 0 },
         user!.createdAt,
         10,
-        "FREE",
+        'FREE',
         1,
-        false // isAdmin = false
+        false, // isAdmin = false
       );
 
       expect(result.data.length).toBe(1);
       // Для FREE плана поле info не должно присутствовать в объекте
-      expect("info" in result.data[0]).toBe(false);
+      expect('info' in result.data[0]).toBe(false);
 
       logger.logResult({
-        testName: "4. Обычный пользователь не видит поле info",
-        status: "passed",
+        testName: '4. Обычный пользователь не видит поле info',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
-          hasInfoField: "info" in result.data[0],
+          hasInfoField: 'info' in result.data[0],
         },
       });
     } finally {
@@ -250,8 +247,8 @@ test("4. Обычный пользователь на FREE плане НЕ ви�
   });
 });
 
-test("5. Админ на FREE плане может экспортировать заявки", async () => {
-  await measureTest("5. Админ может экспортировать заявки", async () => {
+test('5. Админ на FREE плане может экспортировать заявки', async () => {
+  await measureTest('5. Админ может экспортировать заявки', async () => {
     // Создаём админа на FREE плане
     const adminId = await createTestAdminUser();
 
@@ -266,15 +263,15 @@ test("5. Админ на FREE плане может экспортировать
         adminId,
         {}, // без фильтров
         1, // planId для FREE
-        true // isAdmin = true
+        true, // isAdmin = true
       );
 
       // Должны экспортироваться обе заявки
       expect(result.length).toBe(2);
 
       logger.logResult({
-        testName: "5. Админ может экспортировать заявки",
-        status: "passed",
+        testName: '5. Админ может экспортировать заявки',
+        status: 'passed',
         duration: 0,
         data: {
           adminId,
@@ -287,8 +284,8 @@ test("5. Админ на FREE плане может экспортировать
   });
 });
 
-test("6. Обычный пользователь на FREE плане экспортирует только завершённые заявки", async () => {
-  await measureTest("6. Обычный пользователь экспортирует только завершённые", async () => {
+test('6. Обычный пользователь на FREE плане экспортирует только завершённые заявки', async () => {
+  await measureTest('6. Обычный пользователь экспортирует только завершённые', async () => {
     // Создаём обычного пользователя на FREE плане
     const userId = await createTestUser();
 
@@ -303,7 +300,7 @@ test("6. Обычный пользователь на FREE плане экспо
         userId,
         {}, // без фильтров
         1, // planId для FREE
-        false // isAdmin = false
+        false, // isAdmin = false
       );
 
       // Должна экспортироваться только 1 заявка (isFull=true)
@@ -313,8 +310,8 @@ test("6. Обычный пользователь на FREE плане экспо
       expect(bid.isFull).toBe(true);
 
       logger.logResult({
-        testName: "6. Обычный пользователь экспортирует только завершённые",
-        status: "passed",
+        testName: '6. Обычный пользователь экспортирует только завершённые',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -328,8 +325,8 @@ test("6. Обычный пользователь на FREE плане экспо
   });
 });
 
-test("7. Админ на FREE плане включается в обработку scheduler", async () => {
-  await measureTest("7. Админ включается в scheduler", async () => {
+test('7. Админ на FREE плане включается в обработку scheduler', async () => {
+  await measureTest('7. Админ включается в scheduler', async () => {
     // Создаём админа на FREE плане
     const adminId = await createTestAdminUser();
 
@@ -338,23 +335,23 @@ test("7. Админ на FREE плане включается в обработ�
     await createTestBid(quiz.id, {
       isFull: false,
       isEqualPaymentLimit: false,
-      status: "create",
+      status: 'create',
     });
 
     try {
       // Проверяем, что админ включён в выборку платных пользователей
       // Это делается через SQL запрос в SchedulerService.processIncompleteBids
       const paidUsersQuery = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(sql`${userTable.planId} != 1 OR ${userTable.isAdmin} = true`);
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(sql`${UserTable.planId} != 1 OR ${UserTable.isAdmin} = true`);
 
-      const adminInList = paidUsersQuery.some(u => u.id === adminId);
+      const adminInList = paidUsersQuery.some((u) => u.id === adminId);
       expect(adminInList).toBe(true);
 
       logger.logResult({
-        testName: "7. Админ включается в scheduler",
-        status: "passed",
+        testName: '7. Админ включается в scheduler',
+        status: 'passed',
         duration: 0,
         data: {
           adminId,
@@ -367,24 +364,24 @@ test("7. Админ на FREE плане включается в обработ�
   });
 });
 
-test("8. Обычный пользователь на FREE плане НЕ включается в обработку scheduler", async () => {
-  await measureTest("8. Обычный пользователь не включается в scheduler", async () => {
+test('8. Обычный пользователь на FREE плане НЕ включается в обработку scheduler', async () => {
+  await measureTest('8. Обычный пользователь не включается в scheduler', async () => {
     // Создаём обычного пользователя на FREE плане
     const userId = await createTestUser();
 
     try {
       // Проверяем, что обычный пользователь НЕ включён в выборку платных пользователей
       const paidUsersQuery = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(sql`${userTable.planId} != 1 OR ${userTable.isAdmin} = true`);
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(sql`${UserTable.planId} != 1 OR ${UserTable.isAdmin} = true`);
 
-      const userInList = paidUsersQuery.some(u => u.id === userId);
+      const userInList = paidUsersQuery.some((u) => u.id === userId);
       expect(userInList).toBe(false);
 
       logger.logResult({
-        testName: "8. Обычный пользователь не включается в scheduler",
-        status: "passed",
+        testName: '8. Обычный пользователь не включается в scheduler',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -397,8 +394,8 @@ test("8. Обычный пользователь на FREE плане НЕ вк�
   });
 });
 
-test("9. Изменение статуса админа влияет на доступ к заявкам", async () => {
-  await measureTest("9. Изменение статуса админа", async () => {
+test('9. Изменение статуса админа влияет на доступ к заявкам', async () => {
+  await measureTest('9. Изменение статуса админа', async () => {
     // Создаём обычного пользователя
     const userId = await createTestUser();
     const user = await getTestUser(userId);
@@ -410,15 +407,7 @@ test("9. Изменение статуса админа влияет на дос
 
     try {
       // Сначала как обычный пользователь - видит только 1 заявку
-      const resultBefore = await BidsService.getBidsList(
-        userId,
-        { limit: 10, offset: 0 },
-        user!.createdAt,
-        10,
-        "FREE",
-        1,
-        false
-      );
+      const resultBefore = await BidsService.getBidsList(userId, { limit: 10, offset: 0 }, user!.createdAt, 10, 'FREE', 1, false);
       expect(resultBefore.data.length).toBe(1);
 
       // Делаем пользователя админом
@@ -430,15 +419,15 @@ test("9. Изменение статуса админа влияет на дос
         { limit: 10, offset: 0 },
         user!.createdAt,
         10,
-        "FREE",
+        'FREE',
         1,
-        true // теперь isAdmin = true
+        true, // теперь isAdmin = true
       );
       expect(resultAfter.data.length).toBe(2);
 
       logger.logResult({
-        testName: "9. Изменение статуса админа",
-        status: "passed",
+        testName: '9. Изменение статуса админа',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -452,14 +441,14 @@ test("9. Изменение статуса админа влияет на дос
   });
 });
 
-test("10. Админ на FREE плане видит info в экспорте", async () => {
-  await measureTest("10. Админ видит info в экспорте", async () => {
+test('10. Админ на FREE плане видит info в экспорте', async () => {
+  await measureTest('10. Админ видит info в экспорте', async () => {
     // Создаём админа на FREE плане
     const adminId = await createTestAdminUser();
 
     // Создаём квиз и заявку с info
     const quiz = await createTestQuiz(adminId);
-    const testInfo = { telegram_id: "123456", username: "testuser" };
+    const testInfo = { telegram_id: '123456', username: 'testuser' };
     await createTestBid(quiz.id, {
       isFull: true,
       isEqualPaymentLimit: true,
@@ -472,20 +461,20 @@ test("10. Админ на FREE плане видит info в экспорте", 
         adminId,
         {},
         1, // planId для FREE
-        true // isAdmin = true
+        true, // isAdmin = true
       );
 
       expect(result.length).toBe(1);
       // Проверяем что поле info присутствует в объекте (для админа оно должно быть включено)
-      expect("info" in result[0]).toBe(true);
+      expect('info' in result[0]).toBe(true);
 
       logger.logResult({
-        testName: "10. Админ видит info в экспорте",
-        status: "passed",
+        testName: '10. Админ видит info в экспорте',
+        status: 'passed',
         duration: 0,
         data: {
           adminId,
-          hasInfoField: "info" in result[0],
+          hasInfoField: 'info' in result[0],
         },
       });
     } finally {

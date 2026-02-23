@@ -27,6 +27,7 @@
     "react-icons": "catalog:frontend",
     "typescript": "catalog:all",
     "vite": "catalog:frontend",
-    "vite-plugin-mkcert": "catalog:frontend"
+    "vite-plugin-mkcert": "catalog:frontend",
+    "pkg-types": "workspace:*"
   }
 }

@@ -1,7 +1,7 @@
 // Утилита для работы с тестовой БД
 
-import { and, eq, inArray, like, sql } from "drizzle-orm";
-import type { NewPayment, NewUser, NewUserPayment } from "../../src/db";
+import { and, eq, inArray, like, sql } from 'drizzle-orm';
+import type { NewPayment, UserCreate as NewUser, NewUserPayment } from '../../src/db';
 import {
   codeTable,
   db,
@@ -19,8 +19,8 @@ import {
   userNotificationTable,
   userPaymentProTable,
   userPaymentTable,
-  userTable,
-} from "../../src/db";
+  UserTable,
+} from '../../src/db';
 
 /**
  * Создает тестового пользователя
@@ -34,13 +34,13 @@ export async function createTestUser(data?: Partial<NewUser>): Promise<number> {
   const testUser: NewUser = {
     uid,
     login: `test-${Date.now()}@example.com`,
-    password: "test-password-hash",
-    name: "Test User",
+    password: 'test-password-hash',
+    name: 'Test User',
     planId: 1, // FREE по умолчанию
     ...data,
   };
 
-  const [user] = await db.insert(userTable).values(testUser).returning();
+  const [user] = await db.insert(UserTable).values(testUser).returning();
   return user.id;
 }
 
@@ -59,29 +59,19 @@ export async function createTestAdminUser(data?: Partial<NewUser>): Promise<numb
  * Устанавливает или снимает флаг администратора для пользователя
  */
 export async function setUserAdminStatus(userId: number, isAdmin: boolean): Promise<void> {
-  await db
-    .update(userTable)
-    .set({ isAdmin })
-    .where(eq(userTable.id, userId));
+  await db.update(UserTable).set({ isAdmin }).where(eq(UserTable.id, userId));
 }
 
 /**
  * Создает тестовый план (если не существует)
  */
-export async function ensureTestPlan(name: "FREE" | "BASE" | "PRO_PLUS", price: number, bidMonthLimit: number): Promise<number> {
-  const existing = await db
-    .select()
-    .from(planTable)
-    .where(eq(planTable.name, name))
-    .limit(1);
+export async function ensureTestPlan(name: 'FREE' | 'BASE' | 'PRO_PLUS', price: number, bidMonthLimit: number): Promise<number> {
+  const existing = await db.select().from(planTable).where(eq(planTable.name, name)).limit(1);
 
   if (existing.length > 0) {
     const plan = existing[0];
     if (plan.price !== price || plan.bidMonthLimit !== bidMonthLimit) {
-      await db
-        .update(planTable)
-        .set({ price, bidMonthLimit })
-        .where(eq(planTable.id, plan.id));
+      await db.update(planTable).set({ price, bidMonthLimit }).where(eq(planTable.id, plan.id));
     }
     return plan.id;
   }
@@ -103,19 +93,12 @@ export async function ensureTestPlan(name: "FREE" | "BASE" | "PRO_PLUS", price: 
  */
 export async function createTestUpLimit(bid: number, price: number): Promise<number> {
   // Сначала проверяем, существует ли уже запись с таким bid (из-за UNIQUE constraint)
-  const existing = await db
-    .select()
-    .from(upLimitTable)
-    .where(eq(upLimitTable.bid, bid))
-    .limit(1);
+  const existing = await db.select().from(upLimitTable).where(eq(upLimitTable.bid, bid)).limit(1);
 
   if (existing.length > 0) {
     // Обновляем price если он отличается
     if (existing[0].price !== price) {
-      await db
-        .update(upLimitTable)
-        .set({ price })
-        .where(eq(upLimitTable.id, existing[0].id));
+      await db.update(upLimitTable).set({ price }).where(eq(upLimitTable.id, existing[0].id));
     }
     return existing[0].id;
   }
@@ -135,11 +118,7 @@ export async function createTestUpLimit(bid: number, price: number): Promise<num
 /**
  * Создает тестовый user_payment
  */
-export async function createTestUserPayment(
-  userId: number,
-  planId: number,
-  data?: Partial<NewUserPayment>
-): Promise<number> {
+export async function createTestUserPayment(userId: number, planId: number, data?: Partial<NewUserPayment>): Promise<number> {
   const finalDayAt = new Date();
   finalDayAt.setMonth(finalDayAt.getMonth() + 1);
   finalDayAt.setHours(23, 59, 0, 0);
@@ -164,20 +143,16 @@ export async function createTestUserPayment(
 /**
  * Создает тестовый payment
  */
-export async function createTestPayment(
-  userId: number,
-  planId: number,
-  data?: Partial<NewPayment>
-): Promise<number> {
+export async function createTestPayment(userId: number, planId: number, data?: Partial<NewPayment>): Promise<number> {
   const testPayment: NewPayment = {
     userId,
     planId,
     amount: 1000,
-    currency: "USDT",
-    status: "paid",
-    method: "card",
+    currency: 'USDT',
+    status: 'paid',
+    method: 'card',
     invoiceId: `test-${Date.now()}`,
-    invoiceUrl: "",
+    invoiceUrl: '',
     trackId: `test-track-${Date.now()}`,
     ...data,
   };
@@ -189,10 +164,7 @@ export async function createTestPayment(
 /**
  * Создает тестовый user_payment_pro (дополнительный лимит для Pro+)
  */
-export async function createTestUserPaymentPro(
-  userId: number,
-  upLimitId: number
-): Promise<number> {
+export async function createTestUserPaymentPro(userId: number, upLimitId: number): Promise<number> {
   const [userPaymentPro] = await db
     .insert(userPaymentProTable)
     .values({
@@ -211,10 +183,7 @@ export async function createTestUserPaymentPro(
 export async function cleanupTestUser(userId: number): Promise<void> {
   try {
     // 1. Удаляем quiz и связанные таблицы
-    const userQuizzes = await db
-      .select({ id: quizTable.id, uid: quizTable.uid })
-      .from(quizTable)
-      .where(eq(quizTable.userId, userId));
+    const userQuizzes = await db.select({ id: quizTable.id, uid: quizTable.uid }).from(quizTable).where(eq(quizTable.userId, userId));
 
     if (userQuizzes.length > 0) {
       const quizIds = userQuizzes.map((q) => q.id);
@@ -254,13 +223,10 @@ export async function cleanupTestUser(userId: number): Promise<void> {
     await db.delete(paymentTable).where(eq(paymentTable.userId, userId));
 
     // 8. Обнуляем referralId у других пользователей, которые ссылаются на этого пользователя
-    await db
-      .update(userTable)
-      .set({ referralId: null })
-      .where(eq(userTable.referralId, userId));
+    await db.update(UserTable).set({ referralId: null }).where(eq(UserTable.referralId, userId));
 
     // 9. Удаляем пользователя
-    await db.delete(userTable).where(eq(userTable.id, userId));
+    await db.delete(UserTable).where(eq(UserTable.id, userId));
   } catch (error) {
     // Логируем ошибку, но не падаем - лучше оставить данные, чем упасть
     console.error(`Ошибка при очистке тестового пользователя ${userId}:`, error);
@@ -274,10 +240,7 @@ export async function cleanupTestUser(userId: number): Promise<void> {
 export async function cleanupAllTestUsers(): Promise<void> {
   try {
     // Находим всех тестовых пользователей по паттерну login
-    const testUsers = await db
-      .select({ id: userTable.id })
-      .from(userTable)
-      .where(like(userTable.login, "test-%"));
+    const testUsers = await db.select({ id: UserTable.id }).from(UserTable).where(like(UserTable.login, 'test-%'));
 
     if (testUsers.length > 0) {
       console.log(`Найдено ${testUsers.length} тестовых пользователей для очистки`);
@@ -300,7 +263,7 @@ export async function cleanupAllTestUsers(): Promise<void> {
             OR ${paymentTable.trackId} LIKE 'dev-%' 
             OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%dev_bypass%')
             OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%"dev":%')
-            OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%test%')`
+            OR (${paymentTable.metadata} IS NOT NULL AND ${paymentTable.metadata} LIKE '%test%')`,
       );
 
     if (devPayments.length > 0) {
@@ -310,20 +273,16 @@ export async function cleanupAllTestUsers(): Promise<void> {
 
       // Удаляем user_payment, которые ссылаются на эти payment
       if (devPaymentIds.length > 0) {
-        await db
-          .delete(userPaymentTable)
-          .where(inArray(userPaymentTable.paymentId, devPaymentIds));
+        await db.delete(userPaymentTable).where(inArray(userPaymentTable.paymentId, devPaymentIds));
 
         // Удаляем сами payment записи
-        await db
-          .delete(paymentTable)
-          .where(inArray(paymentTable.id, devPaymentIds));
+        await db.delete(paymentTable).where(inArray(paymentTable.id, devPaymentIds));
       }
 
       console.log(`Очищено ${devPayments.length} dev-тестовых записей из payment`);
     }
   } catch (error) {
-    console.error("Ошибка при очистке всех тестовых пользователей:", error);
+    console.error('Ошибка при очистке всех тестовых пользователей:', error);
   }
 }
 
@@ -331,21 +290,13 @@ export async function cleanupAllTestUsers(): Promise<void> {
  * Получает текущий план пользователя
  */
 export async function getUserPlan(userId: number) {
-  const user = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.id, userId))
-    .limit(1);
+  const user = await db.select().from(UserTable).where(eq(UserTable.id, userId)).limit(1);
 
   if (user.length === 0) {
     return null;
   }
 
-  const plan = await db
-    .select()
-    .from(planTable)
-    .where(eq(planTable.id, user[0].planId))
-    .limit(1);
+  const plan = await db.select().from(planTable).where(eq(planTable.id, user[0].planId)).limit(1);
 
   return plan[0] || null;
 }
@@ -357,12 +308,7 @@ export async function getActiveUserPayment(userId: number) {
   const payments = await db
     .select()
     .from(userPaymentTable)
-    .where(
-      and(
-        eq(userPaymentTable.userId, userId),
-        eq(userPaymentTable.isActive, true),
-      ),
-    )
+    .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
     .limit(1);
 
   return payments[0] || null;
@@ -372,21 +318,14 @@ export async function getActiveUserPayment(userId: number) {
  * Получает все user_payment пользователя (включая неактивные)
  */
 export async function getAllUserPayments(userId: number) {
-  return await db
-    .select()
-    .from(userPaymentTable)
-    .where(eq(userPaymentTable.userId, userId));
+  return await db.select().from(userPaymentTable).where(eq(userPaymentTable.userId, userId));
 }
 
 /**
  * Получает план из БД по имени
  */
-export async function getPlanByName(name: "FREE" | "BASE" | "PRO_PLUS") {
-  const plans = await db
-    .select()
-    .from(planTable)
-    .where(eq(planTable.name, name))
-    .limit(1);
+export async function getPlanByName(name: 'FREE' | 'BASE' | 'PRO_PLUS') {
+  const plans = await db.select().from(planTable).where(eq(planTable.name, name)).limit(1);
 
   return plans[0] || null;
 }
@@ -394,11 +333,14 @@ export async function getPlanByName(name: "FREE" | "BASE" | "PRO_PLUS") {
 /**
  * Создает тестовый квиз
  */
-export async function createTestQuiz(userId: number, data?: Partial<{
-  name: string;
-  isActive: boolean;
-  isShowLogo: boolean;
-}>): Promise<{ id: number; uid: string }> {
+export async function createTestQuiz(
+  userId: number,
+  data?: Partial<{
+    name: string;
+    isActive: boolean;
+    isShowLogo: boolean;
+  }>,
+): Promise<{ id: number; uid: string }> {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   const uid = `tq-${timestamp}-${random}`.substring(0, 36);
@@ -408,7 +350,7 @@ export async function createTestQuiz(userId: number, data?: Partial<{
     .values({
       uid,
       userId,
-      name: data?.name ?? "Тестовый квиз",
+      name: data?.name ?? 'Тестовый квиз',
       isActive: data?.isActive ?? true,
       isShowLogo: data?.isShowLogo ?? true,
     })
@@ -420,15 +362,18 @@ export async function createTestQuiz(userId: number, data?: Partial<{
 /**
  * Создает тестовую заявку (bid) для квиза
  */
-export async function createTestBid(quizId: number, data?: Partial<{
-  isFull: boolean;
-  isRead: boolean;
-  status: string;
-  first: boolean;
-  isEqualPaymentLimit: boolean;
-  info: Record<string, unknown>;
-  contacts: Record<string, string>;
-}>): Promise<{ id: number; key: string }> {
+export async function createTestBid(
+  quizId: number,
+  data?: Partial<{
+    isFull: boolean;
+    isRead: boolean;
+    status: string;
+    first: boolean;
+    isEqualPaymentLimit: boolean;
+    info: Record<string, unknown>;
+    contacts: Record<string, string>;
+  }>,
+): Promise<{ id: number; key: string }> {
   const [bid] = await db
     .insert(quizBidTable)
     .values({
@@ -436,7 +381,7 @@ export async function createTestBid(quizId: number, data?: Partial<{
       answer: { test: true },
       isFull: data?.isFull ?? true,
       isRead: data?.isRead ?? false,
-      status: data?.status ?? "create",
+      status: data?.status ?? 'create',
       first: data?.first ?? false,
       isEqualPaymentLimit: data?.isEqualPaymentLimit ?? true,
       info: data?.info ?? null,
@@ -451,12 +396,7 @@ export async function createTestBid(quizId: number, data?: Partial<{
  * Получает пользователя по ID
  */
 export async function getTestUser(userId: number) {
-  const users = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.id, userId))
-    .limit(1);
+  const users = await db.select().from(UserTable).where(eq(UserTable.id, userId)).limit(1);
 
   return users[0] || null;
 }
-

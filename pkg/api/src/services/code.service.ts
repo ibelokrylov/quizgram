@@ -1,14 +1,10 @@
 // Сервис для работы с кодами (верификация, сброс пароля и т.д.)
 // Работает с базой данных через Drizzle ORM
 
-import { and, eq, lt, or } from "drizzle-orm";
-import { codeTable, db, type Code, type NewCode } from "../db";
+import { and, eq, lt, or } from 'drizzle-orm';
+import { codeTable, db, type Code, type NewCode } from '../db';
 
-export type CodeType =
-  | "reset_password"
-  | "change_email"
-  | "registration"
-  | "confirm_auth";
+export type CodeType = 'reset_password' | 'change_email' | 'registration' | 'confirm_auth';
 
 export abstract class CodeService {
   /**
@@ -16,10 +12,7 @@ export abstract class CodeService {
    * Если код уже существует и не истёк - возвращает существующий
    * Если код истёк - генерирует новый
    */
-  static async generateCodeByAuthUser(
-    type: CodeType,
-    userId: number,
-  ): Promise<Code> {
+  static async generateCodeByAuthUser(type: CodeType, userId: number): Promise<Code> {
     // Очищаем истёкшие коды перед генерацией нового
     await this.cleanupExpiredCodes(userId, type);
 
@@ -27,13 +20,7 @@ export abstract class CodeService {
     const existingCodes = await db
       .select()
       .from(codeTable)
-      .where(
-        and(
-          eq(codeTable.type, type),
-          eq(codeTable.userId, userId),
-          eq(codeTable.isActive, true),
-        ),
-      )
+      .where(and(eq(codeTable.type, type), eq(codeTable.userId, userId), eq(codeTable.isActive, true)))
       .limit(1);
 
     const existingCode = existingCodes[0];
@@ -71,10 +58,7 @@ export abstract class CodeService {
       return updatedCode;
     } else {
       // Создаём новый код
-      const [createdCode] = await db
-        .insert(codeTable)
-        .values(newCode)
-        .returning();
+      const [createdCode] = await db.insert(codeTable).values(newCode).returning();
 
       return createdCode;
     }
@@ -83,21 +67,14 @@ export abstract class CodeService {
   /**
    * Генерация кода по email
    */
-  static async generateCodeByEmail(
-    type: CodeType,
-    email: string,
-  ): Promise<Code> {
+  static async generateCodeByEmail(type: CodeType, email: string): Promise<Code> {
     // Сначала нужно найти пользователя по email
-    const { userTable } = await import("../db");
-    const users = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.login, email))
-      .limit(1);
+    const { UserTable: userTable } = await import('../db');
+    const users = await db.select().from(userTable).where(eq(userTable.login, email)).limit(1);
 
     const user = users[0];
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     return this.generateCodeByAuthUser(type, user.id);
@@ -106,22 +83,11 @@ export abstract class CodeService {
   /**
    * Поиск кода по значению, типу и пользователю
    */
-  static async findCode(
-    code: string,
-    codeType: CodeType,
-    userId: number,
-  ): Promise<Code | null> {
+  static async findCode(code: string, codeType: CodeType, userId: number): Promise<Code | null> {
     const codes = await db
       .select()
       .from(codeTable)
-      .where(
-        and(
-          eq(codeTable.value, code),
-          eq(codeTable.type, codeType),
-          eq(codeTable.userId, userId),
-          eq(codeTable.isActive, true),
-        ),
-      )
+      .where(and(eq(codeTable.value, code), eq(codeTable.type, codeType), eq(codeTable.userId, userId), eq(codeTable.isActive, true)))
       .limit(1);
 
     return codes[0] ?? null;
@@ -130,20 +96,11 @@ export abstract class CodeService {
   /**
    * Очистка истёкших кодов для конкретного пользователя и типа
    */
-  static async cleanupExpiredCodes(
-    userId: number,
-    codeType: CodeType,
-  ): Promise<void> {
+  static async cleanupExpiredCodes(userId: number, codeType: CodeType): Promise<void> {
     await db
       .update(codeTable)
       .set({ isActive: false })
-      .where(
-        and(
-          eq(codeTable.userId, userId),
-          eq(codeTable.type, codeType),
-          or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false)),
-        ),
-      );
+      .where(and(eq(codeTable.userId, userId), eq(codeTable.type, codeType), or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false))));
   }
 
   /**
@@ -153,9 +110,7 @@ export abstract class CodeService {
     const result = await db
       .update(codeTable)
       .set({ isActive: false })
-      .where(
-        or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false)),
-      )
+      .where(or(lt(codeTable.life, new Date()), eq(codeTable.isActive, false)))
       .returning();
 
     return result.length;

@@ -1,22 +1,23 @@
 // Модели валидации и типы для модуля пользователя
 
-import { t } from "elysia";
+import { t } from 'elysia';
+import { User } from '../../db';
 
 export namespace UserModel {
   // Описание пользователя в ответе (без пароля)
-  export const user = t.Object({
-    uid: t.String(),
-    login: t.String(),
-    name: t.Optional(t.String()),
-    planId: t.Number(),
-    referralId: t.Optional(t.Number()),
-    isVerification: t.Boolean(),
-    language: t.Optional(t.String()),
-    createdAt: t.Optional(t.Date()),
-    updatedAt: t.Optional(t.Date()),
-    telegramId: t.Optional(t.Nullable(t.String())),
-    isAdmin: t.Optional(t.Boolean()),
-  });
+  export const user = t.Pick(User, [
+    'uid',
+    'login',
+    'name',
+    'planId',
+    'referralId',
+    'isVerification',
+    'language',
+    'createdAt',
+    'updatedAt',
+    'telegramId',
+    'isAdmin',
+  ]);
 
   // Успешный ответ при получении профиля пользователя
   export const sessionProfileSuccessResponse = t.Object({
@@ -24,22 +25,20 @@ export namespace UserModel {
     data: user,
   });
 
-  export type sessionProfileSuccessResponse =
-    typeof sessionProfileSuccessResponse.static;
+  export type sessionProfileSuccessResponse = typeof sessionProfileSuccessResponse.static;
 
   // Ответ при ошибке получения профиля
   export const sessionProfileErrorResponse = t.Object({
     message: t.String(), // "session-profile@error"
   });
 
-  export type sessionProfileErrorResponse =
-    typeof sessionProfileErrorResponse.static;
+  export type sessionProfileErrorResponse = typeof sessionProfileErrorResponse.static;
 
   // Тело запроса для верификации email
   export const verificationEmailBody = t.Object({
     code: t.String({
-      pattern: "^\\d{6}$", // 6-значный цифровой код
-      description: "Код должен содержать 6 цифр",
+      pattern: '^\\d{6}$', // 6-значный цифровой код
+      description: 'Код должен содержать 6 цифр',
     }),
   });
 
@@ -50,8 +49,7 @@ export namespace UserModel {
     message: t.String(), // "Email verified successfully"
   });
 
-  export type verificationEmailSuccessResponse =
-    typeof verificationEmailSuccessResponse.static;
+  export type verificationEmailSuccessResponse = typeof verificationEmailSuccessResponse.static;
 
   // Ответ при ошибке верификации email
   export const verificationEmailErrorResponse = t.Object({
@@ -59,16 +57,14 @@ export namespace UserModel {
     errors: t.Optional(t.Any()),
   });
 
-  export type verificationEmailErrorResponse =
-    typeof verificationEmailErrorResponse.static;
+  export type verificationEmailErrorResponse = typeof verificationEmailErrorResponse.static;
 
   // Успешный ответ при повторной отправке кода верификации
   export const resendVerificationSuccessResponse = t.Object({
     message: t.String(), // "Verification code sent successfully"
   });
 
-  export type resendVerificationSuccessResponse =
-    typeof resendVerificationSuccessResponse.static;
+  export type resendVerificationSuccessResponse = typeof resendVerificationSuccessResponse.static;
 
   // Ответ при ошибке повторной отправки кода верификации
   export const resendVerificationErrorResponse = t.Object({
@@ -76,8 +72,7 @@ export namespace UserModel {
     error: t.Optional(t.String()),
   });
 
-  export type resendVerificationErrorResponse =
-    typeof resendVerificationErrorResponse.static;
+  export type resendVerificationErrorResponse = typeof resendVerificationErrorResponse.static;
 
   // Успешный ответ при загрузке файла
   export const uploadFileSuccessResponse = t.Object({
@@ -89,8 +84,7 @@ export namespace UserModel {
     }),
   });
 
-  export type uploadFileSuccessResponse =
-    typeof uploadFileSuccessResponse.static;
+  export type uploadFileSuccessResponse = typeof uploadFileSuccessResponse.static;
 
   // Ответ при ошибке загрузки файла
   export const uploadFileErrorResponse = t.Object({
@@ -103,7 +97,7 @@ export namespace UserModel {
   // Тело запроса для удаления файла
   export const deleteFileBody = t.Object({
     file_url: t.String({
-      format: "uri", // валидация URL
+      format: 'uri', // валидация URL
     }),
   });
 
@@ -114,8 +108,7 @@ export namespace UserModel {
     message: t.String(), // "ok"
   });
 
-  export type deleteFileSuccessResponse =
-    typeof deleteFileSuccessResponse.static;
+  export type deleteFileSuccessResponse = typeof deleteFileSuccessResponse.static;
 
   // Ответ при ошибке удаления файла
   export const deleteFileErrorResponse = t.Object({
@@ -144,8 +137,7 @@ export namespace UserModel {
     data: userPlan,
   });
 
-  export type getUserPlanSuccessResponse =
-    typeof getUserPlanSuccessResponse.static;
+  export type getUserPlanSuccessResponse = typeof getUserPlanSuccessResponse.static;
 
   // Ответ при ошибке получения плана
   export const getUserPlanErrorResponse = t.Object({
@@ -153,8 +145,7 @@ export namespace UserModel {
     error: t.Optional(t.String()),
   });
 
-  export type getUserPlanErrorResponse =
-    typeof getUserPlanErrorResponse.static;
+  export type getUserPlanErrorResponse = typeof getUserPlanErrorResponse.static;
 
   // Успешный ответ при получении всех планов
   export const getAllPlansSuccessResponse = t.Object({
@@ -162,15 +153,14 @@ export namespace UserModel {
     data: t.Array(userPlan),
   });
 
-  export type getAllPlansSuccessResponse =
-    typeof getAllPlansSuccessResponse.static;
+  export type getAllPlansSuccessResponse = typeof getAllPlansSuccessResponse.static;
 
   // Query параметры для загрузки файла
   export const uploadFileQuery = t.Object({
     size: t.Optional(
       t.String({
-        pattern: "^\\d+x\\d+$", // Формат: 300x312
-        description: "Размер изображения в формате WIDTHxHEIGHT (например, 300x312)",
+        pattern: '^\\d+x\\d+$', // Формат: 300x312
+        description: 'Размер изображения в формате WIDTHxHEIGHT (например, 300x312)',
       }),
     ),
   });
@@ -180,7 +170,7 @@ export namespace UserModel {
   // Тело запроса для обновления языка пользователя
   export const updateLanguageBody = t.Object({
     language: t.String({
-      pattern: "^(en|ru)$",
+      pattern: '^(en|ru)$',
       description: "Язык интерфейса: 'en' или 'ru'",
     }),
   });
@@ -192,8 +182,7 @@ export namespace UserModel {
     message: t.String(), // "ok"
   });
 
-  export type updateLanguageSuccessResponse =
-    typeof updateLanguageSuccessResponse.static;
+  export type updateLanguageSuccessResponse = typeof updateLanguageSuccessResponse.static;
 
   // Ответ при ошибке обновления языка
   export const updateLanguageErrorResponse = t.Object({
@@ -201,8 +190,7 @@ export namespace UserModel {
     error: t.Optional(t.String()),
   });
 
-  export type updateLanguageErrorResponse =
-    typeof updateLanguageErrorResponse.static;
+  export type updateLanguageErrorResponse = typeof updateLanguageErrorResponse.static;
 
   // Модель настроек уведомлений
   export const userNotification = t.Object({
@@ -218,8 +206,7 @@ export namespace UserModel {
     data: userNotification,
   });
 
-  export type getNotificationSuccessResponse =
-    typeof getNotificationSuccessResponse.static;
+  export type getNotificationSuccessResponse = typeof getNotificationSuccessResponse.static;
 
   // Ответ при ошибке получения настроек уведомлений
   export const getNotificationErrorResponse = t.Object({
@@ -227,8 +214,7 @@ export namespace UserModel {
     error: t.Optional(t.String()),
   });
 
-  export type getNotificationErrorResponse =
-    typeof getNotificationErrorResponse.static;
+  export type getNotificationErrorResponse = typeof getNotificationErrorResponse.static;
 
   // Тело запроса для обновления настроек уведомлений
   export const updateNotificationBody = t.Object({
@@ -244,8 +230,7 @@ export namespace UserModel {
     data: userNotification,
   });
 
-  export type updateNotificationSuccessResponse =
-    typeof updateNotificationSuccessResponse.static;
+  export type updateNotificationSuccessResponse = typeof updateNotificationSuccessResponse.static;
 
   // Ответ при ошибке обновления настроек уведомлений
   export const updateNotificationErrorResponse = t.Object({
@@ -253,6 +238,5 @@ export namespace UserModel {
     error: t.Optional(t.String()),
   });
 
-  export type updateNotificationErrorResponse =
-    typeof updateNotificationErrorResponse.static;
+  export type updateNotificationErrorResponse = typeof updateNotificationErrorResponse.static;
 }

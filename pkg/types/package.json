@@ -1,0 +1,14 @@
+{
+  "name": "pkg-types",
+  "private": true,
+  "dependencies": {
+    "drizzle-orm": "catalog:backend",
+    "drizzle-typebox": "catalog:backend",
+    "elysia": "catalog:backend"
+  },
+  "devDependencies": {
+    "bun-types": "catalog:backend",
+    "oxlint": "catalog:all"
+  },
+  "main": "src/index.ts"
+}

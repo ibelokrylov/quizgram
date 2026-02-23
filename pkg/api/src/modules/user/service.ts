@@ -1,6 +1,6 @@
 // Сервис пользователя — бизнес-логика, отделённая от HTTP-слоя
 
-import { and, eq } from "drizzle-orm";
+import { and, eq } from 'drizzle-orm';
 import {
   codeTable,
   db,
@@ -9,25 +9,21 @@ import {
   userNotificationTable,
   userPaymentProTable,
   userPaymentTable,
-  userTable,
+  UserTable,
   type Plan,
   type User,
   type UserNotification,
-} from "../../db";
-import { logger } from "../../lib/logger";
-import { CodeService } from "../../services/code.service";
-import { MailService } from "../../services/mail.service";
+} from '../../db';
+import { logger } from '../../lib/logger';
+import { CodeService } from '../../services/code.service';
+import { MailService } from '../../services/mail.service';
 
 export abstract class UserService {
   /**
    * Поиск пользователя по ID
    */
   static async findById(id: number): Promise<User | null> {
-    const users = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, id))
-      .limit(1);
+    const users = await db.select().from(UserTable).where(eq(UserTable.id, id)).limit(1);
 
     return users[0] ?? null;
   }
@@ -36,11 +32,7 @@ export abstract class UserService {
    * Поиск пользователя по UID
    */
   static async findByUid(uid: string): Promise<User | null> {
-    const users = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.uid, uid))
-      .limit(1);
+    const users = await db.select().from(UserTable).where(eq(UserTable.uid, uid)).limit(1);
 
     return users[0] ?? null;
   }
@@ -52,8 +44,8 @@ export abstract class UserService {
     const user = await this.findById(userId);
 
     if (!user) {
-      const error = new Error("User not found");
-      error.name = "UserNotFoundError";
+      const error = new Error('User not found');
+      error.name = 'UserNotFoundError';
       throw error;
     }
 
@@ -75,53 +67,37 @@ export abstract class UserService {
     }
 
     // Находим код по типу и пользователю
-    const foundCode = await CodeService.findCode(
-      code,
-      "registration",
-      user.id,
-    );
+    const foundCode = await CodeService.findCode(code, 'registration', user.id);
 
     if (!foundCode) {
-      const error = new Error("Invalid or expired code");
-      error.name = "VerificationError";
+      const error = new Error('Invalid or expired code');
+      error.name = 'VerificationError';
       throw error;
     }
 
     // Проверяем, не истёк ли код
     if (new Date(foundCode.life) < new Date()) {
-      const error = new Error("Verification code has expired");
-      error.name = "VerificationError";
+      const error = new Error('Verification code has expired');
+      error.name = 'VerificationError';
       throw error;
     }
 
     // Помечаем пользователя как верифицированного
-    await db
-      .update(userTable)
-      .set({ isVerification: true })
-      .where(eq(userTable.id, user.id));
+    await db.update(UserTable).set({ isVerification: true }).where(eq(UserTable.id, user.id));
 
     // Удаляем использованный код
-    await db
-      .update(codeTable)
-      .set({ isActive: false })
-      .where(eq(codeTable.id, foundCode.id));
+    await db.update(codeTable).set({ isActive: false }).where(eq(codeTable.id, foundCode.id));
   }
 
   /**
    * Получение настроек уведомлений пользователя
    */
-  static async getNotificationSettings(
-    userId: number,
-  ): Promise<UserNotification> {
-    const notifications = await db
-      .select()
-      .from(userNotificationTable)
-      .where(eq(userNotificationTable.userId, userId))
-      .limit(1);
+  static async getNotificationSettings(userId: number): Promise<UserNotification> {
+    const notifications = await db.select().from(userNotificationTable).where(eq(userNotificationTable.userId, userId)).limit(1);
 
     if (!notifications[0]) {
-      const error = new Error("Notification settings not found");
-      error.name = "NotificationNotFoundError";
+      const error = new Error('Notification settings not found');
+      error.name = 'NotificationNotFoundError';
       throw error;
     }
 
@@ -131,19 +107,12 @@ export abstract class UserService {
   /**
    * Обновление настроек уведомлений пользователя
    */
-  static async updateNotificationSettings(
-    userId: number,
-    settings: { telegram?: boolean; email?: boolean },
-  ): Promise<UserNotification> {
-    const existing = await db
-      .select()
-      .from(userNotificationTable)
-      .where(eq(userNotificationTable.userId, userId))
-      .limit(1);
+  static async updateNotificationSettings(userId: number, settings: { telegram?: boolean; email?: boolean }): Promise<UserNotification> {
+    const existing = await db.select().from(userNotificationTable).where(eq(userNotificationTable.userId, userId)).limit(1);
 
     if (!existing[0]) {
-      const error = new Error("Notification settings not found");
-      error.name = "NotificationNotFoundError";
+      const error = new Error('Notification settings not found');
+      error.name = 'NotificationNotFoundError';
       throw error;
     }
 
@@ -159,15 +128,11 @@ export abstract class UserService {
       updateData.email = settings.email;
     }
 
-    const [updated] = await db
-      .update(userNotificationTable)
-      .set(updateData)
-      .where(eq(userNotificationTable.userId, userId))
-      .returning();
+    const [updated] = await db.update(userNotificationTable).set(updateData).where(eq(userNotificationTable.userId, userId)).returning();
 
     if (!updated) {
-      const error = new Error("Failed to update notification settings");
-      error.name = "UpdateNotificationError";
+      const error = new Error('Failed to update notification settings');
+      error.name = 'UpdateNotificationError';
       throw error;
     }
 
@@ -189,23 +154,18 @@ export abstract class UserService {
     }
 
     // Генерируем или получаем существующий код (очистка истёкших кодов обрабатывается внутри)
-    const code = await CodeService.generateCodeByAuthUser(
-      "registration",
-      user.id,
-    );
+    const code = await CodeService.generateCodeByAuthUser('registration', user.id);
 
     // Проверяем rate limiting
     if (new Date(code.nextMailSendAvailable) > new Date()) {
-      const error = new Error(
-        "verification email can be sent again after 2 minutes",
-      );
-      error.name = "RateLimitError";
+      const error = new Error('verification email can be sent again after 2 minutes');
+      error.name = 'RateLimitError';
       throw error;
     }
 
     // Отправляем email
     try {
-      const userLanguage = user.language || "en";
+      const userLanguage = user.language || 'en';
       await MailService.sendVerificationEmailCode(user.login, code.value, userLanguage);
 
       // Обновляем NextMailSendAvailable после успешной отправки
@@ -216,17 +176,15 @@ export abstract class UserService {
         })
         .where(eq(codeTable.id, code.id));
 
-      logger.info("Email с кодом верификации отправлен повторно", {
+      logger.info('Email с кодом верификации отправлен повторно', {
         login: user.login,
       });
     } catch (mailError) {
-      logger.error(
-        "Ошибка при повторной отправке email с кодом верификации",
-        mailError instanceof Error ? mailError : new Error(String(mailError)),
-        { login: user.login },
-      );
-      const error = new Error("Failed to send verification email");
-      error.name = "MailError";
+      logger.error('Ошибка при повторной отправке email с кодом верификации', mailError instanceof Error ? mailError : new Error(String(mailError)), {
+        login: user.login,
+      });
+      const error = new Error('Failed to send verification email');
+      error.name = 'MailError';
       throw error;
     }
   }
@@ -236,29 +194,23 @@ export abstract class UserService {
    * Для Pro+ учитывает дополнительные заявки из user_payment_pro
    * Возвращает дату окончания подписки из user_payment
    */
-  static async getUserPlan(
-    userId: number,
-  ): Promise<Plan & { finalDayAt?: string; cancelAutoRenew?: boolean }> {
+  static async getUserPlan(userId: number): Promise<Plan & { finalDayAt?: string; cancelAutoRenew?: boolean }> {
     const user = await this.findById(userId);
 
     if (!user) {
-      const error = new Error("User not found");
-      error.name = "UserNotFoundError";
+      const error = new Error('User not found');
+      error.name = 'UserNotFoundError';
       throw error;
     }
 
     // Получаем план пользователя из таблицы plan
-    const plans = await db
-      .select()
-      .from(planTable)
-      .where(eq(planTable.id, user.planId))
-      .limit(1);
+    const plans = await db.select().from(planTable).where(eq(planTable.id, user.planId)).limit(1);
 
     const plan = plans[0];
 
     if (!plan) {
-      const error = new Error("Plan not found");
-      error.name = "PlanNotFoundError";
+      const error = new Error('Plan not found');
+      error.name = 'PlanNotFoundError';
       throw error;
     }
 
@@ -269,29 +221,17 @@ export abstract class UserService {
         cancelAutoRenew: userPaymentTable.cancelAutoRenew,
       })
       .from(userPaymentTable)
-      .where(
-        and(
-          eq(userPaymentTable.userId, userId),
-          eq(userPaymentTable.isActive, true),
-        ),
-      )
+      .where(and(eq(userPaymentTable.userId, userId), eq(userPaymentTable.isActive, true)))
       .limit(1);
 
-    const finalDayAt =
-      activeUserPayments.length > 0
-        ? activeUserPayments[0].finalDayAt?.toISOString()
-        : undefined;
+    const finalDayAt = activeUserPayments.length > 0 ? activeUserPayments[0].finalDayAt?.toISOString() : undefined;
 
-    const cancelAutoRenew =
-      activeUserPayments.length > 0
-        ? activeUserPayments[0].cancelAutoRenew
-        : undefined;
+    const cancelAutoRenew = activeUserPayments.length > 0 ? activeUserPayments[0].cancelAutoRenew : undefined;
 
     // Для Pro+ проверяем дополнительные заявки
-    let updatedPlan: Plan & { finalDayAt?: string; cancelAutoRenew?: boolean } =
-      { ...plan };
+    let updatedPlan: Plan & { finalDayAt?: string; cancelAutoRenew?: boolean } = { ...plan };
 
-    if (plan.name === "PRO_PLUS") {
+    if (plan.name === 'PRO_PLUS') {
       const userPaymentPro = await db
         .select({
           upLimitId: userPaymentProTable.upLimitId,
@@ -301,11 +241,7 @@ export abstract class UserService {
         .limit(1);
 
       if (userPaymentPro.length > 0 && userPaymentPro[0].upLimitId) {
-        const upLimit = await db
-          .select()
-          .from(upLimitTable)
-          .where(eq(upLimitTable.id, userPaymentPro[0].upLimitId))
-          .limit(1);
+        const upLimit = await db.select().from(upLimitTable).where(eq(upLimitTable.id, userPaymentPro[0].upLimitId)).limit(1);
 
         if (upLimit.length > 0) {
           // Возвращаем план с обновленным лимитом (базовый + дополнительный)
@@ -337,12 +273,12 @@ export abstract class UserService {
    */
   static async updateLanguage(userId: number, language: string): Promise<void> {
     await db
-      .update(userTable)
+      .update(UserTable)
       .set({
         language,
         updatedAt: new Date(),
       })
-      .where(eq(userTable.id, userId));
+      .where(eq(UserTable.id, userId));
   }
 
   /**
@@ -350,11 +286,11 @@ export abstract class UserService {
    */
   static async updateTelegramId(userId: number, telegramId: string): Promise<void> {
     await db
-      .update(userTable)
+      .update(UserTable)
       .set({
         telegramId,
         updatedAt: new Date(),
       })
-      .where(eq(userTable.id, userId));
+      .where(eq(UserTable.id, userId));
   }
 }

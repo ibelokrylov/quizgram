@@ -37,7 +37,8 @@
     "@types/nodemailer": "^7.0.4",
     "bun-types": "catalog:backend",
     "drizzle-kit": "^1.0.0-beta.2-b782ae1",
-    "oxlint": "catalog:all"
+    "oxlint": "catalog:all",
+    "pkg-types": "workspace:*"
   },
   "module": "src/index.js"
 }

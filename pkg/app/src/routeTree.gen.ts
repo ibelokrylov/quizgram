@@ -25,11 +25,13 @@ import { Route as AppReferralRouteImport } from './routes/app/referral'
 import { Route as AppPaymentRouteRouteImport } from './routes/app/payment/route'
 import { Route as AppNotificationRouteRouteImport } from './routes/app/notification/route'
 import { Route as AppDashboardRouteRouteImport } from './routes/app/dashboard/route'
+import { Route as AppAdminRouteRouteImport } from './routes/app/admin/route'
 import { Route as AppPaymentIndexRouteImport } from './routes/app/payment/index'
 import { Route as AppQuizUidRouteImport } from './routes/app/quiz/$uid'
 import { Route as AppPaymentSuccessRouteImport } from './routes/app/payment/success'
 import { Route as AppPaymentFailureRouteImport } from './routes/app/payment/failure'
 import { Route as AppImportUidRouteImport } from './routes/app/import/$uid'
+import { Route as AppAdminUserRouteImport } from './routes/app/admin/user'
 import { Route as AppPaymentWaitingRouteRouteImport } from './routes/app/payment/waiting/route'
 import { Route as AppBidStatisticRouteRouteImport } from './routes/app/bid/statistic/route'
 import { Route as AppBidReportRouteRouteImport } from './routes/app/bid/report/route'
@@ -115,6 +117,11 @@ const AppDashboardRouteRoute = AppDashboardRouteRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPaymentIndexRoute = AppPaymentIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -139,6 +146,11 @@ const AppImportUidRoute = AppImportUidRouteImport.update({
   id: '/import/$uid',
   path: '/import/$uid',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminUserRoute = AppAdminUserRouteImport.update({
+  id: '/user',
+  path: '/user',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppPaymentWaitingRouteRoute = AppPaymentWaitingRouteRouteImport.update({
   id: '/waiting',
@@ -175,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/registration': typeof RegistrationRoute
   '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRouteWithChildren
@@ -182,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/admin/user': typeof AppAdminUserRoute
   '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
@@ -202,12 +216,14 @@ export interface FileRoutesByTo {
   '/registration': typeof RegistrationRoute
   '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/referral': typeof AppReferralRoute
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/admin/user': typeof AppAdminUserRoute
   '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
@@ -229,6 +245,7 @@ export interface FileRoutesById {
   '/registration': typeof RegistrationRoute
   '/subscription-rules': typeof SubscriptionRulesRoute
   '/telegram-auth': typeof TelegramAuthRoute
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
   '/app/dashboard': typeof AppDashboardRouteRoute
   '/app/notification': typeof AppNotificationRouteRoute
   '/app/payment': typeof AppPaymentRouteRouteWithChildren
@@ -236,6 +253,7 @@ export interface FileRoutesById {
   '/app/bid/report': typeof AppBidReportRouteRouteWithChildren
   '/app/bid/statistic': typeof AppBidStatisticRouteRoute
   '/app/payment/waiting': typeof AppPaymentWaitingRouteRoute
+  '/app/admin/user': typeof AppAdminUserRoute
   '/app/import/$uid': typeof AppImportUidRoute
   '/app/payment/failure': typeof AppPaymentFailureRoute
   '/app/payment/success': typeof AppPaymentSuccessRoute
@@ -258,6 +276,7 @@ export interface FileRouteTypes {
     | '/registration'
     | '/subscription-rules'
     | '/telegram-auth'
+    | '/app/admin'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
@@ -265,6 +284,7 @@ export interface FileRouteTypes {
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/admin/user'
     | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
@@ -285,12 +305,14 @@ export interface FileRouteTypes {
     | '/registration'
     | '/subscription-rules'
     | '/telegram-auth'
+    | '/app/admin'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/referral'
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/admin/user'
     | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
@@ -311,6 +333,7 @@ export interface FileRouteTypes {
     | '/registration'
     | '/subscription-rules'
     | '/telegram-auth'
+    | '/app/admin'
     | '/app/dashboard'
     | '/app/notification'
     | '/app/payment'
@@ -318,6 +341,7 @@ export interface FileRouteTypes {
     | '/app/bid/report'
     | '/app/bid/statistic'
     | '/app/payment/waiting'
+    | '/app/admin/user'
     | '/app/import/$uid'
     | '/app/payment/failure'
     | '/app/payment/success'
@@ -455,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/payment/': {
       id: '/app/payment/'
       path: '/'
@@ -490,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppImportUidRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/admin/user': {
+      id: '/app/admin/user'
+      path: '/user'
+      fullPath: '/app/admin/user'
+      preLoaderRoute: typeof AppAdminUserRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/app/payment/waiting': {
       id: '/app/payment/waiting'
       path: '/waiting'
@@ -521,6 +559,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteRouteChildren {
+  AppAdminUserRoute: typeof AppAdminUserRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminUserRoute: AppAdminUserRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
 interface AppPaymentRouteRouteChildren {
   AppPaymentWaitingRouteRoute: typeof AppPaymentWaitingRouteRoute
   AppPaymentFailureRoute: typeof AppPaymentFailureRoute
@@ -551,6 +601,7 @@ const AppBidReportRouteRouteWithChildren =
   AppBidReportRouteRoute._addFileChildren(AppBidReportRouteRouteChildren)
 
 interface AppRouteRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppDashboardRouteRoute: typeof AppDashboardRouteRoute
   AppNotificationRouteRoute: typeof AppNotificationRouteRoute
   AppPaymentRouteRoute: typeof AppPaymentRouteRouteWithChildren
@@ -562,6 +613,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppDashboardRouteRoute: AppDashboardRouteRoute,
   AppNotificationRouteRoute: AppNotificationRouteRoute,
   AppPaymentRouteRoute: AppPaymentRouteRouteWithChildren,

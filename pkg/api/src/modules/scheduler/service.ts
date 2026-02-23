@@ -1,5 +1,6 @@
 import { and, eq, gte, inArray, isNull, lt, ne, or, sql } from 'drizzle-orm';
-import { db, mailTable, planTable, quizBidTable, quizTable, userPaymentTable, userTable } from '../../db';
+import { UserTable } from 'pkg-types';
+import { db, mailTable, planTable, quizBidTable, quizTable, userPaymentTable } from '../../db';
 import * as DateUtils from '../../lib/date-utils';
 import { logger } from '../../lib/logger';
 import { MailService } from '../../services/mail.service';
@@ -29,9 +30,9 @@ export abstract class SchedulerService {
       // Находим всех платных пользователей (planId !== 1)
       logger.debug('Поиск платных пользователей');
       const paidUsers = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(or(ne(userTable.planId, 1), eq(userTable.isAdmin, true)));
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(or(ne(UserTable.planId, 1), eq(UserTable.isAdmin, true)));
 
       if (paidUsers.length === 0) {
         logger.debug('Нет платных пользователей для обработки');
@@ -273,9 +274,9 @@ export abstract class SchedulerService {
       // Находим всех не удаленных пользователей с платными планами (planId != 1) и активными user_payment
       const usersWithPayments = await db
         .select({
-          userId: userTable.id,
-          userLogin: userTable.login,
-          userLanguage: userTable.language,
+          userId: UserTable.id,
+          userLogin: UserTable.login,
+          userLanguage: UserTable.language,
           userPaymentId: userPaymentTable.id,
           planId: userPaymentTable.planId,
           finalDayAt: userPaymentTable.finalDayAt,
@@ -286,11 +287,11 @@ export abstract class SchedulerService {
           paymentAttempts: userPaymentTable.paymentAttempts, // Количество попыток списания
         })
         .from(userPaymentTable)
-        .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
+        .innerJoin(UserTable, eq(userPaymentTable.userId, UserTable.id))
         .innerJoin(planTable, eq(userPaymentTable.planId, planTable.id))
         .where(
           and(
-            isNull(userTable.deletedAt), // Только не удаленные пользователи
+            isNull(UserTable.deletedAt), // Только не удаленные пользователи
             sql`${userPaymentTable.planId}
             != 1`, // Только платные планы
             eq(userPaymentTable.isActive, true), // Только активные записи user_payment
@@ -315,10 +316,10 @@ export abstract class SchedulerService {
           startsAt: userPaymentTable.startsAt,
         })
         .from(userPaymentTable)
-        .innerJoin(userTable, eq(userPaymentTable.userId, userTable.id))
+        .innerJoin(UserTable, eq(userPaymentTable.userId, UserTable.id))
         .where(
           and(
-            isNull(userTable.deletedAt),
+            isNull(UserTable.deletedAt),
             eq(userPaymentTable.isActive, false), // Неактивные записи (отсроченные)
             sql`DATE(
             ${userPaymentTable.startsAt}
@@ -565,12 +566,12 @@ export abstract class SchedulerService {
 
       // Обновляем план пользователя на FREE
       await db
-        .update(userTable)
+        .update(UserTable)
         .set({
           planId: freePlan.id,
           updatedAt: DateUtils.toJSDate(DateUtils.now()),
         })
-        .where(eq(userTable.id, userId));
+        .where(eq(UserTable.id, userId));
 
       logger.info('Пользователь переведен на FREE план', {
         userId,

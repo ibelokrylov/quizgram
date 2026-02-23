@@ -2,6 +2,7 @@
 // Обрабатывает бизнес-логику для квизов
 
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { UserTable } from 'pkg-types';
 import {
   db,
   getDb,
@@ -16,7 +17,6 @@ import {
   quizTable,
   quizThxPageTable,
   User,
-  userTable,
   type Quiz,
   type QuizContact,
   type QuizThxPage,
@@ -239,9 +239,9 @@ export abstract class QuizService {
         .set({ deletedAt: new Date() })
         .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, userId)));
       await (tx as unknown as typeof database)
-        .update(userTable)
-        .set({ quizCount: sql`GREATEST(${userTable.quizCount} - 1, 0)` })
-        .where(eq(userTable.id, userId));
+        .update(UserTable)
+        .set({ quizCount: sql`GREATEST(${UserTable.quizCount} - 1, 0)` })
+        .where(eq(UserTable.id, userId));
     });
   }
 
@@ -524,9 +524,9 @@ export abstract class QuizService {
 
     // Увеличиваем счетчик квизов у пользователя
     await db
-      .update(userTable)
-      .set({ quizCount: sql`${userTable.quizCount} + 1` })
-      .where(eq(userTable.id, userId));
+      .update(UserTable)
+      .set({ quizCount: sql`${UserTable.quizCount} + 1` })
+      .where(eq(UserTable.id, userId));
 
     return createdQuiz;
   }

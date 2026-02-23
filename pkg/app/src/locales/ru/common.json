@@ -67,6 +67,7 @@
   "edit-quiz.stages.contacts": "Контакты",
   "edit-quiz.stages.thx": "Благодарность",
   "edit-quiz.stages.result": "Результат",
+  "edit-quiz.stages.settings": "Настройки",
   "edit-quiz.question-page.title.placeholder": "Заголовок страницы",
   "edit-quiz.question-page.add-question": "Добавить вопрос",
   "edit-quiz.question-page.question.placeholder": "Заголовок вопроса",
@@ -600,5 +601,15 @@
   "edit-quiz.public.label": "Разрешить копировать квиз",
   "edit-quiz.public.button.tooltip": "Скопировать ссылку для экспорта",
   "edit-quiz.public.error": "Функция не доступна на бесплатном тарифе",
-  "edit-quiz.public.toast.success": "Квиз успешно изменен"
+  "edit-quiz.public.toast.success": "Квиз успешно изменен",
+  "table.head.login": "Логин",
+  "table.head.name": "Имя",
+  "table.head.planId": "ID тарифа",
+  "table.head.referralId": "ID реферала",
+  "table.head.isVerification": "Подтверждён",
+  "table.head.language": "Язык",
+  "table.head.createdAt": "Создан",
+  "table.head.updatedAt": "Обновлён",
+  "table.head.telegramId": "Telegram ID",
+  "table.head.quizCount": "Кол-во квизов"
 }

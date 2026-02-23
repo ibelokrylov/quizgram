@@ -1,10 +1,10 @@
 // Тесты для обработки платежей в scheduler
 
-import { afterAll, beforeAll, expect, spyOn, test } from "bun:test";
-import { eq } from "drizzle-orm";
-import { db, userTable } from "../src/db";
-import { SchedulerService } from "../src/modules/scheduler/service";
-import { MailService } from "../src/services/mail.service";
+import { afterAll, beforeAll, expect, spyOn, test } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { db, UserTable } from '../src/db';
+import { SchedulerService } from '../src/modules/scheduler/service';
+import { MailService } from '../src/services/mail.service';
 import {
   cleanupTestUser,
   createTestPayment,
@@ -15,23 +15,20 @@ import {
   getAllUserPayments,
   getPlanByName,
   getUserPlan,
-} from "./utils/test-db";
-import { TestLogger } from "./utils/test-logger";
+} from './utils/test-db';
+import { TestLogger } from './utils/test-logger';
 
-const logger = new TestLogger("scheduler-payments");
+const logger = new TestLogger('scheduler-payments');
 
 // Вспомогательная функция для измерения времени выполнения теста
-async function measureTest<T>(
-  testName: string,
-  testFn: () => Promise<T>
-): Promise<T> {
+async function measureTest<T>(testName: string, testFn: () => Promise<T>): Promise<T> {
   const startTime = Date.now();
   try {
     const result = await testFn();
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "passed",
+      status: 'passed',
       duration,
     });
     return result;
@@ -39,7 +36,7 @@ async function measureTest<T>(
     const duration = Date.now() - startTime;
     logger.logResult({
       testName,
-      status: "failed",
+      status: 'failed',
       duration,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -49,9 +46,9 @@ async function measureTest<T>(
 
 beforeAll(async () => {
   // Убеждаемся, что планы существуют с реальными значениями из plan.service.ts
-  await ensureTestPlan("FREE", 0, 10);
-  await ensureTestPlan("BASE", 900, 100);
-  await ensureTestPlan("PRO_PLUS", 1600, 200);
+  await ensureTestPlan('FREE', 0, 10);
+  await ensureTestPlan('BASE', 900, 100);
+  await ensureTestPlan('PRO_PLUS', 1600, 200);
 });
 
 afterAll(async () => {
@@ -60,14 +57,14 @@ afterAll(async () => {
   console.log(`\n📊 Результаты тестов сохранены в: ${filepath}`);
 
   // Очищаем всех оставшихся тестовых пользователей
-  const { cleanupAllTestUsers } = await import("./utils/test-db");
+  const { cleanupAllTestUsers } = await import('./utils/test-db');
   await cleanupAllTestUsers();
 });
 
-test("1. Отправка письма за 2 дня до окончания подписки", async () => {
-  await measureTest("1. Отправка письма за 2 дня", async () => {
+test('1. Отправка письма за 2 дня до окончания подписки', async () => {
+  await measureTest('1. Отправка письма за 2 дня', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 1000, 200);
+    const basePlanId = await ensureTestPlan('BASE', 1000, 200);
 
     // Создаем дату, которая закончится через 2 дня
     const now = new Date();
@@ -87,7 +84,7 @@ test("1. Отправка письма за 2 дня до окончания п�
 
     try {
       // Мокируем отправку письма
-      const sendPaymentReminderSpy = spyOn(MailService, "sendPaymentReminder");
+      const sendPaymentReminderSpy = spyOn(MailService, 'sendPaymentReminder');
       sendPaymentReminderSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -96,20 +93,13 @@ test("1. Отправка письма за 2 дня до окончания п�
       // Проверяем, что письмо было отправлено
       expect(sendPaymentReminderSpy).toHaveBeenCalledTimes(1);
 
-      const user = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.id, userId))
-        .limit(1);
+      const user = await db.select().from(UserTable).where(eq(UserTable.id, userId)).limit(1);
 
-      expect(sendPaymentReminderSpy).toHaveBeenCalledWith(
-        user[0].login,
-        user[0].language || "ru"
-      );
+      expect(sendPaymentReminderSpy).toHaveBeenCalledWith(user[0].login, user[0].language || 'ru');
 
       logger.logResult({
-        testName: "1. Отправка письма за 2 дня",
-        status: "passed",
+        testName: '1. Отправка письма за 2 дня',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -126,15 +116,15 @@ test("1. Отправка письма за 2 дня до окончания п�
   });
 });
 
-test("2. Перевод на FREE план при окончании подписки", async () => {
-  await measureTest("2. Перевод на FREE план", async () => {
+test('2. Перевод на FREE план при окончании подписки', async () => {
+  await measureTest('2. Перевод на FREE план', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
 
     // Получаем реальные значения плана из БД
-    const basePlan = await getPlanByName("BASE");
+    const basePlan = await getPlanByName('BASE');
     if (!basePlan) {
-      throw new Error("План BASE не найден в БД");
+      throw new Error('План BASE не найден в БД');
     }
 
     // Создаем дату, которая уже закончилась (вчера)
@@ -155,7 +145,7 @@ test("2. Перевод на FREE план при окончании подпи�
 
     try {
       // Мокируем отправку письма
-      const sendPlanExpirationNoticeSpy = spyOn(MailService, "sendPlanExpirationNotice");
+      const sendPlanExpirationNoticeSpy = spyOn(MailService, 'sendPlanExpirationNotice');
       sendPlanExpirationNoticeSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -163,7 +153,7 @@ test("2. Перевод на FREE план при окончании подпи�
 
       // Проверяем, что план изменился на FREE
       const user = await getUserPlan(userId);
-      expect(user?.name).toBe("FREE");
+      expect(user?.name).toBe('FREE');
 
       // Проверяем, что старая подписка деактивирована
       const allPayments = await getAllUserPayments(userId);
@@ -175,16 +165,16 @@ test("2. Перевод на FREE план при окончании подпи�
 
       // Проверяем параметры вызова
       const callArgs = sendPlanExpirationNoticeSpy.mock.calls[0];
-      expect(callArgs[3]).toBe("BASE"); // currentPlanName
+      expect(callArgs[3]).toBe('BASE'); // currentPlanName
 
       logger.logResult({
-        testName: "2. Перевод на FREE план",
-        status: "passed",
+        testName: '2. Перевод на FREE план',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
           oldPlanId: basePlanId,
-          newPlanName: "FREE",
+          newPlanName: 'FREE',
           emailSent: true,
         },
       });
@@ -196,17 +186,17 @@ test("2. Перевод на FREE план при окончании подпи�
   });
 });
 
-test("3. Активация отсроченного плана в день начала (повышение)", async () => {
-  await measureTest("3. Активация отсроченного плана (повышение)", async () => {
+test('3. Активация отсроченного плана в день начала (повышение)', async () => {
+  await measureTest('3. Активация отсроченного плана (повышение)', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Получаем реальные значения планов из БД
-    const basePlan = await getPlanByName("BASE");
-    const proPlusPlan = await getPlanByName("PRO_PLUS");
+    const basePlan = await getPlanByName('BASE');
+    const proPlusPlan = await getPlanByName('PRO_PLUS');
     if (!basePlan || !proPlusPlan) {
-      throw new Error("Планы не найдены в БД");
+      throw new Error('Планы не найдены в БД');
     }
 
     // Создаем активный план BASE
@@ -257,8 +247,8 @@ test("3. Активация отсроченного плана в день на
       expect(activePayment?.isActive).toBe(true);
 
       logger.logResult({
-        testName: "3. Активация отсроченного плана (повышение)",
-        status: "passed",
+        testName: '3. Активация отсроченного плана (повышение)',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -273,17 +263,17 @@ test("3. Активация отсроченного плана в день на
   });
 });
 
-test("4. Активация отсроченного плана в день начала (понижение PRO_PLUS -> BASE)", async () => {
-  await measureTest("4. Активация отсроченного плана (понижение)", async () => {
+test('4. Активация отсроченного плана в день начала (понижение PRO_PLUS -> BASE)', async () => {
+  await measureTest('4. Активация отсроченного плана (понижение)', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
-    const proPlusPlanId = await ensureTestPlan("PRO_PLUS", 1600, 200);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
+    const proPlusPlanId = await ensureTestPlan('PRO_PLUS', 1600, 200);
 
     // Получаем реальные значения планов из БД
-    const basePlan = await getPlanByName("BASE");
-    const proPlusPlan = await getPlanByName("PRO_PLUS");
+    const basePlan = await getPlanByName('BASE');
+    const proPlusPlan = await getPlanByName('PRO_PLUS');
     if (!basePlan || !proPlusPlan) {
-      throw new Error("Планы не найдены в БД");
+      throw new Error('Планы не найдены в БД');
     }
 
     // Создаем активный план PRO_PLUS
@@ -335,8 +325,8 @@ test("4. Активация отсроченного плана в день на
       expect(activePayment?.startsAt).toBeNull();
 
       logger.logResult({
-        testName: "4. Активация отсроченного плана (понижение)",
-        status: "passed",
+        testName: '4. Активация отсроченного плана (понижение)',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -351,15 +341,15 @@ test("4. Активация отсроченного плана в день на
   });
 });
 
-test("5. НЕ изменение подписки, если она еще активна", async () => {
-  await measureTest("5. НЕ изменение активной подписки", async () => {
+test('5. НЕ изменение подписки, если она еще активна', async () => {
+  await measureTest('5. НЕ изменение активной подписки', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
 
     // Получаем реальные значения плана из БД
-    const basePlan = await getPlanByName("BASE");
+    const basePlan = await getPlanByName('BASE');
     if (!basePlan) {
-      throw new Error("План BASE не найден в БД");
+      throw new Error('План BASE не найден в БД');
     }
 
     // Создаем дату, которая закончится через 10 дней
@@ -381,7 +371,7 @@ test("5. НЕ изменение подписки, если она еще акт
 
     try {
       // Мокируем отправку письма
-      const sendPaymentReminderSpy = spyOn(MailService, "sendPaymentReminder");
+      const sendPaymentReminderSpy = spyOn(MailService, 'sendPaymentReminder');
       sendPaymentReminderSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -392,9 +382,7 @@ test("5. НЕ изменение подписки, если она еще акт
       expect(activePayment).not.toBeNull();
 
       // finalDayAt должна остаться той же
-      const daysDiff = Math.abs(
-        (activePayment!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = Math.abs((activePayment!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24));
       expect(daysDiff).toBeLessThan(1);
 
       // currentLimit не должен быть сброшен
@@ -404,8 +392,8 @@ test("5. НЕ изменение подписки, если она еще акт
       expect(sendPaymentReminderSpy).toHaveBeenCalledTimes(0);
 
       logger.logResult({
-        testName: "5. НЕ изменение активной подписки",
-        status: "passed",
+        testName: '5. НЕ изменение активной подписки',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -422,17 +410,17 @@ test("5. НЕ изменение подписки, если она еще акт
   });
 });
 
-test("6. Обработка нескольких пользователей одновременно", async () => {
-  await measureTest("6. Обработка нескольких пользователей", async () => {
+test('6. Обработка нескольких пользователей одновременно', async () => {
+  await measureTest('6. Обработка нескольких пользователей', async () => {
     const userId1 = await createTestUser();
     const userId2 = await createTestUser();
     const userId3 = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
 
     // Получаем реальные значения плана из БД
-    const basePlan = await getPlanByName("BASE");
+    const basePlan = await getPlanByName('BASE');
     if (!basePlan) {
-      throw new Error("План BASE не найден в БД");
+      throw new Error('План BASE не найден в БД');
     }
 
     const now = new Date();
@@ -477,9 +465,9 @@ test("6. Обработка нескольких пользователей од
 
     try {
       // Мокируем отправку писем
-      const sendPaymentReminderSpy = spyOn(MailService, "sendPaymentReminder");
+      const sendPaymentReminderSpy = spyOn(MailService, 'sendPaymentReminder');
       sendPaymentReminderSpy.mockResolvedValue(undefined);
-      const sendPlanExpirationNoticeSpy = spyOn(MailService, "sendPlanExpirationNotice");
+      const sendPlanExpirationNoticeSpy = spyOn(MailService, 'sendPlanExpirationNotice');
       sendPlanExpirationNoticeSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -487,21 +475,19 @@ test("6. Обработка нескольких пользователей од
 
       // Проверяем пользователя 1 (перевод на FREE)
       const user1Plan = await getUserPlan(userId1);
-      expect(user1Plan?.name).toBe("FREE");
+      expect(user1Plan?.name).toBe('FREE');
 
       // Проверяем пользователя 2 (письмо)
       expect(sendPaymentReminderSpy).toHaveBeenCalledTimes(1);
 
       // Проверяем пользователя 3 (без изменений)
       const activePayment3 = await getActiveUserPayment(userId3);
-      const daysDiff = Math.abs(
-        (activePayment3!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = Math.abs((activePayment3!.finalDayAt.getTime() - tenDaysLater.getTime()) / (1000 * 60 * 60 * 24));
       expect(daysDiff).toBeLessThan(1);
 
       logger.logResult({
-        testName: "6. Обработка нескольких пользователей",
-        status: "passed",
+        testName: '6. Обработка нескольких пользователей',
+        status: 'passed',
         duration: 0,
         data: {
           user1ToFree: true,
@@ -520,14 +506,14 @@ test("6. Обработка нескольких пользователей од
   });
 });
 
-test("7. НЕ отправка письма удаленному пользователю", async () => {
-  await measureTest("7. НЕ отправка письма удаленному пользователю", async () => {
+test('7. НЕ отправка письма удаленному пользователю', async () => {
+  await measureTest('7. НЕ отправка письма удаленному пользователю', async () => {
     const userId = await createTestUser();
-    const basePlanId = await ensureTestPlan("BASE", 900, 100);
+    const basePlanId = await ensureTestPlan('BASE', 900, 100);
 
-    const basePlan = await getPlanByName("BASE");
+    const basePlan = await getPlanByName('BASE');
     if (!basePlan) {
-      throw new Error("План BASE не найден в БД");
+      throw new Error('План BASE не найден в БД');
     }
 
     const now = new Date();
@@ -546,14 +532,11 @@ test("7. НЕ отправка письма удаленному пользов�
     });
 
     // Помечаем пользователя как удаленного
-    await db
-      .update(userTable)
-      .set({ deletedAt: new Date() })
-      .where(eq(userTable.id, userId));
+    await db.update(UserTable).set({ deletedAt: new Date() }).where(eq(UserTable.id, userId));
 
     try {
       // Мокируем отправку письма
-      const sendPaymentReminderSpy = spyOn(MailService, "sendPaymentReminder");
+      const sendPaymentReminderSpy = spyOn(MailService, 'sendPaymentReminder');
       sendPaymentReminderSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -563,8 +546,8 @@ test("7. НЕ отправка письма удаленному пользов�
       expect(sendPaymentReminderSpy).toHaveBeenCalledTimes(0);
 
       logger.logResult({
-        testName: "7. НЕ отправка письма удаленному пользователю",
-        status: "passed",
+        testName: '7. НЕ отправка письма удаленному пользователю',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
@@ -580,22 +563,19 @@ test("7. НЕ отправка письма удаленному пользов�
   });
 });
 
-test("8. НЕ обработка пользователей с планом FREE", async () => {
-  await measureTest("8. НЕ обработка пользователей с планом FREE", async () => {
+test('8. НЕ обработка пользователей с планом FREE', async () => {
+  await measureTest('8. НЕ обработка пользователей с планом FREE', async () => {
     const userId = await createTestUser();
-    const freePlanId = await ensureTestPlan("FREE", 0, 10);
+    const freePlanId = await ensureTestPlan('FREE', 0, 10);
 
     // Устанавливаем пользователю бесплатный план
-    await db
-      .update(userTable)
-      .set({ planId: freePlanId })
-      .where(eq(userTable.id, userId));
+    await db.update(UserTable).set({ planId: freePlanId }).where(eq(UserTable.id, userId));
 
     try {
       // Мокируем отправку писем
-      const sendPaymentReminderSpy = spyOn(MailService, "sendPaymentReminder");
+      const sendPaymentReminderSpy = spyOn(MailService, 'sendPaymentReminder');
       sendPaymentReminderSpy.mockResolvedValue(undefined);
-      const sendPlanExpirationNoticeSpy = spyOn(MailService, "sendPlanExpirationNotice");
+      const sendPlanExpirationNoticeSpy = spyOn(MailService, 'sendPlanExpirationNotice');
       sendPlanExpirationNoticeSpy.mockResolvedValue(undefined);
 
       // Запускаем обработку платежей
@@ -606,8 +586,8 @@ test("8. НЕ обработка пользователей с планом FREE
       expect(sendPlanExpirationNoticeSpy).toHaveBeenCalledTimes(0);
 
       logger.logResult({
-        testName: "8. НЕ обработка пользователей с планом FREE",
-        status: "passed",
+        testName: '8. НЕ обработка пользователей с планом FREE',
+        status: 'passed',
         duration: 0,
         data: {
           userId,
