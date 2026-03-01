@@ -11,27 +11,9 @@ import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
 import { IconCirclePlusFilled } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import {
-  GalleryVerticalEnd,
-  LaptopMinimalCheck,
-  List,
-  PanelTop,
-  Settings2,
-  UserSearch,
-} from 'lucide-react';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Separator } from './ui/separator';
-
-const icons = {
-  start: <PanelTop />,
-  question: <List />,
-  contacts: <UserSearch />,
-  thx: <LaptopMinimalCheck />,
-  result: <GalleryVerticalEnd />,
-  settings: <Settings2 />,
-};
 
 export function NavMain({
   items,
@@ -47,8 +29,6 @@ export function NavMain({
   const location = useLocation();
 
   const isQuizEditor = location.pathname.startsWith('/app/quiz/');
-  const quizUid = isQuizEditor ? location.pathname.split('/app/quiz/')[1] : null;
-  const hash = location.hash || 'start';
 
   const { setQuiz } = useContext(CreateQuizContext);
 
@@ -62,8 +42,6 @@ export function NavMain({
       console.log(err);
     }
   }
-
-  const currentStages = new Set(['start', 'question', 'contacts', 'thx', 'settings']);
 
   return (
     <SidebarGroup>
@@ -85,32 +63,6 @@ export function NavMain({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        {isQuizEditor ? (
-          <>
-            <Separator />
-            {[...currentStages].map((stage) => (
-              <Link key={stage} to={'/app/quiz/' + quizUid + '#' + stage}>
-                <SidebarMenu>
-                  <SidebarMenuItem className="flex items-center gap-2">
-                    <SidebarMenuButton
-                      tooltip="Quick Create"
-                      className={
-                        hash === stage
-                          ? 'bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear'
-                          : 'hover:bg-accent/90 hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear'
-                      }
-                    >
-                      {/* @ts-ignore */}
-                      {icons[stage]}
-                      <div>{t(`edit-quiz.stages.${stage}`)}</div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </Link>
-            ))}
-            <Separator />
-          </>
-        ) : null}
         <SidebarMenu>
           {items.map((item) => {
             // Проверяем точное совпадение пути (без учета query параметров)

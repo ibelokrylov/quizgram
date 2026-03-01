@@ -45,6 +45,7 @@ export interface BidsListFilters {
   isRead?: boolean; // Фильтр по прочитанным/новым заявкам
   limit?: number;
   offset?: number;
+  isNew?: boolean;
 }
 
 // Детали заявки

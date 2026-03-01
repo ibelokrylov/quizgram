@@ -1,8 +1,10 @@
 import { get, set } from '@/app/db/index-db';
+import { useSidebar } from '@/components/ui/sidebar';
 import { CreateQuizContextProvider } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
 import { EditQuiz } from '@/pages/EditQuiz';
+import { DrawereditContextProvider } from '@/pages/EditQuiz/context/DrawerEdit.context';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { v7 } from 'uuid';
@@ -14,10 +16,21 @@ export const Route = createFileRoute('/app/quiz/$uid')({
       const { uid } = params;
       const check = await get<{ data: Quiz; isLoadToServer: boolean }>(uid);
       if (check) {
+        if (check.data.startPage) {
+          if (!Array.isArray(check.data.startPage)) {
+            check.data.startPage = [{ ...check.data.startPage, uuid: v7() }];
+            check.isLoadToServer = false;
+          }
+        }
         return { quiz: check.data, isLoadToServer: check.isLoadToServer };
       }
       const { data } = await http<Quiz>({ url: `/v1/quiz/${uid}` });
       let isLoadToServer = true;
+
+      if (data.startPage && !Array.isArray(data.startPage)) {
+        data.startPage = [{ ...data.startPage, uuid: v7() }];
+        isLoadToServer = false;
+      }
 
       if (!data?.contact || data?.contact?.length === 0) {
         data.contact = [
@@ -67,7 +80,6 @@ export const Route = createFileRoute('/app/quiz/$uid')({
         };
         isLoadToServer = false;
       }
-      console.log('data', data);
       await set(uid, { data: data, isLoadToServer });
       return { quiz: data, isLoadToServer };
     } catch (error) {
@@ -79,11 +91,14 @@ export const Route = createFileRoute('/app/quiz/$uid')({
 
 function RouteComponent() {
   const { quiz, isLoadToServer } = Route.useLoaderData();
+  const { setOpen } = useSidebar();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!quiz) {
       navigate({ to: '/app' });
+    } else {
+      setOpen(false);
     }
   }, [quiz]);
 
@@ -97,7 +112,9 @@ function RouteComponent() {
       isLoadToServer={isLoadToServer}
       key={quiz.uid + new Date().getTime().toString()}
     >
-      <EditQuiz key={new Date().getTime().toString()} />
+      <DrawereditContextProvider>
+        <EditQuiz key={new Date().getTime().toString()} />
+      </DrawereditContextProvider>
     </CreateQuizContextProvider>
   );
 }

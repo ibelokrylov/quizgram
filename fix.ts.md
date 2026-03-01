@@ -64,6 +64,7 @@
 #### src/modules/quiz/service.ts
 
 - **Строки 270-274**: Типы в объекте возврата
+
   ```typescript
   startPage?: any;
   question?: any;
@@ -107,6 +108,7 @@
 #### src/entities/Bid/bid.type.ts
 
 - **Строки 19, 60-65**: Поля с типом `any`
+
   ```typescript
   info?: any | null;
   data: any;
@@ -205,6 +207,7 @@
 #### src/modules/bids/service.ts
 
 - **Строки 27, 38-43**: Поля с типом `unknown`
+
   ```typescript
   info: unknown | null;
   data: unknown;
@@ -311,6 +314,7 @@
 ### pkg/app/src/components/ui/chart.tsx
 
 - **Строки 14-15**:
+
   ```typescript
   | { color?: string; theme?: never }
   | { color?: never; theme: Record<keyof typeof THEMES, string> }

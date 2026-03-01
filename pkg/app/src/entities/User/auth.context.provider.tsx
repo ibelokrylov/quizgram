@@ -11,12 +11,10 @@ import { useUserPlan } from './useUserPlan';
 export const AuthContextProvider = (props: PropsWithChildren) => {
   const [isAuth, setIsAuth] = useState<boolean>(false);
   const [user, setUser] = useState<undefined | User>(undefined);
-  const [isPaidUser, setIsPaidUser] = useState(false);
 
   const { i18n } = useTranslation();
   const navigate = useNavigate();
 
-  const authCtx = useContext(AuthContext);
   const appCtx = useContext(AppContext);
 
   const { query } = useUser();
@@ -48,7 +46,6 @@ export const AuthContextProvider = (props: PropsWithChildren) => {
           i18n.changeLanguage(query.data.language);
         }
       }
-      if (query.data.isAdmin || query.data.planId !== 1) authCtx.setIsPaidUser(true);
     }
   }, [query, i18n, planQuery]);
 
@@ -73,8 +70,6 @@ export const AuthContextProvider = (props: PropsWithChildren) => {
         setIsAuth,
         user,
         setUser,
-        isPaidUser,
-        setIsPaidUser,
       }}
     >
       {appCtx.loading ? <Loader /> : props.children}

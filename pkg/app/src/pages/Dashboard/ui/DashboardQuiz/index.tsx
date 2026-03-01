@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { InputNoBorder } from '@/components/ui/input-no-border';
 import { Separator } from '@/components/ui/separator';
+import { useSidebar } from '@/components/ui/sidebar';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { QuizDashboard } from '@/entities/Quiz/quiz.type';
@@ -37,6 +38,7 @@ export const DashboardQuiz = ({
   const [title, setTitle] = useState(quiz?.name);
   const [active, setActive] = useState(quiz?.isActive ?? false);
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const { setOpen } = useSidebar();
 
   async function copy(value: string) {
     try {
@@ -172,7 +174,7 @@ export const DashboardQuiz = ({
         <div className="flex justify-between items-center">
           <div className="flex flex-wrap gap-3">
             <div>
-              <Link to={'/app/quiz/' + quiz.uid}>
+              <Link onClick={() => setOpen(false)} to={'/app/quiz/' + quiz.uid}>
                 <Button variant={'secondary'}>
                   <FaPencil />
                   {t('quiz.dashboard.edit')}

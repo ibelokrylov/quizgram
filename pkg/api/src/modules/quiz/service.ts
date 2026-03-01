@@ -2,7 +2,7 @@
 // Обрабатывает бизнес-логику для квизов
 
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { UserTable } from 'pkg-types';
+import { QuizResult, quizResultTable, UserTable } from 'pkg-types';
 import {
   db,
   getDb,
@@ -178,6 +178,7 @@ export abstract class QuizService {
     quiz_contact: QuizContact[] | null;
     quiz_thx_page: QuizThxPage | null;
     quiz_question: QuizQuestion[] | null;
+    quiz_result: QuizResult[] | null;
   } | null> {
     // Получаем основной квиз
     const quizResult = await db
@@ -200,11 +201,17 @@ export abstract class QuizService {
       .from(quizQuestionTable)
       .where(eq(quizQuestionTable.quizId, quizResult[0].quiz?.id));
 
+    const results = await db
+      .select()
+      .from(quizResultTable)
+      .where(eq(quizResultTable.quizId, quizResult[0].quiz?.id));
+
     return {
       quiz: quizResult[0].quiz,
       quiz_contact: contacts,
       quiz_question: questions,
       quiz_thx_page: quizResult[0]?.quiz_thx_page,
+      quiz_result: results,
     };
   }
 
@@ -521,6 +528,15 @@ export abstract class QuizService {
     const quiz: NewQuiz = {
       userId,
       uid: crypto.randomUUID(),
+      startPage: [
+        {
+          type: 'standard',
+          uuid: crypto.randomUUID(),
+          content: {
+            title: 'Заголовок страницы',
+          },
+        },
+      ],
     };
 
     const [createdQuiz] = await db.insert(quizTable).values(quiz).returning();

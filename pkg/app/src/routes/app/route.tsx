@@ -1,4 +1,6 @@
+import { AppContext } from '@/app/context/app.context';
 import { AppSidebar } from '@/components/app-sidebar';
+import { Loader } from '@/components/loader';
 import { OTPForm } from '@/components/otp-form';
 import { SiteHeader } from '@/components/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -13,6 +15,15 @@ export const Route = createFileRoute('/app')({
 
 function RouteComponent() {
   const ctx = useContext(AuthContext);
+  const appCtx = useContext(AppContext);
+
+  if (appCtx.loading) {
+    return (
+      <div className={'flex flex-col items-center justify-center w-screen h-screen'}>
+        <Loader />
+      </div>
+    );
+  }
 
   if (!ctx.isAuth) {
     return <LoginPage />;
@@ -33,7 +44,7 @@ function RouteComponent() {
       <AppSidebar variant="floating" />
       <SidebarInset>
         <SiteHeader />
-        <div className={'pb-6'}>
+        <div>
           <Outlet />
         </div>
       </SidebarInset>

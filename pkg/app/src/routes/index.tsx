@@ -1,3 +1,5 @@
+import { AppContext } from '@/app/context/app.context';
+import { Loader } from '@/components/loader';
 import { AuthContext } from '@/entities/User/auth.context';
 import { LoginPage } from '@/pages/Login';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -9,6 +11,8 @@ export const Route = createFileRoute('/')({
 
 function Index() {
   const ctx = useContext(AuthContext);
+  const appCtx = useContext(AppContext);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,5 +21,11 @@ function Index() {
     }
   }, [ctx.isAuth]);
 
-  return <LoginPage />;
+  return appCtx?.loading ? (
+    <div className="flex flex-col items-center justify-center w-screen h-screen">
+      <Loader />
+    </div>
+  ) : (
+    <LoginPage />
+  );
 }

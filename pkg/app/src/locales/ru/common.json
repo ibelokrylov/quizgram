@@ -612,5 +612,21 @@
   "table.head.updatedAt": "Обновлён",
   "table.head.telegramId": "Telegram ID",
   "table.head.quizCount": "Кол-во квизов",
-  "admin.user.total": "Всего пользователей: {{total}}"
+  "admin.user.total": "Всего пользователей: {{total}}",
+  "quiz.settings.title": "Настройки квиза",
+  "app.last-bids.title": "Последние заявки",
+  "quiz.edit.add.button": "Редактировать",
+  "quiz.edit.add.start": "Стартовую",
+  "quiz.edit.add.question": "Вопрос",
+  "quiz.edit.add.contacts": "Форму контактов",
+  "quiz.edit.add.results": "Результат",
+  "quiz.edit.add.thx": "Благодарность",
+  "edit-quiz.publish-at": "Опубликован: {{date}}",
+  "toast.error.add-start-page": "Ошибка добавления дополнительной стартовой страницы",
+  "edit-quiz.add.start.info": "Всего может быть добавлено {{total}} стартовые страницы. Для A/B тестирования теорий. У вас их {{total}}",
+  "toast.error.edit-quiz-contact-form": "Ошибка при попытке редактирвоать квиз. Обратитесь в поддержку, если ошибка повторится",
+  "edit-quiz.start-page.title": "Стартовая страница",
+  "edit-quiz.start-page.close": "Закрыть",
+  "edit-quiz.question.title": "Вопрос",
+  "edit-quiz.question-page.question.delete": "Удалить"
 }

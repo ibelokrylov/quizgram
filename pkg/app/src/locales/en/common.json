@@ -608,5 +608,12 @@
   "table.head.updatedAt": "Updated",
   "table.head.telegramId": "Telegram ID",
   "table.head.quizCount": "Quiz Count",
-  "admin.user.total": "Total users: {{total}}"
+  "admin.user.total": "Total users: {{total}}",
+  "app.last-bids.title": "Last bids",
+  "quiz.settings.title": "Quiz settings",
+  "quiz.edit.add.button": "Edit",
+  "edit-quiz.start-page.title": "Start page",
+  "edit-quiz.start-page.close": "Close",
+  "edit-quiz.question.title": "Question",
+  "edit-quiz.question-page.question.delete": "Delete"
 }

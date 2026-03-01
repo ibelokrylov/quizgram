@@ -1,16 +1,7 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { useInfiniteBids, useBidDetails, useMarkBidAsRead } from '@/entities/Bid/useBids';
-import { useQuizFilters } from '@/entities/Quiz/useQuizFilters';
-import { AuthContext } from '@/entities/User/auth.context';
-import { hasAccessToPaidContent } from '@/entities/User/access-control';
-import { Card } from '@/components/ui/card';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Loader } from '@/components/loader';
 import { Button } from '@/components/ui/button';
-import { getTranslatedError } from '@/lib/error-mapper';
+import { Card } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
 import {
   Select,
   SelectContent,
@@ -18,15 +9,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Combobox } from '@/components/ui/combobox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { BidsTableFree } from './BidsTableFree';
-import { BidsTableBase } from './BidsTableBase';
+import type { BidsListFilters } from '@/entities/Bid/bid.type';
+import { useBidDetails, useInfiniteBids, useMarkBidAsRead } from '@/entities/Bid/useBids';
+import { useQuizFilters } from '@/entities/Quiz/useQuizFilters';
+import { hasAccessToPaidContent } from '@/entities/User/access-control';
+import { AuthContext } from '@/entities/User/auth.context';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { getTranslatedError } from '@/lib/error-mapper';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { ChevronDown, ChevronUp, Download, Info } from 'lucide-react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BidDetailsDrawer } from './BidDetailsDrawer';
 import { BidInfoDrawer } from './BidInfoDrawer';
+import { BidsTableBase } from './BidsTableBase';
+import { BidsTableFree } from './BidsTableFree';
 import { ExportDialog } from './ExportDialog';
-import type { BidsListFilters } from '@/entities/Bid/bid.type';
-import { Download } from 'lucide-react';
 
 export function BidsReportPage() {
   const { t } = useTranslation('common');
@@ -246,7 +245,7 @@ export function BidsReportPage() {
   return (
     <div className="p-4 flex flex-col md:flex-row gap-6 items-start">
       {/* Фильтры - сверху на мобильных, справа на десктопе */}
-      <Card className="p-4 w-full md:w-[300px] shrink-0 md:sticky md:top-4 md:mt-[2.5rem] order-1 md:order-2">
+      <Card className="p-4 w-full md:w-[300px] shrink-0 md:sticky md:top-4 md:mt-10 order-1 md:order-2">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-lg">{t('bids.filters')}</h2>

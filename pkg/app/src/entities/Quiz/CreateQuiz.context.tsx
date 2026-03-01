@@ -1,48 +1,36 @@
-import { set } from '@/app/db/index-db';
 import { createContext, useState, type PropsWithChildren } from 'react';
 import type { Quiz } from './quiz.type';
+import { set } from '@/app/db/index-db';
 
 export const CreateQuizContext = createContext<CreateQuizContextType>({
   quiz: undefined,
   setQuiz: () => {},
-  isLoadToServer: false,
-  setIsLoadToServer: () => {},
 });
 
 export type CreateQuizContextType = {
-  quiz: Quiz | undefined;
-  setQuiz: (quiz: Quiz | undefined) => void;
-  isLoadToServer: boolean;
-  setIsLoadToServer: (isLoadToServer: boolean) => void;
+  quiz: (Quiz & { isLoadToServer: boolean }) | undefined;
+  setQuiz: (quiz: Quiz | undefined, isLoadToServer?: boolean) => void;
 };
 
 export const CreateQuizContextProvider = (
   props: PropsWithChildren<{ quiz: Quiz; isLoadToServer: boolean }>
 ) => {
-  const [quiz, setQuiz] = useState<Quiz | undefined>(props.quiz);
-  const [isLoadToServer, setIsLoadToServer] = useState<boolean>(props.isLoadToServer);
+  const [quiz, setQuiz] = useState<(Quiz & { isLoadToServer: boolean }) | undefined>({
+    ...props.quiz,
+    isLoadToServer: props.isLoadToServer,
+  });
 
-  async function saveQuizData(q: Quiz): Promise<void> {
-    if (!quiz?.uid) {
-      return;
-    }
-    await set(quiz.uid, { data: q, isLoadToServer: false });
-    setIsLoadToServer(false);
-  }
-
-  function onChangeQuiz(q: Quiz | undefined): void {
-    console.log(q);
+  function onChangeQuiz(q: Quiz | undefined, load = false): void {
     if (!q) {
+      setQuiz(q);
       return;
     }
-    saveQuizData(q);
-    setQuiz(q);
+    setQuiz({ ...q, isLoadToServer: load });
+    set(q.uid, { data: q, isLoadToServer: load });
   }
 
   return (
-    <CreateQuizContext.Provider
-      value={{ quiz, setQuiz: onChangeQuiz, isLoadToServer, setIsLoadToServer }}
-    >
+    <CreateQuizContext.Provider value={{ quiz, setQuiz: onChangeQuiz }}>
       {props.children}
     </CreateQuizContext.Provider>
   );

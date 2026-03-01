@@ -1,4 +1,4 @@
-import { IconCamera, IconFileAi, IconFileDescription, IconUser } from '@tabler/icons-react';
+import { IconUser } from '@tabler/icons-react';
 import * as React from 'react';
 import { TbReportMedical } from 'react-icons/tb';
 
@@ -36,54 +36,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: <MdQuiz />,
       },
     ],
-    navClouds: [
-      {
-        title: 'Capture',
-        icon: IconCamera,
-        isActive: true,
-        url: '#',
-        items: [
-          {
-            title: 'Active Proposals',
-            url: '#',
-          },
-          {
-            title: 'Archived',
-            url: '#',
-          },
-        ],
-      },
-      {
-        title: 'Proposal',
-        icon: IconFileDescription,
-        url: '#',
-        items: [
-          {
-            title: 'Active Proposals',
-            url: '#',
-          },
-          {
-            title: 'Archived',
-            url: '#',
-          },
-        ],
-      },
-      {
-        title: 'Prompts',
-        icon: IconFileAi,
-        url: '#',
-        items: [
-          {
-            title: 'Active Proposals',
-            url: '#',
-          },
-          {
-            title: 'Archived',
-            url: '#',
-          },
-        ],
-      },
-    ],
     navSecondary: [
       {
         title: 'Пользователи',
@@ -110,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link to="/app">
                 <div>
                   <img

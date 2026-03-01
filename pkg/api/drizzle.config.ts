@@ -6,8 +6,8 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   dialect: 'postgresql',
 
-  // Путь до схем (мы описываем таблицы в отдельных файлах в src/db)
-  schema: './src/db',
+  // Путь до схем (таблицы в pkg-types, helper в src/db)
+  schema: ['../types/src/db', './src/db'],
 
   // Куда складывать миграции
   out: './drizzle',

@@ -1,50 +1,150 @@
-import { AppContext } from '@/app/context/app.context';
 import { set } from '@/app/db/index-db';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
-import { useLocation } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { useContext, useEffect, useState } from 'react';
+import { Pencil } from 'lucide-react';
+import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BiPlusCircle } from 'react-icons/bi';
 import { CiSaveUp1 } from 'react-icons/ci';
+import { IoIosInformationCircle } from 'react-icons/io';
 import { toast } from 'sonner';
-import { ContactsPage } from './ui/ContactsPage';
-import { QuestionPage } from './ui/QuestionPage';
-import { ResultPage } from './ui/ResultPage';
-import { SettingsPage } from './ui/SettingsPage';
-import { StartPage } from './ui/StartPage';
-import { ThxPage } from './ui/ThxPage';
+import { v7 } from 'uuid';
+import { DrawerEditContext } from './context/DrawerEdit.context';
+import { DrawerEdit } from './ui/DrawerEdit';
+import { QuizFlow } from './ui/QuizFlow';
+import { QuizName } from './ui/QuizName';
+import { QuizSettings } from './ui/QuizSettings';
 
 type QuizUpdateResponse = {
   ok: string[];
   errors: string[];
 };
 
-const renderStage = {
-  start: <StartPage />,
-  question: <QuestionPage />,
-  contacts: <ContactsPage />,
-  thx: <ThxPage />,
-  result: <ResultPage />,
-  settings: <SettingsPage />,
-};
-
-function isValidStageKey(key: string): key is keyof typeof renderStage {
-  return key in renderStage;
-}
-
 export const EditQuiz = () => {
-  const { quiz, setQuiz, isLoadToServer, setIsLoadToServer } = useContext(CreateQuizContext);
+  const { quiz, setQuiz } = useContext(CreateQuizContext);
+  const ctxDrawer = useContext(DrawerEditContext);
+  const { open } = useSidebar();
+
   const { t } = useTranslation();
-  const location = useLocation();
-  const { setHeaderContent } = useContext(AppContext);
+  console.log(quiz);
+
+  function quizAddStartPage() {
+    if (Array.isArray(quiz?.startPage)) {
+      if (quiz.startPage.length < 2) {
+        const newUid = v7();
+        if (quiz.startPage.length === 0) {
+          setQuiz({
+            ...quiz,
+            startPage: [
+              {
+                type: 'standard',
+                uuid: newUid,
+                content: {
+                  title: 'Заголовок страницы',
+                },
+              },
+            ],
+          });
+        } else {
+          const newQuizStartPage = [
+            ...quiz.startPage,
+            ...quiz.startPage.map((i) => ({ ...i, uuid: newUid })),
+          ].map((i) => {
+            if (!i.uuid) {
+              i.uuid = v7();
+            }
+            return i;
+          });
+          setQuiz({
+            ...quiz,
+            startPage: newQuizStartPage,
+          } as Quiz);
+        }
+        ctxDrawer?.setUid(newUid);
+      }
+    } else {
+      if (quiz?.startPage) {
+        const newUid = v7();
+        const newStartPage = [
+          quiz?.startPage,
+          {
+            type: 'standard',
+            uuid: newUid,
+            content: {
+              title: 'Заголовок страницы',
+            },
+          },
+        ].map((i) => {
+          if (!i.uuid) {
+            i.uuid = v7();
+          }
+          return i;
+        });
+        setQuiz({
+          ...quiz,
+          startPage: newStartPage,
+        } as Quiz);
+        ctxDrawer?.setUid(newUid);
+      } else {
+        const newUid = v7();
+        setQuiz({
+          ...quiz,
+          startPage: [
+            {
+              type: 'standard',
+              uuid: newUid,
+              content: {
+                title: 'Заголовок страницы',
+              },
+            },
+          ],
+        } as Quiz);
+        ctxDrawer?.setUid(newUid);
+      }
+    }
+    ctxDrawer?.setOpen(true);
+    ctxDrawer?.setType('startPage');
+  }
+
+  function addQuestion() {
+    const newQuestion = quiz?.question ?? [];
+    const uid = v7();
+    newQuestion.push({
+      uid,
+    });
+
+    setQuiz({ ...quiz, question: newQuestion } as Quiz);
+    ctxDrawer?.setOpen(true);
+    ctxDrawer?.setUid(uid);
+    ctxDrawer?.setType('question');
+  }
+
+  function addResult() {
+    const newResult = quiz?.resaults ?? [];
+    const uid = v7();
+    newResult.push({ uid: uid });
+
+    setQuiz({ ...quiz, resaults: newResult } as Quiz);
+    ctxDrawer?.setOpen(true);
+    ctxDrawer?.setType('resaults');
+    ctxDrawer?.setUid(uid);
+  }
 
   async function saveToServer() {
-    if (isLoadToServer) {
+    if (quiz?.isLoadToServer) {
       toast.error(t('toast.error.quiz-load'));
       return;
     }
@@ -71,7 +171,7 @@ export const EditQuiz = () => {
       const result = (response.data || response) as unknown as QuizUpdateResponse;
       if (!result.errors || result.errors.length === 0) {
         await set(quiz.uid, { data: quiz, isLoadToServer: true });
-        setIsLoadToServer(true);
+        setQuiz(quiz, true);
       }
     } catch (err) {
       console.log(err);
@@ -79,94 +179,181 @@ export const EditQuiz = () => {
     }
   }
 
-  useEffect(() => {
-    if (isLoadToServer) {
-      setHeaderContent(
-        <div className={'text-xs text-gray-500 dark:text-gray-400'}>
-          {t('edit-quiz.updated-at', {
-            date: format(quiz?.updatedAt ?? new Date(), 'dd.MM.yyyy HH:mm:ss'),
-          })}
-        </div>
-      );
-    } else {
-      setHeaderContent(
-        <Button onClick={saveToServer} color={'primary'} className="w-auto">
-          <CiSaveUp1 />
-          {t('edit-quiz.publish')}
-        </Button>
-      );
-    }
-
-    return () => {
-      setHeaderContent(null);
+  function quizEditOrAddContact() {
+    const contact = quiz?.contact?.[0] ?? {
+      uid: v7(),
+      form: [
+        {
+          type: 'name',
+          label: 'Имя',
+          placeholder: 'Иван',
+          required: true,
+          mask: undefined,
+          step: 0,
+        },
+        {
+          type: 'email',
+          label: 'Email',
+          placeholder: 'mail@example.com',
+          required: true,
+          mask: undefined,
+          step: 0,
+        },
+        {
+          type: 'phone',
+          label: 'Телефон',
+          placeholder: '+7 (999) 999-99-99',
+          required: true,
+          mask: '+7 (###) ###-##-##',
+          step: 0,
+        },
+      ],
     };
-  }, [isLoadToServer]);
 
-  const [name, setName] = useState(quiz?.name);
+    if (!quiz?.contact?.length) setQuiz({ ...quiz, contact: [contact] } as Quiz);
 
-  const stage = location.hash || 'start';
-
-  async function updateName() {
-    if (!quiz?.uid || !name) {
-      return;
-    }
-    if (quiz?.name === name) {
-      return;
-    }
-    try {
-      await http({
-        url: `/v1/quiz/name/${quiz?.uid}`,
-        method: 'PUT',
-        body: { name },
-      });
-      if (quiz) {
-        setQuiz({ ...quiz, name } as Quiz);
-      }
-    } catch (err) {
-      console.log(err);
-    }
+    ctxDrawer?.setOpen(true);
+    ctxDrawer?.setUid(contact.uid);
+    ctxDrawer?.setType('contact');
   }
 
-  return (
-    <div className="flex flex-col gap-4 max-w-[1000px] w-full">
-      <div className="px-4 lg:px-0 pt-3">
-        <Input
-          key={quiz?.name}
-          value={name}
-          maxLength={60}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={updateName}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              updateName();
-            }
-          }}
-          placeholder={t('edit-quiz.name.placeholder')}
-        />
-      </div>
+  function quizEditOrAddThx() {
+    const thx = quiz?.thxPage ?? {
+      uid: v7(),
+      title: 'Спасибо, [name]!',
+      description: 'Здесь может быть любой текст',
+      buttons: [],
+      social: [],
+    };
+    if (!quiz?.thxPage) {
+      setQuiz({
+        ...quiz,
+        thxPage: {
+          uid: v7(),
+          title: 'Спасибо, [name]!',
+          description: 'Здесь может быть любой текст',
+          buttons: [],
+          social: [],
+        },
+      } as Quiz);
+    }
 
-      {/* <Separator /> */}
-      {/* <div className={`grid grid-cols-2 lg:grid-cols-5 gap-2 pt-2 max-w-[1000px] w-full px-2 lg:px-0`}>
-        {[...currentStages].map((st) => (
-          <Card
-            key={st}
-            onClick={() => handleStageChange(st)}
-            className={cn(
-              st === stage
-                ? 'bg-accent text-accent-foreground'
-                : 'bg-secondary text-secondary-foreground dark:bg-background/80 dark:border-input/80 dark:text-foreground dark:hover:bg-accent/30',
-              'cursor-pointer p-4 transition-all',
-            )}
-          >
-            <div className='flex flex-row gap-2 items-center'>
-              <div>{isValidIconKey(st) ? icons[st] : null}</div>
-              <div>{t(`edit-quiz.stages.${st}`)}</div>
-            </div>
-          </Card>
-        ))}
-      </div> */}
+    ctxDrawer.setOpen(true);
+    ctxDrawer?.setType('thxPage');
+    ctxDrawer?.setUid(thx.uid);
+  }
+
+  const disabledStartPageCreate = Array.isArray(quiz?.startPage) && quiz?.startPage.length === 2;
+
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <QuizName />
       <Separator />
-      <div key={quiz?.uid}>{isValidStageKey(stage) ? renderStage[stage] : null}</div>
+      <div
+        className={
+          !open
+            ? 'relative h-[calc(100vh-105px)] w-screen'
+            : 'relative h-[calc(100vh-105px)] w-screen md:w-[calc(100vw-288px)]'
+        }
+      >
+        <div className={'absolute left-2 z-10 flex gap-2'}>
+          <QuizSettings />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size={'sm'}>
+                <BiPlusCircle />
+                {t('quiz.edit.add.button')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={quizAddStartPage}>
+                  {disabledStartPageCreate ? (
+                    <div className="w-full">
+                      <Tooltip>
+                        <TooltipTrigger className="w-full">
+                          <div className="flex gap-2 items-center justify-between w-full">
+                            <div>{t('quiz.edit.add.start')}</div>
+                            <IoIosInformationCircle />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t('edit-quiz.add.start.info', { total: 2 })}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between w-full">
+                      <div>{t('quiz.edit.add.start')}</div>
+                      <div>
+                        <BiPlusCircle />
+                      </div>
+                    </div>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={addQuestion}>
+                  <div className="flex items-center justify-between w-full">
+                    <div> {t('quiz.edit.add.question')}</div>
+                    <div>
+                      <BiPlusCircle />
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={addResult}>
+                  <div className="flex items-center justify-between w-full">
+                    <div>{t('quiz.edit.add.results')}</div>
+                    <div>
+                      <BiPlusCircle />
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={quizEditOrAddContact}>
+                  <div className="flex gap-2 items-center justify-between w-full">
+                    <div> {t('quiz.edit.add.contacts')}</div>
+                    {quiz?.contact?.length ? (
+                      <div>
+                        <Pencil />
+                      </div>
+                    ) : (
+                      <div>
+                        <BiPlusCircle />
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={quizEditOrAddThx}>
+                  <div className="flex items-center justify-between w-full">
+                    <div>{t('quiz.edit.add.thx')}</div>
+                    {quiz?.thxPage ? (
+                      <div>
+                        <Pencil />
+                      </div>
+                    ) : (
+                      <div>
+                        <BiPlusCircle />
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {quiz?.isLoadToServer ? (
+            <div className={'text-xs text-gray-500 dark:text-gray-400 pt-0 sm:pt-2'}>
+              {t('edit-quiz.publish-at', {
+                date: format(quiz?.updatedAt ?? new Date(), 'dd.MM.yyyy HH:mm:ss'),
+              })}
+            </div>
+          ) : (
+            <Button onClick={saveToServer} color={'primary'} size={'sm'}>
+              <CiSaveUp1 />
+              {t('edit-quiz.publish')}
+            </Button>
+          )}
+        </div>
+        <QuizFlow className={'h-full w-full z-0'} />
+      </div>
+      <DrawerEdit />
     </div>
   );
 };

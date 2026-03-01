@@ -1,7 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-export const CopyToClick = ({ text, children }: { text: string; children: React.ReactNode }) => {
+export const CopyToClick = ({
+  text,
+  children,
+  as: Component = 'div',
+}: {
+  text: string;
+  children: React.ReactNode;
+  as?: React.ElementType;
+}) => {
   const { t } = useTranslation();
   function copyToClick() {
     navigator.clipboard
@@ -15,8 +23,8 @@ export const CopyToClick = ({ text, children }: { text: string; children: React.
       });
   }
   return (
-    <div className="cursor-pointer" onClick={copyToClick}>
+    <Component className="cursor-pointer" onClick={copyToClick}>
       {children}
-    </div>
+    </Component>
   );
 };

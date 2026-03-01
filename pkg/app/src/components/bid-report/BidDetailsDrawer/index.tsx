@@ -9,17 +9,17 @@ import {
 } from '@/components/ui/drawer';
 import type { BidDetails } from '@/entities/Bid/bid.type';
 import { useUpdateBidStatus } from '@/entities/Bid/useBids';
-import { questionTypes } from '@/pages/EditQuiz/ui/QuestionPage/const/question.type';
+import { questionTypes } from '@/pages/EditQuiz/ui/DrawerEdit/ui/QuestionEdit/const/question.type';
 import { Link } from '@tanstack/react-router';
+import { isBefore } from 'date-fns';
 import { ExternalLink } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AnswersSection } from './ui/AnswerSection';
+import BidStatusSelector from './ui/BidStatusSelector';
 import ContactsSection from './ui/ContactsSection';
 import TelegramUserSection from './ui/TelegramUserSection';
-import BidStatusSelector from './ui/BidStatusSelector';
-import { isBefore } from 'date-fns';
 
 interface BidDetailsDrawerProps {
   open: boolean;

@@ -120,7 +120,8 @@ export abstract class BidsService {
     bidMonthLimit: number,
     planName: string = 'FREE',
     planId: number = 1,
-    isAdmin: boolean = false
+    isAdmin: boolean = false,
+    isNew = false
   ) {
     try {
       // Если план FREE и не админ, всегда показываем только isFull=true AND isEqualPaymentLimit=true

@@ -402,12 +402,10 @@ export abstract class SchedulerService {
                 // Отправляем письмо о предстоящем окончании подписки
                 await MailService.sendPaymentReminder(userPayment.userLogin, userLanguage);
 
-                await db
-                  .insert(mailTable)
-                  .values({
-                    type: 'subscribe_send_info_payment_2_days',
-                    userId: userPayment.userId,
-                  });
+                await db.insert(mailTable).values({
+                  type: 'subscribe_send_info_payment_2_days',
+                  userId: userPayment.userId,
+                });
 
                 logger.info('Отправлено письмо о предстоящем окончании подписки', {
                   userId: userPayment.userId,

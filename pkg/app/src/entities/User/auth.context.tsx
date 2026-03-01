@@ -6,8 +6,6 @@ export const AuthContext = createContext<AuthContext>({
   user: undefined,
   setIsAuth: () => {},
   setUser: () => {},
-  isPaidUser: false,
-  setIsPaidUser: () => {},
 });
 
 export type AuthContext = {
@@ -15,6 +13,4 @@ export type AuthContext = {
   setIsAuth: (v: boolean) => void;
   user?: User;
   setUser: (v: undefined | User) => void;
-  isPaidUser: boolean;
-  setIsPaidUser: (v: boolean) => void;
 };

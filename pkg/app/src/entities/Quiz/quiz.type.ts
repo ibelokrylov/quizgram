@@ -1,3 +1,4 @@
+import { description } from '@/components/chart-area-interactive';
 import { z } from 'zod';
 
 export const quizContactFormType = z.enum(['name', 'email', 'phone', 'text']);
@@ -16,6 +17,8 @@ export const quizContactZod = z.object({
   background: z.string().optional(),
   form: z.array(quizContactFormZod).optional(),
 });
+
+export type QuizContactType = z.infer<typeof quizContactZod>;
 
 export type QuizContactFormType = z.infer<typeof quizContactFormType>;
 
@@ -40,6 +43,25 @@ export const quizThxPageZod = z.object({
 });
 export type QuizThxPage = z.infer<typeof quizThxPageZod>;
 
+export const quizResult = z.object({
+  uid: z.string(),
+  id: z.number().optional(),
+  content: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      url: z.string().optional(),
+      type: z.string().optional(),
+      button: z
+        .object({
+          link: z.string(),
+          title: z.string(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
 export const quizZod = z.object({
   uid: z.string(),
   createdAt: z.date(),
@@ -53,6 +75,7 @@ export const quizZod = z.object({
   thxPage: quizThxPageZod.optional(),
   questionTitle: z.string().optional(),
   contact: z.array(quizContactZod).optional(),
+  results: z.array(quizResult).optional(),
   question: z.array(
     z.object({
       type: z
@@ -78,10 +101,41 @@ export const quizZod = z.object({
   startPage: z
     .object({
       type: z.enum(['standard', 'site']),
+      uuid: z.uuid(),
       content: z.any().optional(),
     })
+    .or(
+      z.array(
+        z.object({
+          uuid: z.uuid().optional(),
+          type: z.enum(['standard', 'site']),
+          content: z.any().optional(),
+        })
+      )
+    )
     .optional(),
   isShared: z.boolean(),
+  nodes: z.array(z.any()).optional(),
+  edges: z.array(z.any()).optional(),
+  resaults: z
+    .array(
+      z.object({
+        uid: z.string(),
+        id: z.number().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        img: z.string().optional(),
+        button: z
+          .object({
+            title: z.string(),
+            type: z.string(),
+            url: z.string().optional(),
+          })
+          .optional(),
+        files: z.array(z.string()).optional(),
+      })
+    )
+    .optional(),
 });
 
 export const quizStartPageStandardZod = z.object({
