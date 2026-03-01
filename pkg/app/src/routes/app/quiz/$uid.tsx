@@ -67,11 +67,10 @@ export const Route = createFileRoute('/app/quiz/$uid')({
         };
         isLoadToServer = false;
       }
-      console.log('data', data);
       await set(uid, { data: data, isLoadToServer });
       return { quiz: data, isLoadToServer };
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return { quiz: undefined, isLoadToServer: true };
     }
   },

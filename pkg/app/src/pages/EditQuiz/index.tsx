@@ -39,6 +39,7 @@ function isValidStageKey(key: string): key is keyof typeof renderStage {
 
 export const EditQuiz = () => {
   const { quiz, setQuiz, isLoadToServer, setIsLoadToServer } = useContext(CreateQuizContext);
+  console.log(quiz);
   const { t } = useTranslation();
   const location = useLocation();
   const { setHeaderContent } = useContext(AppContext);
@@ -100,7 +101,7 @@ export const EditQuiz = () => {
     return () => {
       setHeaderContent(null);
     };
-  }, [isLoadToServer]);
+  }, [isLoadToServer, quiz]);
 
   const [name, setName] = useState(quiz?.name);
 
