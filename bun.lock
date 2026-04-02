@@ -36,6 +36,7 @@
         "drizzle-kit": "catalog:backend",
         "oxlint": "catalog:all",
         "pkg-types": "workspace:*",
+        "typescript": "catalog:all",
       },
     },
     "pkg/app": {

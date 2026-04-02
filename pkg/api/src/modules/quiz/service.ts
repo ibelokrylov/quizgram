@@ -214,10 +214,10 @@ export abstract class QuizService {
         .where(eq(quizResultTable.quizId, quizResult[0].quiz?.id))
     ).map((r) => ({
       uid: r.uid,
-      title: r.title,
-      description: r.description,
+      title: r.title ?? undefined,
+      description: r.description ?? undefined,
       type: r.type,
-      url: r.url,
+      url: r.url ?? undefined,
       button: r.button as QuizModel.QuizResult["button"],
     }));
 

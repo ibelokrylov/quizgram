@@ -38,6 +38,7 @@
     "@types/nodemailer": "^7.0.4",
     "bun-types": "catalog:backend",
     "drizzle-kit": "catalog:backend",
+    "typescript": "catalog:all",
     "oxlint": "catalog:all",
     "pkg-types": "workspace:*"
   }
