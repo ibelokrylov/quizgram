@@ -5,11 +5,13 @@ import { StartPageDrawerContent } from './ui/StartPageDrawerContent';
 import { QuestionEdit } from './ui/QuestionEdit';
 import { t } from 'i18next';
 import { ResultEdit } from './ui/ResultEdit';
+import { ContactFormEdit } from './ui/ContactFormEdit';
+import { ThxPageDrawerEdit } from './ui/ThxPageDrawerEditor';
 
 const render: Record<DrawerContextType, ReactNode> = {
   startPage: <StartPageDrawerContent />,
-  contact: <>Contact</>,
-  thxPage: <>Thx edit</>,
+  contact: <ContactFormEdit />,
+  thxPage: <ThxPageDrawerEdit />,
   resaults: <ResultEdit />,
   question: <QuestionEdit />,
 };
@@ -21,7 +23,9 @@ export const DrawerEdit = () => {
   return (
     <Drawer onClose={() => ctx.setOpen(false)} open={ctx.open}>
       <DrawerContent>
-        <div className="max-w-[800px] mx-auto my-0">{render[ctx.type]}</div>
+        <div className="px-0.5 max-w-[1000px] mx-auto w-full h-[86vh] no-scrollbar overflow-y-auto">
+          {render[ctx.type]}
+        </div>
         <DrawerFooter>
           <DrawerClose>{t('edit-quiz.start-page.close')}</DrawerClose>
         </DrawerFooter>

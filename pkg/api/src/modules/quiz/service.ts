@@ -1,8 +1,5 @@
-// Сервис для работы с квизами
-// Обрабатывает бизнес-логику для квизов
-
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { QuizResult, quizResultTable, UserTable } from 'pkg-types';
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { QuizResult, quizResultTable, UserTable } from "pkg-types";
 import {
   db,
   getDb,
@@ -20,9 +17,10 @@ import {
   type Quiz,
   type QuizContact,
   type QuizThxPage,
-} from '../../db';
-import { buildConflictUpdateColumns } from '../../db/helper';
-import { logger } from '../../lib/logger';
+} from "../../db";
+import { buildConflictUpdateColumns } from "../../db/helper";
+import { logger } from "../../lib/logger";
+import { QuizModel } from "./model";
 
 // Тип для элемента кэша dashboard
 interface DashboardCacheItem {
@@ -53,7 +51,7 @@ export abstract class QuizService {
   static async getAllByDashboard(
     userId: number,
     limit: number = 10,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<{ quizzes: (Quiz & { quiz_open?: QuizOpen })[] }> {
     // Ограничиваем limit максимумом 10
     const actualLimit = limit > 10 ? 10 : limit;
@@ -64,7 +62,7 @@ export abstract class QuizService {
     // Проверяем кэш
     const cached = this.dashboardCache.get(cacheKey);
     if (cached && Date.now() < cached.expires) {
-      logger.debug('Dashboard cache hit', {
+      logger.debug("Dashboard cache hit", {
         userId,
         limit: actualLimit,
         offset,
@@ -77,38 +75,42 @@ export abstract class QuizService {
       this.dashboardCache.delete(cacheKey);
     }
 
-    logger.debug('Dashboard cache miss', {
+    logger.debug("Dashboard cache miss", {
       userId,
       limit: actualLimit,
       offset,
     });
 
     // Получаем квизы с пагинацией через Drizzle ORM
-    const quizzes = await db
+    const quizzes = (await db
       .select()
       .from(quizTable)
       .where(and(eq(quizTable.userId, userId), isNull(quizTable.deletedAt)))
       .orderBy(desc(quizTable.updatedAt))
       .limit(actualLimit)
-      .offset(offset);
+      .offset(offset)) as Quiz[];
 
-    const quiz_opens = await db
+    const quiz_opens = (await db
       .select()
       .from(quizOpenTable)
       .where(
         inArray(
           quizOpenTable.quizUid,
-          quizzes.map((quiz) => quiz.uid)
-        )
-      );
+          quizzes.map((quiz) => quiz.uid),
+        ),
+      )) as QuizOpen[];
 
-    const quizzesWithOpen: (Quiz & { quiz_open?: QuizOpen })[] = quizzes.map((quiz) => {
-      const quiz_open = quiz_opens.find((quiz_open) => quiz_open.quizUid === quiz.uid);
-      return {
-        ...quiz,
-        quiz_open,
-      };
-    });
+    const quizzesWithOpen: (Quiz & { quiz_open?: QuizOpen })[] = quizzes.map(
+      (quiz) => {
+        const quiz_open = quiz_opens.find(
+          (quiz_open) => quiz_open.quizUid === quiz.uid,
+        );
+        return {
+          ...quiz,
+          quiz_open,
+        };
+      },
+    );
 
     // Сохраняем в кэш с TTL 5 секунд (как в Go API)
     const cacheItem: DashboardCacheItem = {
@@ -125,11 +127,13 @@ export abstract class QuizService {
    * @param userId - ID пользователя
    * @returns Массив объектов с uid и name
    */
-  static async getQuizFilters(userId: number): Promise<Array<{ uid: string; name: string }>> {
+  static async getQuizFilters(
+    userId: number,
+  ): Promise<Array<{ uid: string; name: string }>> {
     // Проверяем кэш
     const cached = this.quizFiltersCache.get(userId);
     if (cached && Date.now() < cached.expires) {
-      logger.debug('Quiz filters cache hit', { userId });
+      logger.debug("Quiz filters cache hit", { userId });
       return cached.filters;
     }
 
@@ -138,20 +142,22 @@ export abstract class QuizService {
       this.quizFiltersCache.delete(userId);
     }
 
-    logger.debug('Quiz filters cache miss', { userId });
+    logger.debug("Quiz filters cache miss", { userId });
 
     // Получаем uid и name всех не удаленных квизов пользователя
-    const quizzes = await db
+    const quizzes = (await db
       .select({
         uid: quizTable.uid,
         name: quizTable.name,
       })
       .from(quizTable)
-      .where(and(eq(quizTable.userId, userId), isNull(quizTable.deletedAt)));
+      .where(
+        and(eq(quizTable.userId, userId), isNull(quizTable.deletedAt)),
+      )) as Quiz[];
 
     const quizList = quizzes.map((quiz) => ({
       uid: quiz.uid,
-      name: quiz.name || 'Новый квиз',
+      name: quiz.name || "Новый квиз",
     }));
 
     // Сохраняем в кэш с TTL 20 секунд
@@ -172,13 +178,13 @@ export abstract class QuizService {
    */
   static async getQuizByUid(
     uid: string,
-    userId: number
+    userId: number,
   ): Promise<{
     quiz: Quiz;
     quiz_contact: QuizContact[] | null;
     quiz_thx_page: QuizThxPage | null;
     quiz_question: QuizQuestion[] | null;
-    quiz_result: QuizResult[] | null;
+    quiz_result: QuizModel.QuizResult[] | null;
   } | null> {
     // Получаем основной квиз
     const quizResult = await db
@@ -188,7 +194,7 @@ export abstract class QuizService {
       .leftJoin(quizThxPageTable, eq(quizTable.id, quizThxPageTable.quizId));
 
     if (!quizResult || quizResult.length === 0 || !quizResult[0].quiz) {
-      throw new Error('Quiz not found');
+      throw new Error("Quiz not found");
     }
 
     const contacts = await db
@@ -201,16 +207,25 @@ export abstract class QuizService {
       .from(quizQuestionTable)
       .where(eq(quizQuestionTable.quizId, quizResult[0].quiz?.id));
 
-    const results = await db
-      .select()
-      .from(quizResultTable)
-      .where(eq(quizResultTable.quizId, quizResult[0].quiz?.id));
+    const results: QuizModel.QuizResult[] = (
+      await db
+        .select()
+        .from(quizResultTable)
+        .where(eq(quizResultTable.quizId, quizResult[0].quiz?.id))
+    ).map((r) => ({
+      uid: r.uid,
+      title: r.title,
+      description: r.description,
+      type: r.type,
+      url: r.url,
+      button: r.button as QuizModel.QuizResult["button"],
+    }));
 
     return {
-      quiz: quizResult[0].quiz,
-      quiz_contact: contacts,
-      quiz_question: questions,
-      quiz_thx_page: quizResult[0]?.quiz_thx_page,
+      quiz: quizResult[0].quiz as Quiz,
+      quiz_contact: contacts as QuizContact[],
+      quiz_question: questions as QuizQuestion[],
+      quiz_thx_page: quizResult[0]?.quiz_thx_page as QuizThxPage | null,
       quiz_result: results,
     };
   }
@@ -222,7 +237,11 @@ export abstract class QuizService {
    * @param name - Новое имя квиза
    * @returns Обновленный квиз
    */
-  static async updateQuizName(uid: string, userId: number, name: string): Promise<Quiz> {
+  static async updateQuizName(
+    uid: string,
+    userId: number,
+    name: string,
+  ): Promise<Quiz> {
     // Находим квиз по UID и проверяем принадлежность пользователю
     const quizzes = await db
       .select()
@@ -232,7 +251,7 @@ export abstract class QuizService {
 
     const quiz = quizzes[0];
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new Error("Quiz not found");
     }
 
     // Обновляем имя квиза
@@ -244,10 +263,10 @@ export abstract class QuizService {
 
     const updatedQuiz = updatedQuizzes[0];
     if (!updatedQuiz) {
-      throw new Error('Failed to update quiz name');
+      throw new Error("Failed to update quiz name");
     }
 
-    return updatedQuiz;
+    return updatedQuiz as Quiz;
   }
 
   /**
@@ -286,20 +305,24 @@ export abstract class QuizService {
       question?: any;
       contact?: any;
       thxPage?: any;
+      edges?: QuizModel.QuizEdges[];
+      nodes?: QuizModel.QuizNode[];
+      results?: QuizModel.QuizResult[];
     },
     planId: number,
-    isAdmin: boolean = false
+    isAdmin: boolean = false,
   ): Promise<[string[], string[]]> {
     const ok = new Set<string>([]);
     const errors = new Set<string>([]);
 
-    const quiz = await db
+    const [quiz] = await db
       .select()
       .from(quizTable)
       .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, userId)))
       .limit(1);
-    if (!quiz || quiz.length === 0) {
-      throw new Error('Quiz not found');
+
+    if (!quiz) {
+      throw new Error("Quiz not found");
     }
 
     // Обновляем поля, которые хранятся в таблице quiz
@@ -311,7 +334,7 @@ export abstract class QuizService {
         data.startPage.content.show_logo = true;
       }
       updateData.startPage = data.startPage;
-    } else if (quiz[0].startPage !== null) {
+    } else if (quiz.startPage !== null) {
       // Если startPage не передана в запросе, но есть в БД - удаляем её
       updateData.startPage = null;
     }
@@ -320,17 +343,16 @@ export abstract class QuizService {
       updateData.questionTitle = data.questionTitle;
     }
 
-    // Обработка question, contact, thxPage пока не реализована
-    // (требует обновления связанных таблиц)
-    // В Go API также есть только проверка на contact != nil, но логика не реализована
+    updateData.nodes = data.nodes ?? [];
+    updateData.edges = data.edges ?? [];
+
     if (data.contact !== undefined) {
       try {
-        // Фильтруем контакты с обязательным полем uid и маппим в правильный формат
         const values = (data.contact as QuizContact[])
-          .filter((contact) => contact.uid) // Фильтруем записи без uid
+          .filter((contact) => contact.uid)
           .map((contact) => ({
-            quizId: quiz[0].id,
-            uid: contact.uid, // Правильное имя поля из схемы
+            quizId: quiz.id,
+            uid: contact.uid,
             title: contact.title ?? null,
             description: contact.description ?? null,
             background: contact.background ?? null,
@@ -344,39 +366,41 @@ export abstract class QuizService {
             .onConflictDoUpdate({
               target: [quizContactTable.uid],
               set: buildConflictUpdateColumns(quizContactTable, [
-                'title',
-                'description',
-                'background',
-                'form',
+                "title",
+                "description",
+                "background",
+                "form",
               ]),
             });
         }
 
-        ok.add('contact');
+        ok.add("contact");
       } catch (error) {
         logger.error(
-          'Failed to update contact',
+          "Failed to update contact",
           error instanceof Error ? error : new Error(String(error)),
-          { uid, userId, data: data.contact }
+          { uid, userId, data: data.contact },
         );
-        errors.add('contact');
+        errors.add("contact");
       }
     }
 
     if (data.question !== undefined) {
       try {
-        // Если массив question пустой - удаляем все вопросы квиза
         if (data.question.length === 0) {
-          await db.delete(quizQuestionTable).where(eq(quizQuestionTable.quizId, quiz[0].id));
-          ok.add('question');
+          await db
+            .delete(quizQuestionTable)
+            .where(eq(quizQuestionTable.quizId, quiz.id));
+          ok.add("question");
         } else {
-          // Если массив question не пустой - обновляем вопросы
           const questions = data.question as QuizQuestion[];
-          const questionUid = new Set<string>(questions.map((question) => question.uid));
+          const questionUid = new Set<string>(
+            questions.map((question) => question.uid),
+          );
           const questionQuiz = await db
             .select()
             .from(quizQuestionTable)
-            .where(eq(quizQuestionTable.quizId, quiz[0].id));
+            .where(eq(quizQuestionTable.quizId, quiz.id));
 
           if (questionQuiz.length > 0) {
             const deleteQuestionUid = questionQuiz
@@ -387,9 +411,9 @@ export abstract class QuizService {
                 .delete(quizQuestionTable)
                 .where(
                   and(
-                    eq(quizQuestionTable.quizId, quiz[0].id),
-                    inArray(quizQuestionTable.uid, deleteQuestionUid)
-                  )
+                    eq(quizQuestionTable.quizId, quiz.id),
+                    inArray(quizQuestionTable.uid, deleteQuestionUid),
+                  ),
                 );
             }
           }
@@ -398,24 +422,99 @@ export abstract class QuizService {
             .insert(quizQuestionTable)
             .values(
               questions.map((question, idx) => ({
-                quizId: quiz[0].id,
+                quizId: quiz.id,
                 type: question.type,
                 uid: question.uid,
                 order: idx,
                 content: question.content,
-              }))
+              })),
             )
             .onConflictDoUpdate({
               target: [quizQuestionTable.uid],
-              set: buildConflictUpdateColumns(quizQuestionTable, ['type', 'order', 'content']),
+              set: buildConflictUpdateColumns(quizQuestionTable, [
+                "type",
+                "order",
+                "content",
+              ]),
             });
-          ok.add('question');
+          ok.add("question");
         }
       } catch (err) {
         console.log(err);
-        logger.error('Failed to update question', err, { uid, userId, data: data.question });
-        errors.add('question');
+        logger.error("Failed to update question", err, {
+          uid,
+          userId,
+          data: data.question,
+        });
+        errors.add("question");
       }
+    }
+
+    if (data.results !== undefined) {
+      const res = data.results;
+      const quizResult = await db
+        .select()
+        .from(quizResultTable)
+        .where(eq(quizResultTable.quizId, quiz.id));
+
+      try {
+        if (res.length === 0) {
+          await db
+            .delete(quizResultTable)
+            .where(eq(quizResultTable.quizId, quiz.id));
+          ok.add("results");
+        } else {
+          const deleteUid = quizResult
+            .filter((result) => !res.some((r) => r.uid === result.uid))
+            .map((result) => result.uid);
+
+          if (deleteUid.length > 0) {
+            await db
+              .delete(quizResultTable)
+              .where(
+                and(
+                  eq(quizResultTable.quizId, quiz.id),
+                  inArray(quizResultTable.uid, deleteUid),
+                ),
+              );
+          }
+
+          await db
+            .insert(quizResultTable)
+            .values(
+              res.map((result) => ({
+                quizId: quiz.id,
+                uid: result.uid,
+                title: result.title,
+                description: result.description,
+                url: result.url,
+                button: result.button,
+                type: result.type,
+              })),
+            )
+            .onConflictDoUpdate({
+              target: [quizResultTable.uid],
+              set: buildConflictUpdateColumns(quizResultTable, [
+                "title",
+                "description",
+                "type",
+                "url",
+                "button",
+              ]),
+            });
+          ok.add("results");
+        }
+      } catch (err) {
+        logger.error("Failed to update results", err, {
+          uid,
+          userId,
+          data: data.results,
+        });
+      }
+    } else {
+      await db
+        .delete(quizResultTable)
+        .where(eq(quizResultTable.quizId, quiz.id));
     }
 
     if (data.thxPage !== undefined) {
@@ -424,7 +523,7 @@ export abstract class QuizService {
         await db
           .insert(quizThxPageTable)
           .values({
-            quizId: quiz[0].id,
+            quizId: quiz.id,
             uid: thxPage.uid,
             title: thxPage.title,
             description: thxPage.description,
@@ -434,19 +533,22 @@ export abstract class QuizService {
           .onConflictDoUpdate({
             target: [quizThxPageTable.uid],
             set: buildConflictUpdateColumns(quizThxPageTable, [
-              'title',
-              'description',
-              'buttons',
-              'social',
+              "title",
+              "description",
+              "buttons",
+              "social",
             ]),
           });
-        ok.add('thxPage');
+        ok.add("thxPage");
       } catch (error) {
-        logger.error('Failed to update thxPage', error, { uid, userId, data: data.thxPage });
-        errors.add('thxPage');
+        logger.error("Failed to update thxPage", error, {
+          uid,
+          userId,
+          data: data.thxPage,
+        });
+        errors.add("thxPage");
       }
     }
-    // Обновляем только если есть изменения
     if (Object.keys(updateData).length > 0) {
       try {
         await db
@@ -457,7 +559,11 @@ export abstract class QuizService {
           ok.add(key);
         }
       } catch (error) {
-        logger.error('Failed to update quiz', error, { uid, userId, updateData });
+        logger.error("Failed to update quiz", error, {
+          uid,
+          userId,
+          updateData,
+        });
         for (const key of Object.keys(updateData)) {
           errors.add(key);
         }
@@ -481,7 +587,7 @@ export abstract class QuizService {
         .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, userId)));
       return true;
     } catch {
-      throw new Error('Failed to update quiz active status');
+      throw new Error("Failed to update quiz active status");
     }
   }
 
@@ -495,7 +601,7 @@ export abstract class QuizService {
   static async updateQuizIsShowLogo(
     uid: string,
     userId: number,
-    isShowLogo: boolean
+    isShowLogo: boolean,
   ): Promise<boolean> {
     // Находим квиз по UID и проверяем принадлежность пользователю
     const quizzes = await db
@@ -506,7 +612,7 @@ export abstract class QuizService {
 
     const quiz = quizzes[0];
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new Error("Quiz not found");
     }
 
     // Обновляем is_show_logo
@@ -518,7 +624,7 @@ export abstract class QuizService {
 
     const updatedQuiz = updatedQuizzes[0];
     if (!updatedQuiz) {
-      throw new Error('Failed to update quiz is_show_logo');
+      throw new Error("Failed to update quiz is_show_logo");
     }
 
     return updatedQuiz.isShowLogo;
@@ -530,10 +636,10 @@ export abstract class QuizService {
       uid: crypto.randomUUID(),
       startPage: [
         {
-          type: 'standard',
+          type: "standard",
           uuid: crypto.randomUUID(),
           content: {
-            title: 'Заголовок страницы',
+            title: "Заголовок страницы",
           },
         },
       ],
@@ -542,36 +648,36 @@ export abstract class QuizService {
     const [createdQuiz] = await db.insert(quizTable).values(quiz).returning();
 
     if (!createdQuiz) {
-      throw new Error('Failed to create quiz');
+      throw new Error("Failed to create quiz");
     }
 
     // Создаем дефолтную запись в quiz_contact
     const quizContact: NewQuizContact = {
       quizId: createdQuiz.id,
       uid: crypto.randomUUID(),
-      title: 'Заголовок формы',
-      description: 'Описание формы',
+      title: "Заголовок формы",
+      description: "Описание формы",
       form: [
         {
-          type: 'name',
-          label: 'Имя',
-          placeholder: 'Иван',
+          type: "name",
+          label: "Имя",
+          placeholder: "Иван",
           required: true,
           step: 0,
         },
         {
-          type: 'email',
-          label: 'Email',
-          placeholder: 'mail@example.com',
+          type: "email",
+          label: "Email",
+          placeholder: "mail@example.com",
           required: true,
           step: 0,
         },
         {
-          type: 'phone',
-          label: 'Телефон',
-          placeholder: '+7 (999) 999-99-99',
+          type: "phone",
+          label: "Телефон",
+          placeholder: "+7 (999) 999-99-99",
           required: true,
-          mask: '+7 (###) ###-##-##',
+          mask: "+7 (###) ###-##-##",
           step: 0,
         },
       ],
@@ -583,8 +689,8 @@ export abstract class QuizService {
     const quizThxPage: NewQuizThxPage = {
       quizId: createdQuiz.id,
       uid: crypto.randomUUID(),
-      title: 'Спасибо, [name]!',
-      description: 'Здесь может быть любой текст',
+      title: "Спасибо, [name]!",
+      description: "Здесь может быть любой текст",
       buttons: [],
       social: [],
     };
@@ -597,13 +703,13 @@ export abstract class QuizService {
       .set({ quizCount: sql`${UserTable.quizCount} + 1` })
       .where(eq(UserTable.id, userId));
 
-    return createdQuiz;
+    return createdQuiz as Quiz;
   }
 
   static async updateIsSharedQuiz(
     dto: { isShared: boolean },
     uid: string,
-    user: User
+    user: User,
   ): Promise<boolean> {
     const findQuiz = await db
       .select({
@@ -615,17 +721,23 @@ export abstract class QuizService {
       .from(quizTable)
       .where(and(eq(quizTable.uid, uid), eq(quizTable.userId, user.id)));
 
-    if (findQuiz.length === 0) throw new Error('Quiz not found');
+    if (findQuiz.length === 0) throw new Error("Quiz not found");
     const quiz = findQuiz[0];
     const userPaid = user.planId !== 1 || user.isAdmin;
 
     if (!userPaid && quiz.isShared) {
       // для всех квизов пользователя, если он не админ и бесплатный - грохаем все shared квизы
-      await db.update(quizTable).set({ isShared: false }).where(eq(quizTable.userId, user.id));
-      throw new Error('Function not available for free plan');
+      await db
+        .update(quizTable)
+        .set({ isShared: false })
+        .where(eq(quizTable.userId, user.id));
+      throw new Error("Function not available for free plan");
     }
 
-    await db.update(quizTable).set({ isShared: dto.isShared }).where(eq(quizTable.id, quiz.id));
+    await db
+      .update(quizTable)
+      .set({ isShared: dto.isShared })
+      .where(eq(quizTable.id, quiz.id));
 
     return dto.isShared;
   }
@@ -639,7 +751,7 @@ export abstract class QuizService {
       quiz_contact: QuizContact[] | null;
       quiz_thx_page: QuizThxPage | null;
       quiz_question: QuizQuestion[] | null;
-    } | null
+    } | null,
   ): Promise<{
     quiz: Quiz;
     quiz_contact: QuizContact[] | null;
@@ -654,12 +766,14 @@ export abstract class QuizService {
           .where(and(eq(quizTable.uid, quizUid), eq(quizTable.isShared, true)))
           .limit(1);
 
-    if (!findQuizUser) throw new Error('Quiz not found');
+    if (!findQuizUser) throw new Error("Quiz not found");
 
-    const quiz = findQuiz ? findQuiz : await this.getQuizByUid(quizUid, findQuizUser.userId);
-    logger.info('Start import quiz ' + quizUid, { quiz });
+    const quiz = findQuiz
+      ? findQuiz
+      : await this.getQuizByUid(quizUid, findQuizUser.userId);
+    logger.info("Start import quiz " + quizUid, { quiz });
 
-    if (!quiz) throw new Error('Quiz not found');
+    if (!quiz) throw new Error("Quiz not found");
     const newUid = crypto.randomUUID();
     const [checkFreeUid] = await db
       .select({ uuid: quizTable.uid })
@@ -671,7 +785,7 @@ export abstract class QuizService {
     }
 
     await db.transaction(async (tx) => {
-      const { id, ..._quiz } = quiz.quiz;
+      const { id: _id, ..._quiz } = quiz.quiz;
       const [newQuiz] = await tx
         .insert(quizTable)
         .values({
@@ -686,7 +800,7 @@ export abstract class QuizService {
 
       if (quiz.quiz_contact) {
         for (const contact of quiz.quiz_contact) {
-          const { id, ...c } = contact;
+          const { id: _id, ...c } = contact;
           await tx
             .insert(quizContactTable)
             .values({ ...c, quizId: newQuiz.id, uid: crypto.randomUUID() });
@@ -695,12 +809,15 @@ export abstract class QuizService {
 
       if (quiz.quiz_question) {
         for (const question of quiz.quiz_question) {
-          const { id, ...questionDeleteId } = question;
-          if (questionDeleteId.type === 'question_group') {
+          const { id: _id, ...questionDeleteId } = question;
+          if (questionDeleteId.type === "question_group") {
             questionDeleteId.content = {
-              ...(questionDeleteId.content ?? {}),
+              ...(questionDeleteId.content as Record<string, unknown>),
               questions: (
-                questionDeleteId.content as { title: string; questions: Array<any> }
+                questionDeleteId.content as {
+                  title: string;
+                  questions: Array<any>;
+                }
               )?.questions?.map((item) => ({
                 ...item,
                 uid: crypto.randomUUID(),
@@ -708,13 +825,15 @@ export abstract class QuizService {
             };
           }
 
-          await tx
-            .insert(quizQuestionTable)
-            .values({ ...questionDeleteId, quizId: newQuiz.id, uid: crypto.randomUUID() });
+          await tx.insert(quizQuestionTable).values({
+            ...questionDeleteId,
+            quizId: newQuiz.id,
+            uid: crypto.randomUUID(),
+          });
         }
       }
       if (quiz.quiz_thx_page) {
-        const { id, ...thxPage } = quiz.quiz_thx_page;
+        const { id: _id, ...thxPage } = quiz.quiz_thx_page;
         await tx
           .insert(quizThxPageTable)
           .values({ ...thxPage, quizId: newQuiz.id, uid: crypto.randomUUID() });

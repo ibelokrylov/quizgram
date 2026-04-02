@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz, QuizStartPageStandard } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
+import { DrawerEditContext } from '@/pages/EditQuiz/context/DrawerEdit.context';
 import { ArrowDownFromLine, Trash } from 'lucide-react';
 import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,7 @@ const defaultPage: QuizStartPageStandard = {
 
 export const StandardStartPage = ({ p = 0 }: { p: number }) => {
   const { quiz, setQuiz } = useContext(CreateQuizContext);
+  const ctxDrawer = useContext(DrawerEditContext);
   const { t } = useTranslation();
 
   const startPage = (
@@ -99,8 +101,11 @@ export const StandardStartPage = ({ p = 0 }: { p: number }) => {
       const newStartPage = [...quiz?.startPage];
       newStartPage.splice(p, 1);
       setQuiz({ ...quiz, startPage: newStartPage } as Quiz);
+      ctxDrawer?.setUid(newStartPage[0].uuid ?? null);
     } else {
       setQuiz({ ...quiz, startPage: [] } as Quiz);
+      ctxDrawer?.setOpen(false);
+      ctxDrawer?.setUid(null);
     }
   }
 
@@ -110,7 +115,7 @@ export const StandardStartPage = ({ p = 0 }: { p: number }) => {
 
   return (
     <div className="flex flex-col gap-4 px-2 lg:px-0">
-      <Card className={'p-2 max-w-[400px] w-full'}>
+      <Card className={'p-2 w-full'}>
         <div className="col-span-2 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <Tooltip>

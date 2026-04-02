@@ -1,9 +1,45 @@
 // Модели валидации и типы для модуля квиза
 
-import { t } from 'elysia';
-import { ErrorType } from '../../type/error.type';
+import { t } from "elysia";
+import { QuizResult, QuizResultCreate } from "pkg-types";
+import { ErrorType } from "../../type/error.type";
 
 export namespace QuizModel {
+  export const quizResult = t.Object({
+    uid: t.String(),
+    title: t.Optional(t.String()),
+    url: t.Optional(t.String({ format: "uri" })),
+    description: t.Optional(t.String()),
+    type: t.String(),
+    button: t.Optional(
+      t.Array(
+        t.Object({
+          title: t.Optional(t.String()),
+          type: t.String(),
+          url: t.Optional(
+            t.Union([
+              t.String({ format: "uri" }),
+              t.Object({
+                name: t.String(),
+                url: t.String({ format: "uri" }),
+                uid: t.String(),
+              }),
+              t.Array(
+                t.Object({
+                  name: t.String(),
+                  url: t.String({ format: "uri" }),
+                  uid: t.String(),
+                }),
+              ),
+            ]),
+          ),
+        }),
+      ),
+    ),
+  });
+
+  export type QuizResult = typeof quizResult.static;
+
   // Описание квиза в ответе
   export const quiz = t.Object({
     uid: t.String(),
@@ -17,6 +53,9 @@ export namespace QuizModel {
     question: t.Optional(t.Array(t.Any())),
     contact: t.Optional(t.Array(t.Any())),
     thxPage: t.Optional(t.Any()),
+    nodes: t.Optional(t.Any()),
+    edges: t.Optional(t.Any()),
+    results: t.Optional(t.Array(quizResult)),
   });
 
   // Успешный ответ при получении квиза
@@ -25,7 +64,8 @@ export namespace QuizModel {
     data: quiz,
   });
 
-  export type quizEditorSuccessResponse = typeof quizEditorSuccessResponse.static;
+  export type quizEditorSuccessResponse =
+    typeof quizEditorSuccessResponse.static;
 
   // Ответ при ошибке получения квиза
   export const quizEditorErrorResponse = ErrorType;
@@ -46,7 +86,8 @@ export namespace QuizModel {
     message: t.String(), // "ok"
   });
 
-  export type updateQuizNameSuccessResponse = typeof updateQuizNameSuccessResponse.static;
+  export type updateQuizNameSuccessResponse =
+    typeof updateQuizNameSuccessResponse.static;
 
   // Ответ при ошибке обновления имени квиза
   export const updateQuizNameErrorResponse = ErrorType;
@@ -84,11 +125,40 @@ export namespace QuizModel {
     message: t.String(), // "ok"
   });
 
-  export type deleteQuizSuccessResponse = typeof deleteQuizSuccessResponse.static;
+  export type deleteQuizSuccessResponse =
+    typeof deleteQuizSuccessResponse.static;
 
   // Ответ при ошибке удаления квиза
   export const deleteQuizErrorResponse = ErrorType;
   export type deleteQuizErrorResponse = ErrorType;
+
+  export const quizEdges = t.Object({
+    id: t.String(),
+    source: t.String({ format: "uuid" }),
+    target: t.String(),
+    type: t.String(),
+    sourceHandle: t.Optional(t.String()),
+  });
+
+  export type QuizEdges = typeof quizEdges.static;
+
+  export const quizNode = t.Object({
+    id: t.String({ format: "uuid" }),
+    position: t.Object({
+      x: t.Number(),
+      y: t.Number(),
+    }),
+    type: t.String(),
+    data: t.Optional(t.Any()),
+    measured: t.Optional(
+      t.Object({
+        width: t.Number(),
+        height: t.Number(),
+      }),
+    ),
+  });
+
+  export type QuizNode = typeof quizNode.static;
 
   // Тело запроса для обновления квиза
   export const updateQuizBody = t.Object({
@@ -97,6 +167,9 @@ export namespace QuizModel {
     question: t.Optional(t.Any()),
     contact: t.Optional(t.Any()),
     thxPage: t.Optional(t.Any()),
+    results: t.Optional(t.Array(quizResult)),
+    nodes: t.Optional(t.Array(quizNode)),
+    edges: t.Optional(t.Array(quizEdges)),
   });
 
   export type updateQuizBody = typeof updateQuizBody.static;
@@ -107,7 +180,8 @@ export namespace QuizModel {
     errors: t.Array(t.String()),
   });
 
-  export type updateQuizSuccessResponse = typeof updateQuizSuccessResponse.static;
+  export type updateQuizSuccessResponse =
+    typeof updateQuizSuccessResponse.static;
 
   // Ответ при ошибке обновления квиза
   export const updateQuizErrorResponse = ErrorType;
@@ -119,7 +193,8 @@ export namespace QuizModel {
     data: t.Boolean(), // Новое значение isActive
   });
 
-  export type changeActiveSuccessResponse = typeof changeActiveSuccessResponse.static;
+  export type changeActiveSuccessResponse =
+    typeof changeActiveSuccessResponse.static;
 
   // Ответ при ошибке изменения статуса активности квиза
   export const changeActiveErrorResponse = ErrorType;
@@ -132,7 +207,8 @@ export namespace QuizModel {
       uid: t.String(),
     }),
   });
-  export type createQuizSuccessResponse = typeof createQuizSuccessResponse.static;
+  export type createQuizSuccessResponse =
+    typeof createQuizSuccessResponse.static;
 
   // Успешный ответ при получении фильтров квизов
   export const quizFiltersSuccessResponse = t.Object({
@@ -142,11 +218,12 @@ export namespace QuizModel {
         t.Object({
           uid: t.String(),
           name: t.String(),
-        })
+        }),
       ),
     }),
   });
-  export type quizFiltersSuccessResponse = typeof quizFiltersSuccessResponse.static;
+  export type quizFiltersSuccessResponse =
+    typeof quizFiltersSuccessResponse.static;
 
   // Ответ при ошибке получения фильтров квизов
   export const quizFiltersErrorResponse = ErrorType;

@@ -1,5 +1,10 @@
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
+import { showIdEdges } from '@/entities/Quiz/nodeIds.const';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
+import { DrawerEditContext } from '@/pages/EditQuiz/context/DrawerEdit.context';
+import { t } from 'i18next';
 import { useContext } from 'react';
 import { AnswerOption } from './AnswerOption';
 import { DateQuestion } from './DateQuestion';
@@ -12,23 +17,46 @@ import { RatingQuestion } from './RatingQuestion';
 import { SelectQuestion } from './SelectQuestion';
 import { SlideQuestion } from './SlideQuestion';
 import { VariantImage } from './VariantImage';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { DrawerEditContext } from '@/pages/EditQuiz/context/DrawerEdit.context';
-import { t } from 'i18next';
 
 type QuestionProps = {
   question: Quiz['question'][0];
+  updateQuestion?: (question: Quiz['question'][0]) => void;
+  isShowDelete?: boolean;
+  deleteQuestion?: (uid: string) => void;
+  addQuestion?: () => void;
 };
 
-export const Question = ({ question }: QuestionProps) => {
+export const Question = ({ question, isShowDelete, ...props }: QuestionProps) => {
   const { setQuiz, quiz } = useContext(CreateQuizContext);
   const ctx = useContext(DrawerEditContext);
 
   const updateQuestion = (question: Quiz['question'][0]) => {
-    const next = (quiz?.question ?? []).map((q) => (q.uid === question.uid ? question : q));
-    setQuiz({ ...quiz, question: next } as Quiz);
+    if (props.updateQuestion !== undefined) {
+      props.updateQuestion(question);
+    } else {
+      const next = (quiz?.question ?? []).map((q) => (q.uid === question.uid ? question : q));
+      setQuiz({ ...quiz, question: next } as Quiz);
+    }
   };
+
+  function updateEmptyQuestion(question: Quiz['question'][0]) {
+    if (question.type && showIdEdges.has(question.type)) {
+      console.log('udapted', question);
+      setQuiz({
+        ...quiz,
+        edges: quiz?.edges?.map((edg) => {
+          if (edg.source === question.uid) {
+            return {
+              ...edg,
+              sourceHandle: question.uid,
+            };
+          }
+          return edg;
+        }),
+      } as Quiz);
+    }
+    updateQuestion(question);
+  }
 
   const deleteQuestion = (uid: string) => {
     const questions = quiz?.question ?? [];
@@ -74,21 +102,27 @@ export const Question = ({ question }: QuestionProps) => {
       <QuestionGroup question={question} setQuestion={updateQuestion} />
     ),
   } as const;
+
   return (
-    <div className="flex flex-col gap-3 items-center">
-      <div key={question.uid} className="mb-6 md:mb-4 relative">
+    <div className="flex flex-col gap-3 items-center w-full">
+      <div key={question.uid} className="mb-6 md:mb-4 relative w-full">
         {!question?.type ? (
-          <EmptyQuestion showGroup={true} question={question} setQuestion={updateQuestion} />
+          <EmptyQuestion showGroup={true} question={question} setQuestion={updateEmptyQuestion} />
         ) : (
           renderQuestion[question.type as keyof typeof renderQuestion]?.(question)
         )}
       </div>
-      <Separator />
-      <div>
-        <Button variant={'destructive'} onClick={() => deleteQuestion(question.uid)}>
-          {t('edit-quiz.question-page.question.delete')}
-        </Button>
-      </div>
+
+      {isShowDelete ? null : (
+        <>
+          <Separator />
+          <div>
+            <Button variant={'destructive'} onClick={() => deleteQuestion(question.uid)}>
+              {t('edit-quiz.question-page.question.delete')}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

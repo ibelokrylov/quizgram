@@ -27,7 +27,7 @@ export const RatingQuestion = ({
   }, [content]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 items-center justify-center">
       <div className={'flex items-center gap-4'}>
         <Star className={'text-yellow-500'} size={50} />
         <Star className={'text-yellow-500'} size={50} />

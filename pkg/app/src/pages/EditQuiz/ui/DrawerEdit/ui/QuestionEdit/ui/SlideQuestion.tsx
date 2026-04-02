@@ -27,8 +27,8 @@ export const SlideQuestion = ({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={'flex items-center gap-2'}>
-        <div className={'flex flex-col gap-1'}>
+      <div className={'flex items-center gap-2 justify-center'}>
+        <div className={'flex flex-col gap-1 w-full'}>
           <Label htmlFor="start">{t('edit-quiz.question-page.question.slide.start')}</Label>
           <Input
             id="start"
@@ -49,7 +49,7 @@ export const SlideQuestion = ({
           />
         </div>
         <div className={'text-2xl font-bold text-center pt-2.5'}>-</div>
-        <div className={'flex flex-col gap-1'}>
+        <div className={'flex flex-col gap-1 w-full'}>
           <Label htmlFor="end">{t('edit-quiz.question-page.question.slide.end')}</Label>
           <Input
             id="end"
@@ -67,7 +67,7 @@ export const SlideQuestion = ({
           />
         </div>
       </div>
-      <div className={'flex flex-col gap-4 max-w-xs'}>
+      <div className={'flex flex-col gap-4'}>
         <div className={'flex flex-col gap-1'}>
           <Label htmlFor="default_select">
             {t('edit-quiz.question-page.question.slide.default_select')}

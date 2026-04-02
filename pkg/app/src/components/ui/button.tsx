@@ -18,6 +18,8 @@ const buttonVariants = cva(
           'bg-accent text-accent-foreground hover:bg-accent/90 dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/80',
         outline:
           'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-background/80 dark:border-input/80 dark:text-foreground dark:hover:bg-accent/30',
+        'destructive-outline':
+          'border border-destructive/50 bg-background shadow-xs text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive focus-visible:ring-destructive/20 dark:border-destructive/40 dark:bg-background/80 dark:text-destructive dark:hover:bg-destructive/20 dark:hover:border-destructive',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-secondary/80 dark:text-secondary-foreground dark:hover:bg-secondary/60',
         ghost:
@@ -31,6 +33,7 @@ const buttonVariants = cva(
         icon: 'size-9',
         'icon-sm': 'size-8',
         'icon-lg': 'size-10',
+        'icon-xs': 'size-6 [&_svg:not([class*="size-"])]:size-3',
       },
     },
     defaultVariants: {

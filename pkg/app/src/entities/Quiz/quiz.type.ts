@@ -1,4 +1,3 @@
-import { description } from '@/components/chart-area-interactive';
 import { z } from 'zod';
 
 export const quizContactFormType = z.enum(['name', 'email', 'phone', 'text']);
@@ -43,24 +42,69 @@ export const quizThxPageZod = z.object({
 });
 export type QuizThxPage = z.infer<typeof quizThxPageZod>;
 
-export const quizResult = z.object({
-  uid: z.string(),
-  id: z.number().optional(),
-  content: z
-    .object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      url: z.string().optional(),
-      type: z.string().optional(),
-      button: z
+export const quizResultButtonZod = z
+  .object({
+    title: z.string(),
+    type: 'link',
+    url: z.string().optional(),
+  })
+  .or(
+    z.object({
+      title: z.string(),
+      type: 'file',
+      url: z
         .object({
-          link: z.string(),
-          title: z.string(),
+          name: z.string(),
+          url: z.string(),
         })
         .optional(),
     })
-    .optional(),
+  )
+  .or(
+    z.object({
+      title: z.string(),
+      type: 'files',
+      url: z
+        .array(
+          z.object({
+            name: z.string(),
+            url: z.string(),
+          })
+        )
+        .optional(),
+    })
+  );
+
+export type QuizResultButtonFile = { name: string; url: string; uid: string };
+export type QuizResultButton =
+  | {
+      title: string;
+      type: 'link';
+      url: string | undefined;
+    }
+  | {
+      title: string;
+      type: 'file';
+      url: QuizResultButtonFile | undefined;
+    }
+  | {
+      title: string;
+      type: 'files';
+      url: QuizResultButtonFile[] | undefined;
+    };
+
+export const quizResultZod = z.object({
+  uid: z.string(),
+  id: z.number().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  urlB: z.string().optional(),
+  type: z.enum(['img', 'video']).optional(),
+  url: z.string().optional(),
+  button: z.array(quizResultButtonZod).optional(),
+  files: z.array(z.string()).optional(),
 });
+export type QuizResult = z.infer<typeof quizResultZod>;
 
 export const quizZod = z.object({
   uid: z.string(),
@@ -75,7 +119,6 @@ export const quizZod = z.object({
   thxPage: quizThxPageZod.optional(),
   questionTitle: z.string().optional(),
   contact: z.array(quizContactZod).optional(),
-  results: z.array(quizResult).optional(),
   question: z.array(
     z.object({
       type: z
@@ -117,25 +160,7 @@ export const quizZod = z.object({
   isShared: z.boolean(),
   nodes: z.array(z.any()).optional(),
   edges: z.array(z.any()).optional(),
-  resaults: z
-    .array(
-      z.object({
-        uid: z.string(),
-        id: z.number().optional(),
-        title: z.string().optional(),
-        description: z.string().optional(),
-        img: z.string().optional(),
-        button: z
-          .object({
-            title: z.string(),
-            type: z.string(),
-            url: z.string().optional(),
-          })
-          .optional(),
-        files: z.array(z.string()).optional(),
-      })
-    )
-    .optional(),
+  results: z.array(quizResultZod).optional(),
 });
 
 export const quizStartPageStandardZod = z.object({

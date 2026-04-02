@@ -13,9 +13,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CreateQuizContext } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
+import type { ReactFlowInstance } from '@xyflow/react';
 import { format } from 'date-fns';
 import { Pencil } from 'lucide-react';
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiPlusCircle } from 'react-icons/bi';
 import { CiSaveUp1 } from 'react-icons/ci';
@@ -37,9 +38,15 @@ export const EditQuiz = () => {
   const { quiz, setQuiz } = useContext(CreateQuizContext);
   const ctxDrawer = useContext(DrawerEditContext);
   const { open } = useSidebar();
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
 
-  const { t } = useTranslation();
-  console.log(quiz);
+  const { t, i18n } = useTranslation();
+
+  function getNewNodePosition() {
+    const inst = reactFlowRef.current;
+    if (!inst) return { x: 200, y: 200 };
+    return inst.screenToFlowPosition({ x: 100, y: 200 });
+  }
 
   function quizAddStartPage() {
     if (Array.isArray(quiz?.startPage)) {
@@ -102,6 +109,10 @@ export const EditQuiz = () => {
         const newUid = v7();
         setQuiz({
           ...quiz,
+          nodes: [
+            ...(quiz?.nodes ?? []),
+            { type: 'startPage', id: newUid, position: getNewNodePosition() },
+          ],
           startPage: [
             {
               type: 'standard',
@@ -126,18 +137,40 @@ export const EditQuiz = () => {
       uid,
     });
 
-    setQuiz({ ...quiz, question: newQuestion } as Quiz);
+    setQuiz({
+      ...quiz,
+      nodes: [
+        ...(quiz?.nodes ?? []),
+        {
+          id: uid,
+          position: getNewNodePosition(),
+          type: 'question',
+        },
+      ],
+      question: newQuestion,
+    } as Quiz);
     ctxDrawer?.setOpen(true);
     ctxDrawer?.setUid(uid);
     ctxDrawer?.setType('question');
   }
 
   function addResult() {
-    const newResult = quiz?.resaults ?? [];
+    const newResult = quiz?.results ?? [];
     const uid = v7();
-    newResult.push({ uid: uid });
+    newResult.push({ uid: uid, type: 'img' });
 
-    setQuiz({ ...quiz, resaults: newResult } as Quiz);
+    setQuiz({
+      ...quiz,
+      results: newResult,
+      nodes: [
+        ...(quiz?.nodes ?? []),
+        {
+          id: uid,
+          position: getNewNodePosition(),
+          type: 'result',
+        },
+      ],
+    } as Quiz);
     ctxDrawer?.setOpen(true);
     ctxDrawer?.setType('resaults');
     ctxDrawer?.setUid(uid);
@@ -160,6 +193,9 @@ export const EditQuiz = () => {
           question: quiz?.question,
           contact: quiz?.contact,
           thxPage: quiz?.thxPage,
+          results: quiz?.results,
+          nodes: quiz?.nodes,
+          edges: quiz?.edges,
         },
         method: 'PUT',
       });
@@ -180,6 +216,8 @@ export const EditQuiz = () => {
   }
 
   function quizEditOrAddContact() {
+    const generate = !!quiz?.contact?.[0];
+
     const contact = quiz?.contact?.[0] ?? {
       uid: v7(),
       form: [
@@ -210,7 +248,21 @@ export const EditQuiz = () => {
       ],
     };
 
-    if (!quiz?.contact?.length) setQuiz({ ...quiz, contact: [contact] } as Quiz);
+    if (!quiz?.contact?.length)
+      setQuiz({
+        ...quiz,
+        contact: [contact],
+        nodes: generate
+          ? [
+              ...(quiz?.nodes ?? []),
+              {
+                id: contact.uid,
+                position: getNewNodePosition(),
+                type: 'contactForm',
+              },
+            ]
+          : quiz?.nodes,
+      } as Quiz);
 
     ctxDrawer?.setOpen(true);
     ctxDrawer?.setUid(contact.uid);
@@ -228,13 +280,15 @@ export const EditQuiz = () => {
     if (!quiz?.thxPage) {
       setQuiz({
         ...quiz,
-        thxPage: {
-          uid: v7(),
-          title: 'Спасибо, [name]!',
-          description: 'Здесь может быть любой текст',
-          buttons: [],
-          social: [],
-        },
+        thxPage: thx,
+        nodes: [
+          ...(quiz?.nodes ?? []),
+          {
+            id: thx.uid,
+            position: getNewNodePosition(),
+            type: 'thx',
+          },
+        ],
       } as Quiz);
     }
 
@@ -339,7 +393,11 @@ export const EditQuiz = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           {quiz?.isLoadToServer ? (
-            <div className={'text-xs text-gray-500 dark:text-gray-400 pt-0 sm:pt-2'}>
+            <div
+              className={
+                'flex items-center min-h-[2.8em] py-[5px] leading-[1.4] text-xs text-gray-600 dark:text-gray-300'
+              }
+            >
               {t('edit-quiz.publish-at', {
                 date: format(quiz?.updatedAt ?? new Date(), 'dd.MM.yyyy HH:mm:ss'),
               })}
@@ -351,7 +409,13 @@ export const EditQuiz = () => {
             </Button>
           )}
         </div>
-        <QuizFlow className={'h-full w-full z-0'} />
+        <QuizFlow
+          key={i18n.language}
+          className={'h-full w-full z-0'}
+          onInit={(inst) => {
+            reactFlowRef.current = inst;
+          }}
+        />
       </div>
       <DrawerEdit />
     </div>

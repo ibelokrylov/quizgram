@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Проверка перед коммитом..."
 
 # Получаем список изменённых файлов
@@ -12,8 +9,8 @@ API_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/api/" || true)
 if [ -n "$API_CHANGED" ]; then
   echo "📦 Проверка TypeScript типов для pkg/api..."
   cd pkg/api
-  
-  if bun x tsc --noEmit; then
+
+  if bunx tsc --noEmit; then
     echo "✅ TypeScript типы корректны"
   else
     echo ""
@@ -23,7 +20,7 @@ if [ -n "$API_CHANGED" ]; then
     echo "Для принудительного коммита используйте: git commit --no-verify"
     exit 1
   fi
-  
+
   cd ../..
 fi
 
@@ -33,8 +30,8 @@ APP_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/app/" || true)
 if [ -n "$APP_CHANGED" ]; then
   echo "📦 Проверка TypeScript типов для pkg/app..."
   cd pkg/app
-  
-  if bun x tsc --noEmit; then
+
+  if bunx tsc --noEmit; then
     echo "✅ TypeScript типы корректны"
   else
     echo ""
@@ -44,7 +41,7 @@ if [ -n "$APP_CHANGED" ]; then
     echo "Для принудительного коммита используйте: git commit --no-verify"
     exit 1
   fi
-  
+
   cd ../..
 fi
 
@@ -54,8 +51,8 @@ TG_QUIZ_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^pkg/tg-quiz/" || true)
 if [ -n "$TG_QUIZ_CHANGED" ]; then
   echo "📦 Проверка TypeScript типов для pkg/tg-quiz..."
   cd pkg/tg-quiz
-  
-  if bun x tsc --noEmit; then
+
+  if bunx tsc --noEmit; then
     echo "✅ TypeScript типы корректны"
   else
     echo ""
@@ -65,7 +62,7 @@ if [ -n "$TG_QUIZ_CHANGED" ]; then
     echo "Для принудительного коммита используйте: git commit --no-verify"
     exit 1
   fi
-  
+
   cd ../..
 fi
 

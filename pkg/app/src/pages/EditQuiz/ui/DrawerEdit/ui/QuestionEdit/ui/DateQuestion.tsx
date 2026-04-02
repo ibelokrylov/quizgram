@@ -33,7 +33,7 @@ export const DateQuestion = ({
   }, [content?.type]);
 
   return (
-    <Tabs onValueChange={onValueChange} value={types} className="w-[400px]">
+    <Tabs onValueChange={onValueChange} value={types} className="w-fit mx-auto my-0">
       <TabsList>
         <TabsTrigger value="calendar">
           {t('edit-quiz.question-page.question.date.calendar')}

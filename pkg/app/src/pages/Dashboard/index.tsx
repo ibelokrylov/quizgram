@@ -45,7 +45,7 @@ export const DashboardPage = () => {
         </div>
       ) : (
         <>
-          <div className={'mt-2 grid grid-cols-1 md:grid-cols-2 gap-2'}>
+          <div className={'mt-2 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2'}>
             {quizzes?.map((quiz) => (
               <DashboardQuiz onDeleteQuiz={() => deleteQuiz(quiz.uid)} key={quiz.uid} quiz={quiz} />
             ))}

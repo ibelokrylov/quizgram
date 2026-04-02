@@ -26,7 +26,7 @@ export const FileQuestion = ({
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!content.type && !content.title) {
+    if (!content?.type && !content?.title) {
       setQuestion({
         ...question,
         content: {

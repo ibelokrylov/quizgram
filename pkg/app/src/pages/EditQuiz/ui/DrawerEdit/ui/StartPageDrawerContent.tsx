@@ -19,19 +19,25 @@ export const StartPageDrawerContent = () => {
       </DrawerHeader>
       <div>
         <Tabs
-          defaultValue={
-            (ctxDrawer?.uid ?? Array.isArray(ctx.quiz.startPage))
-              ? //@ts-ignore
-                ctx.quiz.startPage[0].uuid
-              : ctx.quiz.startPage.uuid
+          value={
+            ctxDrawer?.uid
+              ? ctxDrawer?.uid
+              : Array.isArray(ctx.quiz.startPage)
+                ? //@ts-ignore
+                  ctx.quiz.startPage[0].uuid
+                : ctx.quiz.startPage.uuid
           }
-          className="w-[400px]"
+          className="items-center justify-center w-full"
         >
           <TabsList>
             {Array.isArray(ctx.quiz?.startPage) ? (
               <>
                 {ctx?.quiz.startPage.map((i, idx) => (
-                  <TabsTrigger key={i.uuid} value={String(i.uuid)}>
+                  <TabsTrigger
+                    onClick={() => ctxDrawer?.setUid(i.uuid ?? null)}
+                    key={i.uuid}
+                    value={String(i.uuid)}
+                  >
                     {idx === 0 ? 'A' : 'B'}
                   </TabsTrigger>
                 ))}
@@ -43,13 +49,13 @@ export const StartPageDrawerContent = () => {
           {Array.isArray(ctx.quiz.startPage) ? (
             <>
               {ctx.quiz.startPage.map((i, idx) => (
-                <TabsContent key={idx} value={String(i.uuid)}>
+                <TabsContent className="w-full" key={idx} value={String(i.uuid)}>
                   <StandardStartPage p={idx} />
                 </TabsContent>
               ))}
             </>
           ) : (
-            <TabsContent value={String(ctx.quiz.startPage?.uuid)}>
+            <TabsContent className="w-ful " value={String(ctx.quiz.startPage?.uuid)}>
               <StandardStartPage p={0} />
             </TabsContent>
           )}

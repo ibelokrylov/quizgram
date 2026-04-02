@@ -3,6 +3,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { CreateQuizContextProvider } from '@/entities/Quiz/CreateQuiz.context';
 import type { Quiz } from '@/entities/Quiz/quiz.type';
 import http from '@/lib/http';
+import { generateQuizEdgesAndNodesEmpty } from '@/lib/react-flow';
 import { EditQuiz } from '@/pages/EditQuiz';
 import { DrawereditContextProvider } from '@/pages/EditQuiz/context/DrawerEdit.context';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -14,18 +15,39 @@ export const Route = createFileRoute('/app/quiz/$uid')({
   loader: async ({ params }) => {
     try {
       const { uid } = params;
-      const check = await get<{ data: Quiz; isLoadToServer: boolean }>(uid);
+      const check = await get<{
+        data: Quiz & { isLoadToServer: boolean };
+        isLoadToServer: boolean;
+      }>(uid);
       if (check) {
         if (check.data.startPage) {
           if (!Array.isArray(check.data.startPage)) {
-            check.data.startPage = [{ ...check.data.startPage, uuid: v7() }];
+            check.data.startPage = check.data.startPage?.uuid
+              ? [{ ...check.data.startPage, uuid: v7() }]
+              : [check.data.startPage];
             check.isLoadToServer = false;
           }
         }
+        const generateEdges = generateQuizEdgesAndNodesEmpty(check.data);
+        if (generateEdges) {
+          //FIX
+          //@ts-ignore
+          const { isLoadToserver, ..._d } = generateEdges;
+          await set(generateEdges.uid, { data: _d, isLoadToServer: false });
+          return { quiz: generateEdges, isLoadToServer: false };
+        }
+
         return { quiz: check.data, isLoadToServer: check.isLoadToServer };
       }
-      const { data } = await http<Quiz>({ url: `/v1/quiz/${uid}` });
+      const { data: _data } = await http<Quiz>({ url: `/v1/quiz/${uid}` });
+      let data = _data;
+      const generateEdges = generateQuizEdgesAndNodesEmpty({ ...data, isLoadToServer: false });
+
       let isLoadToServer = true;
+      if (generateEdges) {
+        data = generateEdges;
+        isLoadToServer = false;
+      }
 
       if (data.startPage && !Array.isArray(data.startPage)) {
         data.startPage = [{ ...data.startPage, uuid: v7() }];
@@ -93,6 +115,8 @@ function RouteComponent() {
   const { quiz, isLoadToServer } = Route.useLoaderData();
   const { setOpen } = useSidebar();
   const navigate = useNavigate();
+
+  console.log('quiz', quiz);
 
   useEffect(() => {
     if (!quiz) {

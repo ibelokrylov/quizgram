@@ -13,6 +13,7 @@ import { Plus, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContactDrawer } from './ContactDrawer';
+import { toast } from 'sonner';
 
 export const ContactEditForm = ({
   contact,
@@ -27,25 +28,25 @@ export const ContactEditForm = ({
   const [description, setDescription] = useState(contact.description ?? '');
   const { t } = useTranslation();
 
-  // Синхронизация локальных state с пропсом contact
-  useEffect(() => {
-    setTitle(contact.title ?? '');
-    setDescription(contact.description ?? '');
-  }, [contact.title, contact.description]);
-
   function onFinal(url: string) {
     setContact({ ...contact, background: url });
   }
 
   function addToForm(form: QuizContactForm) {
     const oldForm = contact.form ?? [];
+    const keys = new Set(oldForm.map((item) => item.type));
+    if (keys.has(form.type)) {
+      toast.error(t('toast.error.contact.form.add'));
+      return;
+    }
+
     oldForm.push(form);
     setContact({ ...contact, form: oldForm });
     setAddDrawerOpen(false);
   }
 
   return (
-    <div className={'flex flex-col gap-1 py-2 px-0.5'}>
+    <div className={'flex flex-col gap-1 py-2 px-0.5 w-full'}>
       {/* <div>
         <Button
           variant={'outline'}
@@ -55,7 +56,7 @@ export const ContactEditForm = ({
         </Button>
       </div> */}
       <Card className={'w-full relative p-4'}>
-        <div className={'absolute top-[-16px] right-2 w-fit'}>
+        <div className={'absolute -top-4 right-2 w-fit'}>
           <CopyToClick text={contact.uid}>
             <div className={'text-xs text-gray-200 dark:text-gray-600'}>id: {contact.uid}</div>
           </CopyToClick>
@@ -93,19 +94,18 @@ export const ContactEditForm = ({
         <Separator className={'my-4'} />
         <div className={'flex flex-col gap-4'}>
           {contact.form?.map((form) => (
-            <div key={form.type} className={'flex flex-col gap-1 relative group'}>
-              <Label htmlFor={form.label}>
-                {form.label}
-                {form.required ? <span className={'text-red-500'}>*</span> : null}
-              </Label>
-              <Input id={form.label} placeholder={form.placeholder} />
+            <div key={form.type} className="flex items-end gap-1 w-full">
+              <div className={'flex flex-col gap-1 relative group w-full'}>
+                <Label htmlFor={form.label}>
+                  {form.label}
+                  {form.required ? <span className={'text-red-500'}>*</span> : null}
+                </Label>
+                <Input id={form.label} placeholder={form.placeholder} />
+              </div>
               <div>
                 <Button
-                  variant={'outline'}
-                  size={'icon-sm'}
-                  className={cn(
-                    'absolute top-5 right-0 hidden group-hover:inline-flex hover:text-destructive'
-                  )}
+                  variant={'destructive'}
+                  size={'icon'}
                   onClick={() =>
                     setContact({
                       ...contact,
