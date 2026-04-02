@@ -1,19 +1,26 @@
-import { DownloadDrawer } from '@/components/dwonload-drawer';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CopyToClick } from '@/components/ui/copy-to-click';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { QuizContact, QuizContactForm, QuizContactFormType } from '@/entities/Quiz/quiz.type';
-import { cn } from '@/lib/utils';
-import { Plus, Trash } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ContactDrawer } from './ContactDrawer';
-import { toast } from 'sonner';
+import { DownloadDrawer } from "@/components/dwonload-drawer";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CopyToClick } from "@/components/ui/copy-to-click";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type {
+  QuizContact,
+  QuizContactForm,
+  QuizContactFormType,
+} from "@/entities/Quiz/quiz.type";
+import { Plus, Trash } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { ContactDrawer } from "./ContactDrawer";
 
 export const ContactEditForm = ({
   contact,
@@ -24,8 +31,8 @@ export const ContactEditForm = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
-  const [title, setTitle] = useState(contact.title ?? '');
-  const [description, setDescription] = useState(contact.description ?? '');
+  const [title, setTitle] = useState(contact.title ?? "");
+  const [description, setDescription] = useState(contact.description ?? "");
   const { t } = useTranslation();
 
   function onFinal(url: string) {
@@ -36,7 +43,7 @@ export const ContactEditForm = ({
     const oldForm = contact.form ?? [];
     const keys = new Set(oldForm.map((item) => item.type));
     if (keys.has(form.type)) {
-      toast.error(t('toast.error.contact.form.add'));
+      toast.error(t("toast.error.contact.form.add"));
       return;
     }
 
@@ -46,7 +53,7 @@ export const ContactEditForm = ({
   }
 
   return (
-    <div className={'flex flex-col gap-1 py-2 px-0.5 w-full'}>
+    <div className={"flex flex-col gap-1 py-2 px-0.5 w-full"}>
       {/* <div>
         <Button
           variant={'outline'}
@@ -55,13 +62,15 @@ export const ContactEditForm = ({
           <Trash />
         </Button>
       </div> */}
-      <Card className={'w-full relative p-4'}>
-        <div className={'absolute -top-4 right-2 w-fit'}>
+      <Card className={"w-full relative p-4"}>
+        <div className={"absolute -top-4 right-2 w-fit"}>
           <CopyToClick text={contact.uid}>
-            <div className={'text-xs text-gray-200 dark:text-gray-600'}>id: {contact.uid}</div>
+            <div className={"text-xs text-gray-200 dark:text-gray-600"}>
+              id: {contact.uid}
+            </div>
           </CopyToClick>
         </div>
-        <div className={'flex flex-col gap-2 w-full'}>
+        <div className={"flex flex-col gap-2 w-full"}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Textarea
@@ -69,11 +78,15 @@ export const ContactEditForm = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => setContact({ ...contact, title })}
-                placeholder={t('edit-quiz.contacts-page.contact.placeholder.title')}
-                className={'text-lg min-h-[60px] text-center'}
+                placeholder={t(
+                  "edit-quiz.contacts-page.contact.placeholder.title",
+                )}
+                className={"text-lg min-h-[60px] text-center"}
               />
             </TooltipTrigger>
-            <TooltipContent>{t('edit-quiz.contacts-page.contact.tooltip.title')}</TooltipContent>
+            <TooltipContent>
+              {t("edit-quiz.contacts-page.contact.tooltip.title")}
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -82,30 +95,34 @@ export const ContactEditForm = ({
                 maxLength={150}
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={() => setContact({ ...contact, description })}
-                placeholder={t('edit-quiz.contacts-page.contact.placeholder.description')}
-                className={'min-h-[100px] text-center'}
+                placeholder={t(
+                  "edit-quiz.contacts-page.contact.placeholder.description",
+                )}
+                className={"min-h-[100px] text-center"}
               />
             </TooltipTrigger>
             <TooltipContent>
-              {t('edit-quiz.contacts-page.contact.tooltip.description')}
+              {t("edit-quiz.contacts-page.contact.tooltip.description")}
             </TooltipContent>
           </Tooltip>
         </div>
-        <Separator className={'my-4'} />
-        <div className={'flex flex-col gap-4'}>
+        <Separator className={"my-4"} />
+        <div className={"flex flex-col gap-4"}>
           {contact.form?.map((form) => (
             <div key={form.type} className="flex items-end gap-1 w-full">
-              <div className={'flex flex-col gap-1 relative group w-full'}>
+              <div className={"flex flex-col gap-1 relative group w-full"}>
                 <Label htmlFor={form.label}>
                   {form.label}
-                  {form.required ? <span className={'text-red-500'}>*</span> : null}
+                  {form.required ? (
+                    <span className={"text-red-500"}>*</span>
+                  ) : null}
                 </Label>
                 <Input id={form.label} placeholder={form.placeholder} />
               </div>
               <div>
                 <Button
-                  variant={'destructive'}
-                  size={'icon'}
+                  variant={"destructive"}
+                  size={"icon"}
                   onClick={() =>
                     setContact({
                       ...contact,
@@ -120,12 +137,12 @@ export const ContactEditForm = ({
           ))}
           <div>
             <Button
-              variant={'link'}
-              className={'text-sm text-gray-500 dark:text-gray-400'}
+              variant={"link"}
+              className={"text-sm text-gray-500 dark:text-gray-400"}
               onClick={() => setAddDrawerOpen(true)}
             >
               <Plus />
-              {t('edit-quiz.contacts-page.contact.button.add-field')}
+              {t("edit-quiz.contacts-page.contact.button.add-field")}
             </Button>
           </div>
         </div>
@@ -133,12 +150,19 @@ export const ContactEditForm = ({
       <ContactDrawer
         changeForm={addToForm}
         currentAddedFields={
-          new Set(contact.form?.map((f) => f.type) ?? ([] as QuizContactFormType[]))
+          new Set(
+            contact.form?.map((f) => f.type) ?? ([] as QuizContactFormType[]),
+          )
         }
         open={addDrawerOpen}
         setOpen={setAddDrawerOpen}
       />
-      <DownloadDrawer type="image" open={open} setOpen={setOpen} onFinal={onFinal} />
+      <DownloadDrawer
+        type="image"
+        open={open}
+        setOpen={setOpen}
+        onFinal={onFinal}
+      />
     </div>
   );
 };

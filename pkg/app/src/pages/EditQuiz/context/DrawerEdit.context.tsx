@@ -1,7 +1,12 @@
-import { useNavigate } from '@tanstack/react-router';
-import { createContext, useState, type PropsWithChildren } from 'react';
+import { useNavigate } from "@tanstack/react-router";
+import { createContext, useState, type PropsWithChildren } from "react";
 
-export type DrawerContextType = 'startPage' | 'question' | 'thxPage' | 'resaults' | 'contact';
+export type DrawerContextType =
+  | "startPage"
+  | "question"
+  | "thxPage"
+  | "resaults"
+  | "contact";
 type Context = {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -24,14 +29,10 @@ export const DrawereditContextProvider = (props: PropsWithChildren) => {
   const [uid, setUid] = useState<string | null>(null);
   const [type, setType] = useState<DrawerContextType | null>(null);
 
-  const navigate = useNavigate();
-
-  function changeUid(v: string | null) {
-    navigate({ search: (prev) => ({ ...prev, uid: v }) });
-  }
-
   return (
-    <DrawerEditContext.Provider value={{ open, setOpen, uid, setUid, type, setType }}>
+    <DrawerEditContext.Provider
+      value={{ open, setOpen, uid, setUid, type, setType }}
+    >
       {props.children}
     </DrawerEditContext.Provider>
   );
