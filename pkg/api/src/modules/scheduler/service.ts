@@ -4,6 +4,8 @@ import { db, mailTable, planTable, quizBidTable, quizTable, userPaymentTable } f
 import * as DateUtils from '../../lib/date-utils';
 import { logger } from '../../lib/logger';
 import { MailService } from '../../services/mail.service';
+import { DateTime } from 'luxon';
+import { NewsletterService } from '../../services/newsletter.service';
 
 export abstract class SchedulerService {
   /**
@@ -402,12 +404,10 @@ export abstract class SchedulerService {
                 // Отправляем письмо о предстоящем окончании подписки
                 await MailService.sendPaymentReminder(userPayment.userLogin, userLanguage);
 
-                await db
-                  .insert(mailTable)
-                  .values({
-                    type: 'subscribe_send_info_payment_2_days',
-                    userId: userPayment.userId,
-                  });
+                await db.insert(mailTable).values({
+                  type: 'subscribe_send_info_payment_2_days',
+                  userId: userPayment.userId,
+                });
 
                 logger.info('Отправлено письмо о предстоящем окончании подписки', {
                   userId: userPayment.userId,
@@ -639,6 +639,24 @@ export abstract class SchedulerService {
         { userId, userPaymentId }
       );
       throw error;
+    }
+  }
+
+  static async newsletterSend(isDev = false) {
+    logger.info('Начало рассылки новостей');
+    if (isDev) {
+      NewsletterService.sendNewsletter('user');
+      NewsletterService.sendNewsletter('bid');
+      return;
+    }
+    const currentDayOfWeekOnMoscow = DateTime.now().setZone('Europe/Moscow').weekday; // 1 (понедельник) - 7 (воскресенье)
+
+    if (currentDayOfWeekOnMoscow === 2) {
+      NewsletterService.sendNewsletter('user');
+    }
+
+    if (currentDayOfWeekOnMoscow === 4) {
+      NewsletterService.sendNewsletter('bid');
     }
   }
 }

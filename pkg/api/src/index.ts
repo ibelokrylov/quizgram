@@ -136,14 +136,21 @@ async function startApp() {
 
     // Обработка незавершенных заявок каждую 1 минуту
     const processIncompleteBidsInterval = setInterval(() => {
-      logger.debug('Запуск обработки незавершенных заявок через setTimeout', {
-        time: new Date().toISOString(),
+      // logger.debug('Запуск обработки незавершенных заявок через setTimeout', {
+      // time: new Date().toISOString(),
+      // });
+
+      SchedulerService.newsletterSend(true).catch((error) => {
+        logger.error(
+          'Ошибка при выполнении scheduler (newsletter через setTimeout)',
+          error as Error
+        );
       });
 
-      SchedulerService.processIncompleteBids().catch((error) => {
-        logger.error('Ошибка при выполнении scheduler (заявки через setTimeout)', error as Error);
-      });
-    }, 60 * 1000); // 1 минута
+      // SchedulerService.processIncompleteBids().catch((error) => {
+      //   logger.error('Ошибка при выполнении scheduler (заявки через setTimeout)', error as Error);
+      // });
+    }, 10 * 1000); // 1 минута
 
     // Обработка платежей каждые 20 минут
     const processPaymentsInterval = setInterval(
@@ -195,6 +202,21 @@ async function startApp() {
 
             SchedulerService.processIncompleteBids().catch((error) => {
               logger.error('Ошибка при выполнении scheduler (заявки через cron)', error as Error);
+            });
+          },
+        })
+      )
+      .use(
+        cron({
+          name: 'processNewsletters',
+          pattern: '0 13 * * *', // Каждый день в 13:00
+          run() {
+            logger.info('Запуск рассылки newsletter через cron');
+            SchedulerService.newsletterSend().catch((error) => {
+              logger.error(
+                'Ошибка при выполнении scheduler (newsletter через cron)',
+                error as Error
+              );
             });
           },
         })

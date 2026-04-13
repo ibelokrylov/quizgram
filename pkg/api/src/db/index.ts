@@ -20,6 +20,7 @@ export * from './user-file';
 export * from './user-notification';
 export * from './user-payment';
 export * from './user-payment-pro';
+export * from './newsletter.test';
 
 // Ленивая инициализация подключения к БД
 // Это нужно, чтобы drizzle-kit мог импортировать схемы без создания реального подключения
