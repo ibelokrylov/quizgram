@@ -35,7 +35,9 @@ export const telegram = new Elysia({ prefix: '/telegram' })
         logger.debug('Обработка webhook для CRM-бота', {
           updateId: update.update_id,
           hasMessage: !!update.message,
+          hasCallbackQuery: !!update.callback_query,
           messageText: update.message?.text,
+          callbackData: update.callback_query?.data,
         });
 
         await CrmBotService.handleUpdate(update);
@@ -68,6 +70,23 @@ export const telegram = new Elysia({ prefix: '/telegram' })
               username: t.Optional(t.String()),
             }),
             text: t.Optional(t.String()),
+          })
+        ),
+        callback_query: t.Optional(
+          t.Object({
+            id: t.String(),
+            data: t.Optional(t.String()),
+            message: t.Optional(
+              t.Object({
+                message_id: t.Number(),
+                chat: t.Object({
+                  id: t.Number(),
+                  first_name: t.Optional(t.String()),
+                  username: t.Optional(t.String()),
+                }),
+                text: t.Optional(t.String()),
+              })
+            ),
           })
         ),
       }),
