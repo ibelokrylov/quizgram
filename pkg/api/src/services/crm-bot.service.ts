@@ -72,9 +72,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
 
   private static async sendOnboardingStep1(chatId: number): Promise<void> {
     const keyboard: InlineKeyboardMarkup = {
-      inline_keyboard: [
-        [{ text: 'Дальше →', callback_data: CALLBACK_ONBOARD_STEP_2 }],
-      ],
+      inline_keyboard: [[{ text: 'Дальше →', callback_data: CALLBACK_ONBOARD_STEP_2 }]],
     };
 
     await BaseTelegramBotService.sendMessage(
@@ -89,9 +87,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
 
   private static async sendOnboardingStep2(chatId: number): Promise<void> {
     const keyboard: InlineKeyboardMarkup = {
-      inline_keyboard: [
-        [{ text: 'Перейти к созданию →', callback_data: CALLBACK_ONBOARD_STEP_3 }],
-      ],
+      inline_keyboard: [[{ text: 'Перейти к созданию →', callback_data: CALLBACK_ONBOARD_STEP_3 }]],
     };
 
     await BaseTelegramBotService.sendMessage(
@@ -129,10 +125,7 @@ export abstract class CrmBotService extends BaseTelegramBotService {
         chatId: callbackQuery.message?.chat.id,
       });
 
-      await BaseTelegramBotService.answerCallbackQuery(
-        CRM_BOT_TOKEN,
-        callbackQuery.id
-      );
+      await BaseTelegramBotService.answerCallbackQuery(CRM_BOT_TOKEN, callbackQuery.id);
 
       const chatId = callbackQuery.message?.chat.id;
       if (!chatId) {

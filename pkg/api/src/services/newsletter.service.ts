@@ -3,6 +3,39 @@ import { db, NewsletterTestTable, quizBidTable, UserTable } from "../db";
 import { logger } from "../lib/logger";
 import { BaseTelegramBotService, type InlineKeyboardMarkup } from "./base-telegram-bot.service";
 
+const NEWSLETTER_BATCH_SIZE = 5;
+const NEWSLETTER_BATCH_DELAY_MS =
+	parseInt(process.env.NEWSLETTER_BATCH_DELAY_MS || "3000", 10);
+
+async function processInBatches<T, R>(
+	items: T[],
+	batchSize: number,
+	delayMs: number,
+	processor: (item: T) => Promise<R>,
+): Promise<{ success: R[]; errors: unknown[] }> {
+	const success: R[] = [];
+	const errors: unknown[] = [];
+
+	for (let i = 0; i < items.length; i += batchSize) {
+		const batch = items.slice(i, i + batchSize);
+		const results = await Promise.allSettled(batch.map(processor));
+
+		for (const result of results) {
+			if (result.status === "fulfilled") {
+				success.push(result.value);
+			} else {
+				errors.push(result.reason);
+			}
+		}
+
+		if (i + batchSize < items.length) {
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
+		}
+	}
+
+	return { success, errors };
+}
+
 export abstract class NewsletterService {
 	static async sendNewsletter(type: "user" | "bid") {
 		const alreadySentIds = [...(new Set((
@@ -90,8 +123,11 @@ export abstract class NewsletterService {
 
 		const keyboard: InlineKeyboardMarkup = {inline_keyboard: inlineKeyboardButtons};
 
-		const results = await Promise.allSettled(
-			[...targetIds].map((chatId) =>
+		const { success: successIds, errors } = await processInBatches(
+			[...targetIds],
+			NEWSLETTER_BATCH_SIZE,
+			NEWSLETTER_BATCH_DELAY_MS,
+			(chatId) =>
 				BaseTelegramBotService.sendPhoto(
 					type === "user" ? "BOT_CRM_TOKEN" : "BOT_QUIZ_TOKEN",
 					+chatId,
@@ -104,16 +140,12 @@ export abstract class NewsletterService {
 					logger.info(`Newsletter ${type} - успешно отправлено chatId ${chatId}`);
 					return chatId;
 				}),
-			),
 		);
 
-		const successIds = results
-			.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-			.map((r) => r.value);
-
-		results
-			.filter((r): r is PromiseRejectedResult => r.status === "rejected")
-			.forEach((r) => logger.error(`Newsletter ${type} - ошибка отправки: ${r.reason}`));
+		errors.forEach((err) => {
+			const message = err instanceof Error ? err.message : String(err);
+			logger.error(`Newsletter ${type} - ошибка отправки: ${message}`);
+		});
 
 		if (successIds.length === 0) return;
 
