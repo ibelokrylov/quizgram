@@ -31,7 +31,7 @@ export async function createTestUser(data?: Partial<NewUser>): Promise<number> {
 
   const testUser: NewUser = {
     uid,
-    login: `test-${Date.now()}@example.com`,
+    login: `test-${Date.now()}-${Math.random().toString(36).substring(2, 8)}@example.com`,
     password: 'test-password-hash',
     name: 'Test User',
     planId: 1, // FREE по умолчанию
