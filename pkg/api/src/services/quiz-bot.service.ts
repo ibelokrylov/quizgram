@@ -1,6 +1,6 @@
-import { logger } from '../lib/logger';
-import { BaseTelegramBotService, type TelegramUpdate } from './base-telegram-bot.service';
-import { CrmBotService } from './crm-bot.service';
+import {logger} from '../lib/logger';
+import {BaseTelegramBotService, type TelegramUpdate} from './base-telegram-bot.service';
+import {CrmBotService} from './crm-bot.service';
 
 // Экспортируем типы для обратной совместимости
 export type { TelegramChat, TelegramMessage, TelegramUpdate } from './base-telegram-bot.service';
@@ -83,34 +83,67 @@ export abstract class QuizBotService extends BaseTelegramBotService {
 
 /**
  * Явная инициализация Telegram‑ботов при старте API.
- * Всегда запускает polling для получения обновлений от Telegram.
+ * В development запускает polling, в production настраивает webhook.
  */
-export function initTelegramBotsOnStartup(): void {
+export function initTelegramBotsOnStartup(dev: boolean): void {
   try {
-    logger.info('Инициализация Telegram ботов при старте API', {
-      mode: 'polling',
-    });
+    if (dev) {
+      logger.info('Инициализация Telegram ботов при старте API', {
+        mode: 'polling',
+      });
 
-    // Всегда запускаем polling для обоих ботов
-    logger.info('Запуск polling для Telegram ботов');
+      BaseTelegramBotService.startPolling('BOT_QUIZ_TOKEN', QuizBotService.handleUpdate).catch(
+        (error) => {
+          logger.error(
+            'Ошибка при запуске polling для квиз-бота',
+            error instanceof Error ? error : new Error(String(error))
+          );
+        }
+      );
 
-    BaseTelegramBotService.startPolling('BOT_QUIZ_TOKEN', QuizBotService.handleUpdate).catch(
-      (error) => {
+      BaseTelegramBotService.startPolling('BOT_CRM_TOKEN', CrmBotService.handleUpdate).catch(
+        (error) => {
+          logger.error(
+            'Ошибка при запуске polling для CRM-бота',
+            error instanceof Error ? error : new Error(String(error))
+          );
+        }
+      );
+    } else {
+      const apiUrl = process.env.API_URL;
+      if (!apiUrl) {
         logger.error(
-          'Ошибка при запуске polling для квиз-бота',
+          'Не удалось настроить webhook: переменная окружения API_URL не установлена',
+          new Error('API_URL is required for webhook mode')
+        );
+        return;
+      }
+
+      logger.info('Инициализация Telegram ботов при старте API', {
+        mode: 'webhook',
+        apiUrl,
+      });
+
+      BaseTelegramBotService.setWebhook(
+        'BOT_QUIZ_TOKEN',
+        `${apiUrl}/telegram/webhook/quiz`
+      ).catch((error) => {
+        logger.error(
+          'Ошибка при настройке webhook для квиз-бота',
           error instanceof Error ? error : new Error(String(error))
         );
-      }
-    );
+      });
 
-    BaseTelegramBotService.startPolling('BOT_CRM_TOKEN', CrmBotService.handleUpdate).catch(
-      (error) => {
+      BaseTelegramBotService.setWebhook(
+        'BOT_CRM_TOKEN',
+        `${apiUrl}/telegram/webhook/crm`
+      ).catch((error) => {
         logger.error(
-          'Ошибка при запуске polling для CRM-бота',
+          'Ошибка при настройке webhook для CRM-бота',
           error instanceof Error ? error : new Error(String(error))
         );
-      }
-    );
+      });
+    }
   } catch (error) {
     logger.error(
       'Ошибка инициализации Telegram ботов при старте',
@@ -120,7 +153,7 @@ export function initTelegramBotsOnStartup(): void {
 }
 
 /**
- * Останавливает все Telegram боты (останавливает polling и очищает кэш)
+ * Останавливает все Telegram боты (останавливает polling/webhook и очищает кэш)
  */
 export async function stopTelegramBots(): Promise<void> {
   logger.info('Остановка Telegram ботов');
@@ -133,9 +166,15 @@ export async function stopTelegramBots(): Promise<void> {
         clearInterval(instance.healthCheckInterval);
         logger.debug('Health check остановлен для Telegram бота', { tokenEnvKey });
       }
-      if (instance.bot.isPolling()) {
+
+      if (instance.mode === 'polling' && instance.bot.isPolling()) {
         await instance.bot.stopPolling();
         logger.info('Polling остановлен для Telegram бота', { tokenEnvKey });
+      }
+
+      if (instance.mode === 'webhook') {
+        await instance.bot.deleteWebHook();
+        logger.info('Webhook удалён для Telegram бота', { tokenEnvKey });
       }
     } catch (error) {
       logger.error(

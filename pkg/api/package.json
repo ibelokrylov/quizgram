@@ -39,6 +39,7 @@
     "bun-types": "catalog:backend",
     "drizzle-kit": "^1.0.0-beta.2-b782ae1",
     "oxlint": "catalog:all",
+    "oxfmt": "catalog:all",
     "pkg-types": "workspace:*"
   }
 }

@@ -110,6 +110,11 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     description: 'Название приложения (по умолчанию TGMApp)',
   },
   {
+    name: 'API_URL',
+    required: false,
+    description: 'Базовый URL API (для webhook Telegram ботов)',
+  },
+  {
     name: 'HTTPS_CERT',
     required: false,
     description: 'Путь к SSL сертификату (для HTTPS)',

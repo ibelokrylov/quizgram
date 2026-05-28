@@ -48,12 +48,12 @@ export interface InlineKeyboardMarkup {
  */
 interface BotInstance {
   bot: TelegramBot;
+  mode: 'polling' | 'webhook';
   handler: (update: TelegramUpdate) => Promise<void>;
   healthCheckInterval: ReturnType<typeof setInterval> | null;
 }
 
 const HEALTH_CHECK_INTERVAL_MS = 60_000;
-const RECONNECT_DELAY_MS = 10_000;
 
 /**
  * Базовый сервис для работы с Telegram ботами на основе node-telegram-bot-api.
@@ -63,13 +63,38 @@ export abstract class BaseTelegramBotService {
   private static bots: Map<string, BotInstance> = new Map();
 
   /**
-   * Получает (или создаёт) инстанс TelegramBot по ключу переменной окружения.
+   * Получает существующий инстанс TelegramBot по ключу переменной окружения.
+   * Если инстанс не найден — выбрасывает ошибку.
    */
-  static getBot(tokenEnvKey: string, usePolling: boolean = false): TelegramBot {
+  static getBot(tokenEnvKey: string): TelegramBot {
     const existing = this.bots.get(tokenEnvKey);
     if (existing) {
       logger.debug('Используется кэшированный инстанс Telegram бота', {
         tokenEnvKey,
+        mode: existing.mode,
+      });
+      return existing.bot;
+    }
+
+    const error = new Error(
+      `Инстанс Telegram бота ${tokenEnvKey} не инициализирован. Сначала вызовите startPolling() или setWebhook().`
+    );
+    logger.error('Ошибка доступа к Telegram боту', error, { tokenEnvKey });
+    throw error;
+  }
+
+  /**
+   * Получает (или создаёт) инстанс TelegramBot по ключу переменной окружения.
+   */
+  private static getOrCreateBot(
+    tokenEnvKey: string,
+    mode: 'polling' | 'webhook'
+  ): TelegramBot {
+    const existing = this.bots.get(tokenEnvKey);
+    if (existing) {
+      logger.debug('Используется кэшированный инстанс Telegram бота', {
+        tokenEnvKey,
+        mode: existing.mode,
       });
       return existing.bot;
     }
@@ -84,7 +109,7 @@ export abstract class BaseTelegramBotService {
       throw error;
     }
 
-    const bot = new TelegramBot(token, { polling: usePolling });
+    const bot = new TelegramBot(token, { polling: mode === 'polling' });
     if (tokenEnvKey === 'BOT_CRM_TOKEN') {
       bot.setMyCommands([
         {
@@ -96,12 +121,13 @@ export abstract class BaseTelegramBotService {
 
     const instance: BotInstance = {
       bot,
+      mode,
       handler: async () => {},
       healthCheckInterval: null,
     };
     this.bots.set(tokenEnvKey, instance);
 
-    logger.info('Инициализирован Telegram бот', { tokenEnvKey });
+    logger.info('Инициализирован Telegram бот', { tokenEnvKey, mode });
 
     bot
       .getMe()
@@ -191,31 +217,34 @@ export abstract class BaseTelegramBotService {
   }
 
   /**
-   * Запускает периодическую проверку здоровья бота
+   * Запускает периодическую проверку здоровья бота (только для polling)
    */
   private static startHealthCheck(tokenEnvKey: string): void {
     const instance = this.bots.get(tokenEnvKey);
-    if (!instance) return;
+    if (!instance) {
+      logger.debug(`instance bot not found key: ${tokenEnvKey}`);
+      return;
+    }
+
+    if (instance.mode !== 'polling') {
+      logger.debug('Health check пропущен: бот работает в webhook режиме', {
+        tokenEnvKey,
+      });
+      return;
+    }
 
     const interval = setInterval(async () => {
       try {
         await instance.bot.getMe();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        logger.warn('Health check бота не пройден, запускаем переподключение', {
+        logger.warn('Health check бота не пройден', {
           tokenEnvKey,
           errorMessage: message,
         });
 
         clearInterval(interval);
         instance.healthCheckInterval = null;
-
-        this.reconnect(tokenEnvKey).catch((reconnectError) => {
-          logger.error('Ошибка при переподключении бота', {
-            tokenEnvKey,
-            error: reconnectError instanceof Error ? reconnectError.message : String(reconnectError),
-          });
-        });
       }
     }, HEALTH_CHECK_INTERVAL_MS);
 
@@ -224,94 +253,6 @@ export abstract class BaseTelegramBotService {
       tokenEnvKey,
       intervalMs: HEALTH_CHECK_INTERVAL_MS,
     });
-  }
-
-  /**
-   * Переподключает бота: останавливает старый инстанс, ждёт 10 секунд, создаёт новый
-   */
-  private static async reconnect(tokenEnvKey: string): Promise<void> {
-    logger.info('Начато переподключение бота', { tokenEnvKey });
-
-    const oldInstance = this.bots.get(tokenEnvKey);
-    if (oldInstance) {
-      try {
-        if (oldInstance.healthCheckInterval) {
-          clearInterval(oldInstance.healthCheckInterval);
-        }
-        if (oldInstance.bot.isPolling()) {
-          await oldInstance.bot.stopPolling();
-        }
-      } catch (error) {
-        logger.debug('Ошибка при остановке старого инстанса бота', {
-          tokenEnvKey,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-      this.bots.delete(tokenEnvKey);
-    }
-
-    logger.info('Ожидание 10 секунд перед переподключением', { tokenEnvKey });
-    await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS));
-
-    try {
-      const token = process.env[tokenEnvKey];
-      if (!token) {
-        throw new Error(`Переменная окружения ${tokenEnvKey} не установлена`);
-      }
-
-      const bot = new TelegramBot(token, { polling: true });
-      if (tokenEnvKey === 'BOT_CRM_TOKEN') {
-        bot.setMyCommands([
-          {
-            command: 'start',
-            description: 'Запуск бота',
-          },
-        ]);
-      }
-
-      try {
-        await bot.deleteWebHook();
-        logger.info('Webhook удалён для переподключения polling', { tokenEnvKey });
-      } catch (error) {
-        logger.debug('Ошибка при удалении webhook при переподключении', {
-          tokenEnvKey,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-
-      const handler = oldInstance?.handler ?? (async () => {});
-      this.attachEventListeners(bot, tokenEnvKey, handler);
-
-      const me = await bot.getMe();
-      logger.info('Бот успешно переподключён', {
-        tokenEnvKey,
-        botId: me.id,
-        botUsername: me.username,
-        botName: me.first_name,
-      });
-
-      const newInstance: BotInstance = {
-        bot,
-        handler,
-        healthCheckInterval: null,
-      };
-      this.bots.set(tokenEnvKey, newInstance);
-
-      this.startHealthCheck(tokenEnvKey);
-    } catch (error) {
-      logger.error('Ошибка при переподключении бота, повторная попытка через 10 секунд', {
-        tokenEnvKey,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS));
-      this.reconnect(tokenEnvKey).catch((retryError) => {
-        logger.error('Ошибка при повторном переподключении бота', {
-          tokenEnvKey,
-          error: retryError instanceof Error ? retryError.message : String(retryError),
-        });
-      });
-    }
   }
 
   /**
@@ -429,14 +370,14 @@ export abstract class BaseTelegramBotService {
    */
   static escapeMarkdownV2(text: string): string {
     // eslint-disable-next-line no-useless-escape
-    return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+    return text.replace(/([_\*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
   }
 
   /**
    * Настройка webhook для бота
    */
   static async setWebhook(tokenEnvKey: string, webhookUrl: string): Promise<void> {
-    const bot = this.getBot(tokenEnvKey);
+    const bot = this.getOrCreateBot(tokenEnvKey, 'webhook');
 
     try {
       logger.info('Настройка webhook для Telegram бота', {
@@ -495,7 +436,7 @@ export abstract class BaseTelegramBotService {
     tokenEnvKey: string,
     handler: (update: TelegramUpdate) => Promise<void>
   ): Promise<void> {
-    const bot = this.getBot(tokenEnvKey, true);
+    const bot = this.getOrCreateBot(tokenEnvKey, 'polling');
 
     const instance = this.bots.get(tokenEnvKey);
     if (instance) {

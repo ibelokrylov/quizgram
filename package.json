@@ -11,8 +11,6 @@
         "react-dom": "^19.1.1",
         "vite": "^7.2.4",
         "@vitejs/plugin-react": "^5.1.1",
-        "oxlint": "latest",
-        "oxfmt": "latest",
         "babel-plugin-react-compiler": "^19.1.0-rc.3",
         "globals": "^16.4.0",
         "@types/node": "^24.6.0",
@@ -31,7 +29,8 @@
       },
       "all": {
         "typescript": "^5",
-        "oxlint": "latest"
+        "oxlint": "latest",
+        "oxfmt": "latest"
       }
     }
   },

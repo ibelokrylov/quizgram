@@ -32,6 +32,7 @@ let schedulerIntervals: {
 // Главная функция запуска приложения
 // Проверяет переменные окружения и подключение к БД перед запуском сервера
 async function startApp() {
+  logger.info('Начало инициализации приложения');
   // Проверка обязательных переменных окружения перед запуском приложения
   // Если переменные отсутствуют, приложение завершится с ошибкой
   try {
@@ -64,12 +65,12 @@ async function startApp() {
     );
   });
 
-  // Явная инициализация Telegram‑ботов при старте API
-  initTelegramBotsOnStartup();
-
   // Определяем окружение
   const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const isDevelopment = env.ENV !== 'production';
+
+  // Явная инициализация Telegram‑ботов при старте API
+  initTelegramBotsOnStartup(isDevelopment);
 
   // Настраиваем HTTPS если указаны сертификаты
   const httpsCertPath = env.HTTPS_CERT;
