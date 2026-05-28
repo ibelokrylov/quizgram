@@ -149,6 +149,11 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: false,
     description: 'Публичный ключ проекта UnitPay',
   },
+  {
+    name: 'TELEGRAM_PROXY',
+    required: false,
+    description: 'Прокси для Telegram API (http://user:pass@host:port)',
+  },
 ];
 
 /**

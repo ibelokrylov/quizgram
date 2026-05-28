@@ -109,7 +109,22 @@ export abstract class BaseTelegramBotService {
       throw error;
     }
 
-    const bot = new TelegramBot(token, { polling: mode === 'polling' });
+    const proxyUrl = process.env.TELEGRAM_PROXY;
+
+    const bot = new TelegramBot(token, {
+      polling: mode === 'polling',
+      request: {
+        ...(proxyUrl ? { proxy: proxyUrl } : {}),
+        timeout: 15000,
+      } as never,
+    });
+
+    if (proxyUrl) {
+      logger.info('Используется прокси для Telegram бота', {
+        tokenEnvKey,
+        proxyType: proxyUrl.startsWith('http') ? 'http' : 'unknown',
+      });
+    }
     if (tokenEnvKey === 'BOT_CRM_TOKEN') {
       bot.setMyCommands([
         {
