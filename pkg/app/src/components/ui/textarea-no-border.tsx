@@ -236,7 +236,7 @@ function TextAreaNoBorder({
   }, []);
 
   const handleInput = React.useCallback(
-    (event: React.FormEvent<HTMLTextAreaElement>) => {
+    (event: React.InputEvent<HTMLTextAreaElement>) => {
       const nextValue = event.currentTarget.value;
       isTypingRef.current = true;
       updateDimensions(nextValue);
