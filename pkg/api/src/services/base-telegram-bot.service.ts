@@ -1,3 +1,4 @@
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import TelegramBot from 'node-telegram-bot-api';
 import { logger } from '../lib/logger';
 
@@ -110,21 +111,22 @@ export abstract class BaseTelegramBotService {
     }
 
     const proxyUrl = process.env.TELEGRAM_PROXY;
+    let agent: HttpsProxyAgent<string> | undefined;
+    if (proxyUrl) {
+      agent = new HttpsProxyAgent(proxyUrl);
+      logger.info('Используется прокси для Telegram бота', {
+        tokenEnvKey,
+        proxyType: 'http',
+      });
+    }
 
     const bot = new TelegramBot(token, {
       polling: mode === 'polling',
       request: {
-        ...(proxyUrl ? { proxy: proxyUrl } : {}),
+        ...(agent ? { agent } : {}),
         timeout: 15000,
       } as never,
     });
-
-    if (proxyUrl) {
-      logger.info('Используется прокси для Telegram бота', {
-        tokenEnvKey,
-        proxyType: proxyUrl.startsWith('http') ? 'http' : 'unknown',
-      });
-    }
     if (tokenEnvKey === 'BOT_CRM_TOKEN') {
       bot.setMyCommands([
         {
