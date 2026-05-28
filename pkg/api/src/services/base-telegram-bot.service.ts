@@ -44,16 +44,26 @@ export interface InlineKeyboardMarkup {
 }
 
 /**
+ * Внутренняя структура для хранения инстанса бота с метаданными
+ */
+interface BotInstance {
+  bot: TelegramBot;
+  handler: (update: TelegramUpdate) => Promise<void>;
+  healthCheckInterval: ReturnType<typeof setInterval> | null;
+}
+
+const HEALTH_CHECK_INTERVAL_MS = 60_000;
+const RECONNECT_DELAY_MS = 10_000;
+
+/**
  * Базовый сервис для работы с Telegram ботами на основе node-telegram-bot-api.
  * Отвечает за создание и кэширование инстансов ботов и отправку сообщений.
  */
 export abstract class BaseTelegramBotService {
-  // Кэш инстансов ботов по имени переменной окружения с токеном
-  private static bots: Map<string, TelegramBot> = new Map();
+  private static bots: Map<string, BotInstance> = new Map();
 
   /**
    * Получает (или создаёт) инстанс TelegramBot по ключу переменной окружения.
-   * В dev режиме может использовать polling, в production - только как HTTP-клиент.
    */
   static getBot(tokenEnvKey: string, usePolling: boolean = false): TelegramBot {
     const existing = this.bots.get(tokenEnvKey);
@@ -61,7 +71,7 @@ export abstract class BaseTelegramBotService {
       logger.debug('Используется кэшированный инстанс Telegram бота', {
         tokenEnvKey,
       });
-      return existing;
+      return existing.bot;
     }
 
     const token = process.env[tokenEnvKey];
@@ -74,7 +84,6 @@ export abstract class BaseTelegramBotService {
       throw error;
     }
 
-    // В dev режиме можно использовать polling, в production - только как HTTP‑клиент
     const bot = new TelegramBot(token, { polling: usePolling });
     if (tokenEnvKey === 'BOT_CRM_TOKEN') {
       bot.setMyCommands([
@@ -84,11 +93,16 @@ export abstract class BaseTelegramBotService {
         },
       ]);
     }
-    this.bots.set(tokenEnvKey, bot);
+
+    const instance: BotInstance = {
+      bot,
+      handler: async () => {},
+      healthCheckInterval: null,
+    };
+    this.bots.set(tokenEnvKey, instance);
 
     logger.info('Инициализирован Telegram бот', { tokenEnvKey });
 
-    // Пытаемся получить информацию о боте (getMe) и залогировать её
     bot
       .getMe()
       .then((me) => {
@@ -111,13 +125,197 @@ export abstract class BaseTelegramBotService {
   }
 
   /**
+   * Навешивает обработчики событий на инстанс бота
+   */
+  private static attachEventListeners(
+    bot: TelegramBot,
+    tokenEnvKey: string,
+    handler: (update: TelegramUpdate) => Promise<void>
+  ): void {
+    bot.on('message', async (msg) => {
+      const update: TelegramUpdate = {
+        update_id: 0,
+        message: {
+          message_id: msg.message_id,
+          chat: {
+            id: msg.chat.id,
+            first_name: msg.chat.first_name,
+            username: msg.chat.username,
+          },
+          text: msg.text,
+        },
+      };
+      logger.info(`MESSAGE ${tokenEnvKey}`, { msg });
+
+      try {
+        await handler(update);
+      } catch (error) {
+        logger.error('Ошибка при обработке сообщения в polling режиме', {
+          tokenEnvKey,
+          chatId: msg.chat.id,
+          error,
+        });
+      }
+    });
+
+    bot.on('callback_query', async (query) => {
+      const update: TelegramUpdate = {
+        update_id: 0,
+        callback_query: {
+          id: query.id,
+          data: query.data,
+          message: query.message
+            ? {
+                message_id: query.message.message_id,
+                chat: {
+                  id: query.message.chat.id,
+                  first_name: query.message.chat.first_name,
+                  username: query.message.chat.username,
+                },
+                text: query.message.text,
+              }
+            : undefined,
+        },
+      };
+
+      try {
+        await handler(update);
+      } catch (error) {
+        logger.error(
+          'Ошибка при обработке callback_query в polling режиме',
+          error instanceof Error ? error : new Error(String(error)),
+          { tokenEnvKey, callbackQueryId: query.id }
+        );
+      }
+    });
+  }
+
+  /**
+   * Запускает периодическую проверку здоровья бота
+   */
+  private static startHealthCheck(tokenEnvKey: string): void {
+    const instance = this.bots.get(tokenEnvKey);
+    if (!instance) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await instance.bot.getMe();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.warn('Health check бота не пройден, запускаем переподключение', {
+          tokenEnvKey,
+          errorMessage: message,
+        });
+
+        clearInterval(interval);
+        instance.healthCheckInterval = null;
+
+        this.reconnect(tokenEnvKey).catch((reconnectError) => {
+          logger.error('Ошибка при переподключении бота', {
+            tokenEnvKey,
+            error: reconnectError instanceof Error ? reconnectError.message : String(reconnectError),
+          });
+        });
+      }
+    }, HEALTH_CHECK_INTERVAL_MS);
+
+    instance.healthCheckInterval = interval;
+    logger.debug('Health check запущен для Telegram бота', {
+      tokenEnvKey,
+      intervalMs: HEALTH_CHECK_INTERVAL_MS,
+    });
+  }
+
+  /**
+   * Переподключает бота: останавливает старый инстанс, ждёт 10 секунд, создаёт новый
+   */
+  private static async reconnect(tokenEnvKey: string): Promise<void> {
+    logger.info('Начато переподключение бота', { tokenEnvKey });
+
+    const oldInstance = this.bots.get(tokenEnvKey);
+    if (oldInstance) {
+      try {
+        if (oldInstance.healthCheckInterval) {
+          clearInterval(oldInstance.healthCheckInterval);
+        }
+        if (oldInstance.bot.isPolling()) {
+          await oldInstance.bot.stopPolling();
+        }
+      } catch (error) {
+        logger.debug('Ошибка при остановке старого инстанса бота', {
+          tokenEnvKey,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      this.bots.delete(tokenEnvKey);
+    }
+
+    logger.info('Ожидание 10 секунд перед переподключением', { tokenEnvKey });
+    await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS));
+
+    try {
+      const token = process.env[tokenEnvKey];
+      if (!token) {
+        throw new Error(`Переменная окружения ${tokenEnvKey} не установлена`);
+      }
+
+      const bot = new TelegramBot(token, { polling: true });
+      if (tokenEnvKey === 'BOT_CRM_TOKEN') {
+        bot.setMyCommands([
+          {
+            command: 'start',
+            description: 'Запуск бота',
+          },
+        ]);
+      }
+
+      try {
+        await bot.deleteWebHook();
+        logger.info('Webhook удалён для переподключения polling', { tokenEnvKey });
+      } catch (error) {
+        logger.debug('Ошибка при удалении webhook при переподключении', {
+          tokenEnvKey,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      const handler = oldInstance?.handler ?? (async () => {});
+      this.attachEventListeners(bot, tokenEnvKey, handler);
+
+      const me = await bot.getMe();
+      logger.info('Бот успешно переподключён', {
+        tokenEnvKey,
+        botId: me.id,
+        botUsername: me.username,
+        botName: me.first_name,
+      });
+
+      const newInstance: BotInstance = {
+        bot,
+        handler,
+        healthCheckInterval: null,
+      };
+      this.bots.set(tokenEnvKey, newInstance);
+
+      this.startHealthCheck(tokenEnvKey);
+    } catch (error) {
+      logger.error('Ошибка при переподключении бота, повторная попытка через 10 секунд', {
+        tokenEnvKey,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS));
+      this.reconnect(tokenEnvKey).catch((retryError) => {
+        logger.error('Ошибка при повторном переподключении бота', {
+          tokenEnvKey,
+          error: retryError instanceof Error ? retryError.message : String(retryError),
+        });
+      });
+    }
+  }
+
+  /**
    * Отправка сообщения через node-telegram-bot-api
-   * @param tokenEnvKey
-   * @param chatId
-   * @param text
-   * @param parseMode - режим парсинга: "HTML", "Markdown" или "MarkdownV2" (по умолчанию "HTML")
-   * @param disableWebPagePreview - отключить превью ссылок (по умолчанию false)
-   * @param replyMarkup - inline keyboard для сообщения (опционально)
    */
   static async sendMessage(
     tokenEnvKey: string,
@@ -228,7 +426,6 @@ export abstract class BaseTelegramBotService {
 
   /**
    * Экранирование специальных символов для MarkdownV2
-   * MarkdownV2 требует экранирования следующих символов: _ * [ ] ( ) ~ ` > # + - = | { } . !
    */
   static escapeMarkdownV2(text: string): string {
     // eslint-disable-next-line no-useless-escape
@@ -237,8 +434,6 @@ export abstract class BaseTelegramBotService {
 
   /**
    * Настройка webhook для бота
-   * @param tokenEnvKey - ключ переменной окружения с токеном бота
-   * @param webhookUrl - URL для webhook (должен быть HTTPS в production)
    */
   static async setWebhook(tokenEnvKey: string, webhookUrl: string): Promise<void> {
     const bot = this.getBot(tokenEnvKey);
@@ -273,7 +468,6 @@ export abstract class BaseTelegramBotService {
 
   /**
    * Удаление webhook для бота
-   * @param tokenEnvKey - ключ переменной окружения с токеном бота
    */
   static async deleteWebhook(tokenEnvKey: string): Promise<void> {
     const bot = this.getBot(tokenEnvKey);
@@ -295,9 +489,7 @@ export abstract class BaseTelegramBotService {
   }
 
   /**
-   * Запуск polling для бота в dev режиме
-   * @param tokenEnvKey - ключ переменной окружения с токеном бота
-   * @param handler - функция обработки обновлений
+   * Запуск polling для бота
    */
   static async startPolling(
     tokenEnvKey: string,
@@ -305,7 +497,11 @@ export abstract class BaseTelegramBotService {
   ): Promise<void> {
     const bot = this.getBot(tokenEnvKey, true);
 
-    // Удаляем webhook, если он был настроен (polling и webhook не могут работать одновременно)
+    const instance = this.bots.get(tokenEnvKey);
+    if (instance) {
+      instance.handler = handler;
+    }
+
     try {
       await bot.deleteWebHook();
       logger.info('Webhook удалён для запуска polling', { tokenEnvKey });
@@ -316,71 +512,28 @@ export abstract class BaseTelegramBotService {
       });
     }
 
-    // Настраиваем обработчики событий
-    bot.on('message', async (msg) => {
-      const update: TelegramUpdate = {
-        update_id: 0, // В polling режиме update_id не используется
-        message: {
-          message_id: msg.message_id,
-          chat: {
-            id: msg.chat.id,
-            first_name: msg.chat.first_name,
-            username: msg.chat.username,
-          },
-          text: msg.text,
-        },
-      };
-      logger.info(`MESSAGE ${tokenEnvKey}`, { msg });
-
-      try {
-        await handler(update);
-      } catch (error) {
-        logger.error('Ошибка при обработке сообщения в polling режиме', {
-          tokenEnvKey,
-          chatId: msg.chat.id,
-          error,
-        });
-      }
-    });
-
-    bot.on('callback_query', async (query) => {
-      const update: TelegramUpdate = {
-        update_id: 0,
-        callback_query: {
-          id: query.id,
-          data: query.data,
-          message: query.message
-            ? {
-                message_id: query.message.message_id,
-                chat: {
-                  id: query.message.chat.id,
-                  first_name: query.message.chat.first_name,
-                  username: query.message.chat.username,
-                },
-                text: query.message.text,
-              }
-            : undefined,
-        },
-      };
-
-      try {
-        await handler(update);
-      } catch (error) {
-        logger.error(
-          'Ошибка при обработке callback_query в polling режиме',
-          error instanceof Error ? error : new Error(String(error)),
-          { tokenEnvKey, callbackQueryId: query.id }
-        );
-      }
-    });
+    this.attachEventListeners(bot, tokenEnvKey, handler);
 
     logger.info('Polling запущен для Telegram бота', { tokenEnvKey });
+
+    this.startHealthCheck(tokenEnvKey);
   }
 
   /**
-   * Получение доступа к кэшу ботов (для очистки при остановке)
+   * Получение доступа к кэшу ботов (для обратной совместимости)
    */
   static getBotsCache(): Map<string, TelegramBot> {
+    const result = new Map<string, TelegramBot>();
+    for (const [key, instance] of this.bots) {
+      result.set(key, instance.bot);
+    }
+    return result;
+  }
+
+  /**
+   * Получение полного кэша инстансов (включая метаданные)
+   */
+  static getBotInstances(): Map<string, BotInstance> {
     return this.bots;
   }
 }

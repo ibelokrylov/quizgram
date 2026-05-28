@@ -125,13 +125,16 @@ export function initTelegramBotsOnStartup(): void {
 export async function stopTelegramBots(): Promise<void> {
   logger.info('Остановка Telegram ботов');
 
-  const bots = Array.from(BaseTelegramBotService.getBotsCache().entries());
+  const instances = Array.from(BaseTelegramBotService.getBotInstances().entries());
 
-  for (const [tokenEnvKey, bot] of bots) {
+  for (const [tokenEnvKey, instance] of instances) {
     try {
-      // Останавливаем polling если он был запущен
-      if (bot.isPolling()) {
-        await bot.stopPolling();
+      if (instance.healthCheckInterval) {
+        clearInterval(instance.healthCheckInterval);
+        logger.debug('Health check остановлен для Telegram бота', { tokenEnvKey });
+      }
+      if (instance.bot.isPolling()) {
+        await instance.bot.stopPolling();
         logger.info('Polling остановлен для Telegram бота', { tokenEnvKey });
       }
     } catch (error) {
@@ -143,8 +146,7 @@ export async function stopTelegramBots(): Promise<void> {
     }
   }
 
-  // Очищаем кэш ботов
-  BaseTelegramBotService.getBotsCache().clear();
+  BaseTelegramBotService.getBotInstances().clear();
 
   logger.info('Все Telegram боты остановлены');
 }
