@@ -13,12 +13,10 @@ import { publicModule } from './modules/public';
 import { quiz } from './modules/quiz';
 import { SchedulerService } from './modules/scheduler/service';
 import { statistics } from './modules/statistics';
-import { telegram } from './modules/telegram';
 import { user } from './modules/user';
 import { BackupDbService } from './services/backup-db.service';
 import { BackupLogService } from './services/backup-log.service';
 import { PlanService } from './services/plan.service';
-import { initTelegramBotsOnStartup, stopTelegramBots } from './services/quiz-bot.service';
 
 // Храним сервер и приложение для возможности graceful shutdown
 let server: ReturnType<typeof Elysia.prototype.listen>['server'] | null = null;
@@ -68,9 +66,6 @@ async function startApp() {
   // Определяем окружение
   const env = typeof Bun !== 'undefined' ? Bun.env : process.env;
   const isDevelopment = env.ENV !== 'production';
-
-  // Явная инициализация Telegram‑ботов при старте API
-  initTelegramBotsOnStartup(isDevelopment);
 
   // Настраиваем HTTPS если указаны сертификаты
   const httpsCertPath = env.HTTPS_CERT;
@@ -350,9 +345,7 @@ async function startApp() {
         .use(statistics)
         .use(publicModule)
         .use(adminRoute)
-    )
-    // Webhook'и для Telegram ботов (без префикса /v1, так как Telegram отправляет на указанный URL)
-    .use(telegram);
+    );
 
   // Запускаем сервер с HTTPS или HTTP
   if (tlsConfig) {
@@ -437,9 +430,6 @@ async function gracefulShutdown(signal: string): Promise<void> {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-
-    // Останавливаем Telegram ботов
-    await stopTelegramBots();
 
     // Останавливаем HTTP сервер
     if (server) {

@@ -42,6 +42,18 @@ services:
     network_mode: host
     restart: unless-stopped
 
+  tg-sender:
+    build:
+      context: .
+      dockerfile: Dockerfile.tg-sender
+    container_name: quizgram-tg-sender
+    # Используем host network - контейнер будет доступен напрямую на порту 8080 хоста
+    # При host network порты не маппятся через ports:, контейнер использует сеть хоста напрямую
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - pkg/tg-sender/.env
+
 networks:
   quizgram-network:
     driver: bridge

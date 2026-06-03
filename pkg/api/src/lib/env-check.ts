@@ -19,12 +19,12 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
   {
     name: 'BOT_QUIZ_TOKEN',
     required: true,
-    description: 'Токен Telegram бота для квизов (используется для валидации initData)',
+    description: 'Токен Telegram бота для квизов (для validateInitData и отправки в tg-sender)',
   },
   {
     name: 'BOT_CRM_TOKEN',
     required: true,
-    description: 'Токен Telegram CRM бота',
+    description: 'Токен Telegram CRM бота (для validateInitData и отправки в tg-sender)',
   },
 ];
 
@@ -110,11 +110,6 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     description: 'Название приложения (по умолчанию TGMApp)',
   },
   {
-    name: 'API_URL',
-    required: false,
-    description: 'Базовый URL API (для webhook Telegram ботов)',
-  },
-  {
     name: 'HTTPS_CERT',
     required: false,
     description: 'Путь к SSL сертификату (для HTTPS)',
@@ -150,9 +145,9 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     description: 'Публичный ключ проекта UnitPay',
   },
   {
-    name: 'TELEGRAM_PROXY',
-    required: false,
-    description: 'Прокси для Telegram API (http://user:pass@host:port)',
+    name: 'TG_SENDER_URL',
+    required: true,
+    description: 'URL сервиса tg-sender (http://localhost:8080)',
   },
 ];
 

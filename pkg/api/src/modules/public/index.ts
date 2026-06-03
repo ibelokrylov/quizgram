@@ -6,6 +6,18 @@ import { bodyAnswer, publicQuiz, quizContacts } from './models';
 import { PublicService } from './service';
 
 export const publicModule = new Elysia({ prefix: '/public' })
+  .get(
+    '/welcome-quiz-uuid',
+    () => {
+      const uuid = process.env.WELCOME_QUIZ_UUID || '2cd17041-1d5d-4b82-a7cf-12c0d583d1ad';
+      return { uuid };
+    },
+    {
+      response: t.Object({
+        uuid: t.String(),
+      }),
+    }
+  )
   .post(
     '/quiz/:uid',
     async (ctx) => {

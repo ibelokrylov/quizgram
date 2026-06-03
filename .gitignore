@@ -42,3 +42,7 @@ test/logs/
 
 # Heap snapshots
 *.heapsnapshot
+
+# Go binaries
+pkg/tg-sender/server
+pkg/tg-sender/tg-sender
