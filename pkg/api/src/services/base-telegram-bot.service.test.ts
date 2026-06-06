@@ -9,6 +9,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env.TG_SENDER_URL;
+  delete process.env.TG_SENDER_SECRET;
 });
 
 function parseArgs(args: unknown[]) {
@@ -17,6 +18,7 @@ function parseArgs(args: unknown[]) {
   return {
     url,
     method: opts.method,
+    headers: opts.headers as Record<string, string>,
     body: JSON.parse(opts.body as string),
   };
 }
@@ -138,6 +140,33 @@ describe('BaseTelegramBotService', () => {
 
     const req = parseArgs(fetchMock.mock.calls[0]);
     expect(req.body.parse_mode).toBe('MarkdownV2');
+
+    globalThis.fetch = undefined as never;
+  });
+
+  test('sendMessage: X-API-Secret заголовок передаётся при наличии TG_SENDER_SECRET', async () => {
+    process.env.TG_SENDER_SECRET = 'test-secret-123';
+    const fetchMock = mock(globalThis.fetch);
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    await BaseTelegramBotService.sendMessage('BOT_CRM_TOKEN', 123, 'text');
+
+    const req = parseArgs(fetchMock.mock.calls[0]);
+    expect(req.headers['X-API-Secret']).toBe('test-secret-123');
+
+    globalThis.fetch = undefined as never;
+  });
+
+  test('sendMessage: X-API-Secret заголовок отсутствует без TG_SENDER_SECRET', async () => {
+    const fetchMock = mock(globalThis.fetch);
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    await BaseTelegramBotService.sendMessage('BOT_CRM_TOKEN', 123, 'text');
+
+    const req = parseArgs(fetchMock.mock.calls[0]);
+    expect(req.headers['X-API-Secret']).toBeUndefined();
 
     globalThis.fetch = undefined as never;
   });

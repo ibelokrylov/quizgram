@@ -149,6 +149,11 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: true,
     description: 'URL сервиса tg-sender (http://localhost:8080)',
   },
+  {
+    name: 'TG_SENDER_SECRET',
+    required: false,
+    description: 'Секрет для аутентификации в tg-sender (заголовок X-API-Secret)',
+  },
 ];
 
 /**

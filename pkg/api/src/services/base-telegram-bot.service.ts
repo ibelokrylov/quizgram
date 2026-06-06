@@ -73,9 +73,15 @@ async function request(method: string, body: Record<string, unknown>): Promise<v
   const timeout = setTimeout(() => controller.abort(), 10_000);
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const secret = process.env.TG_SENDER_SECRET;
+    if (secret) {
+      headers['X-API-Secret'] = secret;
+    }
+
     const resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     });
