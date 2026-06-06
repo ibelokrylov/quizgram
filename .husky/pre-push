@@ -21,6 +21,11 @@ fi
 
 cd ../..
 
+echo ""
+echo "🔨 Тесты pkg/api..."
+
+cd pkg/api
+
 if bun test; then
   echo "✅ Все тесты прошли успешно!"
 else
