@@ -3,7 +3,23 @@
 
 echo "🔍 Запуск тестов перед push..."
 
-cd pkg/api
+echo ""
+echo "🔨 Тесты pkg/tg-sender..."
+
+cd pkg/tg-sender
+
+if go test ./...; then
+  echo "✅ pkg/tg-sender тесты пройдены!"
+else
+  echo ""
+  echo "❌ Тесты pkg/tg-sender не прошли! Push заблокирован."
+  echo ""
+  echo "Исправьте ошибки в тестах перед push."
+  echo "Для принудительного push используйте: git push --no-verify"
+  exit 1
+fi
+
+cd ../..
 
 if bun test; then
   echo "✅ Все тесты прошли успешно!"
